@@ -46,8 +46,12 @@ void Lcd::insert(const QString& piece) {
     changed();
 }
 
-void Lcd::insertTemplate(Template kind) {
+void Lcd::insertTemplate(Template kind, const QString& fill) {
     entry_.insertTemplate(kind);
+    if (!fill.isEmpty()) {
+        for (const QChar c : fill) entry_.insert(c);
+        entry_.right();
+    }
     changed();
 }
 

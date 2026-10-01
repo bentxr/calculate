@@ -10,6 +10,10 @@ Face put(const QString& label, const QString& insert, const QString& function = 
     return {label, insert, function, KeyAction::Insert};
 }
 Face act(const QString& label, KeyAction action) { return {label, {}, {}, action}; }
+// A key that opens a template; `fill` is typed into its box at once, and the cursor leaves it (x², x⁻¹).
+Face shape(const QString& label, Template kind, const QString& function = {}, const QString& fill = {}) {
+    return {label, fill, function, KeyAction::Template, kind};
+}
 Key digit(const QString& d) { return {d, put(d, d)}; }
 
 }  // namespace
@@ -17,14 +21,14 @@ Key digit(const QString& d) { return {d, put(d, d)}; }
 // Names that Spanish calculators spell differently are marked for translation; the engine accepts both.
 const QList<QList<Key>>& keypad() {
     static const QList<QList<Key>> rows{
-        {{"open", put("(", "(")}, {"close", put(")", ")")}, {"fraction", put("□/□", "/")},
-         {"sqrt", put("√□", "√(", "sqrt")}},
-        {{"square", put("x²", "²")}, {"power", put("x^□", "^")}, {"negative", put("(−)", "-")},
-         {"reciprocal", put("x⁻¹", "^-1")}},
+        {{"open", put("(", "(")}, {"close", put(")", ")")}, {"fraction", shape("□/□", Template::Fraction)},
+         {"sqrt", shape("√□", Template::Sqrt, "sqrt")}},
+        {{"square", shape("x²", Template::Power, {}, "2")}, {"power", shape("x^□", Template::Power)}, {"negative", put("(−)", "-")},
+         {"reciprocal", shape("x⁻¹", Template::Power, {}, "−1")}},
         {{"sin", put(QT_TRANSLATE_NOOP("keypad", "sin"), QT_TRANSLATE_NOOP("keypad", "sin("), "sin")},
          {"cos", put("cos", "cos(", "cos")},
          {"tan", put("tan", "tan(", "tan")},
-         {"logBase", put("log□□", "log(", "log")},
+         {"logBase", shape("log□□", Template::LogBase, "log")},
          {"ln", put("ln", "ln(", "ln")},
          {"memoryAdd", act("M+", KeyAction::MemoryAdd)}},
         {digit("7"), digit("8"), digit("9"), {"delete", act("DEL", KeyAction::Backspace)}, {"clear", act("AC", KeyAction::Clear)}},
@@ -60,10 +64,10 @@ const QList<KeyGroup>& directKeys() {
           {"acosh", put(QT_TRANSLATE_NOOP("keypad", "acosh"), QT_TRANSLATE_NOOP("keypad", "acosh("), "acosh")},
           {"atanh", put(QT_TRANSLATE_NOOP("keypad", "atanh"), QT_TRANSLATE_NOOP("keypad", "atanh("), "atanh")}}},
         {QT_TRANSLATE_NOOP("keypad", "Powers and roots"),
-         {{"cube", put("x³", "³")}, {"cbrt", put("∛", "∛(", "cbrt")}, {"root", put("ⁿ√", "root(", "root")},
-          {"power10", put("10ˣ", "10^")}, {"exp", put("eˣ", "exp(", "exp")}, {"log", put("log", "log(", "log")}}},
+         {{"cube", shape("x³", Template::Power, {}, "3")}, {"cbrt", shape("∛", Template::Cbrt, "cbrt")}, {"root", shape("ⁿ√", Template::Root, "root")},
+          {"power10", shape("10ˣ", Template::Pow10)}, {"exp", shape("eˣ", Template::Exp, "exp")}, {"log", put("log", "log(", "log")}}},
         {QT_TRANSLATE_NOOP("keypad", "Numbers"),
-         {{"factorial", put("x!", "!")}, {"abs", put("abs", "abs(", "abs")}, {"percent", put("%", "%")},
+         {{"factorial", put("x!", "!")}, {"abs", shape("abs", Template::Abs, "abs")}, {"percent", put("%", "%")},
           {"mod", put("mod", "mod(", "mod")}, {"npr", put("nPr", "nPr(", "nPr")}, {"ncr", put("nCr", "nCr(", "nCr")},
           {"gcd", put(QT_TRANSLATE_NOOP("keypad", "gcd"), QT_TRANSLATE_NOOP("keypad", "gcd("), "gcd")},
           {"lcm", put(QT_TRANSLATE_NOOP("keypad", "lcm"), QT_TRANSLATE_NOOP("keypad", "lcm("), "lcm")},

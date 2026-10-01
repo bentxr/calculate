@@ -595,6 +595,7 @@ void MainWindow::present() {
 void MainWindow::apply(const Face& f) {
     switch (f.action) {
     case KeyAction::Insert: lcd_->insert(translated(f.insert)); break;
+    case KeyAction::Template: lcd_->insertTemplate(f.shape, f.insert); break;
     case KeyAction::Clear: lcd_->clear(); break;
     case KeyAction::Backspace: lcd_->backspace(); break;
     case KeyAction::Evaluate: evaluate(); break;
