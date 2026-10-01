@@ -11,11 +11,12 @@
 class DetailsCard;
 class FormulaTip;
 class Lcd;
+class QAction;
 class QComboBox;
-class QDialog;
 class QFrame;
 class QLabel;
 class QListWidget;
+class QMenu;
 class QPlainTextEdit;
 class QPushButton;
 class QScrollArea;
@@ -79,11 +80,9 @@ private:
     QListWidget* modes_ = nullptr;
     QToolButton* panelToggle_ = nullptr;
     QToolButton* settingsButton_ = nullptr;
-    QDialog* settings_ = nullptr;
-    QLabel* languageLabel_ = nullptr;
-    QComboBox* languageBox_ = nullptr;
-    QLabel* themeLabel_ = nullptr;
-    QComboBox* themeBox_ = nullptr;
+    QMenu* settings_ = nullptr;
+    QAction* languageSection_ = nullptr;  // the headings over each setting's values
+    QAction* themeSection_ = nullptr;
     QPushButton* equals_ = nullptr;
     QLabel* statisticsLabel_ = nullptr;
     bool hasResult_ = false;  // whether last_ holds a result to present

@@ -41,6 +41,9 @@ W* child(MainWindow& window, const char* name) {
 
 Lcd* lcd(MainWindow& window) { return child<Lcd>(window, "lcd"); }
 
+// A choice of the settings menu, such as "theme:dark".
+QAction* setting(MainWindow& window, const char* name) { return child<QAction>(window, name); }
+
 QLabel* message(MainWindow& window) { return child<QLabel>(window, "message"); }
 
 // Waits for the worker's answer: a value on the screen, or a message under it.
@@ -503,22 +506,37 @@ TEST(MainWindow, TheLeftPanelCollapsesToARail) {
     EXPECT_TRUE(modes->isVisible());
 }
 
-TEST(MainWindow, TheSettingsButtonOpensTheSettings) {
+TEST(MainWindow, TheSettingsOpenAsAMenuFromTheGear) {
     MainWindow window;
     window.show();
     ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
-    QTest::mouseClick(child<QToolButton>(window, "settingsButton"), Qt::LeftButton);
-    auto* dialog = child<QDialog>(window, "settings");
-    EXPECT_TRUE(dialog->isVisible());
-    dialog->close();
+    auto* gear = child<QToolButton>(window, "settingsButton");
+    QTest::mouseClick(gear, Qt::LeftButton);
+    EXPECT_EQ(window.findChild<QDialog*>("settings"), nullptr);  // not a window of its own
+    auto* menu = child<QMenu>(window, "settings");
+    ASSERT_TRUE(menu->isVisible());
+    const QRect button(gear->mapToGlobal(QPoint(0, 0)), gear->size());
+    EXPECT_EQ(menu->geometry().left(), button.left());  // it stems from the gear, upwards
+    EXPECT_EQ(menu->geometry().bottom() + 1, button.top());
+    EXPECT_TRUE(window.geometry().contains(menu->geometry()));
+    for (const char* name : {"language:system", "language:en", "language:es", "theme:system", "theme:light", "theme:dark"}) {
+        QAction* choice = setting(window, name);
+        ASSERT_NE(choice, nullptr) << name;
+        EXPECT_TRUE(choice->isCheckable()) << name;  // every value listed in place
+    }
+    EXPECT_TRUE(setting(window, "language:system")->isChecked());
+    EXPECT_TRUE(setting(window, "theme:system")->isChecked());
+    setting(window, "theme:dark")->trigger();
+    EXPECT_TRUE(setting(window, "theme:dark")->isChecked());
+    EXPECT_FALSE(setting(window, "theme:system")->isChecked());  // one value per setting
+    setting(window, "theme:system")->trigger();
+    menu->close();
 }
 
 TEST(MainWindow, SpanishRelabelsEverythingWithoutARestart) {
     MainWindow window;
     run(window, "0.1 + 0.2");
-    auto* language = child<QComboBox>(window, "language");
-    ASSERT_EQ(language->count(), 3);  // System, English, Español
-    language->setCurrentIndex(2);
+    setting(window, "language:es")->trigger();
     QCoreApplication::processEvents();  // Qt posts the language change to every window
     EXPECT_EQ(child<QPushButton>(window, "key:sin")->text(), "sen");
     EXPECT_EQ(child<QPushButton>(window, "direct:asin")->text(), "arcsen");
@@ -527,8 +545,9 @@ TEST(MainWindow, SpanishRelabelsEverythingWithoutARestart) {
     EXPECT_EQ(child<QComboBox>(window, "type")->itemText(1), "Doble");
     EXPECT_EQ(child<QToolButton>(window, "detailsButton")->text(), "Detalles");
     EXPECT_EQ(child<DetailsCard>(window, "detailsCard")->findChild<QLabel*>("label:bound")->text(), "Cota garantizada");
-    EXPECT_EQ(language->itemText(0), "Sistema");
-    language->setCurrentIndex(1);
+    EXPECT_EQ(setting(window, "language:system")->text(), "Sistema");
+    EXPECT_EQ(setting(window, "theme:dark")->text(), "Oscuro");
+    setting(window, "language:en")->trigger();
     QCoreApplication::processEvents();
     EXPECT_EQ(child<QPushButton>(window, "key:sin")->text(), "sin");
     EXPECT_EQ(child<QListWidget>(window, "modes")->item(0)->text(), "Calculator");
@@ -537,13 +556,11 @@ TEST(MainWindow, SpanishRelabelsEverythingWithoutARestart) {
 TEST(MainWindow, TheThemeSwitchesBetweenLightAndDark) {
     const QPalette original = QApplication::palette();
     MainWindow window;
-    auto* theme = child<QComboBox>(window, "theme");
-    ASSERT_EQ(theme->count(), 3);  // System, Light, Dark
-    theme->setCurrentIndex(2);
+    setting(window, "theme:dark")->trigger();
     QCoreApplication::processEvents();
     EXPECT_LT(window.palette().color(QPalette::Window).lightness(), 128);
     EXPECT_LT(lcd(window)->background().lightness(), 80);
-    theme->setCurrentIndex(1);
+    setting(window, "theme:light")->trigger();
     QCoreApplication::processEvents();
     EXPECT_GT(window.palette().color(QPalette::Window).lightness(), 128);
     EXPECT_GT(lcd(window)->background().lightness(), 150);
@@ -604,11 +621,10 @@ TEST(MainWindow, ChangingTheLanguageMovesNothing) {
         return rects;
     };
     const QList<QRect> english = geometry();
-    auto* language = child<QComboBox>(window, "language");
-    language->setCurrentIndex(2);  // Español
+    setting(window, "language:es")->trigger();
     QCoreApplication::processEvents();
     EXPECT_EQ(geometry(), english);
-    language->setCurrentIndex(1);  // English
+    setting(window, "language:en")->trigger();
     QCoreApplication::processEvents();
     EXPECT_EQ(geometry(), english);
 }

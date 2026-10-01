@@ -11,16 +11,16 @@
 #include "typechooser.hpp"
 #include "worker.hpp"
 
+#include <QActionGroup>
 #include <QComboBox>
-#include <QDialog>
 #include <QEvent>
-#include <QFormLayout>
 #include <QHelpEvent>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QKeyEvent>
 #include <QListWidget>
+#include <QMenu>
 #include <QMimeData>
 #include <QPlainTextEdit>
 #include <QPushButton>
@@ -95,7 +95,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     outer->addWidget(rail);
     connect(panelToggle_, &QToolButton::toggled, modes_, [this](bool collapsed) { modes_->setVisible(!collapsed); });
     buildSettings();
-    connect(settingsButton_, &QToolButton::clicked, settings_, &QDialog::open);
+    connect(settingsButton_, &QToolButton::clicked, this, [this] {
+        settings_->popup(placed(settings_->sizeHint(), globalGeometry(settingsButton_), popupBounds(settingsButton_)).topLeft());
+    });
 
     auto* main = new QVBoxLayout;
     outer->addLayout(main, 1);
@@ -375,24 +377,30 @@ void MainWindow::showEvent(QShowEvent* event) {
     connect(windowHandle(), &QWindow::screenChanged, this, &MainWindow::sizeKeys);
 }
 
-// ⚙: the language and the theme, applied at once and forgotten at exit.
+// ⚙: a small menu that opens from the button, with the values of the language and of the theme listed
+// in place. A choice applies at once and is forgotten at exit.
 void MainWindow::buildSettings() {
-    settings_ = new QDialog(this);
+    settings_ = new QMenu(this);
     settings_->setObjectName("settings");
-    auto* form = new QFormLayout(settings_);
-    languageLabel_ = new QLabel(settings_);
-    languageBox_ = new QComboBox(settings_);
-    languageBox_->setObjectName("language");
-    languageBox_->addItems({QString(), QStringLiteral("English"), QStringLiteral("Español")});  // each in its own name
-    themeLabel_ = new QLabel(settings_);
-    themeBox_ = new QComboBox(settings_);
-    themeBox_->setObjectName("theme");
-    themeBox_->addItems({QString(), QString(), QString()});
-    form->addRow(languageLabel_, languageBox_);
-    form->addRow(themeLabel_, themeBox_);
-    connect(languageBox_, &QComboBox::currentIndexChanged, this,
-            [](int i) { settings::setLanguage(static_cast<settings::Language>(i)); });
-    connect(themeBox_, &QComboBox::currentIndexChanged, this, [](int i) { settings::setTheme(static_cast<settings::Theme>(i)); });
+    // One heading, then one checkable action per value, in the order of the setting's enum.
+    const auto addSetting = [this](QAction*& section, std::initializer_list<const char*> values, int checked, auto apply) {
+        section = settings_->addSection(QString());
+        auto* group = new QActionGroup(settings_);
+        int i = 0;
+        for (const char* value : values) {
+            QAction* action = settings_->addAction(QString());  // the texts: see retranslate
+            action->setObjectName(QString::fromLatin1(value));
+            action->setCheckable(true);
+            action->setChecked(i == checked);
+            group->addAction(action);
+            connect(action, &QAction::triggered, this, [apply, i] { apply(i); });
+            ++i;
+        }
+    };
+    addSetting(languageSection_, {"language:system", "language:en", "language:es"}, 0,
+               [](int i) { settings::setLanguage(static_cast<settings::Language>(i)); });
+    addSetting(themeSection_, {"theme:system", "theme:light", "theme:dark"}, 0,
+               [](int i) { settings::setTheme(static_cast<settings::Theme>(i)); });
 }
 
 // Every text of the window in the current language: run once when it is built, and again on every
@@ -414,13 +422,14 @@ void MainWindow::retranslate() {
     historyToggle_->setToolTip(tr("History"));
     statisticsLabel_->setText(tr("Values (one per line, or separated by commas):"));
     statisticsKeysToggle_->setToolTip(tr("Show or hide the keypad"));
-    settings_->setWindowTitle(tr("Settings"));
-    languageLabel_->setText(tr("Language"));
-    themeLabel_->setText(tr("Theme"));
-    languageBox_->setItemText(0, tr("System"));
-    themeBox_->setItemText(0, tr("System"));
-    themeBox_->setItemText(1, tr("Light"));
-    themeBox_->setItemText(2, tr("Dark"));
+    languageSection_->setText(tr("Language"));
+    themeSection_->setText(tr("Theme"));
+    findChild<QAction*>("language:system")->setText(tr("System"));
+    findChild<QAction*>("language:en")->setText(QStringLiteral("English"));  // each language in its own name
+    findChild<QAction*>("language:es")->setText(QStringLiteral("Español"));
+    findChild<QAction*>("theme:system")->setText(tr("System"));
+    findChild<QAction*>("theme:light")->setText(tr("Light"));
+    findChild<QAction*>("theme:dark")->setText(tr("Dark"));
 
     QList<Key> keys = cursorPad();
     for (const QList<Key>& row : keypad()) keys += row;
