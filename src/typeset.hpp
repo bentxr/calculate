@@ -40,6 +40,11 @@ Box row(const QList<Box>& boxes);  // side by side on one baseline
 Box fraction(const Box& numerator, const Box& denominator, const QFont& font);
 Box superscript(const Box& base, const Box& exponent);  // the exponent comes in its smaller font
 Box overline(const Box& box);
+Box subscript(const Box& base, const Box& index);  // the index comes in its smaller font
+// √ over the content, with an optional index (ⁿ√) in its smaller font over the tick.
+Box radical(const Box& content, const QFont& font, const Box& index = Box{});
+// A large operator such as Σ with its limits centred under and over it.
+Box bigOperator(const QString& symbol, const Box& under, const Box& over, const QFont& font);
 // Text in several roles, broken between characters into lines no wider than maxWidth.
 Box paragraph(const QList<Segment>& segments, const QFont& font, qreal maxWidth);
 // Where the box's last line of text ends, on its baseline (the origin for an empty box).

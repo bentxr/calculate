@@ -7,6 +7,8 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
+
 using typeset::Box;
 using typeset::Role;
 
@@ -101,4 +103,57 @@ TEST(Typeset, AnExactResultIsTheFractionEqualsItsDecimal) {
     const Box whole = typeset::exact({"−", "6", "1", "", ""}, font(), 1000);
     ASSERT_EQ(whole.runs.size(), 1);
     EXPECT_EQ(whole.runs[0].text, "−6");
+}
+
+namespace {
+
+QFont smallFont() {
+    QFont f = font();
+    f.setPixelSize(14);
+    return f;
+}
+
+}  // namespace
+
+TEST(Typeset, ASubscriptIsLoweredAndSmaller) {
+    const Box b = typeset::subscript(typeset::text("x", font()), typeset::text("i", smallFont()));
+    ASSERT_EQ(b.runs.size(), 2);
+    EXPECT_GT(b.runs[1].origin.y(), b.runs[0].origin.y());
+    EXPECT_NEAR(b.runs[1].origin.x(), width(b.runs[0]), 0.01);
+    EXPECT_GT(b.descent, QFontMetricsF(font()).descent());
+}
+
+TEST(Typeset, ARadicalsBarSpansItsContent) {
+    const Box b = typeset::radical(typeset::text("12", font()), font());
+    ASSERT_EQ(b.runs.size(), 1);
+    const typeset::Run& content = b.runs[0];
+    EXPECT_GT(content.origin.x(), 0);  // after the radical's tick
+    const auto bar = std::find_if(b.lines.begin(), b.lines.end(), [](const QLineF& l) { return l.y1() == l.y2(); });
+    ASSERT_NE(bar, b.lines.end());
+    EXPECT_LT(bar->y1(), top(content));
+    EXPECT_LE(bar->x1(), content.origin.x());
+    EXPECT_GE(bar->x2(), content.origin.x() + width(content));
+    EXPECT_GT(b.ascent, QFontMetricsF(font()).ascent());
+}
+
+TEST(Typeset, ARootsIndexSitsOverTheTick) {
+    const Box b = typeset::radical(typeset::text("32", font()), font(), typeset::text("5", smallFont()));
+    ASSERT_EQ(b.runs.size(), 2);
+    const typeset::Run& index = b.runs[0];
+    const typeset::Run& content = b.runs[1];
+    EXPECT_LT(index.origin.x() + width(index), content.origin.x());
+    EXPECT_LT(index.origin.y(), content.origin.y());
+}
+
+TEST(Typeset, ABigOperatorCentresItsLimits) {
+    const Box b = typeset::bigOperator("Σ", typeset::text("i=1", smallFont()), typeset::text("n", smallFont()), font());
+    ASSERT_EQ(b.runs.size(), 3);
+    const typeset::Run& symbol = b.runs[0];
+    const typeset::Run& under = b.runs[1];
+    const typeset::Run& over = b.runs[2];
+    EXPECT_NEAR(centre(under), centre(symbol), 0.6);
+    EXPECT_NEAR(centre(over), centre(symbol), 0.6);
+    EXPECT_GT(top(under), bottom(symbol) - 1);
+    EXPECT_LT(bottom(over), top(symbol) + 1);
+    EXPECT_GT(symbol.font.pixelSize(), font().pixelSize());  // a big Σ
 }
