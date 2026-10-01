@@ -147,12 +147,12 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(detailsToggle_, &QToolButton::toggled, details_, &QWidget::setVisible);
     connect(history_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) { expression_->setText(item->text()); });
     auto reevaluate = [this] {
-        updateExactAvailability();
+        updateKeys();
         if (!lastExpression_.isEmpty() && !last_.error) request(lastExpression_, false);
     };
     connect(type_, &QComboBox::currentIndexChanged, this, reevaluate);
     connect(angle_, &QComboBox::currentIndexChanged, this, reevaluate);
-    updateExactAvailability();
+    updateKeys();
 }
 
 MainWindow::~MainWindow() {
@@ -164,31 +164,78 @@ MainWindow::~MainWindow() {
 QWidget* MainWindow::buildKeypad() {
     auto* pad = new QWidget;
     pad->setObjectName("keypad");
-    auto* grid = new QGridLayout(pad);
-    int row = 0, column = 0;
-    for (const Key& key : keypad()) {
-        auto* button = new QPushButton(key.label, pad);
-        button->setObjectName("key:" + key.label);
-        grid->addWidget(button, row, column, 1, key.span);
-        column += key.span;
-        if (column >= keypadColumns) {
-            column = 0;
-            ++row;
-        }
-        connect(button, &QPushButton::clicked, this, [this, key] {
-            switch (key.action) {
-            case KeyAction::Insert: expression_->insert(key.insert); break;
-            case KeyAction::Clear: expression_->clear(); break;
-            case KeyAction::Backspace: expression_->backspace(); break;
-            case KeyAction::Evaluate: evaluate(); break;
-            case KeyAction::MemoryAdd: emit memoryAddRequested(); break;
-            case KeyAction::MemorySubtract: emit memorySubtractRequested(); break;
-            case KeyAction::MemoryClear: emit memoryClearRequested(); break;
+    auto* layout = new QVBoxLayout(pad);
+    auto* functions = new QGridLayout;  // six columns, and four around the cursor pad
+    auto* numbers = new QGridLayout;    // five columns, as on the calculator
+    layout->addLayout(functions);
+    layout->addSpacing(12);
+    layout->addLayout(numbers);
+    int functionRow = 0, numberRow = 0;
+    for (const QList<Key>& row : keypad()) {
+        const bool numberKeys = row.size() == 5;
+        for (int c = 0; c < row.size(); ++c) {
+            if (numberKeys) {
+                numbers->addWidget(buildKey(row[c]), numberRow, c);
+            } else {
+                const int column = row.size() == 4 && c >= 2 ? c + 2 : c;  // columns 2–3 hold the cursor pad
+                functions->addWidget(buildKey(row[c]), functionRow, column);
             }
-            expression_->setFocus();
-        });
+        }
+        if (numberKeys) ++numberRow;
+        else ++functionRow;
     }
+    for (int c = 0; c < 6; ++c) functions->setColumnStretch(c, 1);
+    for (int c = 0; c < 5; ++c) numbers->setColumnStretch(c, 1);
+    auto* cursor = new QWidget(pad);
+    auto* cross = new QGridLayout(cursor);
+    cross->setContentsMargins(0, 0, 0, 0);
+    const int places[][2] = {{0, 1}, {1, 0}, {1, 2}, {2, 1}};  // up, left, right, down
+    for (int i = 0; i < cursorPad().size(); ++i) cross->addWidget(buildKey(cursorPad()[i], false), places[i][0], places[i][1]);
+    functions->addWidget(cursor, 0, 2, 2, 2);
     return pad;
+}
+
+QWidget* MainWindow::buildKey(const Key& key, bool legends) {
+    auto* cell = new QWidget;
+    auto* layout = new QVBoxLayout(cell);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+    // SHIFT legends sit on the left and ALPHA legends on the right, so colour is never the only cue.
+    const bool dark = palette().color(QPalette::Window).lightness() < 128;
+    auto legend = [&](const QString& name, const Face& face, const char* light, const char* onDark) {
+        auto* l = new QLabel(translated(face.label), cell);
+        l->setObjectName(name + ":" + key.id);
+        QFont small = l->font();
+        small.setPointSizeF(small.pointSizeF() * 0.8);
+        l->setFont(small);
+        l->setStyleSheet(QStringLiteral("color:%1").arg(dark ? onDark : light));
+        return l;
+    };
+    if (legends) {
+        auto* legendRow = new QHBoxLayout;
+        legendRow->addWidget(legend("shift", key.shift, "#9a6700", "#e3b341"));
+        legendRow->addStretch();
+        legendRow->addWidget(legend("alpha", key.alpha, "#c62828", "#ff7b72"));
+        layout->addLayout(legendRow);
+    }
+
+    auto* button = new QPushButton(translated(key.main.label), cell);
+    button->setObjectName("key:" + key.id);
+    button->setMinimumWidth(32);  // below the style's default, so every column can be equally wide
+    layout->addWidget(button);
+    if (key.main.action == KeyAction::Shift || key.main.action == KeyAction::Alpha) {
+        button->setCheckable(true);
+        if (key.main.action == KeyAction::Shift) shift_ = button;
+        else alpha_ = button;
+        connect(button, &QPushButton::toggled, this, [this, button](bool on) {
+            QPushButton* other = button == shift_ ? alpha_ : shift_;
+            if (on) other->setChecked(false);  // SHIFT and ALPHA are never on together
+            updateKeys();
+        });
+    } else {
+        connect(button, &QPushButton::clicked, this, [this, key] { press(key); });
+    }
+    return cell;
 }
 
 QWidget* MainWindow::buildStatistics() {
@@ -261,14 +308,53 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
     if (history_->count() == 0 || history_->item(0)->text() != expression) history_->insertItem(0, expression);
 }
 
-void MainWindow::updateExactAvailability() {
+const Face& MainWindow::face(const Key& key) const {
+    return shift_->isChecked() ? key.shift : alpha_->isChecked() ? key.alpha : key.main;
+}
+
+// Like the calculator, SHIFT and ALPHA apply to the next key only.
+void MainWindow::press(const Key& key) {
+    const Face& f = face(key);
+    shift_->setChecked(false);
+    alpha_->setChecked(false);
+    switch (f.action) {
+    case KeyAction::Insert: expression_->insert(translated(f.insert)); break;
+    case KeyAction::Clear: expression_->clear(); break;
+    case KeyAction::Backspace: expression_->backspace(); break;
+    case KeyAction::Evaluate: evaluate(); break;
+    case KeyAction::MemoryAdd: emit memoryAddRequested(); break;
+    case KeyAction::MemorySubtract: emit memorySubtractRequested(); break;
+    case KeyAction::Left: expression_->cursorBackward(false); break;
+    case KeyAction::Right: expression_->cursorForward(false); break;
+    case KeyAction::Shift:
+    case KeyAction::Alpha:
+    case KeyAction::Menu:
+    case KeyAction::Config:
+    case KeyAction::Options:
+    case KeyAction::Up:
+    case KeyAction::Down:
+    case KeyAction::Unavailable: break;
+    }
+    expression_->setFocus();
+}
+
+// Enables the keys whose current face (plain, SHIFT or ALPHA) works in the selected type.
+void MainWindow::updateKeys() {
     const bool exact = static_cast<NumberType>(type_->currentIndex()) == NumberType::Exact;
-    for (const Key& key : keypad()) {
-        auto* button = findChild<QPushButton*>("key:" + key.label);
-        const bool available = !exact || availableInExact(key);
-        button->setEnabled(available);
-        button->setToolTip(available ? QString()
-                                     : tr("Exact arithmetic cannot represent %1: its result is irrational. "
-                                          "Switch to a floating type to compute it.").arg(key.label));
+    QList<Key> keys = cursorPad();
+    for (const QList<Key>& row : keypad()) keys += row;
+    for (const Key& key : keys) {
+        if (key.main.action == KeyAction::Shift || key.main.action == KeyAction::Alpha) continue;
+        auto* button = findChild<QPushButton*>("key:" + key.id);
+        const Face& f = face(key);
+        const bool on = available(f, exact);
+        button->setEnabled(on);
+        QString tip;
+        if (!on && f.action == KeyAction::Unavailable && !f.label.isEmpty())
+            tip = tr("%1 is not available in this app yet").arg(translated(f.label));
+        else if (!on && f.action != KeyAction::Unavailable)
+            tip = tr("Exact arithmetic cannot represent %1: its result is irrational. "
+                     "Switch to a floating type to compute it.").arg(translated(f.label));
+        button->setToolTip(tip);
     }
 }

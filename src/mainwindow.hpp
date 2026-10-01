@@ -15,6 +15,8 @@ class QPushButton;
 class QStackedWidget;
 class QToolButton;
 class Worker;
+struct Face;
+struct Key;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -34,11 +36,14 @@ signals:
 
 private:
     QWidget* buildKeypad();
+    QWidget* buildKey(const Key& key, bool legends = true);  // the cursor pad has no legends
     QWidget* buildStatistics();
     calculate_core::Options options() const;
     void request(const QString& expression, bool allowUncertain);
     void showResult(const QString& expression, const calculate_core::Result& result);
-    void updateExactAvailability();
+    const Face& face(const Key& key) const;
+    void press(const Key& key);
+    void updateKeys();
 
     QThread thread_;
     Worker* worker_ = nullptr;
@@ -64,4 +69,6 @@ private:
     QLabel* memory_ = nullptr;
     QListWidget* history_ = nullptr;
     QPlainTextEdit* statisticsValues_ = nullptr;
+    QPushButton* shift_ = nullptr;
+    QPushButton* alpha_ = nullptr;
 };
