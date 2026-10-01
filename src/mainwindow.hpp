@@ -9,6 +9,7 @@
 class DetailsCard;
 class Lcd;
 class QComboBox;
+class QDialog;
 class QFrame;
 class QLabel;
 class QListWidget;
@@ -73,6 +74,7 @@ private:
     QString lastExpression_;
 
     QListWidget* modes_ = nullptr;
+    QDialog* settings_ = nullptr;
     QStackedWidget* pages_ = nullptr;
     QScrollArea* keys_ = nullptr;
     bool keysSized_ = false;

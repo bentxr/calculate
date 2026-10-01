@@ -7,6 +7,7 @@
 
 #include <QAbstractItemView>
 #include <QComboBox>
+#include <QDialog>
 #include <QLabel>
 #include <QListWidget>
 #include <QMenu>
@@ -402,4 +403,37 @@ TEST(MainWindow, DirectKeysSitLeftOfTheCasioPadAtTheSameSize) {
     const QWidget* direct = child<QWidget>(window, "directKeys");
     const QWidget* keypad = child<QWidget>(window, "keypad");
     EXPECT_LT(direct->mapTo(&window, QPoint(direct->width(), 0)).x(), keypad->mapTo(&window, QPoint(0, 0)).x());
+}
+
+TEST(MainWindow, TheLeftPanelCollapsesToARail) {
+    MainWindow window;
+    window.resize(900, 700);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    auto* rail = child<QWidget>(window, "rail");
+    auto* toggle = child<QToolButton>(window, "panelToggle");
+    auto* modes = child<QListWidget>(window, "modes");
+    auto* settings = child<QToolButton>(window, "settingsButton");
+    EXPECT_TRUE(modes->isVisible());
+    const int wide = rail->width();
+    QTest::mouseClick(toggle, Qt::LeftButton);
+    QTest::qWait(50);
+    EXPECT_FALSE(modes->isVisible());
+    EXPECT_LT(rail->width(), wide / 2);
+    EXPECT_TRUE(toggle->isVisible());
+    EXPECT_TRUE(settings->isVisible());
+    EXPECT_GT(settings->y(), rail->height() / 2);  // ⚙ stays at the bottom
+    QTest::mouseClick(toggle, Qt::LeftButton);
+    QTest::qWait(50);
+    EXPECT_TRUE(modes->isVisible());
+}
+
+TEST(MainWindow, TheSettingsButtonOpensTheSettings) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    QTest::mouseClick(child<QToolButton>(window, "settingsButton"), Qt::LeftButton);
+    auto* dialog = child<QDialog>(window, "settings");
+    EXPECT_TRUE(dialog->isVisible());
+    dialog->close();
 }
