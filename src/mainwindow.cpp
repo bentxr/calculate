@@ -2,6 +2,7 @@
 
 #include "detailscard.hpp"
 #include "keypad.hpp"
+#include "keysizing.hpp"
 #include "lcd.hpp"
 #include "typechooser.hpp"
 #include "presenter.hpp"
@@ -16,9 +17,12 @@
 #include <QMenu>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QScreen>
+#include <QScrollArea>
 #include <QStackedWidget>
 #include <QToolButton>
 #include <QVBoxLayout>
+#include <QWindow>
 
 using namespace calculate_core;
 
@@ -101,11 +105,18 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
 
     pages_ = new QStackedWidget(central);
     pages_->setObjectName("pages");
-    auto* calculator = new QWidget(pages_);
-    auto* calculatorLayout = new QHBoxLayout(calculator);
-    calculatorLayout->addWidget(buildKeypad(), 3);
-    pages_->addWidget(calculator);
-    pages_->addWidget(buildStatistics());
+    // The keys keep one size (see sizeKeys): centred in a bigger window, scrolled in a smaller one.
+    keys_ = new QScrollArea(pages_);
+    keys_->setObjectName("keys");
+    keys_->setFrameShape(QFrame::NoFrame);
+    keys_->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
+    keys_->setWidget(buildKeypad());
+    pages_->addWidget(keys_);
+    auto* statistics = new QScrollArea(pages_);  // so neither page sets a minimum width for the window
+    statistics->setFrameShape(QFrame::NoFrame);
+    statistics->setWidgetResizable(true);
+    statistics->setWidget(buildStatistics());
+    pages_->addWidget(statistics);
     main->addWidget(pages_, 1);
     setCentralWidget(central);
     modes_->setCurrentRow(0);
@@ -172,8 +183,10 @@ QWidget* MainWindow::buildKeypad() {
     auto* layout = new QVBoxLayout(pad);
     auto* functions = new QGridLayout;  // six columns, and four around the cursor pad
     auto* numbers = new QGridLayout;    // five columns, as on the calculator
+    functions->setSpacing(keySpacing);
+    numbers->setSpacing(keySpacing);
     layout->addLayout(functions);
-    layout->addSpacing(12);
+    layout->addSpacing(keypadGap);
     layout->addLayout(numbers);
     int functionRow = 0, numberRow = 0;
     for (const QList<Key>& row : keypad()) {
@@ -189,9 +202,8 @@ QWidget* MainWindow::buildKeypad() {
         if (numberKeys) ++numberRow;
         else ++functionRow;
     }
-    for (int c = 0; c < 6; ++c) functions->setColumnStretch(c, 1);
-    for (int c = 0; c < 5; ++c) numbers->setColumnStretch(c, 1);
     auto* cursor = new QWidget(pad);
+    cursor->setObjectName("cursorPad");
     auto* cross = new QGridLayout(cursor);
     cross->setContentsMargins(0, 0, 0, 0);
     const int places[][2] = {{0, 1}, {1, 0}, {1, 2}, {2, 1}};  // up, left, right, down
@@ -214,6 +226,7 @@ QWidget* MainWindow::buildKey(const Key& key, bool legends) {
         small.setPointSizeF(small.pointSizeF() * 0.8);
         l->setFont(small);
         l->setStyleSheet(QStringLiteral("color:%1").arg(dark ? onDark : light));
+        l->setMinimumWidth(1);  // a long legend may shrink, but never widens its key
         return l;
     };
     if (legends) {
@@ -243,6 +256,49 @@ QWidget* MainWindow::buildKey(const Key& key, bool legends) {
         connect(button, &QPushButton::clicked, this, [this, key] { press(key); });
     }
     return cell;
+}
+
+// Gives every key the size keySize() derives from the window's screen; called when the window is
+// first shown and whenever it moves to another screen. What the window reserves for everything but
+// the keys is measured from its own layouts, so it holds for any style, font and language.
+void MainWindow::sizeKeys() {
+    if (!screen()) return;
+    QWidget* pad = keys_->widget();
+    int labels = 0;  // the widest main label, so no key is too narrow for its own name
+    for (const QList<Key>& row : keypad())
+        for (const Key& key : row) labels = qMax(labels, fontMetrics().horizontalAdvance(translated(key.main.label)));
+    const QSize minimum(labels + 16, fontMetrics().height() + 10);
+
+    const QMargins outer = centralWidget()->layout()->contentsMargins();
+    const QMargins inner = pad->layout()->contentsMargins();
+    const int scrollBar = style()->pixelMetric(QStyle::PM_ScrollBarExtent);
+    const int legend = findChild<QLabel*>("shift:sin")->sizeHint().height();
+    const int rows = 9;
+    const QSize reserved(outer.left() + outer.right() + centralWidget()->layout()->spacing() + modes_->width()
+                             + inner.left() + inner.right() + 2 * keys_->frameWidth() + scrollBar,
+                         outer.top() + outer.bottom() + lcd_->minimumSizeHint().height() + 2 * keySpacing
+                             + inner.top() + inner.bottom() + keypadGap + rows * legend
+                             + style()->pixelMetric(QStyle::PM_TitleBarHeight));
+    const QSize size = keySize(screen()->availableGeometry().size(), reserved, QSize(6, rows), keySpacing, minimum);
+    const QSize numberSize((6 * size.width() + keySpacing) / 5, size.height());  // five span six
+
+    for (const QList<Key>& row : keypad())
+        for (const Key& key : row) {
+            auto* button = findChild<QPushButton*>("key:" + key.id);
+            button->setFixedSize(row.size() == 5 ? numberSize : size);
+            button->parentWidget()->setFixedWidth(button->width());  // the key's cell, legends included
+        }
+    findChild<QWidget*>("cursorPad")->setFixedWidth(2 * size.width() + keySpacing);
+    pad->layout()->activate();
+    pad->adjustSize();
+}
+
+void MainWindow::showEvent(QShowEvent* event) {
+    QMainWindow::showEvent(event);
+    if (keysSized_) return;
+    keysSized_ = true;
+    sizeKeys();
+    connect(windowHandle(), &QWindow::screenChanged, this, &MainWindow::sizeKeys);
 }
 
 // MENU picks the mode, SHIFT MENU (CONFIG) the angle unit, and OPTN offers optionsMenu().

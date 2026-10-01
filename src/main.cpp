@@ -2,6 +2,7 @@
 
 #include <QApplication>
 #include <QLocale>
+#include <QScreen>
 #include <QTranslator>
 
 int main(int argc, char** argv) {
@@ -9,7 +10,8 @@ int main(int argc, char** argv) {
     QTranslator translator;
     if (translator.load(QLocale(), "calculate", "_", ":/i18n")) app.installTranslator(&translator);
     MainWindow window;
-    window.resize(1000, 700);
+    const QRect screen = window.screen()->availableGeometry();
+    window.resize(screen.width() / 2, screen.height());  // the size the keys are designed for
     window.show();
     return app.exec();
 }

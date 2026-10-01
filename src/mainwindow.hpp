@@ -15,6 +15,7 @@ class QListWidget;
 class QMenu;
 class QPlainTextEdit;
 class QPushButton;
+class QScrollArea;
 class QStackedWidget;
 class QToolButton;
 class TypeChooser;
@@ -31,6 +32,9 @@ public:
 
 public slots:
     void evaluate();
+
+protected:
+    void showEvent(QShowEvent* event) override;
 
 signals:
     void evaluationRequested(const QString& expression, const calculate_core::Options& options);
@@ -53,6 +57,10 @@ private:
     void replay(int index);
     bool exactType() const;
     void updateKeys();
+    void sizeKeys();
+
+    static constexpr int keySpacing = 6;
+    static constexpr int keypadGap = 12;  // between the function keys and the number keys
 
     QThread thread_;
     Worker* worker_ = nullptr;
@@ -64,6 +72,8 @@ private:
 
     QListWidget* modes_ = nullptr;
     QStackedWidget* pages_ = nullptr;
+    QScrollArea* keys_ = nullptr;
+    bool keysSized_ = false;
     TypeChooser* type_ = nullptr;
     QComboBox* angle_ = nullptr;
     Lcd* lcd_ = nullptr;
