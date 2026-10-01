@@ -34,8 +34,12 @@ QRect popupBounds(const QWidget* widget) {
 PopupBounds::PopupBounds(QWidget* window) : QObject(window), window_(window) {}
 
 bool PopupBounds::eventFilter(QObject* watched, QEvent* event) {
-    if (event->type() != QEvent::Show || !watched->isWidgetType()) return false;
+    // On showing, and whenever one that shows is placed again (the browser places a menu's list again
+    // after showing it). Putting it back inside causes one more Move or Resize, which then changes nothing.
+    const QEvent::Type when = event->type();
+    if (!watched->isWidgetType() || (when != QEvent::Show && when != QEvent::Move && when != QEvent::Resize)) return false;
     auto* popup = static_cast<QWidget*>(watched);
+    if (when != QEvent::Show && !popup->isVisible()) return false;
     const Qt::WindowType type = popup->windowType();
     if (type != Qt::Popup && type != Qt::ToolTip && type != Qt::Dialog) return false;
     const QRect bounds = window_->geometry();
