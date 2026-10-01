@@ -5,8 +5,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(Qt6 6.11 REQUIRED COMPONENTS Widgets)
-qt_standard_project_setup()
+find_package(Qt6 6.11 REQUIRED COMPONENTS Widgets LinguistTools)
+qt_standard_project_setup(I18N_TRANSLATED_LANGUAGES es_ES)
 
 include(FetchContent)
 FetchContent_Declare(calculate-core
@@ -27,6 +27,7 @@ qt_add_library(calculate-ui STATIC
 target_include_directories(calculate-ui PUBLIC ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(calculate-ui PUBLIC Qt6::Widgets calculate-core)
 target_compile_options(calculate-ui PRIVATE -Wall -Wextra -Wpedantic -Werror)
+qt_add_translations(TARGETS calculate-ui TS_FILE_DIR i18n NO_GENERATE_PLURALS_TS_FILE)
 
 qt_add_executable(calculate src/main.cpp)
 target_link_libraries(calculate PRIVATE calculate-ui)

@@ -11,9 +11,11 @@ add_executable(calculate-tests
     test_keypad.cpp
     test_mainwindow.cpp
     test_presenter.cpp
+    test_translation.cpp
     test_worker.cpp
 )
 target_link_libraries(calculate-tests PRIVATE calculate-ui Qt6::Test GTest::gtest)
+target_compile_definitions(calculate-tests PRIVATE CALCULATE_TS_FILE="${PROJECT_SOURCE_DIR}/i18n/calculate_es_ES.ts")
 
 include(GoogleTest)
 gtest_discover_tests(calculate-tests DISCOVERY_MODE PRE_TEST PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
