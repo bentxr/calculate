@@ -102,6 +102,6 @@ TEST(Keypad, DirectKeysGroupTheOtherFunctions) {
     }
     EXPECT_EQ(titles, QStringList({"Trigonometry", "Hyperbolic", "Powers and roots", "Numbers", "Constants and memory"}));
     EXPECT_EQ(all, QStringList({"asin", "acos", "atan", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh", "x³", "∛", "ⁿ√",
-                                "10ˣ", "eˣ", "log", "x!", "Abs", "%", "mod", "nPr", "nCr", "gcd", "lcm", ",", "π", "e",
+                                "10ˣ", "eˣ", "log", "x!", "abs", "%", "mod", "nPr", "nCr", "gcd", "lcm", ",", "π", "e",
                                 "M−", "M", "MC"}));
 }

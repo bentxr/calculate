@@ -165,52 +165,52 @@
     <message>
         <location filename="../src/keypad.cpp" line="52"/>
         <source>asin</source>
-        <translation>Arcsen</translation>
+        <translation>arcsen</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="52"/>
         <source>asin(</source>
-        <translation>Arcsen(</translation>
+        <translation>arcsen(</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="53"/>
         <source>acos</source>
-        <translation>Arccos</translation>
+        <translation>arccos</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="53"/>
         <source>acos(</source>
-        <translation>Arccos(</translation>
+        <translation>arccos(</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="54"/>
         <source>atan</source>
-        <translation>Arctan</translation>
+        <translation>arctan</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="54"/>
         <source>atan(</source>
-        <translation>Arctan(</translation>
+        <translation>arctan(</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="68"/>
         <source>gcd</source>
-        <translation>MCD</translation>
+        <translation>mcd</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="68"/>
         <source>gcd(</source>
-        <translation>MCD(</translation>
+        <translation>mcd(</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="69"/>
         <source>lcm</source>
-        <translation>MCM</translation>
+        <translation>mcm</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="69"/>
         <source>lcm(</source>
-        <translation>MCM(</translation>
+        <translation>mcm(</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="56"/>
@@ -225,32 +225,32 @@
     <message>
         <location filename="../src/keypad.cpp" line="59"/>
         <source>asinh</source>
-        <translation>Arcsenh</translation>
+        <translation>arcsenh</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="59"/>
         <source>asinh(</source>
-        <translation>Arcsenh(</translation>
+        <translation>arcsenh(</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="60"/>
         <source>acosh</source>
-        <translation>Arccosh</translation>
+        <translation>arccosh</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="60"/>
         <source>acosh(</source>
-        <translation>Arccosh(</translation>
+        <translation>arccosh(</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="61"/>
         <source>atanh</source>
-        <translation>Arctanh</translation>
+        <translation>arctanh</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="61"/>
         <source>atanh(</source>
-        <translation>Arctanh(</translation>
+        <translation>arctanh(</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="51"/>

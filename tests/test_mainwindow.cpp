@@ -398,8 +398,8 @@ TEST(MainWindow, SpanishRelabelsEverythingWithoutARestart) {
     language->setCurrentIndex(2);
     QCoreApplication::processEvents();  // Qt posts the language change to every window
     EXPECT_EQ(child<QPushButton>(window, "key:sin")->text(), "sen");
-    EXPECT_EQ(child<QPushButton>(window, "direct:asin")->text(), "Arcsen");
-    EXPECT_EQ(child<QPushButton>(window, "direct:gcd")->text(), "MCD");
+    EXPECT_EQ(child<QPushButton>(window, "direct:asin")->text(), "arcsen");
+    EXPECT_EQ(child<QPushButton>(window, "direct:gcd")->text(), "mcd");
     EXPECT_EQ(child<QListWidget>(window, "modes")->item(0)->text(), "Calculadora");
     EXPECT_EQ(child<QComboBox>(window, "type")->itemText(1), "Doble");
     EXPECT_EQ(child<QToolButton>(window, "detailsButton")->text(), "Detalles");
