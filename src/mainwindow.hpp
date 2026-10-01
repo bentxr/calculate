@@ -54,6 +54,7 @@ private:
     QThread thread_;
     Worker* worker_ = nullptr;
     QTimer busyTimer_;
+    int pending_ = 0;  // requests the worker hasn't answered yet
     std::vector<calculate_core::TypeInfo> types_;
     calculate_core::Result last_;
     QString lastExpression_;

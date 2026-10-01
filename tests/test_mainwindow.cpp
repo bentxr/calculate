@@ -231,3 +231,19 @@ TEST(MainWindow, OptionsHoldTheHyperbolicFunctionsModAndMemoryClear) {
     action(options, "MC")->trigger();
     EXPECT_TRUE(QTest::qWaitFor([&] { return memory->text().isEmpty(); }, 10000));
 }
+
+TEST(MainWindow, CancelStaysOfferedWhileALaterRequestRuns) {
+    MainWindow window;
+    child<QComboBox>(window, "type")->setCurrentIndex(3);  // Exact
+    auto* input = child<QLineEdit>(window, "expression");
+    input->setText("1 + 1");
+    QTest::keyClick(input, Qt::Key_Return);
+    input->setText("200000!");
+    QTest::keyClick(input, Qt::Key_Return);
+    auto* cancel = child<QPushButton>(window, "cancel");
+    ASSERT_TRUE(QTest::qWaitFor([&] { return cancel->isVisibleTo(&window); }, 5000));
+    QTest::mouseClick(cancel, Qt::LeftButton);
+    auto* message = child<QLabel>(window, "message");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return message->text() == "Cancelled"; }, 10000)) << message->text().toStdString();
+    EXPECT_FALSE(cancel->isVisibleTo(&window));
+}
