@@ -5,12 +5,14 @@
 #include "worker.hpp"
 
 #include <QComboBox>
+#include <QCursor>
 #include <QFontDatabase>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QMenu>
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QStackedWidget>
@@ -152,6 +154,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     };
     connect(type_, &QComboBox::currentIndexChanged, this, reevaluate);
     connect(angle_, &QComboBox::currentIndexChanged, this, reevaluate);
+    buildMenus();
     updateKeys();
 }
 
@@ -238,6 +241,26 @@ QWidget* MainWindow::buildKey(const Key& key, bool legends) {
     return cell;
 }
 
+// MENU picks the mode, SHIFT MENU (CONFIG) the angle unit, and OPTN offers optionsMenu().
+void MainWindow::buildMenus() {
+    modeMenu_ = new QMenu(this);
+    modeMenu_->setObjectName("menu");
+    for (int i = 0; i < modes_->count(); ++i)
+        connect(modeMenu_->addAction(modes_->item(i)->text()), &QAction::triggered, this, [this, i] { modes_->setCurrentRow(i); });
+    configMenu_ = new QMenu(this);
+    configMenu_->setObjectName("config");
+    for (int i = 0; i < angle_->count(); ++i)
+        connect(configMenu_->addAction(angle_->itemText(i)), &QAction::triggered, this, [this, i] { angle_->setCurrentIndex(i); });
+    optionsMenu_ = new QMenu(this);
+    optionsMenu_->setObjectName("options");
+    for (const Face& f : optionsMenu())
+        connect(optionsMenu_->addAction(translated(f.label)), &QAction::triggered, this, [this, f] { apply(f); });
+    connect(optionsMenu_, &QMenu::aboutToShow, this, [this] {
+        const QList<QAction*> actions = optionsMenu_->actions();
+        for (int i = 0; i < actions.size(); ++i) actions[i]->setEnabled(available(optionsMenu()[i], exactType()));
+    });
+}
+
 QWidget* MainWindow::buildStatistics() {
     auto* page = new QWidget;
     auto* layout = new QVBoxLayout(page);
@@ -306,6 +329,7 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
         table += "<tr><td>" + name.toHtmlEscaped() + "&nbsp;&nbsp;</td><td>" + v.toHtmlEscaped() + "</td></tr>";
     details_->setText(table + "</table>");
     if (history_->count() == 0 || history_->item(0)->text() != expression) history_->insertItem(0, expression);
+    historyIndex_ = -1;
 }
 
 const Face& MainWindow::face(const Key& key) const {
@@ -317,6 +341,10 @@ void MainWindow::press(const Key& key) {
     const Face& f = face(key);
     shift_->setChecked(false);
     alpha_->setChecked(false);
+    apply(f);
+}
+
+void MainWindow::apply(const Face& f) {
     switch (f.action) {
     case KeyAction::Insert: expression_->insert(translated(f.insert)); break;
     case KeyAction::Clear: expression_->clear(); break;
@@ -324,23 +352,35 @@ void MainWindow::press(const Key& key) {
     case KeyAction::Evaluate: evaluate(); break;
     case KeyAction::MemoryAdd: emit memoryAddRequested(); break;
     case KeyAction::MemorySubtract: emit memorySubtractRequested(); break;
+    case KeyAction::MemoryClear: emit memoryClearRequested(); break;
+    case KeyAction::Menu: popUp(modeMenu_); break;
+    case KeyAction::Config: popUp(configMenu_); break;
+    case KeyAction::Options: popUp(optionsMenu_); break;
     case KeyAction::Left: expression_->cursorBackward(false); break;
     case KeyAction::Right: expression_->cursorForward(false); break;
+    case KeyAction::Up: replay(historyIndex_ + 1); break;
+    case KeyAction::Down: replay(historyIndex_ - 1); break;
     case KeyAction::Shift:
     case KeyAction::Alpha:
-    case KeyAction::Menu:
-    case KeyAction::Config:
-    case KeyAction::Options:
-    case KeyAction::Up:
-    case KeyAction::Down:
     case KeyAction::Unavailable: break;
     }
     expression_->setFocus();
 }
 
+void MainWindow::popUp(QMenu* menu) { menu->popup(QCursor::pos()); }
+
+// ▲ and ▼ step through the history, newest first, as the calculator's replay does.
+void MainWindow::replay(int index) {
+    if (index < 0 || index >= history_->count()) return;
+    historyIndex_ = index;
+    expression_->setText(history_->item(index)->text());
+}
+
+bool MainWindow::exactType() const { return static_cast<NumberType>(type_->currentIndex()) == NumberType::Exact; }
+
 // Enables the keys whose current face (plain, SHIFT or ALPHA) works in the selected type.
 void MainWindow::updateKeys() {
-    const bool exact = static_cast<NumberType>(type_->currentIndex()) == NumberType::Exact;
+    const bool exact = exactType();
     QList<Key> keys = cursorPad();
     for (const QList<Key>& row : keypad()) keys += row;
     for (const Key& key : keys) {

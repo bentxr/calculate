@@ -10,6 +10,7 @@ class QComboBox;
 class QLabel;
 class QLineEdit;
 class QListWidget;
+class QMenu;
 class QPlainTextEdit;
 class QPushButton;
 class QStackedWidget;
@@ -38,11 +39,16 @@ private:
     QWidget* buildKeypad();
     QWidget* buildKey(const Key& key, bool legends = true);  // the cursor pad has no legends
     QWidget* buildStatistics();
+    void buildMenus();
     calculate_core::Options options() const;
     void request(const QString& expression, bool allowUncertain);
     void showResult(const QString& expression, const calculate_core::Result& result);
     const Face& face(const Key& key) const;
     void press(const Key& key);
+    void apply(const Face& face);
+    void popUp(QMenu* menu);
+    void replay(int index);
+    bool exactType() const;
     void updateKeys();
 
     QThread thread_;
@@ -71,4 +77,8 @@ private:
     QPlainTextEdit* statisticsValues_ = nullptr;
     QPushButton* shift_ = nullptr;
     QPushButton* alpha_ = nullptr;
+    QMenu* modeMenu_ = nullptr;
+    QMenu* configMenu_ = nullptr;
+    QMenu* optionsMenu_ = nullptr;
+    int historyIndex_ = -1;  // the history row ▲ and ▼ last showed
 };
