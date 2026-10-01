@@ -16,4 +16,8 @@ public:
     calculate_core::NumberType currentType() const;
     void setCurrentType(calculate_core::NumberType type);
     void retranslate();  // sets every text in the current language
+    void showPopup() override;
+
+private:
+    int rowsWidth_ = 0;  // what the widest row needs
 };
