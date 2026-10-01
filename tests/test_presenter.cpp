@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <QStringList>
+
 using namespace calculate_core;
 
 namespace {
@@ -59,14 +61,45 @@ TEST(Presenter, ConditionVerdicts) {
     EXPECT_EQ(view::verdict("5e-1"), "well-conditioned");
 }
 
-TEST(Presenter, TheDetailsPanel) {
-    const auto rows = view::details(evaluated("0.1 + 0.2"));
-    ASSERT_EQ(rows.size(), 8);
-    EXPECT_EQ(rows[0], qMakePair(QString("Guaranteed bound"), QString("4.4e-17")));
-    EXPECT_EQ(rows[1], qMakePair(QString("Measured error"), QString("4.4e-17")));
-    EXPECT_EQ(rows[5], qMakePair(QString("Condition number κ"), QString("1e+0 · well-conditioned")));
-    EXPECT_EQ(rows[6], qMakePair(QString("Trusted digits"), QString("15 by the bound, 15 by the measurement")));
-    EXPECT_EQ(rows[7], qMakePair(QString("Evaluated"), QString("0.1 + 0.2")));
+TEST(Presenter, TheDetailsCardHoldsEveryFigure) {
+    const QList<view::DetailRow> rows = view::details(evaluated("0.1 + 0.2"), typeInfo(NumberType::Double));
+    QStringList keys;
+    for (const view::DetailRow& row : rows) keys << row.key;
+    EXPECT_EQ(keys, QStringList({"bound", "measured", "trusted", "condition", "input", "rounding", "library",
+                                 "operations", "type", "evaluated"}));
+    EXPECT_EQ(rows[0].label, "Guaranteed bound");
+    EXPECT_EQ(rows[0].value, "4.4e-17");
+    EXPECT_EQ(rows[1].value, "4.4e-17");
+    EXPECT_EQ(rows[2].value, "15 by the bound, 15 by the measurement");
+    EXPECT_EQ(rows[3].value, "1e+0 · well-conditioned");
+    EXPECT_EQ(rows[4].value, "1.7e-17");
+    EXPECT_EQ(rows[5].value, "2.8e-17");
+    EXPECT_EQ(rows[6].value, "0");
+    EXPECT_EQ(rows[7].value, "1");
+    EXPECT_EQ(rows[8].value, "double, 53-bit significand");
+    EXPECT_EQ(rows[9].value, "0.1 + 0.2");
+}
+
+TEST(Presenter, ExactAndIncompleteResultsSaySo) {
+    const QList<view::DetailRow> exact = view::details(evaluated("1/3", NumberType::Exact), typeInfo(NumberType::Exact));
+    ASSERT_EQ(exact.size(), 3);
+    EXPECT_EQ(exact[0].key, "exact");
+    EXPECT_EQ(exact[0].value, "exact · no rounding error");
+    EXPECT_EQ(exact[1].value, "cpp_rational, exact fractions");
+    Options allow;
+    allow.allowUncertainDiscreteArguments = true;
+    const QList<view::DetailRow> rows = view::details(evaluate("(0.1*30)!", allow), typeInfo(NumberType::Double));
+    ASSERT_GE(rows.size(), 2);
+    EXPECT_EQ(rows[rows.size() - 2].key, "incomplete");
+    EXPECT_EQ(rows[rows.size() - 2].value, "an uncertain argument was accepted");
+    EXPECT_TRUE(view::details(evaluated("1/0"), typeInfo(NumberType::Double)).isEmpty());
+}
+
+TEST(Presenter, EveryDetailIsExplained) {
+    for (const char* key : {"bound", "measured", "trusted", "condition", "input", "rounding", "library", "operations",
+                            "type", "evaluated", "exact", "incomplete"})
+        EXPECT_FALSE(view::explanation(key).isEmpty()) << key;
+    EXPECT_TRUE(view::explanation("nonsense").isEmpty());
 }
 
 TEST(Presenter, ErrorsNameWhatWentWrong) {
@@ -90,4 +123,50 @@ TEST(Presenter, ErrorsNameWhatWentWrong) {
 TEST(Presenter, StatisticsExpressions) {
     EXPECT_EQ(view::statisticsExpression("mean", "1\n2, 3;  4\n\n"), "mean(1, 2, 3, 4)");
     EXPECT_EQ(view::statisticsExpression("stdev", "  \n "), "");
+}
+
+TEST(Presenter, ValuePartsSeparateTrustedDigitsNoiseAndExponent) {
+    view::ValueParts p = view::valueParts(evaluated("0.1 + 0.2"));
+    EXPECT_EQ(p.trusted, "0.300000000000000");
+    EXPECT_EQ(p.noise, "0444089209850062616169452667236328125");
+    EXPECT_EQ(p.exponent, "");
+    p = view::valueParts(evaluated("-1e30"));
+    EXPECT_EQ(p.trusted, "−1.000000000000000");
+    EXPECT_EQ(p.noise, "019884624838656");
+    EXPECT_EQ(p.exponent, "30");
+    p = view::valueParts(evaluated("1e-30"));
+    EXPECT_EQ(p.trusted, "1.000000000000000");
+    EXPECT_EQ(p.exponent, "−30");
+    p = view::valueParts(evaluated("2+2"));
+    EXPECT_EQ(p.trusted, "4");
+    EXPECT_EQ(p.noise, "");
+}
+
+TEST(Presenter, FractionPartsStackTheFractionOverItsDecimal) {
+    view::FractionParts f = view::fractionParts(evaluated("1/3", NumberType::Exact));
+    EXPECT_EQ(f.sign, "");
+    EXPECT_EQ(f.numerator, "1");
+    EXPECT_EQ(f.denominator, "3");
+    EXPECT_EQ(f.decimal, "0.");
+    EXPECT_EQ(f.recurring, "3");
+    f = view::fractionParts(evaluated("-7/4", NumberType::Exact));
+    EXPECT_EQ(f.sign, "−");
+    EXPECT_EQ(f.numerator, "7");
+    EXPECT_EQ(f.decimal, "1.75");
+    EXPECT_EQ(f.recurring, "");
+    f = view::fractionParts(evaluated("1/6", NumberType::Exact));
+    EXPECT_EQ(f.decimal, "0.1");
+    EXPECT_EQ(f.recurring, "6");
+    f = view::fractionParts(evaluated("6", NumberType::Exact));
+    EXPECT_EQ(f.denominator, "1");
+    EXPECT_EQ(f.decimal, "");  // a whole number needs no decimal
+    f = view::fractionParts(evaluated("1/97", NumberType::Exact));
+    EXPECT_EQ(f.decimal, "");  // its period is too long to show
+}
+
+TEST(Presenter, ShortTypeNamesForTheCompactSelector) {
+    QStringList names;
+    for (const TypeInfo& t : numberTypes()) names << view::shortTypeName(t);
+    EXPECT_EQ(names, QStringList({"Single", "Double", "Extended", "Exact", "Quadruple", "Octuple", "Hexadecuple"}));
+    EXPECT_TRUE(view::typeLabel(typeInfo(NumberType::Binary512)).startsWith("Hexadecuple · binary512"));
 }

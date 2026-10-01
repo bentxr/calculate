@@ -328,8 +328,8 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
     errorLine_->setText(view::errorLine(result));
     whyLine_->setText(view::whyLine(result, types_[static_cast<std::size_t>(result.type)]));
     QString table = "<table>";
-    for (const auto& [name, v] : view::details(result))
-        table += "<tr><td>" + name.toHtmlEscaped() + "&nbsp;&nbsp;</td><td>" + v.toHtmlEscaped() + "</td></tr>";
+    for (const view::DetailRow& row : view::details(result, types_[static_cast<std::size_t>(result.type)]))
+        table += "<tr><td>" + row.label.toHtmlEscaped() + "&nbsp;&nbsp;</td><td>" + row.value.toHtmlEscaped() + "</td></tr>";
     details_->setText(table + "</table>");
     if (history_->count() == 0 || history_->item(0)->text() != expression) history_->insertItem(0, expression);
     historyIndex_ = -1;

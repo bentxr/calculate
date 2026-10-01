@@ -12,21 +12,17 @@ namespace {
 
 QString fromStd(const std::string& s) { return QString::fromStdString(s); }
 
-// Trusted digits, noise digits and the exponent suffix, laid out like the CLI does.
-struct Parts {
-    QString trusted;
-    QString noise;
-    QString suffix;
-};
+QString minus() { return QString(QChar(0x2212)); }
 
-Parts split(const Digits& value, int trustedDigits) {
+// Laid out like the CLI does: positional for −7 <= exponent < 21, d.ddd × 10^exponent otherwise.
+ValueParts split(const Digits& value, int trustedDigits) {
     const QString sig = fromStd(value.digits);
     const int n = static_cast<int>(sig.size());
     const long long e = value.exponent10;
     const int t = qMin(trustedDigits, n);
-    Parts p;
+    ValueParts p;
     QString* out = &p.trusted;
-    if (value.negative) p.trusted += QChar(0x2212);
+    if (value.negative) p.trusted += minus();
     auto digit = [&](int i) {
         if (i == t) out = &p.noise;
         *out += sig[i];
@@ -51,13 +47,13 @@ Parts split(const Digits& value, int trustedDigits) {
             *out += QChar('.');
             for (int i = 1; i < n; ++i) digit(i);
         }
-        p.suffix = QStringLiteral(" × 10<sup>%1</sup>").arg(e < 0 ? QString(QChar(0x2212)) + QString::number(-e) : QString::number(e));
+        p.exponent = e < 0 ? minus() + QString::number(-e) : QString::number(e);
     }
     return p;
 }
 
 QString fractionText(const Fraction& f) {
-    const QString sign = f.negative ? QString(QChar(0x2212)) : QString();
+    const QString sign = f.negative ? minus() : QString();
     if (f.denominator == "1") return sign + fromStd(f.numerator);
     QString s = sign + fromStd(f.numerator) + "/" + fromStd(f.denominator);
     if (f.hasDecimal) {
@@ -95,6 +91,7 @@ QString translatedLabel(const std::string& label) {
     if (label == "Exact") return QCoreApplication::translate("view", "Exact");
     if (label == "Quadruple") return QCoreApplication::translate("view", "Quadruple");
     if (label == "Octuple") return QCoreApplication::translate("view", "Octuple");
+    if (label == "Binary512") return QCoreApplication::translate("view", "Hexadecuple");  // 16 × single
     return fromStd(label);
 }
 
@@ -109,12 +106,34 @@ QString typeLabel(const TypeInfo& t) {
     return s;
 }
 
+QString shortTypeName(const TypeInfo& t) { return translatedLabel(t.label); }
+
+ValueParts valueParts(const Result& r) {
+    if (r.error || r.exact) return {};
+    return split(r.value, r.trustedDigits);
+}
+
+FractionParts fractionParts(const Result& r) {
+    if (!r.exact) return {};
+    const Fraction& f = *r.exact;
+    FractionParts p;
+    if (f.negative) p.sign = minus();
+    p.numerator = fromStd(f.numerator);
+    p.denominator = fromStd(f.denominator);
+    if (f.hasDecimal && f.denominator != "1") {
+        p.decimal = fromStd(f.integerPart) + "." + fromStd(f.fractionDigits);
+        p.recurring = fromStd(f.repeatingDigits);
+    }
+    return p;
+}
+
 QString valueHtml(const Result& r, const QString& noiseColor) {
     if (r.error) return {};
     if (r.exact) return fractionText(*r.exact).toHtmlEscaped();
-    const Parts p = split(r.value, r.trustedDigits);
-    if (p.noise.isEmpty()) return p.trusted + p.suffix;
-    return p.trusted + QStringLiteral("<span style=\"color:%1\">|%2</span>").arg(noiseColor, p.noise) + p.suffix;
+    const ValueParts p = valueParts(r);
+    const QString suffix = p.exponent.isEmpty() ? QString() : QStringLiteral(" × 10<sup>%1</sup>").arg(p.exponent);
+    if (p.noise.isEmpty()) return p.trusted + suffix;
+    return p.trusted + QStringLiteral("<span style=\"color:%1\">|%2</span>").arg(noiseColor, p.noise) + suffix;
 }
 
 QString errorLine(const Result& r) {
@@ -141,20 +160,71 @@ QString verdict(const QString& conditionNumber) {
     return QCoreApplication::translate("view", "ill-conditioned: no algorithm can do better in this type");
 }
 
-QList<QPair<QString, QString>> details(const Result& r) {
+QList<DetailRow> details(const Result& r, const TypeInfo& t) {
     if (r.error) return {};
+    const DetailRow evaluated{"evaluated", QCoreApplication::translate("view", "Evaluated"), fromStd(r.expression)};
+    if (r.exact)
+        return {{"exact", QCoreApplication::translate("view", "Error"), QCoreApplication::translate("view", "exact · no rounding error")},
+                {"type", QCoreApplication::translate("view", "Number type"),
+                 QCoreApplication::translate("view", "%1, exact fractions").arg(fromStd(t.cppName))},
+                evaluated};
     QString measured = r.measuredAvailable ? fromStd(r.measured) : QCoreApplication::translate("view", "unavailable");
     if (r.measuredAvailable && !r.measurementReliable) measured += QStringLiteral(" (") + QCoreApplication::translate("view", "unreliable") + QStringLiteral(")");
-    return {
-        {QCoreApplication::translate("view", "Guaranteed bound"), fromStd(r.bound)},
-        {QCoreApplication::translate("view", "Measured error"), measured},
-        {QCoreApplication::translate("view", "Input error"), fromStd(r.inputError)},
-        {QCoreApplication::translate("view", "Rounding error"), fromStd(r.roundingError)},
-        {QCoreApplication::translate("view", "Library error"), fromStd(r.libraryError)},
-        {QCoreApplication::translate("view", "Condition number κ"), fromStd(r.conditionNumber) + QStringLiteral(" · ") + verdict(fromStd(r.conditionNumber))},
-        {QCoreApplication::translate("view", "Trusted digits"), QCoreApplication::translate("view", "%1 by the bound, %2 by the measurement").arg(r.trustedDigits).arg(r.trustedDigitsMeasured)},
-        {QCoreApplication::translate("view", "Evaluated"), fromStd(r.expression)},
+    QList<DetailRow> rows{
+        {"bound", QCoreApplication::translate("view", "Guaranteed bound"), fromStd(r.bound)},
+        {"measured", QCoreApplication::translate("view", "Measured error"), measured},
+        {"trusted", QCoreApplication::translate("view", "Trusted digits"),
+         QCoreApplication::translate("view", "%1 by the bound, %2 by the measurement").arg(r.trustedDigits).arg(r.trustedDigitsMeasured)},
+        {"condition", QCoreApplication::translate("view", "Condition number κ"), fromStd(r.conditionNumber) + QStringLiteral(" · ") + verdict(fromStd(r.conditionNumber))},
+        {"input", QCoreApplication::translate("view", "Input error"), fromStd(r.inputError)},
+        {"rounding", QCoreApplication::translate("view", "Rounding error"), fromStd(r.roundingError)},
+        {"library", QCoreApplication::translate("view", "Library error"), fromStd(r.libraryError)},
+        {"operations", QCoreApplication::translate("view", "Rounded operations"), QString::number(r.roundingOperations)},
+        {"type", QCoreApplication::translate("view", "Number type"),
+         QCoreApplication::translate("view", "%1, %2-bit significand").arg(fromStd(t.cppName)).arg(t.precisionBits)},
     };
+    if (!r.boundComplete)
+        rows.append({"incomplete", QCoreApplication::translate("view", "Incomplete"),
+                     QCoreApplication::translate("view", "an uncertain argument was accepted")});
+    rows.append(evaluated);
+    return rows;
+}
+
+QString explanation(const QString& key) {
+    if (key == "bound")
+        return QCoreApplication::translate("view", "A proven upper limit on how far the shown value can be from the exact result "
+                                                   "(to first order: it leaves out terms far smaller than itself).");
+    if (key == "measured")
+        return QCoreApplication::translate("view", "The actual difference from the same calculation redone with far more precision. "
+                                                   "An estimate, usually much smaller than the guaranteed bound.");
+    if (key == "trusted")
+        return QCoreApplication::translate("view", "How many leading digits you can rely on: according to the guaranteed bound, "
+                                                   "and according to the measured error.");
+    if (key == "condition")
+        return QCoreApplication::translate("view", "How much the problem itself magnifies small changes in its input. "
+                                                   "When it is large, no algorithm can do better in this number type.");
+    if (key == "input")
+        return QCoreApplication::translate("view", "The error of storing the numbers you typed in this type: "
+                                                   "0.1, for example, has no exact binary form.");
+    if (key == "rounding")
+        return QCoreApplication::translate("view", "The error added by rounding the result of each arithmetic operation.");
+    if (key == "library")
+        return QCoreApplication::translate("view", "The error of functions such as sin or exp, which can't be computed exactly; "
+                                                   "it is bounded by their tested accuracy.");
+    if (key == "operations")
+        return QCoreApplication::translate("view", "How many operations had to round their result.");
+    if (key == "type")
+        return QCoreApplication::translate("view", "The C++ type the calculation ran in, and the bits of its significand: "
+                                                   "more bits, more correct digits.");
+    if (key == "evaluated")
+        return QCoreApplication::translate("view", "The expression as it was computed, with Ans and M replaced by what they stand for.");
+    if (key == "exact")
+        return QCoreApplication::translate("view", "Exact arithmetic works with fractions of whole numbers, so nothing is ever rounded: "
+                                                   "the result is exactly right.");
+    if (key == "incomplete")
+        return QCoreApplication::translate("view", "You chose to proceed with an uncertain argument for a whole-number function; "
+                                                   "that uncertainty is not included in the figures above.");
+    return {};
 }
 
 QString errorText(const Error& e, const QString& expression) {
