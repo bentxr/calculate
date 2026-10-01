@@ -12,6 +12,8 @@
 #include <QMenu>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QScrollArea>
+#include <QScrollBar>
 #include <QStackedWidget>
 #include <QTest>
 #include <QToolButton>
@@ -347,4 +349,30 @@ TEST(MainWindow, TheHistoryDropsDownUnderTheScreen) {
     QTest::mouseClick(list->viewport(), Qt::LeftButton, {}, list->visualItemRect(list->item(1)).center());
     EXPECT_EQ(lcd(window)->input(), "1+1");
     EXPECT_FALSE(panel->isVisible());
+}
+
+TEST(MainWindow, KeysKeepTheirSizeAndScrollWhenTheWindowIsSmall) {
+    MainWindow window;
+    window.resize(900, 700);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    const QSize sin = child<QPushButton>(window, "key:sin")->size();
+    for (const char* key : {"key:shift", "key:fraction", "key:tan", "key:memoryAdd"})
+        EXPECT_EQ(child<QPushButton>(window, key)->size(), sin) << key;
+    for (const char* legend : {"shift:sin", "alpha:multiply", "shift:memoryAdd"}) {
+        auto* label = child<QLabel>(window, legend);
+        EXPECT_GE(label->width(), label->fontMetrics().horizontalAdvance(label->text())) << legend;  // legends stay readable
+    }
+    const QSize seven = child<QPushButton>(window, "key:7")->size();
+    EXPECT_GT(seven.width(), sin.width());  // five number keys span the width of six function keys
+    window.resize(1600, 1000);
+    QTest::qWait(50);
+    EXPECT_EQ(child<QPushButton>(window, "key:sin")->size(), sin);  // bigger window: the keys stay still
+    EXPECT_EQ(child<QPushButton>(window, "key:7")->size(), seven);
+    auto* keys = child<QScrollArea>(window, "keys");
+    EXPECT_FALSE(keys->horizontalScrollBar()->isVisible());
+    window.resize(260, 400);
+    QTest::qWait(50);
+    EXPECT_EQ(child<QPushButton>(window, "key:sin")->size(), sin);  // smaller window: they scroll instead
+    EXPECT_TRUE(keys->horizontalScrollBar()->isVisible());
 }
