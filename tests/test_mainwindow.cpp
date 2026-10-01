@@ -112,3 +112,15 @@ TEST(MainWindow, MemoryKeys) {
     QTest::mouseClick(child<QPushButton>(window, "key:MC"), Qt::LeftButton);
     EXPECT_TRUE(QTest::qWaitFor([&] { return memory->text().isEmpty(); }, 10000));
 }
+
+TEST(MainWindow, StatisticsModeBuildsAnExpression) {
+    MainWindow window;
+    child<QListWidget>(window, "modes")->setCurrentRow(1);
+    EXPECT_EQ(child<QStackedWidget>(window, "pages")->currentIndex(), 1);
+    child<QPlainTextEdit>(window, "statisticsValues")->setPlainText("2\n4\n4\n4\n5\n5\n7\n9");
+    auto* value = child<QLabel>(window, "value");
+    QTest::mouseClick(child<QPushButton>(window, "stat:stdevp"), Qt::LeftButton);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return !value->text().isEmpty(); }, 10000));
+    EXPECT_EQ(child<QLineEdit>(window, "expression")->text(), "stdevp(2, 4, 4, 4, 5, 5, 7, 9)");
+    EXPECT_EQ(value->text(), "2");
+}

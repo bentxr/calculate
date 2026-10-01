@@ -10,6 +10,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QPlainTextEdit>
 #include <QPushButton>
 #include <QStackedWidget>
 #include <QToolButton>
@@ -183,7 +184,28 @@ QWidget* MainWindow::buildKeypad() {
     return pad;
 }
 
-QWidget* MainWindow::buildStatistics() { return new QWidget; }
+QWidget* MainWindow::buildStatistics() {
+    auto* page = new QWidget;
+    auto* layout = new QVBoxLayout(page);
+    layout->addWidget(new QLabel(tr("Values (one per line, or separated by commas):"), page));
+    statisticsValues_ = new QPlainTextEdit(page);
+    statisticsValues_->setObjectName("statisticsValues");
+    layout->addWidget(statisticsValues_, 1);
+    auto* buttons = new QHBoxLayout;
+    for (const char* f : {"mean", "median", "var", "stdev", "varp", "stdevp"}) {
+        auto* b = new QPushButton(QString::fromLatin1(f), page);
+        b->setObjectName(QStringLiteral("stat:") + f);
+        buttons->addWidget(b);
+        connect(b, &QPushButton::clicked, this, [this, f] {
+            const QString e = view::statisticsExpression(QString::fromLatin1(f), statisticsValues_->toPlainText());
+            if (e.isEmpty()) return;
+            expression_->setText(e);
+            evaluate();
+        });
+    }
+    layout->addLayout(buttons);
+    return page;
+}
 
 Options MainWindow::options() const {
     Options o;
