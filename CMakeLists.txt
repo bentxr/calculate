@@ -26,6 +26,7 @@ qt_add_library(calculate-ui STATIC
     src/lcd.cpp
     src/mainwindow.cpp
     src/presenter.cpp
+    src/settings.cpp
     src/typechooser.cpp
     src/typeset.cpp
     src/worker.cpp

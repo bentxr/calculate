@@ -4,13 +4,16 @@
 #include "keypad.hpp"
 #include "keysizing.hpp"
 #include "lcd.hpp"
-#include "typechooser.hpp"
 #include "presenter.hpp"
+#include "settings.hpp"
+#include "typechooser.hpp"
 #include "worker.hpp"
 
 #include <QComboBox>
-#include <QDialog>
 #include <QCursor>
+#include <QDialog>
+#include <QEvent>
+#include <QFormLayout>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -28,7 +31,6 @@
 using namespace calculate_core;
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberTypes()) {
-    setWindowTitle(tr("calculate"));
     auto* central = new QWidget(this);
     auto* outer = new QHBoxLayout(central);
 
@@ -37,31 +39,27 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     rail->setObjectName("rail");
     auto* railLayout = new QVBoxLayout(rail);
     railLayout->setContentsMargins(0, 0, 0, 0);
-    auto* panelToggle = new QToolButton(rail);
-    panelToggle->setObjectName("panelToggle");
-    panelToggle->setText(QStringLiteral("☰"));
-    panelToggle->setToolTip(tr("Show or hide the panel"));
-    panelToggle->setCheckable(true);
-    panelToggle->setAutoRaise(true);
+    panelToggle_ = new QToolButton(rail);
+    panelToggle_->setObjectName("panelToggle");
+    panelToggle_->setText(QStringLiteral("☰"));
+    panelToggle_->setCheckable(true);
+    panelToggle_->setAutoRaise(true);
     modes_ = new QListWidget(rail);
     modes_->setObjectName("modes");
-    modes_->addItems({tr("Calculator"), tr("Statistics")});
+    modes_->addItems({QString(), QString()});  // Calculator, Statistics (see retranslate)
     modes_->setFixedWidth(140);
-    auto* settingsButton = new QToolButton(rail);
-    settingsButton->setObjectName("settingsButton");
-    settingsButton->setText(QStringLiteral("⚙"));
-    settingsButton->setToolTip(tr("Settings"));
-    settingsButton->setAutoRaise(true);
-    railLayout->addWidget(panelToggle, 0, Qt::AlignLeft);
+    settingsButton_ = new QToolButton(rail);
+    settingsButton_->setObjectName("settingsButton");
+    settingsButton_->setText(QStringLiteral("⚙"));
+    settingsButton_->setAutoRaise(true);
+    railLayout->addWidget(panelToggle_, 0, Qt::AlignLeft);
     railLayout->addWidget(modes_, 1);
     railLayout->addStretch();  // keeps ⚙ at the bottom while the list is hidden
-    railLayout->addWidget(settingsButton, 0, Qt::AlignLeft);
+    railLayout->addWidget(settingsButton_, 0, Qt::AlignLeft);
     outer->addWidget(rail);
-    connect(panelToggle, &QToolButton::toggled, modes_, [this](bool collapsed) { modes_->setVisible(!collapsed); });
-    settings_ = new QDialog(this);
-    settings_->setObjectName("settings");
-    settings_->setWindowTitle(tr("Settings"));
-    connect(settingsButton, &QToolButton::clicked, settings_, &QDialog::open);
+    connect(panelToggle_, &QToolButton::toggled, modes_, [this](bool collapsed) { modes_->setVisible(!collapsed); });
+    buildSettings();
+    connect(settingsButton_, &QToolButton::clicked, settings_, &QDialog::open);
 
     auto* main = new QVBoxLayout;
     outer->addLayout(main, 1);
@@ -74,17 +72,15 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     auto* column = new QVBoxLayout;
     angle_ = new QComboBox(central);
     angle_->setObjectName("angle");
-    angle_->addItems({tr("RAD"), tr("DEG"), tr("GRAD")});
+    angle_->setSizeAdjustPolicy(QComboBox::AdjustToContents);  // its texts change with the language
+    angle_->addItems({QString(), QString(), QString()});  // RAD, DEG, GRAD (see retranslate)
     type_ = new TypeChooser(central);
     type_->setObjectName("type");
-    auto* equals = new QPushButton(tr("="), central);
-    equals->setObjectName("equals");
-    int width = 0;
-    for (QWidget* w : {static_cast<QWidget*>(angle_), static_cast<QWidget*>(type_), static_cast<QWidget*>(equals)})
-        width = qMax(width, w->sizeHint().width());
-    for (QWidget* w : {static_cast<QWidget*>(angle_), static_cast<QWidget*>(type_), static_cast<QWidget*>(equals)}) {
-        w->setFixedWidth(width);
-        w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+    type_->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+    equals_ = new QPushButton(central);
+    equals_->setObjectName("equals");
+    for (QWidget* w : {static_cast<QWidget*>(angle_), static_cast<QWidget*>(type_), static_cast<QWidget*>(equals_)}) {
+        w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);  // as wide as the widest: see retranslate
         column->addWidget(w);
     }
     screenRow->addLayout(column);
@@ -93,17 +89,16 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     // Along the screen's bottom edge: Details, and the messages that need an answer.
     detailsButton_ = new QToolButton(lcd_);
     detailsButton_->setObjectName("detailsButton");
-    detailsButton_->setText(tr("Details"));
     detailsButton_->setAutoRaise(true);
     detailsButton_->setEnabled(false);
     lcd_->addToBar(detailsButton_);
-    proceed_ = new QPushButton(tr("Proceed anyway"), lcd_);
+    proceed_ = new QPushButton(lcd_);
     proceed_->setObjectName("proceed");
     proceed_->setVisible(false);
     lcd_->addToBar(proceed_);
-    busy_ = new QLabel(tr("Computing…"), lcd_);
+    busy_ = new QLabel(lcd_);
     busy_->setObjectName("busy");
-    cancel_ = new QPushButton(tr("Cancel"), lcd_);
+    cancel_ = new QPushButton(lcd_);
     cancel_->setObjectName("cancel");
     busy_->setVisible(false);
     cancel_->setVisible(false);
@@ -116,7 +111,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     historyToggle_ = new QToolButton(lcd_);
     historyToggle_->setObjectName("historyToggle");
     historyToggle_->setText(QStringLiteral("▾"));
-    historyToggle_->setToolTip(tr("History"));
     historyToggle_->setAutoRaise(true);
     historyToggle_->setEnabled(false);
     lcd_->addToBar(historyToggle_, true);
@@ -175,7 +169,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(modes_, &QListWidget::currentRowChanged, pages_, &QStackedWidget::setCurrentIndex);
     connect(lcd_, &Lcd::evaluateRequested, this, &MainWindow::evaluate);
     connect(lcd_, &Lcd::historyRequested, this, [this](int step) { replay(historyIndex_ + step); });
-    connect(equals, &QPushButton::clicked, this, &MainWindow::evaluate);
+    connect(equals_, &QPushButton::clicked, this, &MainWindow::evaluate);
     connect(proceed_, &QPushButton::clicked, this, [this] { request(lastExpression_, true); });
     connect(detailsButton_, &QToolButton::clicked, this, [this] { card_->popUp(lcd_); });
     connect(historyToggle_, &QToolButton::clicked, this, [this] {
@@ -194,11 +188,13 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(type_, &QComboBox::currentIndexChanged, this, reevaluate);
     connect(angle_, &QComboBox::currentIndexChanged, this, reevaluate);
     buildMenus();
-    updateKeys();
+    retranslate();
+    colourLegends();
     // Only the screen takes the keyboard; every other control is used with the mouse.
-    for (QWidget* w : {static_cast<QWidget*>(modes_), static_cast<QWidget*>(panelToggle), static_cast<QWidget*>(settingsButton), static_cast<QWidget*>(type_), static_cast<QWidget*>(angle_),
-                       static_cast<QWidget*>(equals), static_cast<QWidget*>(detailsButton_), static_cast<QWidget*>(proceed_),
-                       static_cast<QWidget*>(cancel_), static_cast<QWidget*>(historyToggle_)})
+    for (QWidget* w : {static_cast<QWidget*>(modes_), static_cast<QWidget*>(panelToggle_), static_cast<QWidget*>(settingsButton_),
+                       static_cast<QWidget*>(type_), static_cast<QWidget*>(angle_), static_cast<QWidget*>(equals_),
+                       static_cast<QWidget*>(detailsButton_), static_cast<QWidget*>(proceed_), static_cast<QWidget*>(cancel_),
+                       static_cast<QWidget*>(historyToggle_)})
         w->setFocusPolicy(Qt::NoFocus);
     lcd_->setFocus();
 }
@@ -249,30 +245,29 @@ QWidget* MainWindow::buildKey(const Key& key, bool legends) {
     auto* layout = new QVBoxLayout(cell);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
-    // SHIFT legends sit on the left and ALPHA legends on the right, so colour is never the only cue.
-    const bool dark = palette().color(QPalette::Window).lightness() < 128;
-    auto legend = [&](const QString& name, const Face& face, const char* light, const char* onDark) {
-        auto* l = new QLabel(translated(face.label), cell);
+    // SHIFT legends sit on the left and ALPHA legends on the right, so colour is never the only cue
+    // (texts: retranslate; colours: colourLegends).
+    auto legend = [&](const QString& name) {
+        auto* l = new QLabel(cell);
         l->setObjectName(name + ":" + key.id);
         QFont small = l->font();
         small.setPointSizeF(small.pointSizeF() * 0.8);
         l->setFont(small);
-        l->setStyleSheet(QStringLiteral("color:%1").arg(dark ? onDark : light));
         l->setMinimumWidth(1);  // a long legend may shrink, but never widens its key
         return l;
     };
     if (legends) {
         auto* legendRow = new QHBoxLayout;
-        legendRow->addWidget(legend("shift", key.shift, "#9a6700", "#e3b341"));
+        legendRow->addWidget(legend("shift"));
         legendRow->addStretch();
-        legendRow->addWidget(legend("alpha", key.alpha, "#c62828", "#ff7b72"));
+        legendRow->addWidget(legend("alpha"));
         layout->addLayout(legendRow);
     }
 
-    auto* button = new QPushButton(translated(key.main.label), cell);
+    auto* button = new QPushButton(cell);
     button->setObjectName("key:" + key.id);
-    button->setMinimumWidth(32);
-    button->setFocusPolicy(Qt::NoFocus);  // the keyboard always stays with the screen  // below the style's default, so every column can be equally wide
+    button->setMinimumWidth(32);  // below the style's default, so every column can be equally wide
+    button->setFocusPolicy(Qt::NoFocus);  // the keyboard always stays with the screen
     layout->addWidget(button);
     if (key.main.action == KeyAction::Shift || key.main.action == KeyAction::Alpha) {
         button->setCheckable(true);
@@ -295,15 +290,17 @@ QWidget* MainWindow::buildDirectKeys() {
     auto* keyboard = new QWidget;
     keyboard->setObjectName("directKeys");
     auto* layout = new QVBoxLayout(keyboard);
-    for (const KeyGroup& group : directKeys()) {
-        auto* title = new QLabel(translated(group.title), keyboard);
+    for (int g = 0; g < directKeys().size(); ++g) {
+        const KeyGroup& group = directKeys()[g];
+        auto* title = new QLabel(keyboard);
+        title->setObjectName("group:" + QString::number(g));
         title->setForegroundRole(QPalette::PlaceholderText);
         layout->addWidget(title);
         auto* grid = new QGridLayout;
         grid->setSpacing(keySpacing);
         for (int i = 0; i < group.keys.size(); ++i) {
             const Key& key = group.keys[i];
-            auto* button = new QPushButton(translated(key.main.label), keyboard);
+            auto* button = new QPushButton(keyboard);
             button->setObjectName("direct:" + key.id);
             button->setMinimumWidth(32);
             button->setFocusPolicy(Qt::NoFocus);
@@ -374,20 +371,114 @@ void MainWindow::showEvent(QShowEvent* event) {
     connect(windowHandle(), &QWindow::screenChanged, this, &MainWindow::sizeKeys);
 }
 
+// ⚙: the language and the theme, applied at once and forgotten at exit.
+void MainWindow::buildSettings() {
+    settings_ = new QDialog(this);
+    settings_->setObjectName("settings");
+    auto* form = new QFormLayout(settings_);
+    languageLabel_ = new QLabel(settings_);
+    languageBox_ = new QComboBox(settings_);
+    languageBox_->setObjectName("language");
+    languageBox_->addItems({QString(), QStringLiteral("English"), QStringLiteral("Español")});  // each in its own name
+    themeLabel_ = new QLabel(settings_);
+    themeBox_ = new QComboBox(settings_);
+    themeBox_->setObjectName("theme");
+    themeBox_->addItems({QString(), QString(), QString()});
+    form->addRow(languageLabel_, languageBox_);
+    form->addRow(themeLabel_, themeBox_);
+    connect(languageBox_, &QComboBox::currentIndexChanged, this,
+            [](int i) { settings::setLanguage(static_cast<settings::Language>(i)); });
+    connect(themeBox_, &QComboBox::currentIndexChanged, this, [](int i) { settings::setTheme(static_cast<settings::Theme>(i)); });
+}
+
+// Every text of the window in the current language: run once when it is built, and again on every
+// QEvent::LanguageChange, so the language can change while the calculator runs.
+void MainWindow::retranslate() {
+    setWindowTitle(tr("calculate"));
+    panelToggle_->setToolTip(tr("Show or hide the panel"));
+    settingsButton_->setToolTip(tr("Settings"));
+    const QStringList modes{tr("Calculator"), tr("Statistics")};
+    for (int i = 0; i < modes.size(); ++i) {
+        modes_->item(i)->setText(modes[i]);
+        modeMenu_->actions()[i]->setText(modes[i]);
+    }
+    const QStringList angles{tr("RAD"), tr("DEG"), tr("GRAD")};
+    for (int i = 0; i < angles.size(); ++i) {
+        angle_->setItemText(i, angles[i]);
+        configMenu_->actions()[i]->setText(angles[i]);
+    }
+    for (int i = 0; i < optionsMenu().size(); ++i) optionsMenu_->actions()[i]->setText(translated(optionsMenu()[i].label));
+    type_->retranslate();
+    equals_->setText(tr("="));
+    detailsButton_->setText(tr("Details"));
+    proceed_->setText(tr("Proceed anyway"));
+    busy_->setText(tr("Computing…"));
+    cancel_->setText(tr("Cancel"));
+    historyToggle_->setToolTip(tr("History"));
+    statisticsLabel_->setText(tr("Values (one per line, or separated by commas):"));
+    settings_->setWindowTitle(tr("Settings"));
+    languageLabel_->setText(tr("Language"));
+    themeLabel_->setText(tr("Theme"));
+    languageBox_->setItemText(0, tr("System"));
+    themeBox_->setItemText(0, tr("System"));
+    themeBox_->setItemText(1, tr("Light"));
+    themeBox_->setItemText(2, tr("Dark"));
+
+    QList<Key> keys = cursorPad();
+    for (const QList<Key>& row : keypad()) keys += row;
+    for (const Key& key : keys) {
+        findChild<QPushButton*>("key:" + key.id)->setText(translated(key.main.label));
+        if (auto* shift = findChild<QLabel*>("shift:" + key.id)) shift->setText(translated(key.shift.label));
+        if (auto* alpha = findChild<QLabel*>("alpha:" + key.id)) alpha->setText(translated(key.alpha.label));
+    }
+    for (int g = 0; g < directKeys().size(); ++g) {
+        findChild<QLabel*>("group:" + QString::number(g))->setText(translated(directKeys()[g].title));
+        for (const Key& key : directKeys()[g].keys) findChild<QPushButton*>("direct:" + key.id)->setText(translated(key.main.label));
+    }
+
+    // angle, type and = share the widest one's width
+    int width = 0;
+    for (QWidget* w : {static_cast<QWidget*>(angle_), static_cast<QWidget*>(type_), static_cast<QWidget*>(equals_)})
+        width = qMax(width, w->sizeHint().width());
+    for (QWidget* w : {static_cast<QWidget*>(angle_), static_cast<QWidget*>(type_), static_cast<QWidget*>(equals_)})
+        w->setFixedWidth(width);
+
+    if (hasResult_) present();
+    updateKeys();
+    if (keysSized_) sizeKeys();  // labels changed width
+}
+
+// SHIFT legends yellow and ALPHA legends red, as on the calculator, in shades that suit the theme.
+void MainWindow::colourLegends() {
+    const bool dark = palette().color(QPalette::Window).lightness() < 128;
+    for (QLabel* label : findChildren<QLabel*>()) {
+        if (label->objectName().startsWith(QStringLiteral("shift:")))
+            label->setStyleSheet(QStringLiteral("color:%1").arg(dark ? "#e3b341" : "#9a6700"));
+        else if (label->objectName().startsWith(QStringLiteral("alpha:")))
+            label->setStyleSheet(QStringLiteral("color:%1").arg(dark ? "#ff7b72" : "#c62828"));
+    }
+}
+
+void MainWindow::changeEvent(QEvent* event) {
+    if (event->type() == QEvent::LanguageChange) retranslate();
+    else if (event->type() == QEvent::PaletteChange) colourLegends();
+    QMainWindow::changeEvent(event);
+}
+
 // MENU picks the mode, SHIFT MENU (CONFIG) the angle unit, and OPTN offers optionsMenu().
 void MainWindow::buildMenus() {
     modeMenu_ = new QMenu(this);
     modeMenu_->setObjectName("menu");
     for (int i = 0; i < modes_->count(); ++i)
-        connect(modeMenu_->addAction(modes_->item(i)->text()), &QAction::triggered, this, [this, i] { modes_->setCurrentRow(i); });
+        connect(modeMenu_->addAction(QString()), &QAction::triggered, this, [this, i] { modes_->setCurrentRow(i); });
     configMenu_ = new QMenu(this);
     configMenu_->setObjectName("config");
     for (int i = 0; i < angle_->count(); ++i)
-        connect(configMenu_->addAction(angle_->itemText(i)), &QAction::triggered, this, [this, i] { angle_->setCurrentIndex(i); });
+        connect(configMenu_->addAction(QString()), &QAction::triggered, this, [this, i] { angle_->setCurrentIndex(i); });
     optionsMenu_ = new QMenu(this);
     optionsMenu_->setObjectName("options");
     for (const Face& f : optionsMenu())
-        connect(optionsMenu_->addAction(translated(f.label)), &QAction::triggered, this, [this, f] { apply(f); });
+        connect(optionsMenu_->addAction(QString()), &QAction::triggered, this, [this, f] { apply(f); });
     connect(optionsMenu_, &QMenu::aboutToShow, this, [this] {
         const QList<QAction*> actions = optionsMenu_->actions();
         for (int i = 0; i < actions.size(); ++i) actions[i]->setEnabled(available(optionsMenu()[i], exactType()));
@@ -397,7 +488,8 @@ void MainWindow::buildMenus() {
 QWidget* MainWindow::buildStatistics() {
     auto* page = new QWidget;
     auto* layout = new QVBoxLayout(page);
-    layout->addWidget(new QLabel(tr("Values (one per line, or separated by commas):"), page));
+    statisticsLabel_ = new QLabel(page);
+    layout->addWidget(statisticsLabel_);
     statisticsValues_ = new QPlainTextEdit(page);
     statisticsValues_->setObjectName("statisticsValues");
     layout->addWidget(statisticsValues_, 1);
@@ -446,15 +538,9 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
     }
     last_ = result;
     lastExpression_ = expression;
-    proceed_->setVisible(result.error && result.error->code == ErrorCode::UncertainDiscreteArgument);
-    card_->setRows(view::details(result, types_[static_cast<std::size_t>(result.type)]));
-    detailsButton_->setEnabled(!result.error);
-    if (result.error) {
-        lcd_->showMessage(view::errorText(*result.error, expression));
-        return;
-    }
-    if (result.exact) lcd_->showExact(view::fractionParts(result));
-    else lcd_->showValue(view::valueParts(result));
+    hasResult_ = true;
+    present();
+    if (result.error) return;
     if (history_->count() == 0 || history_->item(0)->data(Qt::UserRole).toString() != expression) {
         // "expression = value", the value cut short: the list only points back to the calculation.
         QString value = lcd_->outputText();
@@ -465,6 +551,16 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
         historyToggle_->setEnabled(true);
     }
     historyIndex_ = -1;
+}
+
+// Shows the last result on the screen and in the card, in the current language.
+void MainWindow::present() {
+    proceed_->setVisible(last_.error && last_.error->code == ErrorCode::UncertainDiscreteArgument);
+    card_->setRows(view::details(last_, types_[static_cast<std::size_t>(last_.type)]));
+    detailsButton_->setEnabled(!last_.error);
+    if (last_.error) lcd_->showMessage(view::errorText(*last_.error, lastExpression_));
+    else if (last_.exact) lcd_->showExact(view::fractionParts(last_));
+    else lcd_->showValue(view::valueParts(last_));
 }
 
 const Face& MainWindow::face(const Key& key) const {
