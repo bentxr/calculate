@@ -38,13 +38,22 @@ W* child(MainWindow& window, const char* name) {
 
 Lcd* lcd(MainWindow& window) { return child<Lcd>(window, "lcd"); }
 
-// Waits for the worker's answer on the screen.
+QLabel* message(MainWindow& window) { return child<QLabel>(window, "message"); }
+
+// Waits for the worker's answer: a value on the screen, or a message under it.
 bool answered(MainWindow& window) {
-    return QTest::qWaitFor([&] { return !lcd(window)->outputText().isEmpty(); }, 10000);
+    return QTest::qWaitFor([&] { return !lcd(window)->outputText().isEmpty() || !message(window)->text().isEmpty(); }, 10000);
+}
+
+// Clears the last answer, so answered() waits for the next one.
+void forget(MainWindow& window) {
+    lcd(window)->clearResult();
+    message(window)->clear();
 }
 
 // Enters an expression, presses Enter and waits for the answer.
 void run(MainWindow& window, const QString& expression) {
+    forget(window);
     lcd(window)->clear();
     lcd(window)->setInput(expression);
     QTest::keyClick(lcd(window), Qt::Key_Return);
@@ -112,7 +121,7 @@ TEST(MainWindow, EvaluatesAndShowsTheErrorReport) {
 TEST(MainWindow, ChangingTheTypeReevaluates) {
     MainWindow window;
     run(window, "1/3");
-    lcd(window)->showMessage({});
+    forget(window);
     child<QComboBox>(window, "type")->setCurrentIndex(3);  // Exact
     EXPECT_TRUE(answered(window));
     EXPECT_EQ(lcd(window)->outputText(), "1/3 = 0.(3)");
@@ -157,7 +166,7 @@ TEST(MainWindow, UncertainArgumentsOfferToProceed) {
     auto* proceed = child<QPushButton>(window, "proceed");
     run(window, "(0.1*30)!");
     EXPECT_TRUE(proceed->isVisibleTo(&window));
-    lcd(window)->showMessage({});
+    forget(window);
     QTest::mouseClick(proceed, Qt::LeftButton);
     EXPECT_TRUE(answered(window));
     EXPECT_EQ(lcd(window)->outputText(), "6");
@@ -222,8 +231,8 @@ TEST(MainWindow, CancelStaysOfferedWhileALaterRequestRuns) {
     auto* cancel = child<QPushButton>(window, "cancel");
     ASSERT_TRUE(QTest::qWaitFor([&] { return cancel->isVisibleTo(&window); }, 5000));
     QTest::mouseClick(cancel, Qt::LeftButton);
-    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "Cancelled"; }, 10000))
-        << lcd(window)->outputText().toStdString();
+    EXPECT_TRUE(QTest::qWaitFor([&] { return message(window)->text() == "Cancelled"; }, 10000))
+        << message(window)->text().toStdString();
     EXPECT_FALSE(cancel->isVisibleTo(&window));
 }
 
@@ -528,4 +537,29 @@ TEST(MainWindow, StatisticsButtonsShowTheirFormula) {
         QCoreApplication::sendEvent(button, &leave);
         EXPECT_FALSE(tip->isVisible()) << f;
     }
+}
+
+TEST(MainWindow, ErrorsAppearUnderTheScreenWithoutMovingAnything) {
+    MainWindow window;
+    window.resize(1200, 800);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    const auto geometry = [&] {
+        QList<QRect> rects;
+        for (const char* name : {"lcd", "keys", "message"}) rects << child<QWidget>(window, name)->geometry();
+        return rects;
+    };
+    const QList<QRect> before = geometry();
+    child<QComboBox>(window, "type")->setCurrentIndex(3);  // Exact
+    run(window, "ln(2)");
+    EXPECT_TRUE(message(window)->text().startsWith("Exact arithmetic cannot represent ln")) << message(window)->text().toStdString();
+    EXPECT_EQ(lcd(window)->outputText(), "");  // the screen shows values only
+    EXPECT_EQ(geometry(), before);             // the strip under the screen was already there
+    const auto top = [&](QWidget* w) { return w->mapTo(&window, QPoint(0, 0)).y(); };
+    QWidget* screen = child<QWidget>(window, "lcd");
+    EXPECT_GE(top(message(window)), top(screen) + screen->height());                                       // under the screen
+    EXPECT_LE(top(message(window)) + message(window)->height(), top(child<QWidget>(window, "keys")));  // above the keys
+    run(window, "1+1");
+    EXPECT_EQ(message(window)->text(), "");
+    EXPECT_EQ(geometry(), before);
 }

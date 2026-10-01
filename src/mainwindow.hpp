@@ -94,6 +94,7 @@ private:
     QToolButton* detailsButton_ = nullptr;
     DetailsCard* card_ = nullptr;
     FormulaTip* formulaTip_ = nullptr;
+    QLabel* message_ = nullptr;
     QPushButton* proceed_ = nullptr;
     QLabel* busy_ = nullptr;
     QPushButton* cancel_ = nullptr;
