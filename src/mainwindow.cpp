@@ -1,16 +1,15 @@
 #include "mainwindow.hpp"
 
 #include "keypad.hpp"
+#include "lcd.hpp"
 #include "presenter.hpp"
 #include "worker.hpp"
 
 #include <QComboBox>
 #include <QCursor>
-#include <QFontDatabase>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <QLineEdit>
 #include <QListWidget>
 #include <QMenu>
 #include <QPlainTextEdit>
@@ -20,17 +19,6 @@
 #include <QVBoxLayout>
 
 using namespace calculate_core;
-
-namespace {
-
-// Rich text takes an opaque colour, but styles such as Fusion make the placeholder colour translucent.
-QColor opaque(const QColor& ink, const QColor& paper) {
-    const int a = ink.alpha();
-    const auto mix = [a](int i, int p) { return (i * a + p * (255 - a)) / 255; };
-    return QColor(mix(ink.red(), paper.red()), mix(ink.green(), paper.green()), mix(ink.blue(), paper.blue()));
-}
-
-}  // namespace
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberTypes()) {
     setWindowTitle(tr("calculate"));
@@ -58,13 +46,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     top->addWidget(angle_);
     main->addLayout(top);
 
-    const QFont mono = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     auto* entry = new QHBoxLayout;
-    expression_ = new QLineEdit(central);
-    expression_->setObjectName("expression");
-    expression_->setFont(mono);
+    lcd_ = new Lcd(central);
+    lcd_->setObjectName("lcd");
     auto* equals = new QPushButton(tr("="), central);
-    entry->addWidget(expression_, 1);
+    entry->addWidget(lcd_, 1);
     entry->addWidget(equals);
     main->addLayout(entry);
 
@@ -76,9 +62,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
         main->addWidget(l);
         return l;
     };
-    value_ = label("value");
-    value_->setFont(mono);
-    value_->setTextFormat(Qt::RichText);
     errorLine_ = label("errorLine");
     whyLine_ = label("whyLine");
     detailsToggle_ = new QToolButton(central);
@@ -89,7 +72,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     details_ = label("details");
     details_->setTextFormat(Qt::RichText);
     details_->setVisible(false);
-    message_ = label("message");
     proceed_ = new QPushButton(tr("Proceed anyway"), central);
     proceed_->setObjectName("proceed");
     proceed_->setVisible(false);
@@ -132,7 +114,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(worker_, &Worker::memoryChanged, this, [this](const QString& m) {
         memory_->setText(m.isEmpty() ? QString() : tr("M = %1").arg(m));
     });
-    connect(worker_, &Worker::memoryFailed, this, [this] { message_->setText(tr("The memory needs a previous result")); });
+    connect(worker_, &Worker::memoryFailed, this, [this] { lcd_->showMessage(tr("The memory needs a previous result")); });
     thread_.start();
 
     busyTimer_.setSingleShot(true);
@@ -143,11 +125,12 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     });
     connect(cancel_, &QPushButton::clicked, this, [this] { worker_->cancelFlag() = true; });
     connect(modes_, &QListWidget::currentRowChanged, pages_, &QStackedWidget::setCurrentIndex);
-    connect(expression_, &QLineEdit::returnPressed, this, &MainWindow::evaluate);
+    connect(lcd_, &Lcd::evaluateRequested, this, &MainWindow::evaluate);
+    connect(lcd_, &Lcd::historyRequested, this, [this](int step) { replay(historyIndex_ + step); });
     connect(equals, &QPushButton::clicked, this, &MainWindow::evaluate);
     connect(proceed_, &QPushButton::clicked, this, [this] { request(lastExpression_, true); });
     connect(detailsToggle_, &QToolButton::toggled, details_, &QWidget::setVisible);
-    connect(history_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) { expression_->setText(item->text()); });
+    connect(history_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) { lcd_->setInput(item->text()); });
     auto reevaluate = [this] {
         updateKeys();
         if (!lastExpression_.isEmpty() && !last_.error) request(lastExpression_, false);
@@ -156,6 +139,12 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(angle_, &QComboBox::currentIndexChanged, this, reevaluate);
     buildMenus();
     updateKeys();
+    // Only the screen takes the keyboard; every other control is used with the mouse.
+    for (QWidget* w : {static_cast<QWidget*>(modes_), static_cast<QWidget*>(type_), static_cast<QWidget*>(angle_),
+                       static_cast<QWidget*>(equals), static_cast<QWidget*>(detailsToggle_), static_cast<QWidget*>(proceed_),
+                       static_cast<QWidget*>(cancel_), static_cast<QWidget*>(history_)})
+        w->setFocusPolicy(Qt::NoFocus);
+    lcd_->setFocus();
 }
 
 MainWindow::~MainWindow() {
@@ -224,7 +213,8 @@ QWidget* MainWindow::buildKey(const Key& key, bool legends) {
 
     auto* button = new QPushButton(translated(key.main.label), cell);
     button->setObjectName("key:" + key.id);
-    button->setMinimumWidth(32);  // below the style's default, so every column can be equally wide
+    button->setMinimumWidth(32);
+    button->setFocusPolicy(Qt::NoFocus);  // the keyboard always stays with the screen  // below the style's default, so every column can be equally wide
     layout->addWidget(button);
     if (key.main.action == KeyAction::Shift || key.main.action == KeyAction::Alpha) {
         button->setCheckable(true);
@@ -276,7 +266,7 @@ QWidget* MainWindow::buildStatistics() {
         connect(b, &QPushButton::clicked, this, [this, f] {
             const QString e = view::statisticsExpression(QString::fromLatin1(f), statisticsValues_->toPlainText());
             if (e.isEmpty()) return;
-            expression_->setText(e);
+            lcd_->setInput(e);
             evaluate();
         });
     }
@@ -292,7 +282,7 @@ Options MainWindow::options() const {
 }
 
 void MainWindow::evaluate() {
-    const QString text = expression_->text().trimmed();
+    const QString text = lcd_->input().trimmed();
     if (!text.isEmpty()) request(text, false);
 }
 
@@ -315,16 +305,14 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
     lastExpression_ = expression;
     proceed_->setVisible(result.error && result.error->code == ErrorCode::UncertainDiscreteArgument);
     if (result.error) {
-        message_->setText(view::errorText(*result.error, expression));
-        value_->clear();
+        lcd_->showMessage(view::errorText(*result.error, expression));
         errorLine_->clear();
         whyLine_->clear();
         details_->clear();
         return;
     }
-    message_->clear();
-    const QString noise = opaque(palette().color(QPalette::PlaceholderText), palette().color(QPalette::Window)).name();
-    value_->setText(view::valueHtml(result, noise));
+    if (result.exact) lcd_->showExact(view::fractionParts(result));
+    else lcd_->showValue(view::valueParts(result));
     errorLine_->setText(view::errorLine(result));
     whyLine_->setText(view::whyLine(result, types_[static_cast<std::size_t>(result.type)]));
     QString table = "<table>";
@@ -349,9 +337,9 @@ void MainWindow::press(const Key& key) {
 
 void MainWindow::apply(const Face& f) {
     switch (f.action) {
-    case KeyAction::Insert: expression_->insert(translated(f.insert)); break;
-    case KeyAction::Clear: expression_->clear(); break;
-    case KeyAction::Backspace: expression_->backspace(); break;
+    case KeyAction::Insert: lcd_->insert(translated(f.insert)); break;
+    case KeyAction::Clear: lcd_->clear(); break;
+    case KeyAction::Backspace: lcd_->backspace(); break;
     case KeyAction::Evaluate: evaluate(); break;
     case KeyAction::MemoryAdd: emit memoryAddRequested(); break;
     case KeyAction::MemorySubtract: emit memorySubtractRequested(); break;
@@ -359,15 +347,15 @@ void MainWindow::apply(const Face& f) {
     case KeyAction::Menu: popUp(modeMenu_); break;
     case KeyAction::Config: popUp(configMenu_); break;
     case KeyAction::Options: popUp(optionsMenu_); break;
-    case KeyAction::Left: expression_->cursorBackward(false); break;
-    case KeyAction::Right: expression_->cursorForward(false); break;
+    case KeyAction::Left: lcd_->left(); break;
+    case KeyAction::Right: lcd_->right(); break;
     case KeyAction::Up: replay(historyIndex_ + 1); break;
     case KeyAction::Down: replay(historyIndex_ - 1); break;
     case KeyAction::Shift:
     case KeyAction::Alpha:
     case KeyAction::Unavailable: break;
     }
-    expression_->setFocus();
+    lcd_->setFocus();
 }
 
 void MainWindow::popUp(QMenu* menu) { menu->popup(QCursor::pos()); }
@@ -376,7 +364,7 @@ void MainWindow::popUp(QMenu* menu) { menu->popup(QCursor::pos()); }
 void MainWindow::replay(int index) {
     if (index < 0 || index >= history_->count()) return;
     historyIndex_ = index;
-    expression_->setText(history_->item(index)->text());
+    lcd_->setInput(history_->item(index)->text());
 }
 
 bool MainWindow::exactType() const { return static_cast<NumberType>(type_->currentIndex()) == NumberType::Exact; }

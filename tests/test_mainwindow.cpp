@@ -1,8 +1,9 @@
 #include "mainwindow.hpp"
 
+#include "lcd.hpp"
+
 #include <QComboBox>
 #include <QLabel>
-#include <QLineEdit>
 #include <QListWidget>
 #include <QMenu>
 #include <QPalette>
@@ -24,17 +25,19 @@ W* child(MainWindow& window, const char* name) {
     return w;
 }
 
-// Types an expression, presses Enter and waits for the worker's answer.
+Lcd* lcd(MainWindow& window) { return child<Lcd>(window, "lcd"); }
+
+// Waits for the worker's answer on the screen.
+bool answered(MainWindow& window) {
+    return QTest::qWaitFor([&] { return !lcd(window)->outputText().isEmpty(); }, 10000);
+}
+
+// Enters an expression, presses Enter and waits for the answer.
 void run(MainWindow& window, const QString& expression) {
-    auto* input = child<QLineEdit>(window, "expression");
-    auto* value = child<QLabel>(window, "value");
-    auto* message = child<QLabel>(window, "message");
-    value->clear();
-    message->clear();
-    input->setText(expression);
-    QTest::keyClick(input, Qt::Key_Return);
-    EXPECT_TRUE(QTest::qWaitFor([&] { return !value->text().isEmpty() || !message->text().isEmpty(); }, 10000))
-        << expression.toStdString();
+    lcd(window)->clear();
+    lcd(window)->setInput(expression);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window)) << expression.toStdString();
 }
 
 QAction* action(QMenu* menu, const QString& text) {
@@ -58,7 +61,7 @@ TEST(MainWindow, TheTypeMenuComesFromTheEngine) {
 TEST(MainWindow, EvaluatesAndShowsTheErrorReport) {
     MainWindow window;
     run(window, "0.1 + 0.2");
-    EXPECT_TRUE(child<QLabel>(window, "value")->text().startsWith("0.300000000000000<span"));
+    EXPECT_EQ(lcd(window)->outputText(), "0.300000000000000|0444089209850062616169452667236328125");
     EXPECT_EQ(child<QLabel>(window, "errorLine")->text(), "± 4.4e-17 · 15 trusted digits");
     EXPECT_FALSE(child<QLabel>(window, "whyLine")->text().isEmpty());
     EXPECT_EQ(child<QListWidget>(window, "history")->item(0)->text(), "0.1 + 0.2");
@@ -67,11 +70,10 @@ TEST(MainWindow, EvaluatesAndShowsTheErrorReport) {
 TEST(MainWindow, ChangingTheTypeReevaluates) {
     MainWindow window;
     run(window, "1/3");
-    auto* value = child<QLabel>(window, "value");
-    value->clear();
+    lcd(window)->showMessage({});
     child<QComboBox>(window, "type")->setCurrentIndex(3);  // Exact
-    EXPECT_TRUE(QTest::qWaitFor([&] { return !value->text().isEmpty(); }, 10000));
-    EXPECT_EQ(value->text(), "1/3 = 0.(3)");
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "1/3 = 0.(3)");
     EXPECT_EQ(child<QLabel>(window, "errorLine")->text(), "exact · no rounding error");
 }
 
@@ -90,33 +92,31 @@ TEST(MainWindow, ExactModeGreysOutTranscendentalKeys) {
 
 TEST(MainWindow, TheKeypadEditsTheExpression) {
     MainWindow window;
-    auto* input = child<QLineEdit>(window, "expression");
     QTest::mouseClick(child<QPushButton>(window, "key:sin"), Qt::LeftButton);
     QTest::mouseClick(child<QPushButton>(window, "key:shift"), Qt::LeftButton);
     QTest::mouseClick(child<QPushButton>(window, "key:exponent"), Qt::LeftButton);
     QTest::mouseClick(child<QPushButton>(window, "key:close"), Qt::LeftButton);
-    EXPECT_EQ(input->text(), "sin(π)");
+    EXPECT_EQ(lcd(window)->input(), "sin(π)");
     QTest::mouseClick(child<QPushButton>(window, "key:delete"), Qt::LeftButton);
-    EXPECT_EQ(input->text(), "sin(π");
+    EXPECT_EQ(lcd(window)->input(), "sin(π");
     QTest::mouseClick(child<QPushButton>(window, "key:clear"), Qt::LeftButton);
-    EXPECT_EQ(input->text(), "");
+    EXPECT_EQ(lcd(window)->input(), "");
 }
 
 TEST(MainWindow, ShiftAndAlphaLastForOneKey) {
     MainWindow window;
-    auto* input = child<QLineEdit>(window, "expression");
     auto* shift = child<QPushButton>(window, "key:shift");
     QTest::mouseClick(shift, Qt::LeftButton);
     EXPECT_TRUE(shift->isChecked());
     QTest::mouseClick(child<QPushButton>(window, "key:sin"), Qt::LeftButton);
     EXPECT_FALSE(shift->isChecked());
     QTest::mouseClick(child<QPushButton>(window, "key:sin"), Qt::LeftButton);
-    EXPECT_EQ(input->text(), "asin(sin(");
-    input->clear();
+    EXPECT_EQ(lcd(window)->input(), "asin(sin(");
+    lcd(window)->clear();
     QTest::mouseClick(child<QPushButton>(window, "key:alpha"), Qt::LeftButton);
     QTest::mouseClick(child<QPushButton>(window, "key:multiply"), Qt::LeftButton);
     QTest::mouseClick(child<QPushButton>(window, "key:multiply"), Qt::LeftButton);
-    EXPECT_EQ(input->text(), "gcd(×");
+    EXPECT_EQ(lcd(window)->input(), "gcd(×");
 }
 
 TEST(MainWindow, KeysThisAppCannotUseYetStayInPlaceDisabled) {
@@ -134,10 +134,10 @@ TEST(MainWindow, UncertainArgumentsOfferToProceed) {
     auto* proceed = child<QPushButton>(window, "proceed");
     run(window, "(0.1*30)!");
     EXPECT_TRUE(proceed->isVisibleTo(&window));
-    auto* value = child<QLabel>(window, "value");
+    lcd(window)->showMessage({});
     QTest::mouseClick(proceed, Qt::LeftButton);
-    EXPECT_TRUE(QTest::qWaitFor([&] { return !value->text().isEmpty(); }, 10000));
-    EXPECT_EQ(value->text(), "6");
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "6");
     EXPECT_TRUE(child<QLabel>(window, "errorLine")->text().contains("incomplete"));
     EXPECT_FALSE(proceed->isVisibleTo(&window));
 }
@@ -159,38 +159,35 @@ TEST(MainWindow, StatisticsModeBuildsAnExpression) {
     child<QListWidget>(window, "modes")->setCurrentRow(1);
     EXPECT_EQ(child<QStackedWidget>(window, "pages")->currentIndex(), 1);
     child<QPlainTextEdit>(window, "statisticsValues")->setPlainText("2\n4\n4\n4\n5\n5\n7\n9");
-    auto* value = child<QLabel>(window, "value");
     QTest::mouseClick(child<QPushButton>(window, "stat:stdevp"), Qt::LeftButton);
-    EXPECT_TRUE(QTest::qWaitFor([&] { return !value->text().isEmpty(); }, 10000));
-    EXPECT_EQ(child<QLineEdit>(window, "expression")->text(), "stdevp(2, 4, 4, 4, 5, 5, 7, 9)");
-    EXPECT_EQ(value->text(), "2");
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->input(), "stdevp(2, 4, 4, 4, 5, 5, 7, 9)");
+    EXPECT_EQ(lcd(window)->outputText(), "2");
 }
 
 TEST(MainWindow, TheNoiseColourStaysVisibleWhenThePaletteIsTranslucent) {
     MainWindow window;
     QPalette palette = window.palette();
-    palette.setColor(QPalette::Window, Qt::white);
+    palette.setColor(QPalette::Base, Qt::white);  // the screen's background
     palette.setColor(QPalette::PlaceholderText, QColor(0, 0, 0, 128));  // as in Fusion
     window.setPalette(palette);
-    run(window, "0.1 + 0.2");
-    EXPECT_TRUE(child<QLabel>(window, "value")->text().contains("color:#7f7f7f")) << child<QLabel>(window, "value")->text().toStdString();
+    EXPECT_EQ(lcd(window)->noiseColor().name(), "#7f7f7f");
 }
 
 TEST(MainWindow, UpAndDownReplayTheHistory) {
     MainWindow window;
     run(window, "1+1");
     run(window, "2+2");
-    auto* input = child<QLineEdit>(window, "expression");
     auto* up = child<QPushButton>(window, "key:up");
-    input->clear();
+    lcd(window)->clear();
     QTest::mouseClick(up, Qt::LeftButton);
-    EXPECT_EQ(input->text(), "2+2");
+    EXPECT_EQ(lcd(window)->input(), "2+2");
     QTest::mouseClick(up, Qt::LeftButton);
-    EXPECT_EQ(input->text(), "1+1");
+    EXPECT_EQ(lcd(window)->input(), "1+1");
     QTest::mouseClick(up, Qt::LeftButton);
-    EXPECT_EQ(input->text(), "1+1");
+    EXPECT_EQ(lcd(window)->input(), "1+1");
     QTest::mouseClick(child<QPushButton>(window, "key:down"), Qt::LeftButton);
-    EXPECT_EQ(input->text(), "2+2");
+    EXPECT_EQ(lcd(window)->input(), "2+2");
 }
 
 TEST(MainWindow, MenuChoosesTheModeAndConfigTheAngle) {
@@ -213,12 +210,11 @@ TEST(MainWindow, MenuChoosesTheModeAndConfigTheAngle) {
 TEST(MainWindow, OptionsHoldTheHyperbolicFunctionsModAndMemoryClear) {
     MainWindow window;
     auto* options = child<QMenu>(window, "options");
-    auto* input = child<QLineEdit>(window, "expression");
     QTest::mouseClick(child<QPushButton>(window, "key:options"), Qt::LeftButton);
     EXPECT_TRUE(options->isVisible());
     action(options, "sinh")->trigger();
     options->hide();
-    EXPECT_EQ(input->text(), "sinh(");
+    EXPECT_EQ(lcd(window)->input(), "sinh(");
     child<QComboBox>(window, "type")->setCurrentIndex(3);  // Exact
     QTest::mouseClick(child<QPushButton>(window, "key:options"), Qt::LeftButton);
     EXPECT_FALSE(action(options, "sinh")->isEnabled());
@@ -235,15 +231,27 @@ TEST(MainWindow, OptionsHoldTheHyperbolicFunctionsModAndMemoryClear) {
 TEST(MainWindow, CancelStaysOfferedWhileALaterRequestRuns) {
     MainWindow window;
     child<QComboBox>(window, "type")->setCurrentIndex(3);  // Exact
-    auto* input = child<QLineEdit>(window, "expression");
-    input->setText("1 + 1");
-    QTest::keyClick(input, Qt::Key_Return);
-    input->setText("200000!");
-    QTest::keyClick(input, Qt::Key_Return);
+    lcd(window)->setInput("1 + 1");
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    lcd(window)->setInput("200000!");
+    QTest::keyClick(lcd(window), Qt::Key_Return);
     auto* cancel = child<QPushButton>(window, "cancel");
     ASSERT_TRUE(QTest::qWaitFor([&] { return cancel->isVisibleTo(&window); }, 5000));
     QTest::mouseClick(cancel, Qt::LeftButton);
-    auto* message = child<QLabel>(window, "message");
-    EXPECT_TRUE(QTest::qWaitFor([&] { return message->text() == "Cancelled"; }, 10000)) << message->text().toStdString();
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "Cancelled"; }, 10000))
+        << lcd(window)->outputText().toStdString();
     EXPECT_FALSE(cancel->isVisibleTo(&window));
+}
+
+TEST(MainWindow, KeysLeaveTheKeyboardToTheScreen) {
+    MainWindow window;
+    EXPECT_EQ(child<QPushButton>(window, "key:7")->focusPolicy(), Qt::NoFocus);
+    EXPECT_EQ(child<QPushButton>(window, "key:shift")->focusPolicy(), Qt::NoFocus);
+    EXPECT_EQ(lcd(window)->focusPolicy(), Qt::StrongFocus);
+    QTest::mouseClick(child<QPushButton>(window, "key:7"), Qt::LeftButton);
+    QTest::keyClicks(lcd(window), "*6");
+    EXPECT_EQ(lcd(window)->input(), "7×6");
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "42");
 }

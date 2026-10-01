@@ -36,8 +36,6 @@ QString typeLabel(const calculate_core::TypeInfo& type);
 QString shortTypeName(const calculate_core::TypeInfo& type);
 ValueParts valueParts(const calculate_core::Result& result);
 FractionParts fractionParts(const calculate_core::Result& result);
-// Noise digits follow a bar and take noiseColor, so colour is never the only cue.
-QString valueHtml(const calculate_core::Result& result, const QString& noiseColor);
 QString errorLine(const calculate_core::Result& result);
 QString whyLine(const calculate_core::Result& result, const calculate_core::TypeInfo& type);
 QString verdict(const QString& conditionNumber);
