@@ -88,3 +88,27 @@ TEST(MainWindow, TheKeypadEditsTheExpression) {
     QTest::mouseClick(child<QPushButton>(window, "key:C"), Qt::LeftButton);
     EXPECT_EQ(input->text(), "");
 }
+
+TEST(MainWindow, UncertainArgumentsOfferToProceed) {
+    MainWindow window;
+    auto* proceed = child<QPushButton>(window, "proceed");
+    run(window, "(0.1*30)!");
+    EXPECT_TRUE(proceed->isVisibleTo(&window));
+    auto* value = child<QLabel>(window, "value");
+    QTest::mouseClick(proceed, Qt::LeftButton);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return !value->text().isEmpty(); }, 10000));
+    EXPECT_EQ(value->text(), "6");
+    EXPECT_TRUE(child<QLabel>(window, "errorLine")->text().contains("incomplete"));
+    EXPECT_FALSE(proceed->isVisibleTo(&window));
+}
+
+TEST(MainWindow, MemoryKeys) {
+    MainWindow window;
+    run(window, "5");
+    auto* memory = child<QLabel>(window, "memory");
+    QTest::mouseClick(child<QPushButton>(window, "key:M+"), Qt::LeftButton);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return !memory->text().isEmpty(); }, 10000));
+    EXPECT_EQ(memory->text(), "M = 5");
+    QTest::mouseClick(child<QPushButton>(window, "key:MC"), Qt::LeftButton);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return memory->text().isEmpty(); }, 10000));
+}
