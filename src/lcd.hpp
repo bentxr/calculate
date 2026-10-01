@@ -29,7 +29,16 @@ public:
     void showExact(const view::FractionParts& parts);
     void showMessage(const QString& message);
     QString outputText() const;  // the result on one line of plain text
-    QColor noiseColor() const;   // opaque, so rich drawing never loses it
+    // The status line, as on the calculator: S (SHIFT), A (ALPHA), M (memory in use).
+    void setStatus(bool shift, bool alpha);
+    void setMemory(const QString& memory);  // empty when cleared; its value is the screen's tooltip
+    QString memory() const { return memory_; }
+    QString statusText() const;
+
+    static QString fontFamily();  // the bundled screen typeface
+    QColor background() const;    // an LCD panel: pale grey-green, or dark in a dark theme
+    QColor ink() const;
+    QColor noiseColor() const;    // halfway between the ink and the panel
     QSize sizeHint() const override;
 
 signals:
@@ -45,6 +54,8 @@ protected:
 private:
     enum class Shown { Nothing, Value, Exact, Message };
 
+    bool dark() const;
+    QFont statusFont() const;
     QFont inputFont() const;
     QFont outputFont() const;
     typeset::Box inputBox() const;
@@ -56,6 +67,9 @@ private:
     view::ValueParts value_;
     view::FractionParts exact_;
     QString message_;
+    bool shift_ = false;
+    bool alpha_ = false;
+    QString memory_;
     typeset::Box result_;  // laid out once per change, not on every repaint
     QScrollBar* scroll_ = nullptr;  // for results taller than the screen; nothing is truncated
 };
