@@ -190,6 +190,15 @@ TEST(Typeset, TheInputDrawsAFractionWithTheCursorInside) {
     ASSERT_EQ(b.lines.size(), 1);                                    // the fraction bar
 }
 
+TEST(Typeset, AnEmptyInputDrawsNothingButTheCursor) {
+    QRectF caret;
+    const Box b = typeset::input(Entry{}, font(), &caret);
+    EXPECT_TRUE(b.runs.isEmpty());  // no placeholder: only template boxes show one
+    EXPECT_EQ(b.width, 0);
+    EXPECT_EQ(caret.left(), 0);
+    EXPECT_GT(caret.height(), 0);  // the cursor still has a line's height
+}
+
 TEST(Typeset, PlainInputStaysOnOneLineWithTheCursorAtTheEnd) {
     Entry e;
     e.setText("12+3");

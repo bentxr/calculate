@@ -230,7 +230,7 @@ struct InputLayout {
             parts << item(items[i], font, depth, onPath, static_cast<int>(i));
         }
         if (here && entry.cursor() == static_cast<int>(items.size())) parts << caret(font);
-        if (items.empty()) parts << text(QStringLiteral("□"), font);
+        if (items.empty() && depth > 0) parts << text(QStringLiteral("□"), font);  // an empty template box, not the screen
         return typeset::row(parts);
     }
 
