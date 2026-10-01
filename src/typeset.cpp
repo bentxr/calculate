@@ -123,8 +123,11 @@ Box radical(const Box& content, const QFont& font, const Box& index) {
 Box bigOperator(const QString& symbol, const Box& under, const Box& over, const QFont& font) {
     QFont big = font;
     big.setPixelSize(qRound(QFontInfo(font).pixelSize() * 1.5));
-    const Box sign = text(symbol, big);
-    const qreal gap = QFontMetricsF(font).height() * 0.05;
+    Box sign = text(symbol, big);
+    const QRectF ink = QFontMetricsF(big).tightBoundingRect(symbol);  // the glyph itself, not the line
+    sign.ascent = -ink.top();
+    sign.descent = ink.bottom();
+    const qreal gap = QFontMetricsF(font).height() * 0.08;
     const qreal width = qMax(sign.width, qMax(under.width, over.width));
     Box b;
     place(b, sign, (width - sign.width) / 2, 0);
