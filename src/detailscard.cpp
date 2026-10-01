@@ -2,8 +2,43 @@
 
 #include <QGridLayout>
 #include <QLabel>
+#include <QPainter>
 #include <QToolButton>
 #include <QVBoxLayout>
+
+namespace {
+
+// The info sign, a circle with an "i", drawn rather than typed: the browser build has no font with ⓘ.
+class InfoButton : public QToolButton {
+public:
+    using QToolButton::QToolButton;
+
+    QSize sizeHint() const override {
+        const int side = fontMetrics().height() + 6;
+        return {side, side};
+    }
+
+protected:
+    void paintEvent(QPaintEvent* event) override {
+        QToolButton::paintEvent(event);  // the panel under the mouse
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing);
+        const qreal d = fontMetrics().height() * 0.8;
+        QRectF circle(0, 0, d, d);
+        circle.moveCenter(QRectF(rect()).center());
+        const QColor ink = palette().color(QPalette::WindowText);
+        painter.setPen(QPen(ink, 1.2));
+        painter.drawEllipse(circle);
+        const qreal stroke = d * 0.13;  // the i: a dot over a stem
+        const qreal x = circle.center().x();
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(ink);
+        painter.drawEllipse(QPointF(x, circle.top() + d * 0.28), stroke * 0.6, stroke * 0.6);
+        painter.drawRoundedRect(QRectF(x - stroke / 2, circle.top() + d * 0.42, stroke, d * 0.36), stroke / 2, stroke / 2);
+    }
+};
+
+}  // namespace
 
 DetailsCard::DetailsCard(QWidget* parent) : QFrame(parent, Qt::Popup) {
     setFrameShape(QFrame::StyledPanel);
@@ -34,9 +69,8 @@ void DetailsCard::setRows(const QList<view::DetailRow>& rows) {
         value->setObjectName("value:" + row.key);
         value->setWordWrap(true);
         value->setTextInteractionFlags(Qt::TextSelectableByMouse);
-        auto* info = new QToolButton(rows_);
+        auto* info = new InfoButton(rows_);
         info->setObjectName("info:" + row.key);
-        info->setText(QStringLiteral("ⓘ"));
         info->setToolTip(tr("What does this mean?"));
         info->setAutoRaise(true);
         info->setFocusPolicy(Qt::NoFocus);
@@ -47,7 +81,7 @@ void DetailsCard::setRows(const QList<view::DetailRow>& rows) {
     }
 }
 
-// The explanation, about forty characters wide, just under its ⓘ.
+// The explanation, about forty characters wide, just under its info sign.
 void DetailsCard::explain(const QString& key, QToolButton* info) {
     tipText_->setText(view::explanation(key));
     tip_->setFixedWidth(fontMetrics().averageCharWidth() * 40);
