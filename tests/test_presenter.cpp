@@ -158,3 +158,12 @@ TEST(Presenter, ShortTypeNamesForTheCompactSelector) {
     EXPECT_EQ(names, QStringList({"Single", "Double", "Extended", "Exact", "Quadruple", "Octuple", "Hexadecuple"}));
     EXPECT_TRUE(view::typeLabel(typeInfo(NumberType::Binary512)).startsWith("Hexadecuple · binary512"));
 }
+
+TEST(Presenter, TypeTraitsForTheTypeMenu) {
+    EXPECT_EQ(view::typeDigits(typeInfo(NumberType::Double)), "~16 significant digits");
+    EXPECT_EQ(view::typeDetail(typeInfo(NumberType::Double)), "double · 64-bit storage · 53-bit significand");
+    EXPECT_EQ(view::typeDigits(typeInfo(NumberType::Exact)), "every digit exact");
+    EXPECT_EQ(view::typeDetail(typeInfo(NumberType::Exact)), "cpp_rational · fractions, no rounding");
+    EXPECT_EQ(view::typeDetail(typeInfo(NumberType::Binary512)),
+              "binary512 · 512-bit storage · 489-bit significand · software, no subnormals");
+}

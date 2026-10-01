@@ -15,6 +15,7 @@ class QPlainTextEdit;
 class QPushButton;
 class QStackedWidget;
 class QToolButton;
+class TypeChooser;
 class Worker;
 struct Face;
 struct Key;
@@ -61,7 +62,7 @@ private:
 
     QListWidget* modes_ = nullptr;
     QStackedWidget* pages_ = nullptr;
-    QComboBox* type_ = nullptr;
+    TypeChooser* type_ = nullptr;
     QComboBox* angle_ = nullptr;
     Lcd* lcd_ = nullptr;
     QLabel* errorLine_ = nullptr;

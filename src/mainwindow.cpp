@@ -2,6 +2,7 @@
 
 #include "keypad.hpp"
 #include "lcd.hpp"
+#include "typechooser.hpp"
 #include "presenter.hpp"
 #include "worker.hpp"
 
@@ -34,25 +35,29 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     auto* main = new QVBoxLayout;
     outer->addLayout(main, 1);
 
-    auto* top = new QHBoxLayout;
-    type_ = new QComboBox(central);
-    type_->setObjectName("type");
-    for (const TypeInfo& t : types_) type_->addItem(view::typeLabel(t));
-    type_->setCurrentIndex(static_cast<int>(NumberType::Double));
+    // The screen, and beside it the angle unit, the number type and = stacked to its height.
+    auto* screenRow = new QHBoxLayout;
+    lcd_ = new Lcd(central);
+    lcd_->setObjectName("lcd");
+    screenRow->addWidget(lcd_, 1);
+    auto* column = new QVBoxLayout;
     angle_ = new QComboBox(central);
     angle_->setObjectName("angle");
     angle_->addItems({tr("RAD"), tr("DEG"), tr("GRAD")});
-    top->addWidget(type_, 1);
-    top->addWidget(angle_);
-    main->addLayout(top);
-
-    auto* entry = new QHBoxLayout;
-    lcd_ = new Lcd(central);
-    lcd_->setObjectName("lcd");
+    type_ = new TypeChooser(central);
+    type_->setObjectName("type");
     auto* equals = new QPushButton(tr("="), central);
-    entry->addWidget(lcd_, 1);
-    entry->addWidget(equals);
-    main->addLayout(entry);
+    equals->setObjectName("equals");
+    int width = 0;
+    for (QWidget* w : {static_cast<QWidget*>(angle_), static_cast<QWidget*>(type_), static_cast<QWidget*>(equals)})
+        width = qMax(width, w->sizeHint().width());
+    for (QWidget* w : {static_cast<QWidget*>(angle_), static_cast<QWidget*>(type_), static_cast<QWidget*>(equals)}) {
+        w->setFixedWidth(width);
+        w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+        column->addWidget(w);
+    }
+    screenRow->addLayout(column);
+    main->addLayout(screenRow);
 
     auto label = [&](const char* name) {
         auto* l = new QLabel(central);

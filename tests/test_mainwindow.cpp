@@ -1,7 +1,9 @@
 #include "mainwindow.hpp"
 
 #include "lcd.hpp"
+#include "typechooser.hpp"
 
+#include <QAbstractItemView>
 #include <QComboBox>
 #include <QLabel>
 #include <QListWidget>
@@ -50,11 +52,37 @@ QAction* action(QMenu* menu, const QString& text) {
 
 TEST(MainWindow, TheTypeMenuComesFromTheEngine) {
     MainWindow window;
-    auto* type = child<QComboBox>(window, "type");
+    auto* type = child<TypeChooser>(window, "type");
     ASSERT_EQ(type->count(), 7);
     EXPECT_EQ(type->currentIndex(), 1);
-    EXPECT_EQ(type->itemText(1), "Double · double · 64-bit · ~16 digits");
+    EXPECT_EQ(type->itemText(1), "Double");
+    EXPECT_EQ(type->itemText(6), "Hexadecuple");
+    EXPECT_EQ(type->itemData(1, TypeChooser::DigitsRole).toString(), "~16 significant digits");
+    EXPECT_EQ(type->itemData(1, TypeChooser::DetailRole).toString(), "double · 64-bit storage · 53-bit significand");
+    EXPECT_EQ(type->itemData(1, Qt::ToolTipRole).toString(), "Double · double · 64-bit · ~16 digits");
+    EXPECT_GT(type->view()->minimumWidth(), 2 * type->sizeHint().width());  // the menu is wider than the button
     EXPECT_EQ(child<QComboBox>(window, "angle")->count(), 3);
+}
+
+TEST(MainWindow, AngleTypeAndEqualsStackBesideTheScreen) {
+    MainWindow window;
+    window.resize(900, 700);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    const QRect angle = child<QWidget>(window, "angle")->geometry();
+    const QRect type = child<QWidget>(window, "type")->geometry();
+    const QRect equals = child<QWidget>(window, "equals")->geometry();
+    const QRect screen = child<QWidget>(window, "lcd")->geometry();
+    EXPECT_EQ(angle.width(), type.width());
+    EXPECT_EQ(type.width(), equals.width());
+    EXPECT_EQ(angle.x(), type.x());
+    EXPECT_EQ(type.x(), equals.x());
+    EXPECT_LT(angle.bottom(), type.top());
+    EXPECT_LT(type.bottom(), equals.top());
+    EXPECT_EQ(screen.top(), angle.top());
+    EXPECT_EQ(screen.bottom(), equals.bottom());
+    EXPECT_LT(screen.right(), angle.left());
+    EXPECT_LT(type.width(), screen.width() / 3);
 }
 
 TEST(MainWindow, EvaluatesAndShowsTheErrorReport) {
