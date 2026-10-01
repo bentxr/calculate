@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QPalette>
+#include <QStringList>
 
 // The application's language and colours. They change at once, while the app runs, and are not
 // remembered: every start follows the system again.
@@ -14,5 +15,9 @@ void setLanguage(Language language);
 // Applies our light or dark palette; System follows the desktop's colour scheme, also when it changes.
 void setTheme(Theme theme);
 QPalette palette(bool dark);
+
+// The text in every language the app ships, the English source first: widgets are sized for the
+// longest, so switching languages moves nothing.
+QStringList inEveryLanguage(const char* context, const QString& source);
 
 }  // namespace settings

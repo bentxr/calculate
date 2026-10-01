@@ -455,3 +455,24 @@ TEST(MainWindow, TheStatisticsKeypadStaysCompact) {
     const QWidget* four = child<QWidget>(window, "statKey:4");
     EXPECT_LT(four->y() - seven->y(), 2 * seven->height());  // rows stay together however tall the page is
 }
+
+TEST(MainWindow, ChangingTheLanguageMovesNothing) {
+    MainWindow window;
+    window.resize(1200, 800);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    const auto geometry = [&] {
+        QList<QRect> rects;
+        for (const char* name : {"lcd", "type", "angle", "equals", "key:sin", "key:7", "direct:asin", "direct:acosh", "keys"})
+            rects << child<QWidget>(window, name)->geometry();
+        return rects;
+    };
+    const QList<QRect> english = geometry();
+    auto* language = child<QComboBox>(window, "language");
+    language->setCurrentIndex(2);  // Español
+    QCoreApplication::processEvents();
+    EXPECT_EQ(geometry(), english);
+    language->setCurrentIndex(1);  // English
+    QCoreApplication::processEvents();
+    EXPECT_EQ(geometry(), english);
+}

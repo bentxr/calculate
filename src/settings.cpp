@@ -23,6 +23,17 @@ bool systemIsDark() { return QGuiApplication::styleHints()->colorScheme() == Qt:
 
 }  // namespace
 
+QStringList inEveryLanguage(const char* context, const QString& source) {
+    static QTranslator spanish;
+    static const bool loaded = spanish.load(QLocale(QLocale::Spanish, QLocale::Spain), "calculate", "_", ":/i18n");
+    QStringList texts{source};
+    if (loaded) {
+        const QString text = spanish.translate(context, source.toUtf8().constData());
+        if (!text.isEmpty()) texts << text;
+    }
+    return texts;
+}
+
 void setLanguage(Language language) {
     QCoreApplication::removeTranslator(&translator());
     const QLocale locale = language == Language::System    ? QLocale::system()
