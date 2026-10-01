@@ -6,6 +6,7 @@
 #include "typechooser.hpp"
 
 #include <QAbstractItemView>
+#include <QApplication>
 #include <QComboBox>
 #include <QDialog>
 #include <QLabel>
@@ -436,4 +437,44 @@ TEST(MainWindow, TheSettingsButtonOpensTheSettings) {
     auto* dialog = child<QDialog>(window, "settings");
     EXPECT_TRUE(dialog->isVisible());
     dialog->close();
+}
+
+TEST(MainWindow, SpanishRelabelsEverythingWithoutARestart) {
+    MainWindow window;
+    run(window, "0.1 + 0.2");
+    auto* language = child<QComboBox>(window, "language");
+    ASSERT_EQ(language->count(), 3);  // System, English, Español
+    language->setCurrentIndex(2);
+    QCoreApplication::processEvents();  // Qt posts the language change to every window
+    EXPECT_EQ(child<QPushButton>(window, "key:sin")->text(), "sen");
+    EXPECT_EQ(child<QLabel>(window, "shift:sin")->text(), "Arcsen");
+    EXPECT_EQ(child<QPushButton>(window, "direct:gcd")->text(), "MCD");
+    EXPECT_EQ(child<QListWidget>(window, "modes")->item(0)->text(), "Calculadora");
+    EXPECT_EQ(child<QComboBox>(window, "type")->itemText(1), "Doble");
+    EXPECT_EQ(child<QToolButton>(window, "detailsButton")->text(), "Detalles");
+    EXPECT_EQ(child<DetailsCard>(window, "detailsCard")->findChild<QLabel*>("label:bound")->text(), "Cota garantizada");
+    EXPECT_NE(action(child<QMenu>(window, "menu"), "Estadística"), nullptr);
+    EXPECT_EQ(language->itemText(0), "Sistema");
+    language->setCurrentIndex(1);
+    QCoreApplication::processEvents();
+    EXPECT_EQ(child<QPushButton>(window, "key:sin")->text(), "sin");
+    EXPECT_EQ(child<QListWidget>(window, "modes")->item(0)->text(), "Calculator");
+}
+
+TEST(MainWindow, TheThemeSwitchesBetweenLightAndDark) {
+    const QPalette original = QApplication::palette();
+    MainWindow window;
+    auto* theme = child<QComboBox>(window, "theme");
+    ASSERT_EQ(theme->count(), 3);  // System, Light, Dark
+    theme->setCurrentIndex(2);
+    QCoreApplication::processEvents();
+    EXPECT_LT(window.palette().color(QPalette::Window).lightness(), 128);
+    EXPECT_EQ(child<QLabel>(window, "shift:sin")->styleSheet(), "color:#e3b341");
+    EXPECT_LT(lcd(window)->background().lightness(), 80);
+    theme->setCurrentIndex(1);
+    QCoreApplication::processEvents();
+    EXPECT_GT(window.palette().color(QPalette::Window).lightness(), 128);
+    EXPECT_EQ(child<QLabel>(window, "shift:sin")->styleSheet(), "color:#9a6700");
+    QApplication::setPalette(original);
+    QCoreApplication::processEvents();
 }

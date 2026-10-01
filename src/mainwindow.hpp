@@ -36,6 +36,7 @@ public slots:
 
 protected:
     void showEvent(QShowEvent* event) override;
+    void changeEvent(QEvent* event) override;
 
 signals:
     void evaluationRequested(const QString& expression, const calculate_core::Options& options);
@@ -49,6 +50,10 @@ private:
     QWidget* buildKey(const Key& key, bool legends = true);  // the cursor pad has no legends
     QWidget* buildStatistics();
     void buildMenus();
+    void buildSettings();
+    void retranslate();
+    void colourLegends();
+    void present();
     calculate_core::Options options() const;
     void request(const QString& expression, bool allowUncertain);
     void showResult(const QString& expression, const calculate_core::Result& result);
@@ -74,7 +79,16 @@ private:
     QString lastExpression_;
 
     QListWidget* modes_ = nullptr;
+    QToolButton* panelToggle_ = nullptr;
+    QToolButton* settingsButton_ = nullptr;
     QDialog* settings_ = nullptr;
+    QLabel* languageLabel_ = nullptr;
+    QComboBox* languageBox_ = nullptr;
+    QLabel* themeLabel_ = nullptr;
+    QComboBox* themeBox_ = nullptr;
+    QPushButton* equals_ = nullptr;
+    QLabel* statisticsLabel_ = nullptr;
+    bool hasResult_ = false;  // whether last_ holds a result to present
     QStackedWidget* pages_ = nullptr;
     QScrollArea* keys_ = nullptr;
     bool keysSized_ = false;

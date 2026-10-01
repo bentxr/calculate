@@ -1,0 +1,18 @@
+#pragma once
+
+#include <QPalette>
+
+// The application's language and colours. They change at once, while the app runs, and are not
+// remembered: every start follows the system again.
+namespace settings {
+
+enum class Language { System, English, Spanish };
+enum class Theme { System, Light, Dark };
+
+// Installs the translator for the language; open windows get QEvent::LanguageChange.
+void setLanguage(Language language);
+// Applies our light or dark palette; System follows the desktop's colour scheme, also when it changes.
+void setTheme(Theme theme);
+QPalette palette(bool dark);
+
+}  // namespace settings

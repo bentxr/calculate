@@ -54,6 +54,7 @@ protected:
     void keyPressEvent(QKeyEvent* event) override;
     void wheelEvent(QWheelEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
+    void changeEvent(QEvent* event) override;
 
 private:
     enum class Shown { Nothing, Value, Exact, Message };

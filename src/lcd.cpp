@@ -298,3 +298,8 @@ void Lcd::wheelEvent(QWheelEvent* event) {
 }
 
 void Lcd::resizeEvent(QResizeEvent*) { changed(); }
+
+void Lcd::changeEvent(QEvent* event) {
+    if (event->type() == QEvent::LanguageChange) setMemory(memory_);  // its tooltip
+    QWidget::changeEvent(event);
+}
