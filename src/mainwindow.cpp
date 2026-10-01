@@ -539,7 +539,7 @@ QWidget* MainWindow::buildStatistics() {
 
 Options MainWindow::options() const {
     Options o;
-    o.type = static_cast<NumberType>(type_->currentIndex());
+    o.type = type_->currentType();
     o.angle = static_cast<AngleUnit>(angle_->currentIndex());
     return o;
 }
@@ -626,7 +626,7 @@ void MainWindow::replay(int index) {
     lcd_->setEntry(historyEntries_[static_cast<std::size_t>(index)]);
 }
 
-bool MainWindow::exactType() const { return static_cast<NumberType>(type_->currentIndex()) == NumberType::Exact; }
+bool MainWindow::exactType() const { return type_->currentType() == NumberType::Exact; }
 
 QString MainWindow::exactRefusal(const QString& label) const {
     return tr("Exact arithmetic cannot represent %1: its result is irrational. Switch to a floating type to compute it.")

@@ -73,8 +73,15 @@ TEST(MainWindow, TheTypeMenuComesFromTheEngine) {
     auto* type = child<TypeChooser>(window, "type");
     ASSERT_EQ(type->count(), 7);
     EXPECT_EQ(type->currentIndex(), 1);
+    EXPECT_EQ(type->currentType(), calculate_core::NumberType::Double);
     EXPECT_EQ(type->itemText(1), "Double");
-    EXPECT_EQ(type->itemText(6), "Hexadecuple");
+    EXPECT_EQ(type->itemText(5), "Hexadecuple");
+    EXPECT_EQ(type->itemText(6), "Exact");  // the most precise of all, so the last
+    for (int i = 1; i < 6; ++i)             // the others from the least precise
+        EXPECT_LE(type->itemData(i - 1, TypeChooser::PrecisionRole).toInt(), type->itemData(i, TypeChooser::PrecisionRole).toInt()) << i;
+    type->setCurrentType(calculate_core::NumberType::Exact);
+    EXPECT_EQ(type->currentIndex(), 6);
+    EXPECT_EQ(type->currentType(), calculate_core::NumberType::Exact);
     EXPECT_EQ(type->itemData(1, TypeChooser::DigitsRole).toString(), "~16 significant digits");
     EXPECT_EQ(type->itemData(1, TypeChooser::DetailRole).toString(), "double · 64-bit storage · 53-bit significand");
     EXPECT_EQ(type->itemData(1, Qt::ToolTipRole).toString(), "Double · double · 64-bit · ~16 digits");
@@ -122,7 +129,7 @@ TEST(MainWindow, ChangingTheTypeReevaluates) {
     MainWindow window;
     run(window, "1/3");
     forget(window);
-    child<QComboBox>(window, "type")->setCurrentIndex(3);  // Exact
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
     EXPECT_TRUE(answered(window));
     EXPECT_EQ(lcd(window)->outputText(), "1/3 = 0.(3)");
     EXPECT_EQ(detail(window, "exact"), "exact · no rounding error");
@@ -132,7 +139,7 @@ TEST(MainWindow, ExactModeGreysOutTranscendentalKeys) {
     MainWindow window;
     auto* sin = child<QPushButton>(window, "key:sin");
     EXPECT_TRUE(sin->isEnabled());
-    child<QComboBox>(window, "type")->setCurrentIndex(3);
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
     EXPECT_FALSE(sin->isEnabled());
     EXPECT_FALSE(sin->toolTip().isEmpty());
     EXPECT_TRUE(child<QPushButton>(window, "key:sqrt")->isEnabled());
@@ -223,7 +230,7 @@ TEST(MainWindow, MemoryClearEmptiesTheMemory) {
 
 TEST(MainWindow, CancelStaysOfferedWhileALaterRequestRuns) {
     MainWindow window;
-    child<QComboBox>(window, "type")->setCurrentIndex(3);  // Exact
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
     lcd(window)->setInput("1 + 1");
     QTest::keyClick(lcd(window), Qt::Key_Return);
     lcd(window)->setInput("200000!");
@@ -349,7 +356,7 @@ TEST(MainWindow, DirectKeysInsertTheirFunctions) {
     QTest::mouseClick(child<QPushButton>(window, "direct:comma"), Qt::LeftButton);
     QTest::mouseClick(child<QPushButton>(window, "direct:sinh"), Qt::LeftButton);
     EXPECT_EQ(lcd(window)->input(), "asin(π, sinh(");
-    child<QComboBox>(window, "type")->setCurrentIndex(3);  // Exact
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
     EXPECT_FALSE(child<QPushButton>(window, "direct:sinh")->isEnabled());
     EXPECT_FALSE(child<QPushButton>(window, "direct:sinh")->toolTip().isEmpty());
     EXPECT_TRUE(child<QPushButton>(window, "direct:mod")->isEnabled());
@@ -550,7 +557,7 @@ TEST(MainWindow, ErrorsAppearUnderTheScreenWithoutMovingAnything) {
         return rects;
     };
     const QList<QRect> before = geometry();
-    child<QComboBox>(window, "type")->setCurrentIndex(3);  // Exact
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
     run(window, "ln(2)");
     EXPECT_TRUE(message(window)->text().startsWith("Exact arithmetic cannot represent ln")) << message(window)->text().toStdString();
     EXPECT_EQ(lcd(window)->outputText(), "");  // the screen shows values only
@@ -569,7 +576,7 @@ TEST(MainWindow, TemplateKeysBuildTwoDimensionalInput) {
     const auto click = [&](std::initializer_list<const char*> names) {
         for (const char* name : names) QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
     };
-    child<QComboBox>(window, "type")->setCurrentIndex(3);  // Exact
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
     click({"key:fraction", "key:1", "key:down", "key:3", "key:right", "key:plus", "key:sqrt", "key:4", "key:right",
            "direct:cube"});
     EXPECT_EQ(lcd(window)->input(), "((1)/(3))+√(4)^(3)");
