@@ -28,6 +28,8 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
+
 namespace {
 
 template <class W>
@@ -323,6 +325,39 @@ TEST(MainWindow, TheInfoSignIsDrawnNotTyped) {
             for (int x = 0; x < image.width(); ++x)
                 if (qAbs(image.pixelColor(x, y).lightness() - background.lightness()) > 60) ++ink;
         EXPECT_GT(ink, 10) << info->objectName().toStdString();  // a visible sign
+    }
+    card->hide();
+}
+
+TEST(MainWindow, LightLinesSeparateTheRowsOfTheCard) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    run(window, "0.1 + 0.2");
+    QTest::mouseClick(child<QToolButton>(window, "detailsButton"), Qt::LeftButton);
+    auto* card = child<DetailsCard>(window, "detailsCard");
+    QList<QLabel*> labels = card->findChildren<QLabel*>(QRegularExpression("^label:"));
+    std::sort(labels.begin(), labels.end(), [](QLabel* a, QLabel* b) { return a->y() < b->y(); });
+    const QList<QFrame*> lines = card->findChildren<QFrame*>(QRegularExpression("^separator:"));
+    ASSERT_GE(labels.size(), 2);
+    EXPECT_EQ(lines.size(), labels.size() - 1);  // between rows, not around them
+    const auto bottomOfRow = [&](const QString& key) {
+        int bottom = 0;
+        for (const char* part : {"label:", "value:", "info:"})
+            bottom = qMax(bottom, card->findChild<QWidget*>(part + key)->geometry().bottom());
+        return bottom;
+    };
+    for (int i = 0; i + 1 < labels.size(); ++i) {
+        const QString key = labels[i]->objectName().mid(6);
+        auto* line = card->findChild<QFrame*>("separator:" + key);
+        ASSERT_NE(line, nullptr) << key.toStdString();
+        EXPECT_GT(line->y(), bottomOfRow(key)) << key.toStdString();
+        EXPECT_LT(line->geometry().bottom(), labels[i + 1]->y()) << key.toStdString();
+        EXPECT_LE(line->x(), labels[i]->x());  // from the label to the info sign
+        EXPECT_GE(line->geometry().right(), card->findChild<QWidget*>("info:" + key)->geometry().right());
+        EXPECT_EQ(line->frameShape(), QFrame::HLine);
+        EXPECT_EQ(line->foregroundRole(), QPalette::Mid);  // light, not the text's colour
+        EXPECT_LE(line->height(), 2);
     }
     card->hide();
 }

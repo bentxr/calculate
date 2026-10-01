@@ -75,9 +75,18 @@ void DetailsCard::setRows(const QList<view::DetailRow>& rows) {
         info->setAutoRaise(true);
         info->setFocusPolicy(Qt::NoFocus);
         connect(info, &QToolButton::clicked, this, [this, key = row.key, info] { explain(key, info); });
-        grid->addWidget(label, line, 0, Qt::AlignTop);
-        grid->addWidget(value, line, 1, Qt::AlignTop);
-        grid->addWidget(info, line, 2, Qt::AlignTop);
+        grid->addWidget(label, 2 * line, 0, Qt::AlignTop);
+        grid->addWidget(value, 2 * line, 1, Qt::AlignTop);
+        grid->addWidget(info, 2 * line, 2, Qt::AlignTop);
+        if (line + 1 == rows.size()) break;
+        // A faint line under the row, so the eye finds the info sign of each figure.
+        auto* separator = new QFrame(rows_);
+        separator->setObjectName("separator:" + row.key);
+        separator->setFrameShape(QFrame::HLine);
+        separator->setFrameShadow(QFrame::Plain);
+        separator->setForegroundRole(QPalette::Mid);
+        separator->setFixedHeight(1);
+        grid->addWidget(separator, 2 * line + 1, 0, 1, 3);
     }
 }
 
