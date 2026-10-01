@@ -13,6 +13,7 @@ add_executable(calculate-tests
     test_mainwindow.cpp
     test_presenter.cpp
     test_translation.cpp
+    test_typeset.cpp
     test_worker.cpp
 )
 target_link_libraries(calculate-tests PRIVATE calculate-ui Qt6::Test GTest::gtest)

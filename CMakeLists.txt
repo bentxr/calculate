@@ -23,6 +23,7 @@ qt_add_library(calculate-ui STATIC
     src/keypad.cpp
     src/mainwindow.cpp
     src/presenter.cpp
+    src/typeset.cpp
     src/worker.cpp
 )
 target_include_directories(calculate-ui PUBLIC ${PROJECT_SOURCE_DIR}/src)
