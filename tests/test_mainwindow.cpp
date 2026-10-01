@@ -65,3 +65,26 @@ TEST(MainWindow, ChangingTheTypeReevaluates) {
     EXPECT_EQ(value->text(), "1/3 = 0.(3)");
     EXPECT_EQ(child<QLabel>(window, "errorLine")->text(), "exact · no rounding error");
 }
+
+TEST(MainWindow, ExactModeGreysOutTranscendentalKeys) {
+    MainWindow window;
+    auto* sin = child<QPushButton>(window, "key:sin");
+    EXPECT_TRUE(sin->isEnabled());
+    child<QComboBox>(window, "type")->setCurrentIndex(3);
+    EXPECT_FALSE(sin->isEnabled());
+    EXPECT_FALSE(sin->toolTip().isEmpty());
+    EXPECT_TRUE(child<QPushButton>(window, "key:√")->isEnabled());
+}
+
+TEST(MainWindow, TheKeypadEditsTheExpression) {
+    MainWindow window;
+    auto* input = child<QLineEdit>(window, "expression");
+    QTest::mouseClick(child<QPushButton>(window, "key:sin"), Qt::LeftButton);
+    QTest::mouseClick(child<QPushButton>(window, "key:π"), Qt::LeftButton);
+    QTest::mouseClick(child<QPushButton>(window, "key:)"), Qt::LeftButton);
+    EXPECT_EQ(input->text(), "sin(π)");
+    QTest::mouseClick(child<QPushButton>(window, "key:⌫"), Qt::LeftButton);
+    EXPECT_EQ(input->text(), "sin(π");
+    QTest::mouseClick(child<QPushButton>(window, "key:C"), Qt::LeftButton);
+    EXPECT_EQ(input->text(), "");
+}

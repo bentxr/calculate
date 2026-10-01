@@ -1,5 +1,6 @@
 #include "mainwindow.hpp"
 
+#include "keypad.hpp"
 #include "worker.hpp"
 
 #include <QComboBox>
@@ -155,7 +156,30 @@ void MainWindow::setDigitStyle(view::DigitStyle style) {
 QWidget* MainWindow::buildKeypad() {
     auto* pad = new QWidget;
     pad->setObjectName("keypad");
-    new QGridLayout(pad);
+    auto* grid = new QGridLayout(pad);
+    int row = 0, column = 0;
+    for (const Key& key : keypad()) {
+        auto* button = new QPushButton(key.label, pad);
+        button->setObjectName("key:" + key.label);
+        grid->addWidget(button, row, column, 1, key.span);
+        column += key.span;
+        if (column >= keypadColumns) {
+            column = 0;
+            ++row;
+        }
+        connect(button, &QPushButton::clicked, this, [this, key] {
+            switch (key.action) {
+            case KeyAction::Insert: expression_->insert(key.insert); break;
+            case KeyAction::Clear: expression_->clear(); break;
+            case KeyAction::Backspace: expression_->backspace(); break;
+            case KeyAction::Evaluate: evaluate(); break;
+            case KeyAction::MemoryAdd: emit memoryAddRequested(); break;
+            case KeyAction::MemorySubtract: emit memorySubtractRequested(); break;
+            case KeyAction::MemoryClear: emit memoryClearRequested(); break;
+            }
+            expression_->setFocus();
+        });
+    }
     return pad;
 }
 
@@ -208,4 +232,14 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
     if (history_->count() == 0 || history_->item(0)->text() != expression) history_->insertItem(0, expression);
 }
 
-void MainWindow::updateExactAvailability() {}
+void MainWindow::updateExactAvailability() {
+    const bool exact = static_cast<NumberType>(type_->currentIndex()) == NumberType::Exact;
+    for (const Key& key : keypad()) {
+        auto* button = findChild<QPushButton*>("key:" + key.label);
+        const bool available = !exact || availableInExact(key);
+        button->setEnabled(available);
+        button->setToolTip(available ? QString()
+                                     : tr("Exact arithmetic cannot represent %1: its result is irrational. "
+                                          "Switch to a floating type to compute it.").arg(key.label));
+    }
+}
