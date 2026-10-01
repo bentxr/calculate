@@ -111,25 +111,13 @@ QString Lcd::outputText() const {
     return {};
 }
 
-void Lcd::setStatus(bool shift, bool alpha) {
-    shift_ = shift;
-    alpha_ = alpha;
-    update();
-}
-
 void Lcd::setMemory(const QString& memory) {
     memory_ = memory;
     setToolTip(memory.isEmpty() ? QString() : tr("M = %1").arg(memory));
     update();
 }
 
-QString Lcd::statusText() const {
-    QStringList on;
-    if (shift_) on << QStringLiteral("S");
-    if (alpha_) on << QStringLiteral("A");
-    if (!memory_.isEmpty()) on << QStringLiteral("M");
-    return on.join(' ');
-}
+QString Lcd::statusText() const { return memory_.isEmpty() ? QString() : QStringLiteral("M"); }
 
 // JetBrains Mono, loaded once from the resources; the system's fixed font if that ever fails.
 QString Lcd::fontFamily() {

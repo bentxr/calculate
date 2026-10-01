@@ -13,7 +13,6 @@ class QDialog;
 class QFrame;
 class QLabel;
 class QListWidget;
-class QMenu;
 class QPlainTextEdit;
 class QPushButton;
 class QScrollArea;
@@ -47,20 +46,15 @@ signals:
 private:
     QWidget* buildKeypad();
     QWidget* buildDirectKeys();
-    QWidget* buildKey(const Key& key, bool legends = true);  // the cursor pad has no legends
+    QPushButton* buildKey(const Key& key, const QString& prefix);  // prefix: "key:" or "direct:"
     QWidget* buildStatistics();
-    void buildMenus();
     void buildSettings();
     void retranslate();
-    void colourLegends();
     void present();
     calculate_core::Options options() const;
     void request(const QString& expression, bool allowUncertain);
     void showResult(const QString& expression, const calculate_core::Result& result);
-    const Face& face(const Key& key) const;
-    void press(const Key& key);
     void apply(const Face& face);
-    void popUp(QMenu* menu);
     void replay(int index);
     bool exactType() const;
     void updateKeys();
@@ -105,10 +99,5 @@ private:
     QListWidget* history_ = nullptr;
     QPlainTextEdit* statisticsValues_ = nullptr;
     QToolButton* statisticsKeysToggle_ = nullptr;
-    QPushButton* shift_ = nullptr;
-    QPushButton* alpha_ = nullptr;
-    QMenu* modeMenu_ = nullptr;
-    QMenu* configMenu_ = nullptr;
-    QMenu* optionsMenu_ = nullptr;
     int historyIndex_ = -1;  // the history row ▲ and ▼ last showed
 };

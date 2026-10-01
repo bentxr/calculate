@@ -10,7 +10,6 @@
 #include "worker.hpp"
 
 #include <QComboBox>
-#include <QCursor>
 #include <QDialog>
 #include <QEvent>
 #include <QFormLayout>
@@ -19,7 +18,6 @@
 #include <QLabel>
 #include <QKeyEvent>
 #include <QListWidget>
-#include <QMenu>
 #include <QMimeData>
 #include <QPlainTextEdit>
 #include <QPushButton>
@@ -221,9 +219,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     };
     connect(type_, &QComboBox::currentIndexChanged, this, reevaluate);
     connect(angle_, &QComboBox::currentIndexChanged, this, reevaluate);
-    buildMenus();
     retranslate();
-    colourLegends();
     // Only the screen takes the keyboard; every other control is used with the mouse.
     for (QWidget* w : {static_cast<QWidget*>(modes_), static_cast<QWidget*>(panelToggle_), static_cast<QWidget*>(settingsButton_),
                        static_cast<QWidget*>(type_), static_cast<QWidget*>(angle_), static_cast<QWidget*>(equals_),
@@ -255,10 +251,10 @@ QWidget* MainWindow::buildKeypad() {
         const bool numberKeys = row.size() == 5;
         for (int c = 0; c < row.size(); ++c) {
             if (numberKeys) {
-                numbers->addWidget(buildKey(row[c]), numberRow, c);
+                numbers->addWidget(buildKey(row[c], "key:"), numberRow, c);
             } else {
                 const int column = row.size() == 4 && c >= 2 ? c + 2 : c;  // columns 2–3 hold the cursor pad
-                functions->addWidget(buildKey(row[c]), functionRow, column);
+                functions->addWidget(buildKey(row[c], "key:"), functionRow, column);
             }
         }
         if (numberKeys) ++numberRow;
@@ -269,54 +265,18 @@ QWidget* MainWindow::buildKeypad() {
     auto* cross = new QGridLayout(cursor);
     cross->setContentsMargins(0, 0, 0, 0);
     const int places[][2] = {{0, 1}, {1, 0}, {1, 2}, {2, 1}};  // up, left, right, down
-    for (int i = 0; i < cursorPad().size(); ++i) cross->addWidget(buildKey(cursorPad()[i], false), places[i][0], places[i][1]);
+    for (int i = 0; i < cursorPad().size(); ++i) cross->addWidget(buildKey(cursorPad()[i], "key:"), places[i][0], places[i][1]);
     functions->addWidget(cursor, 0, 2, 2, 2);
     return pad;
 }
 
-QWidget* MainWindow::buildKey(const Key& key, bool legends) {
-    auto* cell = new QWidget;
-    auto* layout = new QVBoxLayout(cell);
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(0);
-    // SHIFT legends sit on the left and ALPHA legends on the right, so colour is never the only cue
-    // (texts: retranslate; colours: colourLegends).
-    auto legend = [&](const QString& name) {
-        auto* l = new QLabel(cell);
-        l->setObjectName(name + ":" + key.id);
-        QFont small = l->font();
-        small.setPointSizeF(small.pointSizeF() * 0.8);
-        l->setFont(small);
-        l->setMinimumWidth(1);  // a long legend may shrink, but never widens its key
-        return l;
-    };
-    if (legends) {
-        auto* legendRow = new QHBoxLayout;
-        legendRow->addWidget(legend("shift"));
-        legendRow->addStretch();
-        legendRow->addWidget(legend("alpha"));
-        layout->addLayout(legendRow);
-    }
-
-    auto* button = new QPushButton(cell);
-    button->setObjectName("key:" + key.id);
-    button->setMinimumWidth(32);  // below the style's default, so every column can be equally wide
+QPushButton* MainWindow::buildKey(const Key& key, const QString& prefix) {
+    auto* button = new QPushButton;
+    button->setObjectName(prefix + key.id);
+    button->setMinimumWidth(32);          // below the style's default, so every column can be equally wide
     button->setFocusPolicy(Qt::NoFocus);  // the keyboard always stays with the screen
-    layout->addWidget(button);
-    if (key.main.action == KeyAction::Shift || key.main.action == KeyAction::Alpha) {
-        button->setCheckable(true);
-        if (key.main.action == KeyAction::Shift) shift_ = button;
-        else alpha_ = button;
-        connect(button, &QPushButton::toggled, this, [this, button](bool on) {
-            QPushButton* other = button == shift_ ? alpha_ : shift_;
-            if (on) other->setChecked(false);  // SHIFT and ALPHA are never on together
-            lcd_->setStatus(shift_->isChecked(), alpha_->isChecked());
-            updateKeys();
-        });
-    } else {
-        connect(button, &QPushButton::clicked, this, [this, key] { press(key); });
-    }
-    return cell;
+    connect(button, &QPushButton::clicked, this, [this, key] { apply(key.face); });
+    return button;
 }
 
 // The direct keys, a titled grid of six columns per topic.
@@ -334,16 +294,7 @@ QWidget* MainWindow::buildDirectKeys() {
         grid->setSpacing(keySpacing);
         for (int i = 0; i < group.keys.size(); ++i) {
             const Key& key = group.keys[i];
-            auto* button = new QPushButton(keyboard);
-            button->setObjectName("direct:" + key.id);
-            button->setMinimumWidth(32);
-            button->setFocusPolicy(Qt::NoFocus);
-            connect(button, &QPushButton::clicked, this, [this, key] {
-                shift_->setChecked(false);  // a direct key is its own function: it ends SHIFT and ALPHA
-                alpha_->setChecked(false);
-                apply(key.main);
-            });
-            grid->addWidget(button, i / 6, i % 6);
+            grid->addWidget(buildKey(key, "direct:"), i / 6, i % 6);
         }
         grid->setColumnStretch(6, 1);  // shorter rows line up on the left, in the same columns
         layout->addLayout(grid);
@@ -364,29 +315,26 @@ void MainWindow::sizeKeys() {
     for (const QList<Key>& row : keypad()) all += row;
     for (const KeyGroup& group : directKeys()) all += group.keys;
     int labels = 0;  // the widest main label, so no key is too narrow for its own name
-    for (const Key& key : all) labels = qMax(labels, fontMetrics().horizontalAdvance(translated(key.main.label)));
+    for (const Key& key : all) labels = qMax(labels, fontMetrics().horizontalAdvance(translated(key.face.label)));
     const QSize minimum(labels + 10, fontMetrics().height() + 10);
 
     const QMargins outer = centralWidget()->layout()->contentsMargins();
     const QMargins inner = pad->layout()->contentsMargins();
     const QMargins left = direct->layout()->contentsMargins();
     const int scrollBar = style()->pixelMetric(QStyle::PM_ScrollBarExtent);
-    const int legend = findChild<QLabel*>("shift:sin")->sizeHint().height();
-    const int rows = 9;
+    const int rows = 7;
     const QSize reserved(outer.left() + outer.right() + centralWidget()->layout()->spacing() + modes_->width()
                              + inner.left() + inner.right() + left.left() + left.right() + area->layout()->spacing()
                              + 2 * keys_->frameWidth() + scrollBar,
                          outer.top() + outer.bottom() + lcd_->minimumSizeHint().height() + 2 * keySpacing
-                             + inner.top() + inner.bottom() + keypadGap + rows * legend
+                             + inner.top() + inner.bottom() + keypadGap
                              + style()->pixelMetric(QStyle::PM_TitleBarHeight));
     const QSize size = keySize(screen()->availableGeometry().size(), reserved, QSize(12, rows), keySpacing, minimum);
     const QSize numberSize((6 * size.width() + keySpacing) / 5, size.height());  // five span six
 
     for (const QList<Key>& row : keypad())
         for (const Key& key : row) {
-            auto* button = findChild<QPushButton*>("key:" + key.id);
-            button->setFixedSize(row.size() == 5 ? numberSize : size);
-            button->parentWidget()->setFixedWidth(button->width());  // the key's cell, legends included
+            findChild<QPushButton*>("key:" + key.id)->setFixedSize(row.size() == 5 ? numberSize : size);
         }
     for (const KeyGroup& group : directKeys())
         for (const Key& key : group.keys) findChild<QPushButton*>("direct:" + key.id)->setFixedSize(size);
@@ -432,16 +380,9 @@ void MainWindow::retranslate() {
     panelToggle_->setToolTip(tr("Show or hide the panel"));
     settingsButton_->setToolTip(tr("Settings"));
     const QStringList modes{tr("Calculator"), tr("Statistics")};
-    for (int i = 0; i < modes.size(); ++i) {
-        modes_->item(i)->setText(modes[i]);
-        modeMenu_->actions()[i]->setText(modes[i]);
-    }
+    for (int i = 0; i < modes.size(); ++i) modes_->item(i)->setText(modes[i]);
     const QStringList angles{tr("RAD"), tr("DEG"), tr("GRAD")};
-    for (int i = 0; i < angles.size(); ++i) {
-        angle_->setItemText(i, angles[i]);
-        configMenu_->actions()[i]->setText(angles[i]);
-    }
-    for (int i = 0; i < optionsMenu().size(); ++i) optionsMenu_->actions()[i]->setText(translated(optionsMenu()[i].label));
+    for (int i = 0; i < angles.size(); ++i) angle_->setItemText(i, angles[i]);
     type_->retranslate();
     equals_->setText(tr("="));
     detailsButton_->setText(tr("Details"));
@@ -461,14 +402,10 @@ void MainWindow::retranslate() {
 
     QList<Key> keys = cursorPad();
     for (const QList<Key>& row : keypad()) keys += row;
-    for (const Key& key : keys) {
-        findChild<QPushButton*>("key:" + key.id)->setText(translated(key.main.label));
-        if (auto* shift = findChild<QLabel*>("shift:" + key.id)) shift->setText(translated(key.shift.label));
-        if (auto* alpha = findChild<QLabel*>("alpha:" + key.id)) alpha->setText(translated(key.alpha.label));
-    }
+    for (const Key& key : keys) findChild<QPushButton*>("key:" + key.id)->setText(translated(key.face.label));
     for (int g = 0; g < directKeys().size(); ++g) {
         findChild<QLabel*>("group:" + QString::number(g))->setText(translated(directKeys()[g].title));
-        for (const Key& key : directKeys()[g].keys) findChild<QPushButton*>("direct:" + key.id)->setText(translated(key.main.label));
+        for (const Key& key : directKeys()[g].keys) findChild<QPushButton*>("direct:" + key.id)->setText(translated(key.face.label));
     }
 
     // angle, type and = share the widest one's width
@@ -483,41 +420,9 @@ void MainWindow::retranslate() {
     if (keysSized_) sizeKeys();  // labels changed width
 }
 
-// SHIFT legends yellow and ALPHA legends red, as on the calculator, in shades that suit the theme.
-void MainWindow::colourLegends() {
-    const bool dark = palette().color(QPalette::Window).lightness() < 128;
-    for (QLabel* label : findChildren<QLabel*>()) {
-        if (label->objectName().startsWith(QStringLiteral("shift:")))
-            label->setStyleSheet(QStringLiteral("color:%1").arg(dark ? "#e3b341" : "#9a6700"));
-        else if (label->objectName().startsWith(QStringLiteral("alpha:")))
-            label->setStyleSheet(QStringLiteral("color:%1").arg(dark ? "#ff7b72" : "#c62828"));
-    }
-}
-
 void MainWindow::changeEvent(QEvent* event) {
     if (event->type() == QEvent::LanguageChange) retranslate();
-    else if (event->type() == QEvent::PaletteChange) colourLegends();
     QMainWindow::changeEvent(event);
-}
-
-// MENU picks the mode, SHIFT MENU (CONFIG) the angle unit, and OPTN offers optionsMenu().
-void MainWindow::buildMenus() {
-    modeMenu_ = new QMenu(this);
-    modeMenu_->setObjectName("menu");
-    for (int i = 0; i < modes_->count(); ++i)
-        connect(modeMenu_->addAction(QString()), &QAction::triggered, this, [this, i] { modes_->setCurrentRow(i); });
-    configMenu_ = new QMenu(this);
-    configMenu_->setObjectName("config");
-    for (int i = 0; i < angle_->count(); ++i)
-        connect(configMenu_->addAction(QString()), &QAction::triggered, this, [this, i] { angle_->setCurrentIndex(i); });
-    optionsMenu_ = new QMenu(this);
-    optionsMenu_->setObjectName("options");
-    for (const Face& f : optionsMenu())
-        connect(optionsMenu_->addAction(QString()), &QAction::triggered, this, [this, f] { apply(f); });
-    connect(optionsMenu_, &QMenu::aboutToShow, this, [this] {
-        const QList<QAction*> actions = optionsMenu_->actions();
-        for (int i = 0; i < actions.size(); ++i) actions[i]->setEnabled(available(optionsMenu()[i], exactType()));
-    });
 }
 
 QWidget* MainWindow::buildStatistics() {
@@ -637,18 +542,6 @@ void MainWindow::present() {
     else lcd_->showValue(view::valueParts(last_));
 }
 
-const Face& MainWindow::face(const Key& key) const {
-    return shift_->isChecked() ? key.shift : alpha_->isChecked() ? key.alpha : key.main;
-}
-
-// Like the calculator, SHIFT and ALPHA apply to the next key only.
-void MainWindow::press(const Key& key) {
-    const Face& f = face(key);
-    shift_->setChecked(false);
-    alpha_->setChecked(false);
-    apply(f);
-}
-
 void MainWindow::apply(const Face& f) {
     switch (f.action) {
     case KeyAction::Insert: lcd_->insert(translated(f.insert)); break;
@@ -658,21 +551,13 @@ void MainWindow::apply(const Face& f) {
     case KeyAction::MemoryAdd: emit memoryAddRequested(); break;
     case KeyAction::MemorySubtract: emit memorySubtractRequested(); break;
     case KeyAction::MemoryClear: emit memoryClearRequested(); break;
-    case KeyAction::Menu: popUp(modeMenu_); break;
-    case KeyAction::Config: popUp(configMenu_); break;
-    case KeyAction::Options: popUp(optionsMenu_); break;
     case KeyAction::Left: lcd_->left(); break;
     case KeyAction::Right: lcd_->right(); break;
     case KeyAction::Up: replay(historyIndex_ + 1); break;
     case KeyAction::Down: replay(historyIndex_ - 1); break;
-    case KeyAction::Shift:
-    case KeyAction::Alpha:
-    case KeyAction::Unavailable: break;
     }
     lcd_->setFocus();
 }
-
-void MainWindow::popUp(QMenu* menu) { menu->popup(QCursor::pos()); }
 
 // ▲ and ▼ step through the history, newest first, as the calculator's replay does.
 void MainWindow::replay(int index) {
@@ -688,29 +573,18 @@ QString MainWindow::exactRefusal(const QString& label) const {
         .arg(translated(label));
 }
 
-// Enables the keys whose current face (plain, SHIFT or ALPHA) works in the selected type.
+// Enables the keys that work in the selected type: Exact refuses the irrational functions.
 void MainWindow::updateKeys() {
     const bool exact = exactType();
-    QList<Key> keys = cursorPad();
-    for (const QList<Key>& row : keypad()) keys += row;
-    for (const Key& key : keys) {
-        if (key.main.action == KeyAction::Shift || key.main.action == KeyAction::Alpha) continue;
-        auto* button = findChild<QPushButton*>("key:" + key.id);
-        const Face& f = face(key);
-        const bool on = available(f, exact);
-        button->setEnabled(on);
-        QString tip;
-        if (!on && f.action == KeyAction::Unavailable && !f.label.isEmpty())
-            tip = tr("%1 is not available in this app yet").arg(translated(f.label));
-        else if (!on && f.action != KeyAction::Unavailable)
-            tip = exactRefusal(f.label);
-        button->setToolTip(tip);
-    }
+    QList<QPair<QString, Key>> keys;
+    for (const QList<Key>& row : keypad())
+        for (const Key& key : row) keys.append({"key:", key});
     for (const KeyGroup& group : directKeys())
-        for (const Key& key : group.keys) {
-            auto* button = findChild<QPushButton*>("direct:" + key.id);
-            const bool on = available(key.main, exact);
-            button->setEnabled(on);
-            button->setToolTip(on ? QString() : exactRefusal(key.main.label));
-        }
+        for (const Key& key : group.keys) keys.append({"direct:", key});
+    for (const auto& [prefix, key] : keys) {
+        auto* button = findChild<QPushButton*>(prefix + key.id);
+        const bool on = available(key.face, exact);
+        button->setEnabled(on);
+        button->setToolTip(on ? QString() : exactRefusal(key.face.label));
+    }
 }
