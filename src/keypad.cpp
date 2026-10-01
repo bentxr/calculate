@@ -63,7 +63,7 @@ const QList<KeyGroup>& directKeys() {
          {{"cube", put("x³", "³")}, {"cbrt", put("∛", "∛(", "cbrt")}, {"root", put("ⁿ√", "root(", "root")},
           {"power10", put("10ˣ", "10^")}, {"exp", put("eˣ", "exp(", "exp")}, {"log", put("log", "log(", "log")}}},
         {QT_TRANSLATE_NOOP("keypad", "Numbers"),
-         {{"factorial", put("x!", "!")}, {"abs", put("Abs", "abs(", "abs")}, {"percent", put("%", "%")},
+         {{"factorial", put("x!", "!")}, {"abs", put("abs", "abs(", "abs")}, {"percent", put("%", "%")},
           {"mod", put("mod", "mod(", "mod")}, {"npr", put("nPr", "nPr(", "nPr")}, {"ncr", put("nCr", "nCr(", "nCr")},
           {"gcd", put(QT_TRANSLATE_NOOP("keypad", "gcd"), QT_TRANSLATE_NOOP("keypad", "gcd("), "gcd")},
           {"lcm", put(QT_TRANSLATE_NOOP("keypad", "lcm"), QT_TRANSLATE_NOOP("keypad", "lcm("), "lcm")},
