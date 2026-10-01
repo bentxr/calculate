@@ -8,7 +8,7 @@ class QLabel;
 class QToolButton;
 class QVBoxLayout;
 
-// Everything about the error beyond the value on the screen: one row per figure, each with an ⓘ that
+// Everything about the error beyond the value on the screen: one row per figure, each with an info sign that
 // opens its explanation in a small popup under it. The card floats over the window as a popup, so
 // opening it moves nothing, and a click anywhere else closes it.
 class DetailsCard : public QFrame {

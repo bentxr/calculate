@@ -17,6 +17,7 @@
 #include <QMenu>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QStackedWidget>
@@ -299,6 +300,29 @@ TEST(MainWindow, EveryRowOfTheCardExplainsItselfInAPopup) {
         EXPECT_LE(qAbs(tip->mapToGlobal(QPoint(0, 0)).y() - info->mapToGlobal(QPoint(0, info->height())).y()), 2);  // under its ⓘ
         EXPECT_EQ(card->size(), size);  // the card itself never changes
         tip->hide();
+    }
+    card->hide();
+}
+
+// The browser build has no font with the ⓘ character, so the sign is drawn, not typed.
+TEST(MainWindow, TheInfoSignIsDrawnNotTyped) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    run(window, "0.1 + 0.2");
+    QTest::mouseClick(child<QToolButton>(window, "detailsButton"), Qt::LeftButton);
+    auto* card = child<DetailsCard>(window, "detailsCard");
+    const QList<QToolButton*> infos = card->findChildren<QToolButton*>(QRegularExpression("^info:"));
+    ASSERT_FALSE(infos.isEmpty());
+    for (QToolButton* info : infos) {
+        EXPECT_TRUE(info->text().isEmpty()) << info->objectName().toStdString();
+        const QImage image = info->grab().toImage();
+        const QColor background = image.pixelColor(0, 0);
+        int ink = 0;
+        for (int y = 0; y < image.height(); ++y)
+            for (int x = 0; x < image.width(); ++x)
+                if (qAbs(image.pixelColor(x, y).lightness() - background.lightness()) > 60) ++ink;
+        EXPECT_GT(ink, 10) << info->objectName().toStdString();  // a visible sign
     }
     card->hide();
 }
