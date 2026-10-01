@@ -440,6 +440,21 @@ TEST(MainWindow, MenusAndTooltipsStayInsideANarrowWindow) {
     QToolTip::hideText();
 }
 
+// Some platforms (the browser) place a menu's list again after showing it: it must stay inside then too.
+TEST(MainWindow, APopupMovedAfterItShowsStaysInside) {
+    MainWindow window;
+    window.setGeometry(40, 30, 380, 420);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    auto* popup = new QFrame(&window, Qt::Popup);
+    popup->setGeometry(100, 100, 100, 100);
+    popup->show();
+    popup->setGeometry(300, 100, 600, 100);  // wider than the window, past its right edge
+    QCoreApplication::processEvents();
+    EXPECT_TRUE(window.geometry().contains(popup->geometry()));
+    popup->hide();
+}
+
 TEST(MainWindow, TheHistoryDropsDownUnderTheScreen) {
     MainWindow window;
     window.resize(900, 700);
