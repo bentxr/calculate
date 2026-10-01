@@ -89,6 +89,7 @@ QString typeLabel(const TypeInfo& t) {
 }
 
 QString shortTypeName(const TypeInfo& t) { return translatedLabel(t.label); }
+QString shortTypeNameSource(const TypeInfo& t) { return t.label == "Binary512" ? QStringLiteral("Hexadecuple") : fromStd(t.label); }
 
 QString typeDigits(const TypeInfo& t) {
     if (t.type == NumberType::Exact) return QCoreApplication::translate("view", "every digit exact");

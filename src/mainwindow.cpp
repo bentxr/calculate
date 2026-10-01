@@ -25,6 +25,7 @@
 #include <QScreen>
 #include <QScrollArea>
 #include <QStackedWidget>
+#include <QStyleOptionComboBox>
 #include <QToolButton>
 #include <QVBoxLayout>
 #include <QWindow>
@@ -314,8 +315,10 @@ void MainWindow::sizeKeys() {
     QList<Key> all;
     for (const QList<Key>& row : keypad()) all += row;
     for (const KeyGroup& group : directKeys()) all += group.keys;
-    int labels = 0;  // the widest main label, so no key is too narrow for its own name
-    for (const Key& key : all) labels = qMax(labels, fontMetrics().horizontalAdvance(translated(key.face.label)));
+    int labels = 0;  // the widest label in any language, so no key is too narrow for its name
+    for (const Key& key : all)
+        for (const QString& label : settings::inEveryLanguage("keypad", key.face.label))
+            labels = qMax(labels, fontMetrics().horizontalAdvance(label));
     const QSize minimum(labels + 10, fontMetrics().height() + 10);
 
     const QMargins outer = centralWidget()->layout()->contentsMargins();
@@ -408,10 +411,17 @@ void MainWindow::retranslate() {
         for (const Key& key : directKeys()[g].keys) findChild<QPushButton*>("direct:" + key.id)->setText(translated(key.face.label));
     }
 
-    // angle, type and = share the widest one's width
-    int width = 0;
-    for (QWidget* w : {static_cast<QWidget*>(angle_), static_cast<QWidget*>(type_), static_cast<QWidget*>(equals_)})
-        width = qMax(width, w->sizeHint().width());
+    // angle, type and = share one width, wide enough for their texts in every language
+    int text = 0;
+    for (const char* angle : {"RAD", "DEG", "GRAD"})
+        for (const QString& t : settings::inEveryLanguage("MainWindow", QString::fromLatin1(angle)))
+            text = qMax(text, fontMetrics().horizontalAdvance(t));
+    for (const TypeInfo& type : types_)
+        for (const QString& t : settings::inEveryLanguage("view", view::shortTypeNameSource(type)))
+            text = qMax(text, fontMetrics().horizontalAdvance(t));
+    QStyleOptionComboBox option;
+    option.initFrom(type_);
+    const int width = style()->sizeFromContents(QStyle::CT_ComboBox, &option, QSize(text, fontMetrics().height()), type_).width();
     for (QWidget* w : {static_cast<QWidget*>(angle_), static_cast<QWidget*>(type_), static_cast<QWidget*>(equals_)})
         w->setFixedWidth(width);
 

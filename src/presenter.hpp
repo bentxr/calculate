@@ -34,6 +34,7 @@ struct DetailRow {
 
 QString typeLabel(const calculate_core::TypeInfo& type);
 QString shortTypeName(const calculate_core::TypeInfo& type);
+QString shortTypeNameSource(const calculate_core::TypeInfo& type);  // its English source text
 QString typeDigits(const calculate_core::TypeInfo& type);  // "~16 significant digits"
 QString typeDetail(const calculate_core::TypeInfo& type);  // the C++ type and its bits
 ValueParts valueParts(const calculate_core::Result& result);
