@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=calculate
+Comment=A calculator that shows the error of every result
+Exec=calculate
+Icon=calculate
+Categories=Utility;Calculator;Education;Science;
+Terminal=false
