@@ -26,6 +26,7 @@ qt_add_library(calculate-ui STATIC
     src/keysizing.cpp
     src/lcd.cpp
     src/mainwindow.cpp
+    src/popupplacement.cpp
     src/presenter.cpp
     src/settings.cpp
     src/typechooser.cpp
