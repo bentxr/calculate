@@ -68,6 +68,9 @@ TEST(MainWindow, TheTypeMenuComesFromTheEngine) {
     EXPECT_EQ(type->itemData(1, TypeChooser::DetailRole).toString(), "double · 64-bit storage · 53-bit significand");
     EXPECT_EQ(type->itemData(1, Qt::ToolTipRole).toString(), "Double · double · 64-bit · ~16 digits");
     EXPECT_GT(type->view()->minimumWidth(), 2 * type->sizeHint().width());  // the menu is wider than the button
+    // the menu looks like the Details card: window colours inside a panel frame
+    EXPECT_EQ(type->view()->viewport()->backgroundRole(), QPalette::Window);
+    EXPECT_EQ(type->view()->frameShape(), QFrame::StyledPanel);
     EXPECT_EQ(child<QComboBox>(window, "angle")->count(), 3);
 }
 

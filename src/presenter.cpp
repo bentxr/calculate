@@ -62,7 +62,7 @@ int exponentOf(const QString& s) {
 QString translatedNote(const std::string& note) {
     if (note == "same format as binary128 here") return QCoreApplication::translate("view", "same format as binary128 here");
     if (note == "identical to double here") return QCoreApplication::translate("view", "identical to double here");
-    if (note == "software, no subnormals") return QCoreApplication::translate("view", "software, no subnormals");
+    if (note == "software, no subnormals") return {};  // left out: people read it as noise
     return fromStd(note);
 }
 
@@ -84,7 +84,7 @@ QString typeLabel(const TypeInfo& t) {
     QString s = translatedLabel(t.label) + dot + fromStd(t.cppName);
     if (t.type == NumberType::Exact) return s + dot + QCoreApplication::translate("view", "no rounding");
     s += dot + QCoreApplication::translate("view", "%1-bit").arg(t.storageBits) + dot + QCoreApplication::translate("view", "~%1 digits").arg(t.decimalDigits);
-    if (!t.note.empty()) s += dot + translatedNote(t.note);
+    if (!translatedNote(t.note).isEmpty()) s += dot + translatedNote(t.note);
     return s;
 }
 
@@ -100,7 +100,7 @@ QString typeDetail(const TypeInfo& t) {
     if (t.type == NumberType::Exact) return QCoreApplication::translate("view", "%1 · fractions, no rounding").arg(fromStd(t.cppName));
     QString s = QCoreApplication::translate("view", "%1 · %2-bit storage · %3-bit significand")
                     .arg(fromStd(t.cppName)).arg(t.storageBits).arg(t.precisionBits);
-    if (!t.note.empty()) s += QStringLiteral(" · ") + translatedNote(t.note);
+    if (!translatedNote(t.note).isEmpty()) s += QStringLiteral(" · ") + translatedNote(t.note);
     return s;
 }
 
