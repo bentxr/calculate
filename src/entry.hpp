@@ -24,9 +24,15 @@ class Entry {
 public:
     void insert(const QString& piece);   // at the cursor, which moves past it
     void insertTemplate(Template kind);  // the cursor goes into its first box
-    void backspace();                    // removes the item before the cursor
+    // Removes the item before the cursor. At the start of a template's first box it removes the
+    // template and keeps what was typed in it; at the start of a later box it goes back a box.
+    void backspace();
     void left();
     void right();
+    // Inside a fraction, between numerator and denominator (and true); false outside one, where ▲ and
+    // ▼ belong to the history.
+    bool up();
+    bool down();
     void clear();
     // Replaces the content with `text`, split into the pieces the keys would make; the cursor goes
     // to the end. (Text from the history or the statistics page is always one row.)
@@ -43,6 +49,7 @@ public:
 private:
     Row& rowAt(std::size_t depth);  // the row after the first `depth` steps of the path
     Row& row() { return rowAt(path_.size()); }
+    bool moveInFraction(int box);
 
     Row root_;
     std::vector<std::pair<int, int>> path_;

@@ -115,3 +115,71 @@ TEST(Entry, ATemplateAfterADigitNeverMergesWithIt) {
     EXPECT_EQ(e.text(), "5(10^(3))");  // an error for the engine (no implicit multiplication), never 510^3
     EXPECT_TRUE(value(e).startsWith("Missing operator"));
 }
+
+namespace {
+
+using Path = std::vector<std::pair<int, int>>;
+
+Entry fraction(std::initializer_list<const char*> numerator, std::initializer_list<const char*> denominator) {
+    Entry e;
+    e.insertTemplate(Template::Fraction);
+    type(e, numerator);
+    e.right();
+    type(e, denominator);
+    return e;
+}
+
+}  // namespace
+
+TEST(Entry, LeftAndRightWalkThroughTheBoxes) {
+    Entry e = fraction({"1"}, {"3"});
+    e.right();  // out, after the fraction
+    EXPECT_EQ(e.path(), Path{});
+    e.left();  // into the denominator, at its end
+    EXPECT_EQ(e.path(), (Path{{0, 1}}));
+    EXPECT_EQ(e.cursor(), 1);
+    e.left();
+    e.left();  // from the denominator's start to the numerator's end
+    EXPECT_EQ(e.path(), (Path{{0, 0}}));
+    EXPECT_EQ(e.cursor(), 1);
+    e.left();
+    e.left();  // out, before the fraction
+    EXPECT_EQ(e.path(), Path{});
+    EXPECT_EQ(e.cursor(), 0);
+}
+
+TEST(Entry, UpAndDownMoveBetweenNumeratorAndDenominator) {
+    Entry e = fraction({"1", "2"}, {});
+    e.left();  // back in the numerator, at its end
+    EXPECT_TRUE(e.down());
+    EXPECT_EQ(e.path(), (Path{{0, 1}}));
+    type(e, {"5"});
+    EXPECT_TRUE(e.up());
+    EXPECT_EQ(e.path(), (Path{{0, 0}}));
+    EXPECT_TRUE(e.up());  // inside a fraction ▲ never replays the history
+    EXPECT_EQ(e.text(), "((12)/(5))");
+    Entry plain;
+    type(plain, {"1"});
+    EXPECT_FALSE(plain.up());  // outside a fraction: the history's turn
+    EXPECT_FALSE(plain.down());
+}
+
+TEST(Entry, DeleteAtTheStartOfABoxUnwrapsTheTemplate) {
+    Entry e;
+    type(e, {"2", "+"});
+    e.insertTemplate(Template::Sqrt);
+    type(e, {"9"});
+    e.left();       // the start of the radicand
+    e.backspace();  // the √ goes, the 9 stays
+    EXPECT_EQ(e.text(), "2+9");
+    EXPECT_EQ(e.path(), Path{});
+    EXPECT_EQ(e.cursor(), 2);
+    Entry f = fraction({"1"}, {"3"});
+    f.left();       // the start of the denominator
+    f.backspace();  // a later box: back to the end of the previous one
+    EXPECT_EQ(f.path(), (Path{{0, 0}}));
+    EXPECT_EQ(f.cursor(), 1);
+    f.left();
+    f.backspace();  // the first box: the fraction goes, its parts stay, divided
+    EXPECT_EQ(f.text(), "1÷3");
+}

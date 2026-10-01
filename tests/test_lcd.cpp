@@ -95,3 +95,17 @@ TEST(Lcd, TheStatusLineShowsTheMemory) {
     EXPECT_EQ(lcd.statusText(), "");
     EXPECT_EQ(lcd.toolTip(), "");
 }
+
+TEST(Lcd, InsideAFractionUpAndDownStayInTheEntry) {
+    Lcd lcd;
+    QSignalSpy history(&lcd, &Lcd::historyRequested);
+    lcd.insertTemplate(Template::Fraction);
+    QTest::keyClicks(&lcd, "1");
+    QTest::keyClick(&lcd, Qt::Key_Down);
+    QTest::keyClicks(&lcd, "2");
+    EXPECT_EQ(lcd.input(), "((1)/(2))");
+    EXPECT_EQ(history.count(), 0);
+    QTest::keyClick(&lcd, Qt::Key_Right);  // out of the fraction
+    QTest::keyClick(&lcd, Qt::Key_Up);
+    EXPECT_EQ(history.count(), 1);
+}
