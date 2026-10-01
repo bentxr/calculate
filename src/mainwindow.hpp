@@ -44,6 +44,7 @@ signals:
 
 private:
     QWidget* buildKeypad();
+    QWidget* buildDirectKeys();
     QWidget* buildKey(const Key& key, bool legends = true);  // the cursor pad has no legends
     QWidget* buildStatistics();
     void buildMenus();
@@ -57,6 +58,7 @@ private:
     void replay(int index);
     bool exactType() const;
     void updateKeys();
+    QString exactRefusal(const QString& label) const;  // why Exact greys out a key
     void sizeKeys();
 
     static constexpr int keySpacing = 6;

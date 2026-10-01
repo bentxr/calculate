@@ -110,7 +110,13 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     keys_->setObjectName("keys");
     keys_->setFrameShape(QFrame::NoFrame);
     keys_->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
-    keys_->setWidget(buildKeypad());
+    auto* keysArea = new QWidget;
+    auto* keysLayout = new QHBoxLayout(keysArea);
+    keysLayout->setContentsMargins(0, 0, 0, 0);
+    keysLayout->setSpacing(keypadGap);
+    keysLayout->addWidget(buildDirectKeys(), 0, Qt::AlignTop);
+    keysLayout->addWidget(buildKeypad(), 0, Qt::AlignTop);
+    keys_->setWidget(keysArea);
     pages_->addWidget(keys_);
     auto* statistics = new QScrollArea(pages_);  // so neither page sets a minimum width for the window
     statistics->setFrameShape(QFrame::NoFrame);
@@ -258,28 +264,65 @@ QWidget* MainWindow::buildKey(const Key& key, bool legends) {
     return cell;
 }
 
+// The direct keys, a titled grid of six columns per topic.
+QWidget* MainWindow::buildDirectKeys() {
+    auto* keyboard = new QWidget;
+    keyboard->setObjectName("directKeys");
+    auto* layout = new QVBoxLayout(keyboard);
+    for (const KeyGroup& group : directKeys()) {
+        auto* title = new QLabel(translated(group.title), keyboard);
+        title->setForegroundRole(QPalette::PlaceholderText);
+        layout->addWidget(title);
+        auto* grid = new QGridLayout;
+        grid->setSpacing(keySpacing);
+        for (int i = 0; i < group.keys.size(); ++i) {
+            const Key& key = group.keys[i];
+            auto* button = new QPushButton(translated(key.main.label), keyboard);
+            button->setObjectName("direct:" + key.id);
+            button->setMinimumWidth(32);
+            button->setFocusPolicy(Qt::NoFocus);
+            connect(button, &QPushButton::clicked, this, [this, key] {
+                shift_->setChecked(false);  // a direct key is its own function: it ends SHIFT and ALPHA
+                alpha_->setChecked(false);
+                apply(key.main);
+            });
+            grid->addWidget(button, i / 6, i % 6);
+        }
+        grid->setColumnStretch(6, 1);  // shorter rows line up on the left, in the same columns
+        layout->addLayout(grid);
+    }
+    layout->addStretch();
+    return keyboard;
+}
+
 // Gives every key the size keySize() derives from the window's screen; called when the window is
 // first shown and whenever it moves to another screen. What the window reserves for everything but
 // the keys is measured from its own layouts, so it holds for any style, font and language.
 void MainWindow::sizeKeys() {
     if (!screen()) return;
-    QWidget* pad = keys_->widget();
+    QWidget* area = keys_->widget();
+    QWidget* pad = findChild<QWidget*>("keypad");
+    QWidget* direct = findChild<QWidget*>("directKeys");
+    QList<Key> all;
+    for (const QList<Key>& row : keypad()) all += row;
+    for (const KeyGroup& group : directKeys()) all += group.keys;
     int labels = 0;  // the widest main label, so no key is too narrow for its own name
-    for (const QList<Key>& row : keypad())
-        for (const Key& key : row) labels = qMax(labels, fontMetrics().horizontalAdvance(translated(key.main.label)));
-    const QSize minimum(labels + 16, fontMetrics().height() + 10);
+    for (const Key& key : all) labels = qMax(labels, fontMetrics().horizontalAdvance(translated(key.main.label)));
+    const QSize minimum(labels + 10, fontMetrics().height() + 10);
 
     const QMargins outer = centralWidget()->layout()->contentsMargins();
     const QMargins inner = pad->layout()->contentsMargins();
+    const QMargins left = direct->layout()->contentsMargins();
     const int scrollBar = style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     const int legend = findChild<QLabel*>("shift:sin")->sizeHint().height();
     const int rows = 9;
     const QSize reserved(outer.left() + outer.right() + centralWidget()->layout()->spacing() + modes_->width()
-                             + inner.left() + inner.right() + 2 * keys_->frameWidth() + scrollBar,
+                             + inner.left() + inner.right() + left.left() + left.right() + area->layout()->spacing()
+                             + 2 * keys_->frameWidth() + scrollBar,
                          outer.top() + outer.bottom() + lcd_->minimumSizeHint().height() + 2 * keySpacing
                              + inner.top() + inner.bottom() + keypadGap + rows * legend
                              + style()->pixelMetric(QStyle::PM_TitleBarHeight));
-    const QSize size = keySize(screen()->availableGeometry().size(), reserved, QSize(6, rows), keySpacing, minimum);
+    const QSize size = keySize(screen()->availableGeometry().size(), reserved, QSize(12, rows), keySpacing, minimum);
     const QSize numberSize((6 * size.width() + keySpacing) / 5, size.height());  // five span six
 
     for (const QList<Key>& row : keypad())
@@ -288,9 +331,13 @@ void MainWindow::sizeKeys() {
             button->setFixedSize(row.size() == 5 ? numberSize : size);
             button->parentWidget()->setFixedWidth(button->width());  // the key's cell, legends included
         }
+    for (const KeyGroup& group : directKeys())
+        for (const Key& key : group.keys) findChild<QPushButton*>("direct:" + key.id)->setFixedSize(size);
     findChild<QWidget*>("cursorPad")->setFixedWidth(2 * size.width() + keySpacing);
-    pad->layout()->activate();
-    pad->adjustSize();
+    for (QWidget* w : {pad, direct, area}) {
+        w->layout()->activate();
+        w->adjustSize();
+    }
 }
 
 void MainWindow::showEvent(QShowEvent* event) {
@@ -440,6 +487,11 @@ void MainWindow::replay(int index) {
 
 bool MainWindow::exactType() const { return static_cast<NumberType>(type_->currentIndex()) == NumberType::Exact; }
 
+QString MainWindow::exactRefusal(const QString& label) const {
+    return tr("Exact arithmetic cannot represent %1: its result is irrational. Switch to a floating type to compute it.")
+        .arg(translated(label));
+}
+
 // Enables the keys whose current face (plain, SHIFT or ALPHA) works in the selected type.
 void MainWindow::updateKeys() {
     const bool exact = exactType();
@@ -455,8 +507,14 @@ void MainWindow::updateKeys() {
         if (!on && f.action == KeyAction::Unavailable && !f.label.isEmpty())
             tip = tr("%1 is not available in this app yet").arg(translated(f.label));
         else if (!on && f.action != KeyAction::Unavailable)
-            tip = tr("Exact arithmetic cannot represent %1: its result is irrational. "
-                     "Switch to a floating type to compute it.").arg(translated(f.label));
+            tip = exactRefusal(f.label);
         button->setToolTip(tip);
     }
+    for (const KeyGroup& group : directKeys())
+        for (const Key& key : group.keys) {
+            auto* button = findChild<QPushButton*>("direct:" + key.id);
+            const bool on = available(key.main, exact);
+            button->setEnabled(on);
+            button->setToolTip(on ? QString() : exactRefusal(key.main.label));
+        }
 }

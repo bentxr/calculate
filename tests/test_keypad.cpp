@@ -7,6 +7,8 @@
 #include <QSet>
 #include <QStringList>
 
+#include <algorithm>
+
 namespace {
 
 QStringList labels(const QList<Key>& keys) {
@@ -87,4 +89,32 @@ TEST(Keypad, AvailabilityFollowsTheEngine) {
     EXPECT_TRUE(available(find("reciprocal").shift, true));  // x!
     EXPECT_FALSE(available(find("calc").main, false));
     EXPECT_FALSE(available(find("7").alpha, false));  // no legend
+}
+
+TEST(Keypad, DirectKeysGroupWhatShiftHides) {
+    QStringList titles, labels;
+    for (const KeyGroup& group : directKeys()) {
+        titles << group.title;
+        labels << ::labels(group.keys);
+    }
+    EXPECT_EQ(titles, QStringList({"Trigonometry", "Hyperbolic", "Powers and roots", "Numbers", "Constants and memory"}));
+    EXPECT_EQ(labels, QStringList({"asin", "acos", "atan", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh", "x³", "∛",
+                                   "ⁿ√", "10ˣ", "eˣ", "log", "x!", "Abs", "%", "mod", "nPr", "nCr", "gcd", "lcm", ",",
+                                   "π", "e", "M−", "M", "MC"}));
+}
+
+TEST(Keypad, EveryHiddenFunctionHasADirectKey) {
+    QList<Face> hidden = optionsMenu();
+    for (const QList<Key>& row : keypad())
+        for (const Key& key : row) hidden << key.shift << key.alpha;
+    QList<Face> direct;
+    for (const KeyGroup& group : directKeys())
+        for (const Key& key : group.keys) direct << key.main;
+    for (const Face& face : hidden) {
+        if (!available(face, false) || face.action == KeyAction::Config) continue;  // CONFIG is a menu, not a function
+        const bool found = std::any_of(direct.begin(), direct.end(), [&](const Face& d) {
+            return d.action == face.action && d.insert == face.insert;
+        });
+        EXPECT_TRUE(found) << face.label.toStdString();
+    }
 }

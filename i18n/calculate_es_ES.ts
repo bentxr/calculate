@@ -20,82 +20,82 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../src/mainwindow.cpp" line="26"/>
+        <location filename="../src/mainwindow.cpp" line="30"/>
         <source>calculate</source>
         <translation>calculate</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="32"/>
+        <location filename="../src/mainwindow.cpp" line="36"/>
         <source>Calculator</source>
         <translation>Calculadora</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="32"/>
+        <location filename="../src/mainwindow.cpp" line="36"/>
         <source>Statistics</source>
         <translation>Estadística</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="47"/>
+        <location filename="../src/mainwindow.cpp" line="51"/>
         <source>RAD</source>
         <translation>RAD</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="47"/>
+        <location filename="../src/mainwindow.cpp" line="51"/>
         <source>DEG</source>
         <translation>DEG</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="47"/>
+        <location filename="../src/mainwindow.cpp" line="51"/>
         <source>GRAD</source>
         <translation>GRAD</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="50"/>
+        <location filename="../src/mainwindow.cpp" line="54"/>
         <source>=</source>
         <translation>=</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="66"/>
+        <location filename="../src/mainwindow.cpp" line="70"/>
         <source>Details</source>
         <translation>Detalles</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="70"/>
+        <location filename="../src/mainwindow.cpp" line="74"/>
         <source>Proceed anyway</source>
         <translation>Continuar de todos modos</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="74"/>
+        <location filename="../src/mainwindow.cpp" line="78"/>
         <source>Computing…</source>
         <translation>Calculando…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="76"/>
+        <location filename="../src/mainwindow.cpp" line="80"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="89"/>
+        <location filename="../src/mainwindow.cpp" line="93"/>
         <source>History</source>
         <translation>Historial</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="122"/>
+        <location filename="../src/mainwindow.cpp" line="139"/>
         <source>The memory needs a previous result</source>
         <translation>La memoria necesita un resultado anterior</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="271"/>
+        <location filename="../src/mainwindow.cpp" line="373"/>
         <source>Values (one per line, or separated by commas):</source>
         <translation>Valores (uno por línea, o separados por comas):</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="400"/>
+        <location filename="../src/mainwindow.cpp" line="507"/>
         <source>%1 is not available in this app yet</source>
         <translation>%1 aún no está disponible en esta aplicación</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="402"/>
+        <location filename="../src/mainwindow.cpp" line="490"/>
         <source>Exact arithmetic cannot represent %1: its result is irrational. Switch to a floating type to compute it.</source>
         <translation>La aritmética exacta no puede representar %1: su resultado es irracional. Cambia a un tipo de coma flotante para calcularlo.</translation>
     </message>
@@ -114,51 +114,61 @@
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="40"/>
+        <location filename="../src/keypad.cpp" line="99"/>
         <source>asin</source>
         <translation>Arcsen</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="40"/>
+        <location filename="../src/keypad.cpp" line="99"/>
         <source>asin(</source>
         <translation>Arcsen(</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="42"/>
+        <location filename="../src/keypad.cpp" line="100"/>
         <source>acos</source>
         <translation>Arccos</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="42"/>
+        <location filename="../src/keypad.cpp" line="100"/>
         <source>acos(</source>
         <translation>Arccos(</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="44"/>
+        <location filename="../src/keypad.cpp" line="101"/>
         <source>atan</source>
         <translation>Arctan</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="44"/>
+        <location filename="../src/keypad.cpp" line="101"/>
         <source>atan(</source>
         <translation>Arctan(</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="56"/>
+        <location filename="../src/keypad.cpp" line="111"/>
         <source>gcd</source>
         <translation>MCD</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="56"/>
+        <location filename="../src/keypad.cpp" line="111"/>
         <source>gcd(</source>
         <translation>MCD(</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="58"/>
+        <location filename="../src/keypad.cpp" line="112"/>
         <source>lcm</source>
         <translation>MCM</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="58"/>
+        <location filename="../src/keypad.cpp" line="112"/>
         <source>lcm(</source>
         <translation>MCM(</translation>
     </message>
@@ -201,6 +211,31 @@
         <location filename="../src/keypad.cpp" line="88"/>
         <source>atanh(</source>
         <translation>Arctanh(</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="98"/>
+        <source>Trigonometry</source>
+        <translation>Trigonometría</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="102"/>
+        <source>Hyperbolic</source>
+        <translation>Hiperbólicas</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="105"/>
+        <source>Powers and roots</source>
+        <translation>Potencias y raíces</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="108"/>
+        <source>Numbers</source>
+        <translation>Números</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="114"/>
+        <source>Constants and memory</source>
+        <translation>Constantes y memoria</translation>
     </message>
 </context>
 <context>

@@ -34,6 +34,14 @@ const QList<Key>& cursorPad();
 // The OPTN menu: the hyperbolic functions (in a menu on scientific calculators too), mod and memory clear.
 const QList<Face>& optionsMenu();
 
+// The second keyboard: every function a scientific calculator hides behind SHIFT, ALPHA or OPTN, on a key of its
+// own and grouped by topic, for anyone who doesn't know the calculator.
+struct KeyGroup {
+    QString title;  // English source text; see translated()
+    QList<Key> keys;
+};
+const QList<KeyGroup>& directKeys();
+
 // Whether the face does something in this app, and in the Exact type when `exact`.
 bool available(const Face& face, bool exact);
 
