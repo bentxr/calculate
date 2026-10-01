@@ -7,6 +7,7 @@
 
 #include <QAbstractItemView>
 #include <QApplication>
+#include <QClipboard>
 #include <QComboBox>
 #include <QDialog>
 #include <QLabel>
@@ -477,4 +478,33 @@ TEST(MainWindow, TheThemeSwitchesBetweenLightAndDark) {
     EXPECT_EQ(child<QLabel>(window, "shift:sin")->styleSheet(), "color:#9a6700");
     QApplication::setPalette(original);
     QCoreApplication::processEvents();
+}
+
+TEST(MainWindow, TheValuesBoxTakesOnlyNumbers) {
+    MainWindow window;
+    child<QListWidget>(window, "modes")->setCurrentRow(1);
+    auto* values = child<QPlainTextEdit>(window, "statisticsValues");
+    QTest::keyClicks(values, "1a2;b3, 4");
+    QTest::keyClick(values, Qt::Key_Return);
+    QTest::keyClicks(values, "-5x");
+    EXPECT_EQ(values->toPlainText(), "12;3, 4\n-5");
+    QGuiApplication::clipboard()->setText("7abc8");
+    QTest::keySequence(values, QKeySequence::Paste);
+    EXPECT_EQ(values->toPlainText(), "12;3, 4\n-578");
+}
+
+TEST(MainWindow, AKeypadEntersValuesWithoutAKeyboard) {
+    MainWindow window;
+    child<QListWidget>(window, "modes")->setCurrentRow(1);
+    for (const char* key : {"statKey:7", "statKey:next", "statKey:9", "statKey:point", "statKey:5"})
+        QTest::mouseClick(child<QPushButton>(window, key), Qt::LeftButton);
+    EXPECT_EQ(child<QPlainTextEdit>(window, "statisticsValues")->toPlainText(), "7\n9.5");
+    QTest::mouseClick(child<QPushButton>(window, "stat:mean"), Qt::LeftButton);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->input(), "mean(7, 9.5)");
+    EXPECT_EQ(lcd(window)->outputText(), "8.25");
+    auto* keys = child<QWidget>(window, "statisticsKeys");
+    EXPECT_FALSE(keys->isHidden());
+    QTest::mouseClick(child<QToolButton>(window, "statisticsKeysToggle"), Qt::LeftButton);
+    EXPECT_TRUE(keys->isHidden());
 }
