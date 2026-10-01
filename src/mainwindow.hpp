@@ -6,6 +6,7 @@
 #include <QThread>
 #include <QTimer>
 
+class DetailsCard;
 class Lcd;
 class QComboBox;
 class QLabel;
@@ -65,10 +66,8 @@ private:
     TypeChooser* type_ = nullptr;
     QComboBox* angle_ = nullptr;
     Lcd* lcd_ = nullptr;
-    QLabel* errorLine_ = nullptr;
-    QLabel* whyLine_ = nullptr;
-    QToolButton* detailsToggle_ = nullptr;
-    QLabel* details_ = nullptr;
+    QToolButton* detailsButton_ = nullptr;
+    DetailsCard* card_ = nullptr;
     QPushButton* proceed_ = nullptr;
     QLabel* busy_ = nullptr;
     QPushButton* cancel_ = nullptr;

@@ -1,6 +1,8 @@
 #include "mainwindow.hpp"
 
+#include "detailscard.hpp"
 #include "lcd.hpp"
+#include "presenter.hpp"
 #include "typechooser.hpp"
 
 #include <QAbstractItemView>
@@ -12,6 +14,7 @@
 #include <QPushButton>
 #include <QStackedWidget>
 #include <QTest>
+#include <QToolButton>
 
 #include "printers.hpp"
 
@@ -39,6 +42,12 @@ void run(MainWindow& window, const QString& expression) {
     lcd(window)->setInput(expression);
     QTest::keyClick(lcd(window), Qt::Key_Return);
     EXPECT_TRUE(answered(window)) << expression.toStdString();
+}
+
+// The value in a row of the Details card.
+QString detail(MainWindow& window, const QString& key) {
+    auto* label = child<DetailsCard>(window, "detailsCard")->findChild<QLabel*>("value:" + key);
+    return label ? label->text() : QString();
 }
 
 QAction* action(QMenu* menu, const QString& text) {
@@ -89,8 +98,9 @@ TEST(MainWindow, EvaluatesAndShowsTheErrorReport) {
     MainWindow window;
     run(window, "0.1 + 0.2");
     EXPECT_EQ(lcd(window)->outputText(), "0.300000000000000|0444089209850062616169452667236328125");
-    EXPECT_EQ(child<QLabel>(window, "errorLine")->text(), "± 4.4e-17 · 15 trusted digits");
-    EXPECT_FALSE(child<QLabel>(window, "whyLine")->text().isEmpty());
+    EXPECT_EQ(detail(window, "bound"), "4.4e-17");
+    EXPECT_EQ(detail(window, "trusted"), "15 by the bound, 15 by the measurement");
+    EXPECT_EQ(detail(window, "type"), "double, 53-bit significand");
     EXPECT_EQ(child<QListWidget>(window, "history")->item(0)->text(), "0.1 + 0.2");
 }
 
@@ -101,7 +111,7 @@ TEST(MainWindow, ChangingTheTypeReevaluates) {
     child<QComboBox>(window, "type")->setCurrentIndex(3);  // Exact
     EXPECT_TRUE(answered(window));
     EXPECT_EQ(lcd(window)->outputText(), "1/3 = 0.(3)");
-    EXPECT_EQ(child<QLabel>(window, "errorLine")->text(), "exact · no rounding error");
+    EXPECT_EQ(detail(window, "exact"), "exact · no rounding error");
 }
 
 TEST(MainWindow, ExactModeGreysOutTranscendentalKeys) {
@@ -167,7 +177,7 @@ TEST(MainWindow, UncertainArgumentsOfferToProceed) {
     QTest::mouseClick(proceed, Qt::LeftButton);
     EXPECT_TRUE(answered(window));
     EXPECT_EQ(lcd(window)->outputText(), "6");
-    EXPECT_TRUE(child<QLabel>(window, "errorLine")->text().contains("incomplete"));
+    EXPECT_EQ(detail(window, "incomplete"), "an uncertain argument was accepted");
     EXPECT_FALSE(proceed->isVisibleTo(&window));
 }
 
@@ -272,4 +282,43 @@ TEST(MainWindow, KeysLeaveTheKeyboardToTheScreen) {
     QTest::keyClick(lcd(window), Qt::Key_Return);
     EXPECT_TRUE(answered(window));
     EXPECT_EQ(lcd(window)->outputText(), "42");
+}
+
+TEST(MainWindow, TheScreenShowsOnlyTheValueAndTheCardTheRest) {
+    MainWindow window;
+    window.resize(900, 700);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    EXPECT_EQ(window.findChild<QLabel*>("errorLine"), nullptr);
+    EXPECT_EQ(window.findChild<QLabel*>("whyLine"), nullptr);
+    auto* button = child<QToolButton>(window, "detailsButton");
+    EXPECT_FALSE(button->isEnabled());  // nothing to explain yet
+    run(window, "0.1 + 0.2");
+    EXPECT_TRUE(button->isEnabled());
+    auto* card = child<DetailsCard>(window, "detailsCard");
+    EXPECT_FALSE(card->isVisible());
+    const QRect keypad = child<QWidget>(window, "keypad")->geometry();
+    const QRect screen = lcd(window)->geometry();
+    QTest::mouseClick(button, Qt::LeftButton);
+    EXPECT_TRUE(card->isVisible());
+    EXPECT_EQ(child<QWidget>(window, "keypad")->geometry(), keypad);  // an overlay: nothing moves
+    EXPECT_EQ(lcd(window)->geometry(), screen);
+    card->hide();
+}
+
+TEST(MainWindow, EveryRowOfTheCardExplainsItself) {
+    MainWindow window;
+    run(window, "0.1 + 0.2");
+    auto* card = child<DetailsCard>(window, "detailsCard");
+    for (const char* key : {"bound", "measured", "trusted", "condition", "input", "rounding", "library", "operations",
+                            "type", "evaluated"}) {
+        auto* info = card->findChild<QToolButton*>(QString("info:") + key);
+        auto* text = card->findChild<QLabel*>(QString("explanation:") + key);
+        ASSERT_NE(info, nullptr) << key;
+        ASSERT_NE(text, nullptr) << key;
+        EXPECT_FALSE(text->isVisibleTo(card));
+        QTest::mouseClick(info, Qt::LeftButton);
+        EXPECT_TRUE(text->isVisibleTo(card)) << key;
+        EXPECT_EQ(text->text(), view::explanation(key));
+    }
 }

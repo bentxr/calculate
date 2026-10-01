@@ -17,7 +17,7 @@ TEST(Translation, SpanishIsEmbeddedAndUsed) {
     QCoreApplication::installTranslator(&spanish);
     EXPECT_EQ(view::errorText(*evaluate("1/0").error, "1/0"), "División por cero");
     EXPECT_EQ(view::typeLabel(numberTypes()[1]), "Doble · double · 64 bits · ~16 dígitos");
-    EXPECT_EQ(view::errorLine(evaluate("0.1 + 0.2")), "± 4.4e-17 · 15 dígitos fiables");
+    EXPECT_EQ(view::details(evaluate("0.1 + 0.2"), numberTypes()[1])[2].value, "15 según la cota, 15 según la medición");
     EXPECT_EQ(translated("asin"), "Arcsen");  // the keys read as on a Spanish calculator
     EXPECT_EQ(translated("gcd("), "MCD(");
     EXPECT_EQ(translated("asinh("), "Arcsenh(");

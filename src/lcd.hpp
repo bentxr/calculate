@@ -6,6 +6,7 @@
 
 #include <QWidget>
 
+class QHBoxLayout;
 class QScrollBar;
 
 // The calculator's screen: the input at the top and the result at the bottom right, drawn in two
@@ -41,6 +42,9 @@ public:
     QColor noiseColor() const;    // halfway between the ink and the panel
     QSize sizeHint() const override;
 
+    // Small controls along the screen's bottom edge (Details, Cancel…), on the left or the right.
+    void addToBar(QWidget* widget, bool right = false);
+
 signals:
     void evaluateRequested();
     void historyRequested(int step);  // +1 for an older entry (▲), −1 for a newer one (▼)
@@ -60,6 +64,7 @@ private:
     QFont outputFont() const;
     typeset::Box inputBox() const;
     QRectF resultArea(const typeset::Box& input) const;
+    int barHeight() const;
     void changed();  // lays the result out again and repaints
 
     Entry entry_;
@@ -72,4 +77,7 @@ private:
     QString memory_;
     typeset::Box result_;  // laid out once per change, not on every repaint
     QScrollBar* scroll_ = nullptr;  // for results taller than the screen; nothing is truncated
+    QWidget* bar_ = nullptr;
+    QHBoxLayout* barLayout_ = nullptr;
+    int leftOfBar_ = 0;  // widgets before the bar's stretch
 };

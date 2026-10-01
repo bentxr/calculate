@@ -2,6 +2,7 @@
 
 #include <QFontDatabase>
 #include <QFontMetricsF>
+#include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QPainter>
 #include <QScrollBar>
@@ -33,6 +34,10 @@ Lcd::Lcd(QWidget* parent) : QWidget(parent) {
     setAttribute(Qt::WA_InputMethodEnabled, false);
     scroll_ = new QScrollBar(Qt::Vertical, this);
     scroll_->hide();
+    bar_ = new QWidget(this);
+    barLayout_ = new QHBoxLayout(bar_);
+    barLayout_->setContentsMargins(0, 0, 0, 0);
+    barLayout_->addStretch();
     connect(scroll_, &QScrollBar::valueChanged, this, qOverload<>(&QWidget::update));
 }
 
@@ -141,10 +146,18 @@ QColor Lcd::background() const { return dark() ? QColor(0x1f, 0x26, 0x21) : QCol
 QColor Lcd::ink() const { return dark() ? QColor(0xd4, 0xe2, 0xcc) : QColor(0x1c, 0x24, 0x1a); }
 QColor Lcd::noiseColor() const { return mix(ink(), background(), 0.5); }
 
+void Lcd::addToBar(QWidget* widget, bool right) {
+    if (right) barLayout_->addWidget(widget);
+    else barLayout_->insertWidget(leftOfBar_++, widget);  // before the stretch
+    changed();
+}
+
+int Lcd::barHeight() const { return barLayout_->count() > 1 ? bar_->sizeHint().height() : 0; }  // more than the stretch
+
 QSize Lcd::sizeHint() const {
     // One input line, and room for a stacked fraction; taller results scroll.
     const qreal height = 2 * margin + spacing + QFontMetricsF(statusFont()).height() + QFontMetricsF(inputFont()).height()
-                         + 2.4 * QFontMetricsF(outputFont()).height();
+                         + 2.4 * QFontMetricsF(outputFont()).height() + barHeight();
     return QSize(320, qCeil(height));
 }
 
@@ -159,7 +172,7 @@ typeset::Box Lcd::inputBox() const {
 QRectF Lcd::resultArea(const typeset::Box& input) const {
     const qreal top = margin + QFontMetricsF(statusFont()).height() + input.ascent + input.descent + spacing;
     const qreal right = scroll_->isVisible() ? width() - scroll_->width() : width() - margin;
-    return QRectF(margin, top, right - margin, height() - top - margin);
+    return QRectF(margin, top, right - margin, height() - top - margin - barHeight());
 }
 
 void Lcd::changed() {
@@ -172,6 +185,7 @@ void Lcd::changed() {
         }
         return typeset::Box{};
     };
+    bar_->setGeometry(qRound(margin / 2), height() - barHeight() - 2, width() - qRound(margin), barHeight());
     scroll_->hide();
     const typeset::Box input = inputBox();
     QRectF area = resultArea(input);

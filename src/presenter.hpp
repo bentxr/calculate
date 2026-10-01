@@ -38,8 +38,6 @@ QString typeDigits(const calculate_core::TypeInfo& type);  // "~16 significant d
 QString typeDetail(const calculate_core::TypeInfo& type);  // the C++ type and its bits
 ValueParts valueParts(const calculate_core::Result& result);
 FractionParts fractionParts(const calculate_core::Result& result);
-QString errorLine(const calculate_core::Result& result);
-QString whyLine(const calculate_core::Result& result, const calculate_core::TypeInfo& type);
 QString verdict(const QString& conditionNumber);
 QList<DetailRow> details(const calculate_core::Result& result, const calculate_core::TypeInfo& type);
 QString explanation(const QString& key);
