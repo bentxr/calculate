@@ -153,7 +153,12 @@ TEST(Typeset, ABigOperatorCentresItsLimits) {
     const typeset::Run& over = b.runs[2];
     EXPECT_NEAR(centre(under), centre(symbol), 0.6);
     EXPECT_NEAR(centre(over), centre(symbol), 0.6);
-    EXPECT_GT(top(under), bottom(symbol) - 1);
-    EXPECT_LT(bottom(over), top(symbol) + 1);
+    // the limits hug the glyph itself (its ink, not the font's line height)
+    const QRectF ink = QFontMetricsF(symbol.font).tightBoundingRect(symbol.text).translated(symbol.origin);
+    const qreal close = QFontMetricsF(font()).height() * 0.3;
+    EXPECT_GE(top(under), ink.bottom());
+    EXPECT_LT(top(under) - ink.bottom(), close);
+    EXPECT_LE(bottom(over), ink.top());
+    EXPECT_LT(ink.top() - bottom(over), close);
     EXPECT_GT(symbol.font.pixelSize(), font().pixelSize());  // a big Σ
 }
