@@ -1,16 +1,19 @@
 #pragma once
 
+#include "entry.hpp"
+
 #include <QList>
 #include <QString>
 
-enum class KeyAction { Insert, Clear, Backspace, Evaluate, MemoryAdd, MemorySubtract, MemoryClear, Left, Right, Up, Down };
+enum class KeyAction { Insert, Template, Clear, Backspace, Evaluate, MemoryAdd, MemorySubtract, MemoryClear, Left, Right, Up, Down };
 
 // What a key does.
 struct Face {
     QString label;     // the legend (English source text; see translated())
-    QString insert;    // text inserted into the expression (Insert only; translated like the label)
+    QString insert;    // text inserted (Insert), or a template's filled-in box (Template: "2" for x²)
     QString function;  // the engine function it stands for, if any (for Exact availability)
     KeyAction action = KeyAction::Insert;
+    Template shape = Template::Text;  // Template only
 };
 
 struct Key {

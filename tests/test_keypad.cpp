@@ -56,13 +56,17 @@ TEST(Keypad, IdsAreUnique) {
 
 TEST(Keypad, KeysInsertWhatTheyShow) {
     EXPECT_EQ(find("sin").face.insert, "sin(");
-    EXPECT_EQ(find("fraction").face.insert, "/");
-    EXPECT_EQ(find("sqrt").face.insert, "√(");
-    EXPECT_EQ(find("square").face.insert, "²");
-    EXPECT_EQ(find("power").face.insert, "^");
+    EXPECT_EQ(find("fraction").face.shape, Template::Fraction);
+    EXPECT_EQ(find("sqrt").face.shape, Template::Sqrt);
+    EXPECT_EQ(find("square").face.shape, Template::Power);
+    EXPECT_EQ(find("square").face.insert, "2");  // a power with its exponent filled in
+    EXPECT_EQ(find("power").face.shape, Template::Power);
+    EXPECT_EQ(find("power").face.insert, "");
     EXPECT_EQ(find("negative").face.insert, "-");
-    EXPECT_EQ(find("reciprocal").face.insert, "^-1");
-    EXPECT_EQ(find("logBase").face.insert, "log(");
+    EXPECT_EQ(find("reciprocal").face.insert, "−1");
+    EXPECT_EQ(find("logBase").face.shape, Template::LogBase);
+    for (const char* id : {"fraction", "sqrt", "square", "power", "reciprocal", "logBase", "cube", "cbrt", "root", "power10", "exp", "abs"})
+        EXPECT_EQ(find(id).face.action, KeyAction::Template) << id;
     EXPECT_EQ(find("exponent").face.insert, "e");
     EXPECT_EQ(find("memoryAdd").face.action, KeyAction::MemoryAdd);
     EXPECT_EQ(find("clear").face.action, KeyAction::Clear);
@@ -76,10 +80,12 @@ TEST(Keypad, EveryFunctionHasAKey) {
     const auto inserts = [&](const QString& text) {
         return std::any_of(faces.begin(), faces.end(), [&](const Face& f) { return f.action == KeyAction::Insert && f.insert == text; });
     };
-    for (const char* text : {"asin(", "acos(", "atan(", "sinh(", "cosh(", "tanh(", "asinh(", "acosh(", "atanh(", "³", "∛(",
-                             "root(", "10^", "exp(", "log(", "!", "abs(", "%", "mod(", "nPr(", "nCr(", "gcd(", "lcm(", ", ",
-                             "π", "e", "M", "Ans"})
+    for (const char* text : {"asin(", "acos(", "atan(", "sinh(", "cosh(", "tanh(", "asinh(", "acosh(", "atanh(", "log(",
+                             "!", "%", "mod(", "nPr(", "nCr(", "gcd(", "lcm(", ", ", "π", "e", "M", "Ans"})
         EXPECT_TRUE(inserts(text)) << text;
+    for (Template shape : {Template::Fraction, Template::Sqrt, Template::Cbrt, Template::Root, Template::Power, Template::Exp,
+                           Template::Pow10, Template::LogBase, Template::Abs})
+        EXPECT_TRUE(std::any_of(faces.begin(), faces.end(), [&](const Face& f) { return f.shape == shape; }));
     for (KeyAction action : {KeyAction::MemoryAdd, KeyAction::MemorySubtract, KeyAction::MemoryClear})
         EXPECT_TRUE(std::any_of(faces.begin(), faces.end(), [&](const Face& f) { return f.action == action; }));
 }

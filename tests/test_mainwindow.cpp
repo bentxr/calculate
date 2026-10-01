@@ -563,3 +563,21 @@ TEST(MainWindow, ErrorsAppearUnderTheScreenWithoutMovingAnything) {
     EXPECT_EQ(message(window)->text(), "");
     EXPECT_EQ(geometry(), before);
 }
+
+TEST(MainWindow, TemplateKeysBuildTwoDimensionalInput) {
+    MainWindow window;
+    const auto click = [&](std::initializer_list<const char*> names) {
+        for (const char* name : names) QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    };
+    child<QComboBox>(window, "type")->setCurrentIndex(3);  // Exact
+    click({"key:fraction", "key:1", "key:down", "key:3", "key:right", "key:plus", "key:sqrt", "key:4", "key:right",
+           "direct:cube"});
+    EXPECT_EQ(lcd(window)->input(), "((1)/(3))+√(4)^(3)");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "25/3 = 8.(3)");  // 1/3 + 2³
+    lcd(window)->clear();
+    click({"key:2", "key:square", "key:plus", "key:5", "key:reciprocal"});
+    EXPECT_EQ(lcd(window)->input(), "2^(2)+5^(−1)");
+}

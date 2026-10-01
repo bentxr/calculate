@@ -20,7 +20,8 @@ public:
 
     QString input() const { return entry_.text(); }
     void insert(const QString& piece);
-    void insertTemplate(Template kind);
+    // Opens a template; `fill`, if any, is typed into its box and the cursor leaves it (x², x⁻¹).
+    void insertTemplate(Template kind, const QString& fill = {});
     bool up();    // inside a fraction, to its numerator; false elsewhere (the history's turn)
     bool down();
     void backspace();
