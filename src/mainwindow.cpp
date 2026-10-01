@@ -19,6 +19,17 @@
 
 using namespace calculate_core;
 
+namespace {
+
+// Rich text takes an opaque colour, but styles such as Fusion make the placeholder colour translucent.
+QColor opaque(const QColor& ink, const QColor& paper) {
+    const int a = ink.alpha();
+    const auto mix = [a](int i, int p) { return (i * a + p * (255 - a)) / 255; };
+    return QColor(mix(ink.red(), paper.red()), mix(ink.green(), paper.green()), mix(ink.blue(), paper.blue()));
+}
+
+}  // namespace
+
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberTypes()) {
     setWindowTitle(tr("calculate"));
     auto* central = new QWidget(this);
@@ -239,7 +250,7 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
         return;
     }
     message_->clear();
-    const QString noise = palette().color(QPalette::PlaceholderText).name();
+    const QString noise = opaque(palette().color(QPalette::PlaceholderText), palette().color(QPalette::Window)).name();
     value_->setText(view::valueHtml(result, noise));
     errorLine_->setText(view::errorLine(result));
     whyLine_->setText(view::whyLine(result, types_[static_cast<std::size_t>(result.type)]));

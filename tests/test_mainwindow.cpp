@@ -4,6 +4,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QPalette>
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QStackedWidget>
@@ -123,4 +124,14 @@ TEST(MainWindow, StatisticsModeBuildsAnExpression) {
     EXPECT_TRUE(QTest::qWaitFor([&] { return !value->text().isEmpty(); }, 10000));
     EXPECT_EQ(child<QLineEdit>(window, "expression")->text(), "stdevp(2, 4, 4, 4, 5, 5, 7, 9)");
     EXPECT_EQ(value->text(), "2");
+}
+
+TEST(MainWindow, TheNoiseColourStaysVisibleWhenThePaletteIsTranslucent) {
+    MainWindow window;
+    QPalette palette = window.palette();
+    palette.setColor(QPalette::Window, Qt::white);
+    palette.setColor(QPalette::PlaceholderText, QColor(0, 0, 0, 128));  // as in Fusion
+    window.setPalette(palette);
+    run(window, "0.1 + 0.2");
+    EXPECT_TRUE(child<QLabel>(window, "value")->text().contains("color:#7f7f7f")) << child<QLabel>(window, "value")->text().toStdString();
 }
