@@ -376,3 +376,30 @@ TEST(MainWindow, KeysKeepTheirSizeAndScrollWhenTheWindowIsSmall) {
     EXPECT_EQ(child<QPushButton>(window, "key:sin")->size(), sin);  // smaller window: they scroll instead
     EXPECT_TRUE(keys->horizontalScrollBar()->isVisible());
 }
+
+TEST(MainWindow, DirectKeysInsertWhatTheCasioHidesBehindShift) {
+    MainWindow window;
+    QTest::mouseClick(child<QPushButton>(window, "direct:asin"), Qt::LeftButton);
+    QTest::mouseClick(child<QPushButton>(window, "direct:pi"), Qt::LeftButton);
+    QTest::mouseClick(child<QPushButton>(window, "direct:comma"), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "asin(π, ");
+    QTest::mouseClick(child<QPushButton>(window, "key:shift"), Qt::LeftButton);
+    QTest::mouseClick(child<QPushButton>(window, "direct:sinh"), Qt::LeftButton);  // a direct key ends SHIFT too
+    EXPECT_FALSE(child<QPushButton>(window, "key:shift")->isChecked());
+    EXPECT_EQ(lcd(window)->input(), "asin(π, sinh(");
+    child<QComboBox>(window, "type")->setCurrentIndex(3);  // Exact
+    EXPECT_FALSE(child<QPushButton>(window, "direct:sinh")->isEnabled());
+    EXPECT_FALSE(child<QPushButton>(window, "direct:sinh")->toolTip().isEmpty());
+    EXPECT_TRUE(child<QPushButton>(window, "direct:mod")->isEnabled());
+}
+
+TEST(MainWindow, DirectKeysSitLeftOfTheCasioPadAtTheSameSize) {
+    MainWindow window;
+    window.resize(1200, 800);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    EXPECT_EQ(child<QPushButton>(window, "direct:asin")->size(), child<QPushButton>(window, "key:sin")->size());
+    const QWidget* direct = child<QWidget>(window, "directKeys");
+    const QWidget* keypad = child<QWidget>(window, "keypad");
+    EXPECT_LT(direct->mapTo(&window, QPoint(direct->width(), 0)).x(), keypad->mapTo(&window, QPoint(0, 0)).x());
+}

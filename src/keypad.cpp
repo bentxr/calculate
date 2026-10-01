@@ -92,6 +92,33 @@ const QList<Face>& optionsMenu() {
     return faces;
 }
 
+const QList<KeyGroup>& directKeys() {
+    const auto key = [](const QString& id, const Face& face) { return Key{id, face, {}, {}}; };
+    static const QList<KeyGroup> groups{
+        {QT_TRANSLATE_NOOP("keypad", "Trigonometry"),
+         {key("asin", put(QT_TRANSLATE_NOOP("keypad", "asin"), QT_TRANSLATE_NOOP("keypad", "asin("), "asin")),
+          key("acos", put(QT_TRANSLATE_NOOP("keypad", "acos"), QT_TRANSLATE_NOOP("keypad", "acos("), "acos")),
+          key("atan", put(QT_TRANSLATE_NOOP("keypad", "atan"), QT_TRANSLATE_NOOP("keypad", "atan("), "atan"))}},
+        {QT_TRANSLATE_NOOP("keypad", "Hyperbolic"),
+         {key("sinh", optionsMenu()[0]), key("cosh", optionsMenu()[1]), key("tanh", optionsMenu()[2]),
+          key("asinh", optionsMenu()[3]), key("acosh", optionsMenu()[4]), key("atanh", optionsMenu()[5])}},
+        {QT_TRANSLATE_NOOP("keypad", "Powers and roots"),
+         {key("cube", put("x³", "³")), key("cbrt", put("∛", "∛(", "cbrt")), key("root", put("ⁿ√", "root(", "root")),
+          key("power10", put("10ˣ", "10^")), key("exp", put("eˣ", "exp(", "exp")), key("log", put("log", "log(", "log"))}},
+        {QT_TRANSLATE_NOOP("keypad", "Numbers"),
+         {key("factorial", put("x!", "!")), key("abs", put("Abs", "abs(", "abs")), key("percent", put("%", "%")),
+          key("mod", optionsMenu()[6]), key("npr", put("nPr", "nPr(", "nPr")), key("ncr", put("nCr", "nCr(", "nCr")),
+          key("gcd", put(QT_TRANSLATE_NOOP("keypad", "gcd"), QT_TRANSLATE_NOOP("keypad", "gcd("), "gcd")),
+          key("lcm", put(QT_TRANSLATE_NOOP("keypad", "lcm"), QT_TRANSLATE_NOOP("keypad", "lcm("), "lcm")),
+          key("comma", put(",", ", "))}},
+        {QT_TRANSLATE_NOOP("keypad", "Constants and memory"),
+         {key("pi", put("π", "π", "pi")), key("e", put("e", "e", "e")),
+          key("memorySubtract", act("M−", KeyAction::MemorySubtract)), key("memory", put("M", "M")),
+          key("memoryClear", optionsMenu()[7])}},
+    };
+    return groups;
+}
+
 bool available(const Face& face, bool exact) {
     if (face.action == KeyAction::Unavailable) return false;
     if (!exact || face.function.isEmpty()) return true;
