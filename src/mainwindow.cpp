@@ -1,6 +1,7 @@
 #include "mainwindow.hpp"
 
 #include "keypad.hpp"
+#include "presenter.hpp"
 #include "worker.hpp"
 
 #include <QComboBox>
@@ -149,11 +150,6 @@ MainWindow::~MainWindow() {
     thread_.wait();
 }
 
-void MainWindow::setDigitStyle(view::DigitStyle style) {
-    digitStyle_ = style;
-    if (!lastExpression_.isEmpty()) showResult(lastExpression_, last_);
-}
-
 QWidget* MainWindow::buildKeypad() {
     auto* pad = new QWidget;
     pad->setObjectName("keypad");
@@ -244,7 +240,7 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
     }
     message_->clear();
     const QString noise = palette().color(QPalette::PlaceholderText).name();
-    value_->setText(view::valueHtml(result, digitStyle_, noise));
+    value_->setText(view::valueHtml(result, noise));
     errorLine_->setText(view::errorLine(result));
     whyLine_->setText(view::whyLine(result, types_[static_cast<std::size_t>(result.type)]));
     QString table = "<table>";

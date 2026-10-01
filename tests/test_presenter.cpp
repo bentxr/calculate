@@ -25,21 +25,16 @@ TEST(Presenter, TypeLabelsShowTheCppNameAndTheTraits) {
               "Octuple · binary256 · 256-bit · ~71 digits · software, no subnormals");
 }
 
-TEST(Presenter, TheThreeDigitStylesNeverRelyOnColourAlone) {
-    const Result r = evaluated("0.1 + 0.2");
-    EXPECT_EQ(view::valueHtml(r, view::DigitStyle::Faded, "#888888"),
-              "0.300000000000000<span style=\"color:#888888\"><i>0444089209850062616169452667236328125</i></span>");
-    EXPECT_EQ(view::valueHtml(r, view::DigitStyle::Bold, "#888888"),
-              "<b>0.300000000000000</b><span style=\"color:#888888\">0444089209850062616169452667236328125</span>");
-    EXPECT_EQ(view::valueHtml(r, view::DigitStyle::Bar, "#888888"),
+TEST(Presenter, NoiseDigitsFollowABarSoColourIsNeverTheOnlyCue) {
+    EXPECT_EQ(view::valueHtml(evaluated("0.1 + 0.2"), "#888888"),
               "0.300000000000000<span style=\"color:#888888\">|0444089209850062616169452667236328125</span>");
 }
 
 TEST(Presenter, ValuesWithoutNoiseAndLargeValues) {
-    EXPECT_EQ(view::valueHtml(evaluated("2+2"), view::DigitStyle::Faded, "#888888"), "4");
-    EXPECT_EQ(view::valueHtml(evaluated("-1e30"), view::DigitStyle::Bold, "#888888"),
-              "<b>−1.000000000000000</b><span style=\"color:#888888\">019884624838656</span> × 10<sup>30</sup>");
-    EXPECT_EQ(view::valueHtml(evaluated("1/3", NumberType::Exact), view::DigitStyle::Faded, "#888888"), "1/3 = 0.(3)");
+    EXPECT_EQ(view::valueHtml(evaluated("2+2"), "#888888"), "4");
+    EXPECT_EQ(view::valueHtml(evaluated("-1e30"), "#888888"),
+              "−1.000000000000000<span style=\"color:#888888\">|019884624838656</span> × 10<sup>30</sup>");
+    EXPECT_EQ(view::valueHtml(evaluated("1/3", NumberType::Exact), "#888888"), "1/3 = 0.(3)");
 }
 
 TEST(Presenter, TheErrorLineAndTheWhyLine) {

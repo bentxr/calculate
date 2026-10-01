@@ -109,18 +109,12 @@ QString typeLabel(const TypeInfo& t) {
     return s;
 }
 
-QString valueHtml(const Result& r, DigitStyle style, const QString& noiseColor) {
+QString valueHtml(const Result& r, const QString& noiseColor) {
     if (r.error) return {};
     if (r.exact) return fractionText(*r.exact).toHtmlEscaped();
     const Parts p = split(r.value, r.trustedDigits);
     if (p.noise.isEmpty()) return p.trusted + p.suffix;
-    const QString noise = QStringLiteral("<span style=\"color:%1\">%2</span>").arg(noiseColor);
-    switch (style) {
-    case DigitStyle::Faded: return p.trusted + noise.arg(QStringLiteral("<i>%1</i>").arg(p.noise)) + p.suffix;
-    case DigitStyle::Bold: return QStringLiteral("<b>%1</b>").arg(p.trusted) + noise.arg(p.noise) + p.suffix;
-    case DigitStyle::Bar: return p.trusted + noise.arg(QStringLiteral("|") + p.noise) + p.suffix;
-    }
-    return {};
+    return p.trusted + QStringLiteral("<span style=\"color:%1\">|%2</span>").arg(noiseColor, p.noise) + p.suffix;
 }
 
 QString errorLine(const Result& r) {

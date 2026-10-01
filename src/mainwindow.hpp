@@ -1,7 +1,5 @@
 #pragma once
 
-#include "presenter.hpp"
-
 #include <calculate-core/calculate-core.hpp>
 
 #include <QMainWindow>
@@ -25,8 +23,6 @@ public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow() override;
 
-    void setDigitStyle(view::DigitStyle style);
-
 public slots:
     void evaluate();
 
@@ -47,7 +43,6 @@ private:
     QThread thread_;
     Worker* worker_ = nullptr;
     QTimer busyTimer_;
-    view::DigitStyle digitStyle_ = view::DigitStyle::Faded;
     std::vector<calculate_core::TypeInfo> types_;
     calculate_core::Result last_;
     QString lastExpression_;
