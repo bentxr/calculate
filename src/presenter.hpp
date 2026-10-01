@@ -44,5 +44,7 @@ QList<DetailRow> details(const calculate_core::Result& result, const calculate_c
 QString explanation(const QString& key);
 QString errorText(const calculate_core::Error& error, const QString& expression);
 QString statisticsExpression(const QString& function, const QString& values);
+// How the engine computes a statistic, in one line; empty for anything else.
+QString algorithm(const QString& function);
 
 }  // namespace view

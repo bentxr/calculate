@@ -2,6 +2,7 @@
 
 #include <QFontInfo>
 #include <QFontMetricsF>
+#include <QPainter>
 
 namespace typeset {
 
@@ -175,6 +176,19 @@ Box paragraph(const QList<Segment>& segments, const QFont& font, qreal maxWidth)
     flush();
     b.descent = pen.y() + m.descent();
     return b;
+}
+
+void paint(QPainter& painter, const Box& box, QPointF origin, const QColor& ink, const QColor& noise, const QRectF& clip) {
+    for (const Run& run : box.runs) {
+        const QPointF at = origin + run.origin;
+        const QFontMetricsF m(run.font);
+        if (at.y() + m.descent() < clip.top() || at.y() - m.ascent() > clip.bottom()) continue;
+        painter.setFont(run.font);
+        painter.setPen(run.role == Role::Noise ? noise : ink);
+        painter.drawText(at, run.text);
+    }
+    painter.setPen(QPen(ink, 1.5));
+    for (const QLineF& line : box.lines) painter.drawLine(line.translated(origin));
 }
 
 Box value(const view::ValueParts& parts, const QFont& font, qreal maxWidth) {

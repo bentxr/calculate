@@ -1,6 +1,7 @@
 #include "mainwindow.hpp"
 
 #include "detailscard.hpp"
+#include "formulatip.hpp"
 #include "keypad.hpp"
 #include "keysizing.hpp"
 #include "lcd.hpp"
@@ -13,6 +14,7 @@
 #include <QDialog>
 #include <QEvent>
 #include <QFormLayout>
+#include <QHelpEvent>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -139,6 +141,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     lcd_->addToBar(cancel_);
     card_ = new DetailsCard(this);
     card_->setObjectName("detailsCard");
+    formulaTip_ = new FormulaTip(this);
+    formulaTip_->setObjectName("formulaTip");
 
     // The session's history: a list that drops down under the screen from the ▾ at its corner.
     historyToggle_ = new QToolButton(lcd_);
@@ -430,6 +434,17 @@ void MainWindow::retranslate() {
     if (keysSized_) sizeKeys();  // labels changed width
 }
 
+// Hovering a statistics button shows how that statistic is computed.
+bool MainWindow::eventFilter(QObject* watched, QEvent* event) {
+    const QString statistic = watched->property("statistic").toString();
+    if (!statistic.isEmpty() && event->type() == QEvent::ToolTip) {
+        formulaTip_->showFor(statistic, static_cast<QHelpEvent*>(event)->globalPos());
+        return true;
+    }
+    if (!statistic.isEmpty() && event->type() == QEvent::Leave) formulaTip_->hide();
+    return QMainWindow::eventFilter(watched, event);
+}
+
 void MainWindow::changeEvent(QEvent* event) {
     if (event->type() == QEvent::LanguageChange) retranslate();
     QMainWindow::changeEvent(event);
@@ -465,6 +480,8 @@ QWidget* MainWindow::buildStatistics() {
         auto* b = new QPushButton(f, page);
         b->setObjectName(QStringLiteral("stat:") + f);
         b->setFocusPolicy(Qt::NoFocus);
+        b->setProperty("statistic", f);
+        b->installEventFilter(this);  // hovering shows the formula (see eventFilter)
         functions->addWidget(b, i / 3, i % 3);
         connect(b, &QPushButton::clicked, this, [this, f] {
             const QString e = view::statisticsExpression(f, statisticsValues_->toPlainText());

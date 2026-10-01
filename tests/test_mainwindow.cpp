@@ -1,6 +1,7 @@
 #include "mainwindow.hpp"
 
 #include "detailscard.hpp"
+#include "formulatip.hpp"
 #include "lcd.hpp"
 #include "presenter.hpp"
 #include "typechooser.hpp"
@@ -10,6 +11,7 @@
 #include <QClipboard>
 #include <QComboBox>
 #include <QDialog>
+#include <QHelpEvent>
 #include <QLabel>
 #include <QListWidget>
 #include <QMenu>
@@ -504,5 +506,26 @@ TEST(MainWindow, StatisticsFunctionsSitAboveTheNumberPad) {
     for (const char* name : {"stat:mean", "stat:median", "stat:var", "stat:stdev", "stat:varp", "stat:stdevp"}) {
         EXPECT_LT(rect(name).bottom(), seven.top()) << name;   // the functions over the numbers
         EXPECT_GT(rect(name).left(), values.right()) << name;  // beside the values, with the keypad
+    }
+}
+
+TEST(MainWindow, StatisticsButtonsShowTheirFormula) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    child<QListWidget>(window, "modes")->setCurrentRow(1);
+    auto* tip = child<FormulaTip>(window, "formulaTip");
+    EXPECT_FALSE(tip->isVisible());
+    for (const char* f : {"mean", "median", "var", "stdev", "varp", "stdevp"}) {
+        auto* button = child<QPushButton>(window, (QString("stat:") + f).toUtf8().constData());
+        QHelpEvent hover(QEvent::ToolTip, QPoint(5, 5), button->mapToGlobal(QPoint(5, 5)));
+        QCoreApplication::sendEvent(button, &hover);
+        EXPECT_TRUE(tip->isVisible()) << f;
+        EXPECT_EQ(tip->function(), f);
+        EXPECT_EQ(tip->algorithm(), view::algorithm(f));
+        EXPECT_GT(tip->formulaHeight(), 1.5 * tip->fontMetrics().height()) << f;  // drawn in two dimensions
+        QEvent leave(QEvent::Leave);
+        QCoreApplication::sendEvent(button, &leave);
+        EXPECT_FALSE(tip->isVisible()) << f;
     }
 }

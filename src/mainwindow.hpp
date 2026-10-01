@@ -7,6 +7,7 @@
 #include <QTimer>
 
 class DetailsCard;
+class FormulaTip;
 class Lcd;
 class QComboBox;
 class QDialog;
@@ -36,6 +37,7 @@ public slots:
 protected:
     void showEvent(QShowEvent* event) override;
     void changeEvent(QEvent* event) override;
+    bool eventFilter(QObject* watched, QEvent* event) override;
 
 signals:
     void evaluationRequested(const QString& expression, const calculate_core::Options& options);
@@ -91,6 +93,7 @@ private:
     Lcd* lcd_ = nullptr;
     QToolButton* detailsButton_ = nullptr;
     DetailsCard* card_ = nullptr;
+    FormulaTip* formulaTip_ = nullptr;
     QPushButton* proceed_ = nullptr;
     QLabel* busy_ = nullptr;
     QPushButton* cancel_ = nullptr;
