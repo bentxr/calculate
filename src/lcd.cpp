@@ -191,23 +191,6 @@ void Lcd::changed() {
     update();
 }
 
-namespace {
-
-void draw(QPainter& painter, const typeset::Box& box, QPointF origin, const QColor& ink, const QColor& noise, const QRectF& clip) {
-    for (const typeset::Run& run : box.runs) {
-        const QPointF at = origin + run.origin;
-        const QFontMetricsF m(run.font);
-        if (at.y() + m.descent() < clip.top() || at.y() - m.ascent() > clip.bottom()) continue;
-        painter.setFont(run.font);
-        painter.setPen(run.role == typeset::Role::Noise ? noise : ink);
-        painter.drawText(at, run.text);
-    }
-    painter.setPen(QPen(ink, 1.5));
-    for (const QLineF& line : box.lines) painter.drawLine(line.translated(origin));
-}
-
-}  // namespace
-
 void Lcd::paintEvent(QPaintEvent*) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
@@ -223,7 +206,7 @@ void Lcd::paintEvent(QPaintEvent*) {
 
     const typeset::Box input = inputBox();
     const QPointF inputOrigin(margin, margin + status.height() + input.ascent);
-    draw(painter, input, inputOrigin, ink, ink, rect());
+    typeset::paint(painter, input, inputOrigin, ink, ink, rect());
     if (hasFocus()) {
         const QStringList& pieces = entry_.pieces();
         const QString before = QStringList(pieces.mid(0, entry_.cursor())).join(QString());
@@ -237,7 +220,7 @@ void Lcd::paintEvent(QPaintEvent*) {
     painter.setClipRect(area);
     const qreal height = result_.ascent + result_.descent;
     const qreal baseline = height <= area.height() ? area.bottom() - result_.descent : area.top() + result_.ascent - scroll_->value();
-    draw(painter, result_, QPointF(area.right() - result_.width, baseline), ink, noiseColor(), area);
+    typeset::paint(painter, result_, QPointF(area.right() - result_.width, baseline), ink, noiseColor(), area);
 }
 
 void Lcd::keyPressEvent(QKeyEvent* event) {

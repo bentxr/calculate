@@ -236,4 +236,21 @@ QString statisticsExpression(const QString& function, const QString& values) {
     return function + "(" + list.join(", ") + ")";
 }
 
+// What the engine does (parser.cpp, statistic(); functions.hpp, Median), so the user sees the algorithm.
+QString algorithm(const QString& function) {
+    if (function == "mean")
+        return QCoreApplication::translate("view", "The values are added from left to right, then divided by n.");
+    if (function == "median")
+        return QCoreApplication::translate("view", "The values are sorted; the middle one is taken, or the mean of the two middle ones.");
+    if (function == "var")
+        return QCoreApplication::translate("view", "Two passes: the mean first, then the squared deviations from it, divided by n − 1 (a sample).");
+    if (function == "varp")
+        return QCoreApplication::translate("view", "Two passes: the mean first, then the squared deviations from it, divided by n (the whole population).");
+    if (function == "stdev")
+        return QCoreApplication::translate("view", "The square root of the sample variance (two passes, divided by n − 1).");
+    if (function == "stdevp")
+        return QCoreApplication::translate("view", "The square root of the population variance (two passes, divided by n).");
+    return {};
+}
+
 }  // namespace view

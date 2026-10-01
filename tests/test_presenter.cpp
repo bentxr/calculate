@@ -151,3 +151,9 @@ TEST(Presenter, TypeTraitsForTheTypeMenu) {
     EXPECT_EQ(view::typeDetail(typeInfo(NumberType::Exact)), "cpp_rational · fractions, no rounding");
     EXPECT_EQ(view::typeDetail(typeInfo(NumberType::Binary512)), "binary512 · 512-bit storage · 489-bit significand");
 }
+
+TEST(Presenter, EveryStatisticSaysHowItIsComputed) {
+    for (const char* f : {"mean", "median", "var", "stdev", "varp", "stdevp"}) EXPECT_FALSE(view::algorithm(f).isEmpty()) << f;
+    EXPECT_TRUE(view::algorithm("variance").isEmpty());
+    EXPECT_NE(view::algorithm("var"), view::algorithm("varp"));  // n − 1 against n
+}

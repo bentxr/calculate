@@ -10,6 +10,19 @@
     </message>
 </context>
 <context>
+    <name>FormulaTip</name>
+    <message>
+        <location filename="../src/formulatip.cpp" line="60"/>
+        <source>n odd</source>
+        <translation>n impar</translation>
+    </message>
+    <message>
+        <location filename="../src/formulatip.cpp" line="60"/>
+        <source>n even</source>
+        <translation>n par</translation>
+    </message>
+</context>
+<context>
     <name>Lcd</name>
     <message>
         <location filename="../src/lcd.cpp" line="116"/>
@@ -20,119 +33,119 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../src/mainwindow.cpp" line="382"/>
+        <location filename="../src/mainwindow.cpp" line="386"/>
         <source>calculate</source>
         <translation>calculate</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="383"/>
+        <location filename="../src/mainwindow.cpp" line="387"/>
         <source>Show or hide the panel</source>
         <translation>Mostrar u ocultar el panel</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="385"/>
+        <location filename="../src/mainwindow.cpp" line="389"/>
         <source>Calculator</source>
         <translation>Calculadora</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="385"/>
+        <location filename="../src/mainwindow.cpp" line="389"/>
         <source>Statistics</source>
         <translation>Estadística</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="384"/>
-        <location filename="../src/mainwindow.cpp" line="398"/>
+        <location filename="../src/mainwindow.cpp" line="388"/>
+        <location filename="../src/mainwindow.cpp" line="402"/>
         <source>Settings</source>
         <translation>Ajustes</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="387"/>
+        <location filename="../src/mainwindow.cpp" line="391"/>
         <source>RAD</source>
         <translation>RAD</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="387"/>
+        <location filename="../src/mainwindow.cpp" line="391"/>
         <source>DEG</source>
         <translation>DEG</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="387"/>
+        <location filename="../src/mainwindow.cpp" line="391"/>
         <source>GRAD</source>
         <translation>GRAD</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="390"/>
+        <location filename="../src/mainwindow.cpp" line="394"/>
         <source>=</source>
         <translation>=</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="391"/>
+        <location filename="../src/mainwindow.cpp" line="395"/>
         <source>Details</source>
         <translation>Detalles</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="392"/>
+        <location filename="../src/mainwindow.cpp" line="396"/>
         <source>Proceed anyway</source>
         <translation>Continuar de todos modos</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="393"/>
+        <location filename="../src/mainwindow.cpp" line="397"/>
         <source>Computing…</source>
         <translation>Calculando…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="394"/>
+        <location filename="../src/mainwindow.cpp" line="398"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="395"/>
+        <location filename="../src/mainwindow.cpp" line="399"/>
         <source>History</source>
         <translation>Historial</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="192"/>
+        <location filename="../src/mainwindow.cpp" line="196"/>
         <source>The memory needs a previous result</source>
         <translation>La memoria necesita un resultado anterior</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="396"/>
+        <location filename="../src/mainwindow.cpp" line="400"/>
         <source>Values (one per line, or separated by commas):</source>
         <translation>Valores (uno por línea, o separados por comas):</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="397"/>
+        <location filename="../src/mainwindow.cpp" line="401"/>
         <source>Show or hide the keypad</source>
         <translation>Mostrar u ocultar el teclado numérico</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="399"/>
+        <location filename="../src/mainwindow.cpp" line="403"/>
         <source>Language</source>
         <translation>Idioma</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="400"/>
+        <location filename="../src/mainwindow.cpp" line="404"/>
         <source>Theme</source>
         <translation>Tema</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="401"/>
-        <location filename="../src/mainwindow.cpp" line="402"/>
+        <location filename="../src/mainwindow.cpp" line="405"/>
+        <location filename="../src/mainwindow.cpp" line="406"/>
         <source>System</source>
         <translation>Sistema</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="403"/>
+        <location filename="../src/mainwindow.cpp" line="407"/>
         <source>Light</source>
         <translation>Claro</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="404"/>
+        <location filename="../src/mainwindow.cpp" line="408"/>
         <source>Dark</source>
         <translation>Oscuro</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="582"/>
+        <location filename="../src/mainwindow.cpp" line="607"/>
         <source>Exact arithmetic cannot represent %1: its result is irrational. Switch to a floating type to compute it.</source>
         <translation>La aritmética exacta no puede representar %1: su resultado es irracional. Cambia a un tipo de coma flotante para calcularlo.</translation>
     </message>
@@ -617,6 +630,36 @@
         <location filename="../src/presenter.cpp" line="228"/>
         <source>Cancelled</source>
         <translation>Cancelado</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="242"/>
+        <source>The values are added from left to right, then divided by n.</source>
+        <translation>Los valores se suman de izquierda a derecha y luego se dividen entre n.</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="244"/>
+        <source>The values are sorted; the middle one is taken, or the mean of the two middle ones.</source>
+        <translation>Los valores se ordenan; se toma el central, o la media de los dos centrales.</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="246"/>
+        <source>Two passes: the mean first, then the squared deviations from it, divided by n − 1 (a sample).</source>
+        <translation>Dos pasadas: primero la media, luego las desviaciones al cuadrado respecto a ella, divididas entre n − 1 (una muestra).</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="248"/>
+        <source>Two passes: the mean first, then the squared deviations from it, divided by n (the whole population).</source>
+        <translation>Dos pasadas: primero la media, luego las desviaciones al cuadrado respecto a ella, divididas entre n (toda la población).</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="250"/>
+        <source>The square root of the sample variance (two passes, divided by n − 1).</source>
+        <translation>La raíz cuadrada de la varianza muestral (dos pasadas, dividida entre n − 1).</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="252"/>
+        <source>The square root of the population variance (two passes, divided by n).</source>
+        <translation>La raíz cuadrada de la varianza poblacional (dos pasadas, dividida entre n).</translation>
     </message>
 </context>
 </TS>

@@ -8,6 +8,9 @@
 #include <QPointF>
 #include <QString>
 
+class QPainter;
+class QRectF;
+
 // A small layout engine for the calculator's screen: it places text and lines in two dimensions
 // (fractions, raised exponents, recurring bars, long values wrapped to the screen). Coordinates are
 // relative to the box's baseline at y = 0, with y growing downwards as in Qt.
@@ -49,6 +52,10 @@ Box bigOperator(const QString& symbol, const Box& under, const Box& over, const 
 Box paragraph(const QList<Segment>& segments, const QFont& font, qreal maxWidth);
 // Where the box's last line of text ends, on its baseline (the origin for an empty box).
 QPointF end(const Box& box);
+
+// Draws the box with its baseline origin at `origin`: text in `ink`, noise digits in `noise`. Runs
+// outside `clip` are skipped, so a result of thousands of lines paints quickly.
+void paint(QPainter& painter, const Box& box, QPointF origin, const QColor& ink, const QColor& noise, const QRectF& clip);
 
 // The screen's results: trusted|noise digits with any ×10 exponent, and fraction = decimal.
 Box value(const view::ValueParts& parts, const QFont& font, qreal maxWidth);
