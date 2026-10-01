@@ -52,13 +52,6 @@ ValueParts split(const Digits& value, int trustedDigits) {
     return p;
 }
 
-QString trustedText(const Result& r) {
-    const int n = static_cast<int>(r.value.digits.size());
-    if (r.trustedDigits >= n) return QCoreApplication::translate("view", "all digits trusted");
-    if (r.trustedDigits == 1) return QCoreApplication::translate("view", "1 trusted digit");
-    return QCoreApplication::translate("view", "%1 trusted digits").arg(r.trustedDigits);
-}
-
 // The decimal exponent of a formatted magnitude such as "4.4e-17"; "0" is very small, "inf" very large.
 int exponentOf(const QString& s) {
     if (s == "inf") return 1 << 30;
@@ -127,23 +120,6 @@ FractionParts fractionParts(const Result& r) {
         p.recurring = fromStd(f.repeatingDigits);
     }
     return p;
-}
-
-QString errorLine(const Result& r) {
-    if (r.error) return {};
-    if (r.exact) return QCoreApplication::translate("view", "exact · no rounding error");
-    QString s = QStringLiteral("± ") + fromStd(r.bound) + QStringLiteral(" · ") + trustedText(r);
-    if (!r.boundComplete) s += QStringLiteral(" · ") + QCoreApplication::translate("view", "incomplete: an uncertain argument was accepted");
-    return s;
-}
-
-QString whyLine(const Result& r, const TypeInfo& t) {
-    if (r.error || r.exact) return {};
-    return QCoreApplication::translate("view", "input %1 · rounding %2 · library %3 · rounded operations: %4 · %5, %6-bit significand")
-        .arg(fromStd(r.inputError), fromStd(r.roundingError), fromStd(r.libraryError))
-        .arg(r.roundingOperations)
-        .arg(fromStd(t.cppName))
-        .arg(t.precisionBits);
 }
 
 QString verdict(const QString& conditionNumber) {

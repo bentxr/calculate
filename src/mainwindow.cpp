@@ -1,5 +1,6 @@
 #include "mainwindow.hpp"
 
+#include "detailscard.hpp"
 #include "keypad.hpp"
 #include "lcd.hpp"
 #include "typechooser.hpp"
@@ -59,39 +60,27 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     screenRow->addLayout(column);
     main->addLayout(screenRow);
 
-    auto label = [&](const char* name) {
-        auto* l = new QLabel(central);
-        l->setObjectName(name);
-        l->setWordWrap(true);
-        l->setTextInteractionFlags(Qt::TextSelectableByMouse);
-        main->addWidget(l);
-        return l;
-    };
-    errorLine_ = label("errorLine");
-    whyLine_ = label("whyLine");
-    detailsToggle_ = new QToolButton(central);
-    detailsToggle_->setObjectName("detailsToggle");
-    detailsToggle_->setText(tr("Details"));
-    detailsToggle_->setCheckable(true);
-    main->addWidget(detailsToggle_);
-    details_ = label("details");
-    details_->setTextFormat(Qt::RichText);
-    details_->setVisible(false);
-    proceed_ = new QPushButton(tr("Proceed anyway"), central);
+    // Along the screen's bottom edge: Details, and the messages that need an answer.
+    detailsButton_ = new QToolButton(lcd_);
+    detailsButton_->setObjectName("detailsButton");
+    detailsButton_->setText(tr("Details"));
+    detailsButton_->setAutoRaise(true);
+    detailsButton_->setEnabled(false);
+    lcd_->addToBar(detailsButton_);
+    proceed_ = new QPushButton(tr("Proceed anyway"), lcd_);
     proceed_->setObjectName("proceed");
     proceed_->setVisible(false);
-    main->addWidget(proceed_);
-    auto* busyRow = new QHBoxLayout;
-    busy_ = new QLabel(tr("Computing…"), central);
+    lcd_->addToBar(proceed_);
+    busy_ = new QLabel(tr("Computing…"), lcd_);
     busy_->setObjectName("busy");
-    cancel_ = new QPushButton(tr("Cancel"), central);
+    cancel_ = new QPushButton(tr("Cancel"), lcd_);
     cancel_->setObjectName("cancel");
     busy_->setVisible(false);
     cancel_->setVisible(false);
-    busyRow->addWidget(busy_);
-    busyRow->addWidget(cancel_);
-    busyRow->addStretch();
-    main->addLayout(busyRow);
+    lcd_->addToBar(busy_);
+    lcd_->addToBar(cancel_);
+    card_ = new DetailsCard(this);
+    card_->setObjectName("detailsCard");
 
     pages_ = new QStackedWidget(central);
     pages_->setObjectName("pages");
@@ -131,7 +120,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(lcd_, &Lcd::historyRequested, this, [this](int step) { replay(historyIndex_ + step); });
     connect(equals, &QPushButton::clicked, this, &MainWindow::evaluate);
     connect(proceed_, &QPushButton::clicked, this, [this] { request(lastExpression_, true); });
-    connect(detailsToggle_, &QToolButton::toggled, details_, &QWidget::setVisible);
+    connect(detailsButton_, &QToolButton::clicked, this, [this] { card_->popUp(lcd_); });
     connect(history_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) { lcd_->setInput(item->text()); });
     auto reevaluate = [this] {
         updateKeys();
@@ -143,7 +132,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     updateKeys();
     // Only the screen takes the keyboard; every other control is used with the mouse.
     for (QWidget* w : {static_cast<QWidget*>(modes_), static_cast<QWidget*>(type_), static_cast<QWidget*>(angle_),
-                       static_cast<QWidget*>(equals), static_cast<QWidget*>(detailsToggle_), static_cast<QWidget*>(proceed_),
+                       static_cast<QWidget*>(equals), static_cast<QWidget*>(detailsButton_), static_cast<QWidget*>(proceed_),
                        static_cast<QWidget*>(cancel_), static_cast<QWidget*>(history_)})
         w->setFocusPolicy(Qt::NoFocus);
     lcd_->setFocus();
@@ -307,21 +296,14 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
     last_ = result;
     lastExpression_ = expression;
     proceed_->setVisible(result.error && result.error->code == ErrorCode::UncertainDiscreteArgument);
+    card_->setRows(view::details(result, types_[static_cast<std::size_t>(result.type)]));
+    detailsButton_->setEnabled(!result.error);
     if (result.error) {
         lcd_->showMessage(view::errorText(*result.error, expression));
-        errorLine_->clear();
-        whyLine_->clear();
-        details_->clear();
         return;
     }
     if (result.exact) lcd_->showExact(view::fractionParts(result));
     else lcd_->showValue(view::valueParts(result));
-    errorLine_->setText(view::errorLine(result));
-    whyLine_->setText(view::whyLine(result, types_[static_cast<std::size_t>(result.type)]));
-    QString table = "<table>";
-    for (const view::DetailRow& row : view::details(result, types_[static_cast<std::size_t>(result.type)]))
-        table += "<tr><td>" + row.label.toHtmlEscaped() + "&nbsp;&nbsp;</td><td>" + row.value.toHtmlEscaped() + "</td></tr>";
-    details_->setText(table + "</table>");
     if (history_->count() == 0 || history_->item(0)->text() != expression) history_->insertItem(0, expression);
     historyIndex_ = -1;
 }

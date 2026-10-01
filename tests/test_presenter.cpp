@@ -27,20 +27,6 @@ TEST(Presenter, TypeLabelsShowTheCppNameAndTheTraits) {
               "Octuple · binary256 · 256-bit · ~71 digits · software, no subnormals");
 }
 
-TEST(Presenter, TheErrorLineAndTheWhyLine) {
-    const Result r = evaluated("0.1 + 0.2");
-    EXPECT_EQ(view::errorLine(r), "± 4.4e-17 · 15 trusted digits");
-    EXPECT_EQ(view::whyLine(r, typeInfo(NumberType::Double)),
-              "input 1.7e-17 · rounding 2.8e-17 · library 0 · rounded operations: 1 · double, 53-bit significand");
-    EXPECT_EQ(view::errorLine(evaluated("2+2")), "± 0 · all digits trusted");
-    EXPECT_EQ(view::errorLine(evaluated("1/3", NumberType::Exact)), "exact · no rounding error");
-    EXPECT_EQ(view::whyLine(evaluated("1/3", NumberType::Exact), typeInfo(NumberType::Exact)), "");
-    Options allow;
-    allow.allowUncertainDiscreteArguments = true;
-    EXPECT_EQ(view::errorLine(evaluate("(0.1*30)!", allow)),
-              "± 0 · all digits trusted · incomplete: an uncertain argument was accepted");
-}
-
 TEST(Presenter, ConditionVerdicts) {
     EXPECT_EQ(view::verdict("1e+0"), "well-conditioned");
     EXPECT_EQ(view::verdict("1.8e+5"), "moderately conditioned");
