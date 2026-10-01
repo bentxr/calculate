@@ -20,12 +20,17 @@ endif()
 
 qt_add_library(calculate-ui STATIC
     src/keypad.cpp
+    src/mainwindow.cpp
     src/presenter.cpp
     src/worker.cpp
 )
 target_include_directories(calculate-ui PUBLIC ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(calculate-ui PUBLIC Qt6::Widgets calculate-core)
 target_compile_options(calculate-ui PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+qt_add_executable(calculate src/main.cpp)
+target_link_libraries(calculate PRIVATE calculate-ui)
+set_target_properties(calculate PROPERTIES WIN32_EXECUTABLE ON MACOSX_BUNDLE ON)
 
 include(CTest)
 if(BUILD_TESTING AND NOT EMSCRIPTEN)
