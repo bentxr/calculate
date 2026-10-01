@@ -11,6 +11,7 @@ add_executable(calculate-tests
     test_keypad.cpp
     test_mainwindow.cpp
     test_presenter.cpp
+    test_screenshots.cpp
     test_translation.cpp
     test_worker.cpp
 )
