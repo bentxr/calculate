@@ -440,6 +440,30 @@ TEST(MainWindow, MenusAndTooltipsStayInsideANarrowWindow) {
     QToolTip::hideText();
 }
 
+// With a larger font (the browser's), the type list's rows are wider than a phone: the list is cut
+// to the window rather than left out of reach, and it widens again when there is room.
+TEST(MainWindow, TheTypeListNarrowsToFitTheWindow) {
+    MainWindow window;
+    window.setGeometry(40, 30, 380, 420);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    auto* type = child<TypeChooser>(window, "type");
+    QFont big = type->view()->font();
+    big.setPixelSize(30);
+    type->view()->setFont(big);
+    type->retranslate();
+    const int wanted = type->view()->minimumWidth();
+    ASSERT_GT(wanted, window.width());
+    type->showPopup();
+    EXPECT_TRUE(window.geometry().contains(type->view()->window()->geometry()));
+    type->hidePopup();
+    window.setGeometry(40, 30, 1600, 420);
+    QCoreApplication::processEvents();
+    type->showPopup();
+    EXPECT_GE(type->view()->width(), wanted);  // the whole rows again
+    type->hidePopup();
+}
+
 // Some platforms (the browser) place a menu's list again after showing it: it must stay inside then too.
 TEST(MainWindow, APopupMovedAfterItShowsStaysInside) {
     MainWindow window;

@@ -1,9 +1,11 @@
 #include "typechooser.hpp"
 
+#include "popupplacement.hpp"
 #include "presenter.hpp"
 
 #include <calculate-core/calculate-core.hpp>
 
+#include <QLayout>
 #include <QListView>
 #include <QPainter>
 #include <QStyledItemDelegate>
@@ -137,5 +139,20 @@ void TypeChooser::retranslate() {
         widest = qMax(widest, QFontMetrics(bold).horizontalAdvance(itemText(i) + "    ")
                                   + QFontMetrics(view()->font()).horizontalAdvance(itemData(i, DigitsRole).toString()));
     }
-    view()->setMinimumWidth(widest + 2 * pad + view()->style()->pixelMetric(QStyle::PM_ScrollBarExtent));
+    rowsWidth_ = widest + 2 * pad + view()->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
+    view()->setMinimumWidth(rowsWidth_);
+}
+
+// The list as wide as its widest row; in a narrower window (a phone), narrower by what does not fit, so
+// that the window's edge never puts it out of reach.
+void TypeChooser::showPopup() {
+    view()->setMinimumWidth(rowsWidth_);
+    QComboBox::showPopup();
+    QWidget* list = view()->window();
+    const QRect bounds = popupBounds(this);
+    const int excess = list->width() - bounds.width();
+    if (excess <= 0) return;
+    view()->setMinimumWidth(rowsWidth_ - excess);
+    list->layout()->activate();  // so the list's own minimum follows now
+    list->setGeometry(keptInside(list->geometry(), bounds));
 }
