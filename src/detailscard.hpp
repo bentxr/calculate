@@ -5,8 +5,8 @@
 #include <QFrame>
 
 class QLabel;
+class QScrollArea;
 class QToolButton;
-class QVBoxLayout;
 
 // Everything about the error beyond the value on the screen: one row per figure, each with an info sign that
 // opens its explanation in a small popup under it. The card floats over the window as a popup, so
@@ -18,13 +18,13 @@ public:
     explicit DetailsCard(QWidget* parent = nullptr);
 
     void setRows(const QList<view::DetailRow>& rows);
-    void popUp(QWidget* under);  // just below `under`, as wide as it
+    void popUp(QWidget* under);  // just below `under` and as wide as it, inside the window
 
 private:
     void explain(const QString& key, QToolButton* info);
 
-    QVBoxLayout* layout_ = nullptr;
-    QWidget* rows_ = nullptr;  // rebuilt for every result
+    QScrollArea* scroll_ = nullptr;  // the rows scroll when the window has no room for them all
+    QWidget* rows_ = nullptr;        // rebuilt for every result
     QFrame* tip_ = nullptr;    // the explanation popup, object "explanation"
     QLabel* tipText_ = nullptr;
 };

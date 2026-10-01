@@ -13,5 +13,8 @@ QRect placed(QSize size, QRect anchor, QRect bounds);
 // `rect` moved inside `bounds`, and cut to its size if it is larger.
 QRect keptInside(QRect rect, QRect bounds);
 
+// Where `widget` is, in global coordinates: what a popup is anchored to.
+QRect globalGeometry(const QWidget* widget);
+
 // The global geometry of the window `widget` belongs to: its outermost window, past any popup or dialog.
 QRect popupBounds(const QWidget* widget);

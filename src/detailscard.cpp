@@ -1,8 +1,11 @@
 #include "detailscard.hpp"
 
+#include "popupplacement.hpp"
+
 #include <QGridLayout>
 #include <QLabel>
 #include <QPainter>
+#include <QScrollArea>
 #include <QToolButton>
 #include <QVBoxLayout>
 
@@ -42,7 +45,11 @@ protected:
 
 DetailsCard::DetailsCard(QWidget* parent) : QFrame(parent, Qt::Popup) {
     setFrameShape(QFrame::StyledPanel);
-    layout_ = new QVBoxLayout(this);
+    scroll_ = new QScrollArea(this);
+    scroll_->setFrameShape(QFrame::NoFrame);
+    scroll_->setWidgetResizable(true);
+    scroll_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    (new QVBoxLayout(this))->addWidget(scroll_);
     tip_ = new QFrame(this, Qt::Popup);
     tip_->setObjectName("explanation");
     tip_->setFrameShape(QFrame::StyledPanel);
@@ -52,9 +59,8 @@ DetailsCard::DetailsCard(QWidget* parent) : QFrame(parent, Qt::Popup) {
 }
 
 void DetailsCard::setRows(const QList<view::DetailRow>& rows) {
-    delete rows_;
-    rows_ = new QWidget(this);
-    layout_->addWidget(rows_);
+    rows_ = new QWidget;
+    scroll_->setWidget(rows_);  // deletes the previous rows
     auto* grid = new QGridLayout(rows_);
     grid->setContentsMargins(0, 0, 0, 0);
     grid->setColumnStretch(1, 1);
@@ -93,15 +99,19 @@ void DetailsCard::setRows(const QList<view::DetailRow>& rows) {
 // The explanation, about forty characters wide, just under its info sign.
 void DetailsCard::explain(const QString& key, QToolButton* info) {
     tipText_->setText(view::explanation(key));
-    tip_->setFixedWidth(fontMetrics().averageCharWidth() * 40);
+    const QRect bounds = popupBounds(info);
+    tip_->setFixedWidth(qMin(fontMetrics().averageCharWidth() * 40, bounds.width()));
     tip_->adjustSize();
-    tip_->move(info->mapToGlobal(QPoint(0, info->height())));
+    tip_->setGeometry(placed(tip_->size(), globalGeometry(info), bounds));
     tip_->show();
 }
 
 void DetailsCard::popUp(QWidget* under) {
-    setFixedWidth(under->width());
-    move(under->mapToGlobal(QPoint(0, under->height())));
-    resize(width(), sizeHint().height());
+    // As tall as its rows when the window has the room; cut by the window's edge otherwise, and scrolled.
+    const QMargins margins = layout()->contentsMargins();
+    const int sides = margins.left() + margins.right() + 2 * frameWidth();
+    const int rows = rows_ ? qMax(rows_->heightForWidth(under->width() - sides), rows_->sizeHint().height()) : 0;
+    const QSize size(under->width(), rows + margins.top() + margins.bottom() + 2 * frameWidth());
+    setGeometry(placed(size, globalGeometry(under), popupBounds(under)));
     show();
 }

@@ -5,6 +5,7 @@
 #include "keypad.hpp"
 #include "keysizing.hpp"
 #include "lcd.hpp"
+#include "popupplacement.hpp"
 #include "presenter.hpp"
 #include "settings.hpp"
 #include "typechooser.hpp"
@@ -224,8 +225,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(proceed_, &QPushButton::clicked, this, [this] { request(lastExpression_, true); });
     connect(detailsButton_, &QToolButton::clicked, this, [this] { card_->popUp(lcd_); });
     connect(historyToggle_, &QToolButton::clicked, this, [this] {
-        historyPanel_->setFixedWidth(lcd_->width());
-        historyPanel_->move(lcd_->mapToGlobal(QPoint(0, lcd_->height())));
+        const QSize size(lcd_->width(), historyPanel_->sizeHint().height());
+        historyPanel_->setGeometry(placed(size, globalGeometry(lcd_), popupBounds(lcd_)));
         historyPanel_->show();
     });
     connect(history_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) {

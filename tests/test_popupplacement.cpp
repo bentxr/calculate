@@ -57,4 +57,6 @@ TEST(PopupPlacement, TheBoundsAreTheOutermostWindow) {
     EXPECT_EQ(popupBounds(inside), top.geometry());
     EXPECT_EQ(popupBounds(popup), top.geometry());
     EXPECT_EQ(popupBounds(&top), top.geometry());
+    inside->setGeometry(5, 6, 30, 20);
+    EXPECT_EQ(globalGeometry(inside), QRect(popup->mapToGlobal(QPoint(5, 6)), QSize(30, 20)));
 }
