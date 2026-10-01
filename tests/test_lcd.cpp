@@ -84,16 +84,13 @@ TEST(Lcd, ItsColoursFollowTheTheme) {
     EXPECT_GT(lcd.noiseColor().lightness(), lcd.background().lightness());
 }
 
-TEST(Lcd, TheStatusLineShowsShiftAlphaAndMemory) {
+TEST(Lcd, TheStatusLineShowsTheMemory) {
     Lcd lcd;
     EXPECT_EQ(lcd.statusText(), "");
-    lcd.setStatus(true, false);
-    EXPECT_EQ(lcd.statusText(), "S");
-    lcd.setStatus(false, true);
     lcd.setMemory("5");
-    EXPECT_EQ(lcd.statusText(), "A M");
+    EXPECT_EQ(lcd.statusText(), "M");
     EXPECT_EQ(lcd.toolTip(), "M = 5");
     lcd.setMemory({});
-    EXPECT_EQ(lcd.statusText(), "A");
+    EXPECT_EQ(lcd.statusText(), "");
     EXPECT_EQ(lcd.toolTip(), "");
 }

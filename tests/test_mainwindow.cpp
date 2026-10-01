@@ -55,13 +55,6 @@ QString detail(MainWindow& window, const QString& key) {
     return label ? label->text() : QString();
 }
 
-QAction* action(QMenu* menu, const QString& text) {
-    for (QAction* a : menu->actions())
-        if (a->text() == text) return a;
-    ADD_FAILURE() << "no action " << text.toStdString();
-    return nullptr;
-}
-
 }  // namespace
 
 TEST(MainWindow, TheTypeMenuComesFromTheEngine) {
@@ -129,16 +122,14 @@ TEST(MainWindow, ExactModeGreysOutTranscendentalKeys) {
     EXPECT_FALSE(sin->isEnabled());
     EXPECT_FALSE(sin->toolTip().isEmpty());
     EXPECT_TRUE(child<QPushButton>(window, "key:sqrt")->isEnabled());
-    QTest::mouseClick(child<QPushButton>(window, "key:shift"), Qt::LeftButton);
-    EXPECT_FALSE(child<QPushButton>(window, "key:exponent")->isEnabled());  // SHIFT: π
-    EXPECT_TRUE(child<QPushButton>(window, "key:reciprocal")->isEnabled());  // SHIFT: x!
+    EXPECT_FALSE(child<QPushButton>(window, "direct:pi")->isEnabled());
+    EXPECT_TRUE(child<QPushButton>(window, "direct:factorial")->isEnabled());
 }
 
 TEST(MainWindow, TheKeypadEditsTheExpression) {
     MainWindow window;
     QTest::mouseClick(child<QPushButton>(window, "key:sin"), Qt::LeftButton);
-    QTest::mouseClick(child<QPushButton>(window, "key:shift"), Qt::LeftButton);
-    QTest::mouseClick(child<QPushButton>(window, "key:exponent"), Qt::LeftButton);
+    QTest::mouseClick(child<QPushButton>(window, "direct:pi"), Qt::LeftButton);
     QTest::mouseClick(child<QPushButton>(window, "key:close"), Qt::LeftButton);
     EXPECT_EQ(lcd(window)->input(), "sin(π)");
     QTest::mouseClick(child<QPushButton>(window, "key:delete"), Qt::LeftButton);
@@ -147,32 +138,13 @@ TEST(MainWindow, TheKeypadEditsTheExpression) {
     EXPECT_EQ(lcd(window)->input(), "");
 }
 
-TEST(MainWindow, ShiftAndAlphaLastForOneKey) {
+TEST(MainWindow, ThereIsNoShiftAlphaOrMenu) {
     MainWindow window;
-    auto* shift = child<QPushButton>(window, "key:shift");
-    QTest::mouseClick(shift, Qt::LeftButton);
-    EXPECT_TRUE(shift->isChecked());
-    EXPECT_EQ(lcd(window)->statusText(), "S");
-    QTest::mouseClick(child<QPushButton>(window, "key:sin"), Qt::LeftButton);
-    EXPECT_FALSE(shift->isChecked());
-    EXPECT_EQ(lcd(window)->statusText(), "");
-    QTest::mouseClick(child<QPushButton>(window, "key:sin"), Qt::LeftButton);
-    EXPECT_EQ(lcd(window)->input(), "asin(sin(");
-    lcd(window)->clear();
-    QTest::mouseClick(child<QPushButton>(window, "key:alpha"), Qt::LeftButton);
-    QTest::mouseClick(child<QPushButton>(window, "key:multiply"), Qt::LeftButton);
-    QTest::mouseClick(child<QPushButton>(window, "key:multiply"), Qt::LeftButton);
-    EXPECT_EQ(lcd(window)->input(), "gcd(×");
-}
-
-TEST(MainWindow, KeysThisAppCannotUseYetStayInPlaceDisabled) {
-    MainWindow window;
-    auto* calc = child<QPushButton>(window, "key:calc");
-    EXPECT_FALSE(calc->isEnabled());
-    EXPECT_FALSE(calc->toolTip().isEmpty());
-    QTest::mouseClick(child<QPushButton>(window, "key:alpha"), Qt::LeftButton);
-    EXPECT_FALSE(child<QPushButton>(window, "key:7")->isEnabled());  // no ALPHA function
-    EXPECT_TRUE(child<QPushButton>(window, "key:memoryAdd")->isEnabled());  // ALPHA: M
+    for (const char* name : {"key:shift", "key:alpha", "key:menu", "key:options", "key:on", "key:calc"})
+        EXPECT_EQ(window.findChild<QPushButton*>(name), nullptr) << name;
+    EXPECT_EQ(window.findChild<QMenu*>("menu"), nullptr);
+    EXPECT_EQ(window.findChild<QMenu*>("options"), nullptr);
+    EXPECT_EQ(window.findChild<QLabel*>("shift:sin"), nullptr);
 }
 
 TEST(MainWindow, UncertainArgumentsOfferToProceed) {
@@ -194,8 +166,7 @@ TEST(MainWindow, MemoryKeys) {
     QTest::mouseClick(child<QPushButton>(window, "key:memoryAdd"), Qt::LeftButton);
     EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->memory() == "5"; }, 10000));
     EXPECT_EQ(lcd(window)->statusText(), "M");
-    QTest::mouseClick(child<QPushButton>(window, "key:shift"), Qt::LeftButton);
-    QTest::mouseClick(child<QPushButton>(window, "key:memoryAdd"), Qt::LeftButton);
+    QTest::mouseClick(child<QPushButton>(window, "direct:memorySubtract"), Qt::LeftButton);
     EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->memory() == "5-(5)"; }, 10000)) << lcd(window)->memory().toStdString();
 }
 
@@ -226,40 +197,13 @@ TEST(MainWindow, UpAndDownReplayTheHistory) {
     EXPECT_EQ(lcd(window)->input(), "2+2");
 }
 
-TEST(MainWindow, MenuChoosesTheModeAndConfigTheAngle) {
-    MainWindow window;
-    auto* menu = child<QMenu>(window, "menu");
-    QTest::mouseClick(child<QPushButton>(window, "key:menu"), Qt::LeftButton);
-    EXPECT_TRUE(menu->isVisible());
-    action(menu, "Statistics")->trigger();
-    menu->hide();
-    EXPECT_EQ(child<QStackedWidget>(window, "pages")->currentIndex(), 1);
-    auto* config = child<QMenu>(window, "config");
-    QTest::mouseClick(child<QPushButton>(window, "key:shift"), Qt::LeftButton);
-    QTest::mouseClick(child<QPushButton>(window, "key:menu"), Qt::LeftButton);
-    EXPECT_TRUE(config->isVisible());
-    action(config, "DEG")->trigger();
-    config->hide();
-    EXPECT_EQ(child<QComboBox>(window, "angle")->currentIndex(), 1);
-}
 
-TEST(MainWindow, OptionsHoldTheHyperbolicFunctionsModAndMemoryClear) {
+TEST(MainWindow, MemoryClearEmptiesTheMemory) {
     MainWindow window;
-    auto* options = child<QMenu>(window, "options");
-    QTest::mouseClick(child<QPushButton>(window, "key:options"), Qt::LeftButton);
-    EXPECT_TRUE(options->isVisible());
-    action(options, "sinh")->trigger();
-    options->hide();
-    EXPECT_EQ(lcd(window)->input(), "sinh(");
-    child<QComboBox>(window, "type")->setCurrentIndex(3);  // Exact
-    QTest::mouseClick(child<QPushButton>(window, "key:options"), Qt::LeftButton);
-    EXPECT_FALSE(action(options, "sinh")->isEnabled());
-    EXPECT_TRUE(action(options, "mod")->isEnabled());
-    options->hide();
     run(window, "5");
     QTest::mouseClick(child<QPushButton>(window, "key:memoryAdd"), Qt::LeftButton);
     EXPECT_TRUE(QTest::qWaitFor([&] { return !lcd(window)->memory().isEmpty(); }, 10000));
-    action(options, "MC")->trigger();
+    QTest::mouseClick(child<QPushButton>(window, "direct:memoryClear"), Qt::LeftButton);
     EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->memory().isEmpty(); }, 10000));
 }
 
@@ -281,7 +225,7 @@ TEST(MainWindow, CancelStaysOfferedWhileALaterRequestRuns) {
 TEST(MainWindow, KeysLeaveTheKeyboardToTheScreen) {
     MainWindow window;
     EXPECT_EQ(child<QPushButton>(window, "key:7")->focusPolicy(), Qt::NoFocus);
-    EXPECT_EQ(child<QPushButton>(window, "key:shift")->focusPolicy(), Qt::NoFocus);
+    EXPECT_EQ(child<QPushButton>(window, "direct:asin")->focusPolicy(), Qt::NoFocus);
     EXPECT_EQ(lcd(window)->focusPolicy(), Qt::StrongFocus);
     QTest::mouseClick(child<QPushButton>(window, "key:7"), Qt::LeftButton);
     QTest::keyClicks(lcd(window), "*6");
@@ -360,12 +304,8 @@ TEST(MainWindow, KeysKeepTheirSizeAndScrollWhenTheWindowIsSmall) {
     window.show();
     ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
     const QSize sin = child<QPushButton>(window, "key:sin")->size();
-    for (const char* key : {"key:shift", "key:fraction", "key:tan", "key:memoryAdd"})
+    for (const char* key : {"key:open", "key:fraction", "key:tan", "key:memoryAdd"})
         EXPECT_EQ(child<QPushButton>(window, key)->size(), sin) << key;
-    for (const char* legend : {"shift:sin", "alpha:multiply", "shift:memoryAdd"}) {
-        auto* label = child<QLabel>(window, legend);
-        EXPECT_GE(label->width(), label->fontMetrics().horizontalAdvance(label->text())) << legend;  // legends stay readable
-    }
     const QSize seven = child<QPushButton>(window, "key:7")->size();
     EXPECT_GT(seven.width(), sin.width());  // five number keys span the width of six function keys
     window.resize(1600, 1000);
@@ -380,15 +320,12 @@ TEST(MainWindow, KeysKeepTheirSizeAndScrollWhenTheWindowIsSmall) {
     EXPECT_TRUE(keys->horizontalScrollBar()->isVisible());
 }
 
-TEST(MainWindow, DirectKeysInsertWhatHidesBehindShift) {
+TEST(MainWindow, DirectKeysInsertTheirFunctions) {
     MainWindow window;
     QTest::mouseClick(child<QPushButton>(window, "direct:asin"), Qt::LeftButton);
     QTest::mouseClick(child<QPushButton>(window, "direct:pi"), Qt::LeftButton);
     QTest::mouseClick(child<QPushButton>(window, "direct:comma"), Qt::LeftButton);
-    EXPECT_EQ(lcd(window)->input(), "asin(π, ");
-    QTest::mouseClick(child<QPushButton>(window, "key:shift"), Qt::LeftButton);
-    QTest::mouseClick(child<QPushButton>(window, "direct:sinh"), Qt::LeftButton);  // a direct key ends SHIFT too
-    EXPECT_FALSE(child<QPushButton>(window, "key:shift")->isChecked());
+    QTest::mouseClick(child<QPushButton>(window, "direct:sinh"), Qt::LeftButton);
     EXPECT_EQ(lcd(window)->input(), "asin(π, sinh(");
     child<QComboBox>(window, "type")->setCurrentIndex(3);  // Exact
     EXPECT_FALSE(child<QPushButton>(window, "direct:sinh")->isEnabled());
@@ -448,13 +385,12 @@ TEST(MainWindow, SpanishRelabelsEverythingWithoutARestart) {
     language->setCurrentIndex(2);
     QCoreApplication::processEvents();  // Qt posts the language change to every window
     EXPECT_EQ(child<QPushButton>(window, "key:sin")->text(), "sen");
-    EXPECT_EQ(child<QLabel>(window, "shift:sin")->text(), "Arcsen");
+    EXPECT_EQ(child<QPushButton>(window, "direct:asin")->text(), "Arcsen");
     EXPECT_EQ(child<QPushButton>(window, "direct:gcd")->text(), "MCD");
     EXPECT_EQ(child<QListWidget>(window, "modes")->item(0)->text(), "Calculadora");
     EXPECT_EQ(child<QComboBox>(window, "type")->itemText(1), "Doble");
     EXPECT_EQ(child<QToolButton>(window, "detailsButton")->text(), "Detalles");
     EXPECT_EQ(child<DetailsCard>(window, "detailsCard")->findChild<QLabel*>("label:bound")->text(), "Cota garantizada");
-    EXPECT_NE(action(child<QMenu>(window, "menu"), "Estadística"), nullptr);
     EXPECT_EQ(language->itemText(0), "Sistema");
     language->setCurrentIndex(1);
     QCoreApplication::processEvents();
@@ -470,12 +406,11 @@ TEST(MainWindow, TheThemeSwitchesBetweenLightAndDark) {
     theme->setCurrentIndex(2);
     QCoreApplication::processEvents();
     EXPECT_LT(window.palette().color(QPalette::Window).lightness(), 128);
-    EXPECT_EQ(child<QLabel>(window, "shift:sin")->styleSheet(), "color:#e3b341");
     EXPECT_LT(lcd(window)->background().lightness(), 80);
     theme->setCurrentIndex(1);
     QCoreApplication::processEvents();
     EXPECT_GT(window.palette().color(QPalette::Window).lightness(), 128);
-    EXPECT_EQ(child<QLabel>(window, "shift:sin")->styleSheet(), "color:#9a6700");
+    EXPECT_GT(lcd(window)->background().lightness(), 150);
     QApplication::setPalette(original);
     QCoreApplication::processEvents();
 }

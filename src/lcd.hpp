@@ -30,8 +30,7 @@ public:
     void showExact(const view::FractionParts& parts);
     void showMessage(const QString& message);
     QString outputText() const;  // the result on one line of plain text
-    // The status line, as on the calculator: S (SHIFT), A (ALPHA), M (memory in use).
-    void setStatus(bool shift, bool alpha);
+    // The status line, as on the calculator: M while the memory holds something.
     void setMemory(const QString& memory);  // empty when cleared; its value is the screen's tooltip
     QString memory() const { return memory_; }
     QString statusText() const;
@@ -73,8 +72,6 @@ private:
     view::ValueParts value_;
     view::FractionParts exact_;
     QString message_;
-    bool shift_ = false;
-    bool alpha_ = false;
     QString memory_;
     typeset::Box result_;  // laid out once per change, not on every repaint
     QScrollBar* scroll_ = nullptr;  // for results taller than the screen; nothing is truncated

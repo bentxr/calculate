@@ -3,46 +3,36 @@
 #include <QList>
 #include <QString>
 
-enum class KeyAction {
-    Insert, Clear, Backspace, Evaluate, MemoryAdd, MemorySubtract, MemoryClear,
-    Shift, Alpha, Menu, Config, Options, Left, Right, Up, Down,
-    Unavailable,  // printed on the calculator, not supported here yet
-};
+enum class KeyAction { Insert, Clear, Backspace, Evaluate, MemoryAdd, MemorySubtract, MemoryClear, Left, Right, Up, Down };
 
-// One function of a key: the key alone, after SHIFT, or after ALPHA.
+// What a key does.
 struct Face {
     QString label;     // the legend (English source text; see translated())
     QString insert;    // text inserted into the expression (Insert only; translated like the label)
     QString function;  // the engine function it stands for, if any (for Exact availability)
-    KeyAction action = KeyAction::Unavailable;
+    KeyAction action = KeyAction::Insert;
 };
 
 struct Key {
-    QString id;  // stable name: the button is "key:<id>"
-    Face main;
-    Face shift;  // the yellow legend; empty when there is none
-    Face alpha;  // the red legend; empty when there is none
+    QString id;  // stable name: the button is "key:<id>" (right pad) or "direct:<id>" (left keyboard)
+    Face face;
 };
 
-// The keys of the main pad, row by row. The first two rows have four keys each, with the
-// cursor pad between their second and third keys; then three rows of six keys and four rows of five.
+// The right pad, row by row: two rows of four keys with the cursor pad between their second and third
+// keys, a row of six, and four rows of five (the numbers).
 const QList<QList<Key>>& keypad();
 
 // The cursor pad: up, left, right, down.
 const QList<Key>& cursorPad();
 
-// The OPTN menu: the hyperbolic functions (in a menu on scientific calculators too), mod and memory clear.
-const QList<Face>& optionsMenu();
-
-// The second keyboard: every function a scientific calculator hides behind SHIFT, ALPHA or OPTN, on a key of its
-// own and grouped by topic, for anyone who doesn't know the calculator.
+// The left keyboard: every other function, on a key of its own, grouped by topic.
 struct KeyGroup {
     QString title;  // English source text; see translated()
     QList<Key> keys;
 };
 const QList<KeyGroup>& directKeys();
 
-// Whether the face does something in this app, and in the Exact type when `exact`.
+// Whether the face works in the Exact type when `exact` (Exact refuses irrational functions).
 bool available(const Face& face, bool exact);
 
 // A label or inserted text in the user's language (Spanish calculators print sen, Arcsen, MCD…).
