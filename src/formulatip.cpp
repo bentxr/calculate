@@ -1,6 +1,7 @@
 #include "formulatip.hpp"
 
 #include "lcd.hpp"
+#include "popupplacement.hpp"
 #include "presenter.hpp"
 
 #include <QFontInfo>
@@ -59,8 +60,11 @@ void FormulaTip::showFor(const QString& function, const QPoint& at) {
     math.setPixelSize(qRound(QFontInfo(font()).pixelSize() * 1.3));
     formula_ = formula(function, math, tr("n odd"), tr("n even"));
     const QRect words = textRect();
-    resize(qCeil(qMax(formula_.width, qreal(words.width()))) + 2 * pad, words.bottom() + pad);
-    move(at + QPoint(12, 16));
+    const QSize size(qCeil(qMax(formula_.width, qreal(words.width()))) + 2 * pad, words.bottom() + pad);
+    // Under or over a band around the pointer, never on it: a tip under the pointer takes the hover
+    // from the button, which hides the tip.
+    const QRect pointer(at + QPoint(12, -16), QSize(1, 32));
+    setGeometry(placed(size, pointer, popupBounds(this)));
     show();
     update();
 }

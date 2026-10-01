@@ -299,7 +299,9 @@ TEST(MainWindow, EveryRowOfTheCardExplainsItselfInAPopup) {
         ASSERT_NE(tip, nullptr);
         EXPECT_TRUE(tip->isVisible()) << key;
         EXPECT_EQ(tip->findChild<QLabel*>()->text(), view::explanation(key));
-        EXPECT_LE(qAbs(tip->mapToGlobal(QPoint(0, 0)).y() - info->mapToGlobal(QPoint(0, info->height())).y()), 2);  // under its ⓘ
+        const QRect sign(info->mapToGlobal(QPoint(0, 0)), info->size());
+        const QRect at = tip->geometry();
+        EXPECT_TRUE(at.top() == sign.bottom() + 1 || at.bottom() + 1 == sign.top()) << key;  // under its sign, or over it
         EXPECT_EQ(card->size(), size);  // the card itself never changes
         tip->hide();
     }
@@ -360,6 +362,52 @@ TEST(MainWindow, LightLinesSeparateTheRowsOfTheCard) {
         EXPECT_LE(line->height(), 2);
     }
     card->hide();
+}
+
+// In a small window every popup stays inside it (in the browser, what is outside cannot be reached):
+// the card scrolls, and a formula never covers the pointer, which would make it flicker.
+TEST(MainWindow, PopupsStayInsideASmallWindow) {
+    MainWindow window;
+    window.setGeometry(40, 30, 640, 420);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    const QRect bounds = window.geometry();
+    run(window, "1+1");
+    run(window, "0.1 + 0.2");
+
+    QTest::mouseClick(child<QToolButton>(window, "detailsButton"), Qt::LeftButton);
+    auto* card = child<DetailsCard>(window, "detailsCard");
+    ASSERT_TRUE(card->isVisible());
+    EXPECT_TRUE(bounds.contains(card->geometry()));
+    auto* rows = card->findChild<QScrollArea*>();
+    ASSERT_NE(rows, nullptr);
+    EXPECT_GT(rows->verticalScrollBar()->maximum(), 0);  // shorter than its rows: it scrolls
+    auto* last = card->findChild<QToolButton*>("info:evaluated");
+    rows->ensureWidgetVisible(last);
+    QTest::mouseClick(last, Qt::LeftButton);
+    auto* tip = card->findChild<QFrame*>("explanation");
+    EXPECT_TRUE(tip->isVisible());
+    EXPECT_TRUE(bounds.contains(tip->geometry()));
+    tip->hide();
+    card->hide();
+
+    QTest::mouseClick(child<QToolButton>(window, "historyToggle"), Qt::LeftButton);
+    auto* panel = child<QWidget>(window, "historyPanel");
+    EXPECT_TRUE(panel->isVisible());
+    EXPECT_TRUE(bounds.contains(panel->geometry()));
+    panel->hide();
+
+    child<QListWidget>(window, "modes")->setCurrentRow(1);
+    QTest::qWait(50);
+    auto* stdevp = child<QPushButton>(window, "stat:stdevp");
+    const QPoint pointer = stdevp->mapToGlobal(QPoint(stdevp->width() - 3, stdevp->height() / 2));
+    QHelpEvent hover(QEvent::ToolTip, stdevp->mapFromGlobal(pointer), pointer);
+    QCoreApplication::sendEvent(stdevp, &hover);
+    auto* formula = child<FormulaTip>(window, "formulaTip");
+    EXPECT_TRUE(formula->isVisible());
+    EXPECT_TRUE(bounds.contains(formula->geometry()));
+    EXPECT_FALSE(formula->geometry().contains(pointer));
+    formula->hide();
 }
 
 TEST(MainWindow, TheHistoryDropsDownUnderTheScreen) {

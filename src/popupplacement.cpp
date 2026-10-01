@@ -21,6 +21,8 @@ QRect keptInside(QRect rect, QRect bounds) {
     return QRect(QPoint(x, y), size);
 }
 
+QRect globalGeometry(const QWidget* widget) { return QRect(widget->mapToGlobal(QPoint(0, 0)), widget->size()); }
+
 QRect popupBounds(const QWidget* widget) {
     const QWidget* window = widget->window();
     while (window->parentWidget()) window = window->parentWidget()->window();
