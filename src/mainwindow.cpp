@@ -300,14 +300,17 @@ void MainWindow::request(const QString& expression, bool allowUncertain) {
     lastExpression_ = expression;
     Options o = options();
     o.allowUncertainDiscreteArguments = allowUncertain;
+    ++pending_;
     busyTimer_.start();
     emit evaluationRequested(expression, o);
 }
 
 void MainWindow::showResult(const QString& expression, const Result& result) {
-    busyTimer_.stop();
-    busy_->setVisible(false);
-    cancel_->setVisible(false);
+    if (--pending_ == 0) {  // an earlier answer must not hide Cancel while a later request runs
+        busyTimer_.stop();
+        busy_->setVisible(false);
+        cancel_->setVisible(false);
+    }
     last_ = result;
     lastExpression_ = expression;
     proceed_->setVisible(result.error && result.error->code == ErrorCode::UncertainDiscreteArgument);
