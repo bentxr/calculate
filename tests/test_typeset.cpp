@@ -1,3 +1,4 @@
+#include "entry.hpp"
 #include "typeset.hpp"
 
 #include "printers.hpp"
@@ -161,4 +162,55 @@ TEST(Typeset, ABigOperatorCentresItsLimits) {
     EXPECT_LE(bottom(over), ink.top());
     EXPECT_LT(ink.top() - bottom(over), close);
     EXPECT_GT(symbol.font.pixelSize(), font().pixelSize());  // a big Σ
+}
+
+namespace {
+
+const typeset::Run* runWith(const Box& b, const QString& text) {
+    for (const typeset::Run& run : b.runs)
+        if (run.text == text) return &run;
+    return nullptr;
+}
+
+}  // namespace
+
+TEST(Typeset, TheInputDrawsAFractionWithTheCursorInside) {
+    Entry e;
+    e.insertTemplate(Template::Fraction);
+    e.insert("1");
+    QRectF caret;
+    const Box b = typeset::input(e, font(), &caret);
+    const typeset::Run* one = runWith(b, "1");
+    const typeset::Run* empty = runWith(b, "□");  // the empty denominator
+    ASSERT_NE(one, nullptr);
+    ASSERT_NE(empty, nullptr);
+    EXPECT_LT(bottom(*one), top(*empty));  // stacked, not side by side
+    EXPECT_NEAR(caret.left(), one->origin.x() + width(*one), 0.01);  // right after the 1
+    EXPECT_LE(caret.bottom(), top(*empty));                          // in the numerator
+    ASSERT_EQ(b.lines.size(), 1);                                    // the fraction bar
+}
+
+TEST(Typeset, PlainInputStaysOnOneLineWithTheCursorAtTheEnd) {
+    Entry e;
+    e.setText("12+3");
+    QRectF caret;
+    const Box b = typeset::input(e, font(), &caret);
+    for (const typeset::Run& run : b.runs) EXPECT_EQ(run.origin.y(), 0);
+    EXPECT_NEAR(caret.left(), b.width, 0.01);
+    EXPECT_TRUE(b.lines.isEmpty());
+}
+
+TEST(Typeset, TheInputRaisesExponentsAndDrawsRadicals) {
+    Entry e;
+    e.insert("2");
+    e.insertTemplate(Template::Power);
+    e.insert("8");
+    e.right();
+    e.insertTemplate(Template::Sqrt);
+    e.insert("9");
+    QRectF caret;
+    const Box b = typeset::input(e, font(), &caret);
+    EXPECT_LT(runWith(b, "8")->origin.y(), runWith(b, "2")->origin.y());  // the exponent is raised
+    EXPECT_LT(runWith(b, "8")->font.pixelSize(), runWith(b, "2")->font.pixelSize());
+    EXPECT_GE(b.lines.size(), 4);  // the radical's strokes
 }

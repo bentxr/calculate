@@ -19,6 +19,8 @@ public:
     explicit Lcd(QWidget* parent = nullptr);
 
     QString input() const { return entry_.text(); }
+    const Entry& entry() const { return entry_; }
+    void setEntry(const Entry& entry);  // brings back an earlier input, templates and all
     void insert(const QString& piece);
     // Opens a template; `fill`, if any, is typed into its box and the cursor leaves it (x², x⁻¹).
     void insertTemplate(Template kind, const QString& fill = {});
@@ -66,7 +68,7 @@ private:
     QFont statusFont() const;
     QFont inputFont() const;
     QFont outputFont() const;
-    typeset::Box inputBox() const;
+    typeset::Box inputBox(QRectF* caret = nullptr) const;
     QRectF resultArea(const typeset::Box& input) const;
     int barHeight() const;
     void changed();  // lays the result out again and repaints

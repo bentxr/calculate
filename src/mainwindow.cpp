@@ -229,7 +229,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
         historyPanel_->show();
     });
     connect(history_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) {
-        lcd_->setInput(item->data(Qt::UserRole).toString());
+        lcd_->setEntry(historyEntries_[static_cast<std::size_t>(history_->row(item))]);
         historyPanel_->hide();
     });
     auto reevaluate = [this] {
@@ -546,7 +546,9 @@ Options MainWindow::options() const {
 
 void MainWindow::evaluate() {
     const QString text = lcd_->input().trimmed();
-    if (!text.isEmpty()) request(text, false);
+    if (text.isEmpty()) return;
+    typed_ = lcd_->entry();  // the history keeps it as typed, templates and all
+    request(text, false);
 }
 
 void MainWindow::request(const QString& expression, bool allowUncertain) {
@@ -576,6 +578,9 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
         auto* item = new QListWidgetItem(expression + QStringLiteral(" = ") + value);
         item->setData(Qt::UserRole, expression);
         history_->insertItem(0, item);
+        Entry entry = typed_;
+        if (entry.text().trimmed() != expression) entry.setText(expression);  // not what was typed last
+        historyEntries_.insert(historyEntries_.begin(), entry);
         historyToggle_->setEnabled(true);
     }
     historyIndex_ = -1;
@@ -618,7 +623,7 @@ void MainWindow::apply(const Face& f) {
 void MainWindow::replay(int index) {
     if (index < 0 || index >= history_->count()) return;
     historyIndex_ = index;
-    lcd_->setInput(history_->item(index)->data(Qt::UserRole).toString());
+    lcd_->setEntry(historyEntries_[static_cast<std::size_t>(index)]);
 }
 
 bool MainWindow::exactType() const { return static_cast<NumberType>(type_->currentIndex()) == NumberType::Exact; }

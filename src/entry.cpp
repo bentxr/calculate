@@ -177,9 +177,3 @@ void Entry::setText(const QString& text) {
 }
 
 QString Entry::text() const { return serialize(root_); }
-
-QStringList Entry::pieces() const {
-    QStringList list;
-    for (const Item& item : root_) list << serialize(item);
-    return list;
-}

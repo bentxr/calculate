@@ -19,6 +19,21 @@ void place(Box& box, const Box& part, qreal dx, qreal dy) {
 
 qreal advance(const Run& run) { return QFontMetricsF(run.font).horizontalAdvance(run.text); }
 
+QFont scaled(const QFont& font, qreal factor) {
+    QFont f = font;
+    f.setPixelSize(qMax(6, qRound(QFontInfo(font).pixelSize() * factor)));
+    return f;
+}
+
+// Nothing, with a line's height: what an exponent or a lowered base attaches to.
+Box strut(const QFont& font) {
+    const QFontMetricsF m(font);
+    Box b;
+    b.ascent = m.ascent();
+    b.descent = m.descent();
+    return b;
+}
+
 QFont smaller(const QFont& font) {
     QFont f = font;
     f.setPixelSize(qMax(1, qRound(QFontMetricsF(font).height() * 0.6)));
@@ -192,6 +207,69 @@ void paint(QPainter& painter, const Box& box, QPointF origin, const QColor& ink,
     }
     painter.setPen(QPen(ink, 1.5));
     for (const QLineF& line : box.lines) painter.drawLine(line.translated(origin));
+}
+
+namespace {
+
+// Lays out an entry's rows and templates, marking the cursor with an empty Caret run in its row.
+struct InputLayout {
+    const Entry& entry;
+
+    Box caret(const QFont& font) const {
+        Box b = strut(font);
+        b.runs << Run{QString(), QPointF(0, 0), font, Role::Caret};
+        return b;
+    }
+
+    // `onPath`: the rows that lead to the cursor; the cursor's own row is the last of them.
+    Box row(const Row& items, const QFont& font, std::size_t depth, bool onPath) const {
+        const bool here = onPath && depth == entry.path().size();
+        QList<Box> parts;
+        for (std::size_t i = 0; i < items.size(); ++i) {
+            if (here && static_cast<int>(i) == entry.cursor()) parts << caret(font);
+            parts << item(items[i], font, depth, onPath, static_cast<int>(i));
+        }
+        if (here && entry.cursor() == static_cast<int>(items.size())) parts << caret(font);
+        if (items.empty()) parts << text(QStringLiteral("□"), font);
+        return typeset::row(parts);
+    }
+
+    Box item(const Item& it, const QFont& font, std::size_t depth, bool onPath, int index) const {
+        const QFont small = scaled(font, 0.7);
+        const auto box = [&](int b, const QFont& f) {
+            const bool on = onPath && depth < entry.path().size() && entry.path()[depth] == std::make_pair(index, b);
+            return row(it.boxes[static_cast<std::size_t>(b)], f, depth + 1, on);
+        };
+        switch (it.kind) {
+        case Template::Text: return text(it.text, font);
+        case Template::Fraction: return fraction(box(0, font), box(1, font), font);
+        case Template::Sqrt: return radical(box(0, font), font);
+        case Template::Cbrt: return radical(box(0, font), font, text(QStringLiteral("3"), small));
+        case Template::Root: return radical(box(1, font), font, box(0, small));
+        case Template::Power: return superscript(strut(font), box(0, small));
+        case Template::Exp: return superscript(text(QStringLiteral("e"), font), box(0, small));
+        case Template::Pow10: return superscript(text(QStringLiteral("10"), font), box(0, small));
+        case Template::LogBase:
+            return typeset::row({text(QStringLiteral("log"), font), subscript(strut(font), box(0, small)),
+                                 text(QStringLiteral("("), font), box(1, font), text(QStringLiteral(")"), font)});
+        case Template::Abs: return typeset::row({text(QStringLiteral("|"), font), box(0, font), text(QStringLiteral("|"), font)});
+        }
+        return {};
+    }
+};
+
+}  // namespace
+
+Box input(const Entry& entry, const QFont& font, QRectF* caret) {
+    Box b = InputLayout{entry}.row(entry.root(), font, 0, true);
+    for (int i = 0; i < b.runs.size(); ++i) {
+        if (b.runs[i].role != Role::Caret) continue;
+        const QFontMetricsF m(b.runs[i].font);
+        if (caret) *caret = QRectF(b.runs[i].origin.x(), b.runs[i].origin.y() - m.ascent(), 0, m.ascent() + m.descent());
+        b.runs.removeAt(i);
+        break;
+    }
+    return b;
 }
 
 Box value(const view::ValueParts& parts, const QFont& font, qreal maxWidth) {
