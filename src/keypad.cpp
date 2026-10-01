@@ -78,6 +78,20 @@ const QList<Key>& cursorPad() {
     return keys;
 }
 
+const QList<Face>& optionsMenu() {
+    static const QList<Face> faces{
+        put(QT_TRANSLATE_NOOP("keypad", "sinh"), QT_TRANSLATE_NOOP("keypad", "sinh("), "sinh"),
+        put("cosh", "cosh(", "cosh"),
+        put("tanh", "tanh(", "tanh"),
+        put(QT_TRANSLATE_NOOP("keypad", "asinh"), QT_TRANSLATE_NOOP("keypad", "asinh("), "asinh"),
+        put(QT_TRANSLATE_NOOP("keypad", "acosh"), QT_TRANSLATE_NOOP("keypad", "acosh("), "acosh"),
+        put(QT_TRANSLATE_NOOP("keypad", "atanh"), QT_TRANSLATE_NOOP("keypad", "atanh("), "atanh"),
+        put("mod", "mod(", "mod"),
+        act("MC", KeyAction::MemoryClear),
+    };
+    return faces;
+}
+
 bool available(const Face& face, bool exact) {
     if (face.action == KeyAction::Unavailable) return false;
     if (!exact || face.function.isEmpty()) return true;

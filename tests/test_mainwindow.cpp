@@ -4,6 +4,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QMenu>
 #include <QPalette>
 #include <QPlainTextEdit>
 #include <QPushButton>
@@ -34,6 +35,13 @@ void run(MainWindow& window, const QString& expression) {
     QTest::keyClick(input, Qt::Key_Return);
     EXPECT_TRUE(QTest::qWaitFor([&] { return !value->text().isEmpty() || !message->text().isEmpty(); }, 10000))
         << expression.toStdString();
+}
+
+QAction* action(QMenu* menu, const QString& text) {
+    for (QAction* a : menu->actions())
+        if (a->text() == text) return a;
+    ADD_FAILURE() << "no action " << text.toStdString();
+    return nullptr;
 }
 
 }  // namespace
@@ -166,4 +174,60 @@ TEST(MainWindow, TheNoiseColourStaysVisibleWhenThePaletteIsTranslucent) {
     window.setPalette(palette);
     run(window, "0.1 + 0.2");
     EXPECT_TRUE(child<QLabel>(window, "value")->text().contains("color:#7f7f7f")) << child<QLabel>(window, "value")->text().toStdString();
+}
+
+TEST(MainWindow, UpAndDownReplayTheHistory) {
+    MainWindow window;
+    run(window, "1+1");
+    run(window, "2+2");
+    auto* input = child<QLineEdit>(window, "expression");
+    auto* up = child<QPushButton>(window, "key:up");
+    input->clear();
+    QTest::mouseClick(up, Qt::LeftButton);
+    EXPECT_EQ(input->text(), "2+2");
+    QTest::mouseClick(up, Qt::LeftButton);
+    EXPECT_EQ(input->text(), "1+1");
+    QTest::mouseClick(up, Qt::LeftButton);
+    EXPECT_EQ(input->text(), "1+1");
+    QTest::mouseClick(child<QPushButton>(window, "key:down"), Qt::LeftButton);
+    EXPECT_EQ(input->text(), "2+2");
+}
+
+TEST(MainWindow, MenuChoosesTheModeAndConfigTheAngle) {
+    MainWindow window;
+    auto* menu = child<QMenu>(window, "menu");
+    QTest::mouseClick(child<QPushButton>(window, "key:menu"), Qt::LeftButton);
+    EXPECT_TRUE(menu->isVisible());
+    action(menu, "Statistics")->trigger();
+    menu->hide();
+    EXPECT_EQ(child<QStackedWidget>(window, "pages")->currentIndex(), 1);
+    auto* config = child<QMenu>(window, "config");
+    QTest::mouseClick(child<QPushButton>(window, "key:shift"), Qt::LeftButton);
+    QTest::mouseClick(child<QPushButton>(window, "key:menu"), Qt::LeftButton);
+    EXPECT_TRUE(config->isVisible());
+    action(config, "DEG")->trigger();
+    config->hide();
+    EXPECT_EQ(child<QComboBox>(window, "angle")->currentIndex(), 1);
+}
+
+TEST(MainWindow, OptionsHoldTheHyperbolicFunctionsModAndMemoryClear) {
+    MainWindow window;
+    auto* options = child<QMenu>(window, "options");
+    auto* input = child<QLineEdit>(window, "expression");
+    QTest::mouseClick(child<QPushButton>(window, "key:options"), Qt::LeftButton);
+    EXPECT_TRUE(options->isVisible());
+    action(options, "sinh")->trigger();
+    options->hide();
+    EXPECT_EQ(input->text(), "sinh(");
+    child<QComboBox>(window, "type")->setCurrentIndex(3);  // Exact
+    QTest::mouseClick(child<QPushButton>(window, "key:options"), Qt::LeftButton);
+    EXPECT_FALSE(action(options, "sinh")->isEnabled());
+    EXPECT_TRUE(action(options, "mod")->isEnabled());
+    options->hide();
+    run(window, "5");
+    auto* memory = child<QLabel>(window, "memory");
+    QTest::mouseClick(child<QPushButton>(window, "key:memoryAdd"), Qt::LeftButton);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return !memory->text().isEmpty(); }, 10000));
+    action(options, "MC")->trigger();
+    EXPECT_TRUE(QTest::qWaitFor([&] { return memory->text().isEmpty(); }, 10000));
 }

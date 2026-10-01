@@ -4,7 +4,7 @@
 #include <QString>
 
 enum class KeyAction {
-    Insert, Clear, Backspace, Evaluate, MemoryAdd, MemorySubtract,
+    Insert, Clear, Backspace, Evaluate, MemoryAdd, MemorySubtract, MemoryClear,
     Shift, Alpha, Menu, Config, Options, Left, Right, Up, Down,
     Unavailable,  // printed on the calculator, not supported here yet
 };
@@ -30,6 +30,9 @@ const QList<QList<Key>>& keypad();
 
 // The cursor pad: up, left, right, down.
 const QList<Key>& cursorPad();
+
+// The OPTN menu: the hyperbolic functions (in a menu on scientific calculators too), mod and memory clear.
+const QList<Face>& optionsMenu();
 
 // Whether the face does something in this app, and in the Exact type when `exact`.
 bool available(const Face& face, bool exact);
