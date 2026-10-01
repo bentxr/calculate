@@ -8,6 +8,7 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(calculate-tests
     main.cpp
+    test_entry.cpp
     test_keypad.cpp
     test_mainwindow.cpp
     test_presenter.cpp
