@@ -55,3 +55,44 @@ TEST(Presenter, TheErrorLineAndTheWhyLine) {
     EXPECT_EQ(view::errorLine(evaluate("(0.1*30)!", allow)),
               "± 0 · all digits trusted · incomplete: an uncertain argument was accepted");
 }
+
+TEST(Presenter, ConditionVerdicts) {
+    EXPECT_EQ(view::verdict("1e+0"), "well-conditioned");
+    EXPECT_EQ(view::verdict("1.8e+5"), "moderately conditioned");
+    EXPECT_EQ(view::verdict("2e+16"), "ill-conditioned: no algorithm can do better in this type");
+    EXPECT_EQ(view::verdict("inf"), "ill-conditioned: no algorithm can do better in this type");
+    EXPECT_EQ(view::verdict("5e-1"), "well-conditioned");
+}
+
+TEST(Presenter, TheDetailsPanel) {
+    const auto rows = view::details(evaluated("0.1 + 0.2"));
+    ASSERT_EQ(rows.size(), 8);
+    EXPECT_EQ(rows[0], qMakePair(QString("Guaranteed bound"), QString("4.4e-17")));
+    EXPECT_EQ(rows[1], qMakePair(QString("Measured error"), QString("4.4e-17")));
+    EXPECT_EQ(rows[5], qMakePair(QString("Condition number κ"), QString("1e+0 · well-conditioned")));
+    EXPECT_EQ(rows[6], qMakePair(QString("Trusted digits"), QString("15 by the bound, 15 by the measurement")));
+    EXPECT_EQ(rows[7], qMakePair(QString("Evaluated"), QString("0.1 + 0.2")));
+}
+
+TEST(Presenter, ErrorsNameWhatWentWrong) {
+    const auto text = [](const char* expression, NumberType type = NumberType::Double) {
+        const Result r = evaluated(expression, type);
+        EXPECT_TRUE(r.error) << expression;
+        return view::errorText(*r.error, QString::fromUtf8(expression));
+    };
+    EXPECT_EQ(text("1 + 1/0"), "Division by zero");
+    EXPECT_EQ(text("2π"), "Missing operator before “π” (write 2×π, not 2π)");
+    EXPECT_EQ(text("sin(1)", NumberType::Exact),
+              "Exact arithmetic cannot represent sin: its result is irrational. Switch to a floating type to compute it.");
+    EXPECT_EQ(text("sqrt(2)", NumberType::Exact), "The exact result of sqrt(2) is irrational");
+    EXPECT_EQ(text("Ans"), "There is no previous result yet");
+    EXPECT_EQ(text("foo(1)"), "Unknown name “foo”");
+    EXPECT_EQ(text("(0.1*30)!"),
+              "(0.1*30)! needs an exactly known whole number, but its argument carries an error. "
+              "If you proceed anyway, the error report will not include that error.");
+}
+
+TEST(Presenter, StatisticsExpressions) {
+    EXPECT_EQ(view::statisticsExpression("mean", "1\n2, 3;  4\n\n"), "mean(1, 2, 3, 4)");
+    EXPECT_EQ(view::statisticsExpression("stdev", "  \n "), "");
+}
