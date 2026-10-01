@@ -14,7 +14,7 @@ namespace {
 
 constexpr int pad = 6;
 constexpr int gap = 4;
-constexpr int barHeight = 5;
+constexpr int barHeight = 4;
 
 QFont smallFont(const QFont& font) {
     QFont f = font;
@@ -32,34 +32,44 @@ public:
         return QSize(m.horizontalAdvance('x') * 46, 2 * pad + m.height() + 2 * gap + barHeight + QFontMetrics(smallFont(option.font)).height());
     }
 
+    // Drawn like the Details card: window colours, the UI font, a soft rounded highlight for the row
+    // under the mouse or selected, and a thin accent bar.
     void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override {
-        QStyleOptionViewItem o = option;
-        initStyleOption(&o, index);
-        o.text.clear();
-        o.widget->style()->drawControl(QStyle::CE_ItemViewItem, &o, painter, o.widget);
-
-        const bool selected = option.state & QStyle::State_Selected;
-        const QColor text = option.palette.color(selected ? QPalette::HighlightedText : QPalette::Text);
+        const QPalette& palette = option.palette;
+        painter->save();
+        painter->setRenderHint(QPainter::Antialiasing);
+        if (option.state & (QStyle::State_Selected | QStyle::State_MouseOver)) {
+            QColor tint = palette.color(QPalette::Highlight);
+            tint.setAlpha(option.state & QStyle::State_Selected ? 60 : 30);
+            painter->setPen(Qt::NoPen);
+            painter->setBrush(tint);
+            painter->drawRoundedRect(QRectF(option.rect).adjusted(2, 1, -2, -1), 4, 4);
+        }
         const QRect r = option.rect.adjusted(pad, pad, -pad, -pad);
         const QFontMetrics m(option.font);
-        painter->save();
         QFont bold = option.font;
         bold.setBold(true);
         painter->setFont(bold);
-        painter->setPen(text);
+        painter->setPen(palette.color(QPalette::WindowText));
         painter->drawText(r.left(), r.top() + m.ascent(), index.data(Qt::DisplayRole).toString());
         painter->setFont(option.font);
         const QString digits = index.data(TypeChooser::DigitsRole).toString();
         painter->drawText(r.right() - m.horizontalAdvance(digits), r.top() + m.ascent(), digits);
 
-        const QRect track(r.left(), r.top() + m.height() + gap, r.width(), barHeight);
-        painter->fillRect(track, option.palette.color(QPalette::Mid));
-        QRect filled = track;
-        filled.setWidth(qRound(track.width() * precision(index)));
-        painter->fillRect(filled, option.palette.color(selected ? QPalette::HighlightedText : QPalette::Highlight));
+        const QRectF track(r.left(), r.top() + m.height() + gap, r.width(), barHeight);
+        QColor groove = palette.color(QPalette::WindowText);
+        groove.setAlpha(35);
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(groove);
+        painter->drawRoundedRect(track, barHeight / 2.0, barHeight / 2.0);
+        QRectF filled = track;
+        filled.setWidth(track.width() * precision(index));
+        painter->setBrush(palette.color(QPalette::Highlight));
+        painter->drawRoundedRect(filled, barHeight / 2.0, barHeight / 2.0);
 
         painter->setFont(smallFont(option.font));
-        painter->drawText(r.left(), track.bottom() + gap + QFontMetrics(smallFont(option.font)).ascent(),
+        painter->setPen(palette.color(QPalette::PlaceholderText));
+        painter->drawText(r.left(), qRound(track.bottom()) + gap + QFontMetrics(smallFont(option.font)).ascent(),
                           index.data(TypeChooser::DetailRole).toString());
         painter->restore();
     }
@@ -83,6 +93,9 @@ TypeChooser::TypeChooser(QWidget* parent) : QComboBox(parent) {
     auto* list = new QListView(this);
     list->setItemDelegate(new TypeDelegate(list));
     setView(list);
+    list->setFrameShape(QFrame::StyledPanel);  // like the Details card (after setView, which resets it)
+    list->viewport()->setBackgroundRole(QPalette::Window);
+    list->setMouseTracking(true);  // for the hover highlight
     for (const calculate_core::TypeInfo& t : calculate_core::numberTypes()) {
         addItem({});
         setItemData(count() - 1, t.type == calculate_core::NumberType::Exact ? -1 : t.decimalDigits, PrecisionRole);

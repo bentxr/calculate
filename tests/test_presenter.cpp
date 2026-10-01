@@ -23,8 +23,7 @@ TypeInfo typeInfo(NumberType type) { return numberTypes()[static_cast<std::size_
 TEST(Presenter, TypeLabelsShowTheCppNameAndTheTraits) {
     EXPECT_EQ(view::typeLabel(typeInfo(NumberType::Double)), "Double · double · 64-bit · ~16 digits");
     EXPECT_EQ(view::typeLabel(typeInfo(NumberType::Exact)), "Exact · cpp_rational · no rounding");
-    EXPECT_EQ(view::typeLabel(typeInfo(NumberType::Binary256)),
-              "Octuple · binary256 · 256-bit · ~71 digits · software, no subnormals");
+    EXPECT_EQ(view::typeLabel(typeInfo(NumberType::Binary256)), "Octuple · binary256 · 256-bit · ~71 digits");
 }
 
 TEST(Presenter, ConditionVerdicts) {
@@ -150,6 +149,5 @@ TEST(Presenter, TypeTraitsForTheTypeMenu) {
     EXPECT_EQ(view::typeDetail(typeInfo(NumberType::Double)), "double · 64-bit storage · 53-bit significand");
     EXPECT_EQ(view::typeDigits(typeInfo(NumberType::Exact)), "every digit exact");
     EXPECT_EQ(view::typeDetail(typeInfo(NumberType::Exact)), "cpp_rational · fractions, no rounding");
-    EXPECT_EQ(view::typeDetail(typeInfo(NumberType::Binary512)),
-              "binary512 · 512-bit storage · 489-bit significand · software, no subnormals");
+    EXPECT_EQ(view::typeDetail(typeInfo(NumberType::Binary512)), "binary512 · 512-bit storage · 489-bit significand");
 }

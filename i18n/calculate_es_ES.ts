@@ -278,11 +278,6 @@
         <translation>aquí, idéntico a double</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="65"/>
-        <source>software, no subnormals</source>
-        <translation>por software, sin subnormales</translation>
-    </message>
-    <message>
         <location filename="../src/presenter.cpp" line="70"/>
         <source>Single</source>
         <translation>Simple</translation>
