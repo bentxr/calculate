@@ -82,14 +82,28 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     card_ = new DetailsCard(this);
     card_->setObjectName("detailsCard");
 
+    // The session's history: a list that drops down under the screen from the ▾ at its corner.
+    historyToggle_ = new QToolButton(lcd_);
+    historyToggle_->setObjectName("historyToggle");
+    historyToggle_->setText(QStringLiteral("▾"));
+    historyToggle_->setToolTip(tr("History"));
+    historyToggle_->setAutoRaise(true);
+    historyToggle_->setEnabled(false);
+    lcd_->addToBar(historyToggle_, true);
+    historyPanel_ = new QFrame(this, Qt::Popup);
+    historyPanel_->setObjectName("historyPanel");
+    historyPanel_->setFrameShape(QFrame::StyledPanel);
+    auto* historyLayout = new QVBoxLayout(historyPanel_);
+    historyLayout->setContentsMargins(0, 0, 0, 0);
+    history_ = new QListWidget(historyPanel_);
+    history_->setObjectName("history");
+    historyLayout->addWidget(history_);
+
     pages_ = new QStackedWidget(central);
     pages_->setObjectName("pages");
     auto* calculator = new QWidget(pages_);
     auto* calculatorLayout = new QHBoxLayout(calculator);
     calculatorLayout->addWidget(buildKeypad(), 3);
-    history_ = new QListWidget(calculator);
-    history_->setObjectName("history");
-    calculatorLayout->addWidget(history_, 1);
     pages_->addWidget(calculator);
     pages_->addWidget(buildStatistics());
     main->addWidget(pages_, 1);
@@ -121,7 +135,15 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(equals, &QPushButton::clicked, this, &MainWindow::evaluate);
     connect(proceed_, &QPushButton::clicked, this, [this] { request(lastExpression_, true); });
     connect(detailsButton_, &QToolButton::clicked, this, [this] { card_->popUp(lcd_); });
-    connect(history_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) { lcd_->setInput(item->text()); });
+    connect(historyToggle_, &QToolButton::clicked, this, [this] {
+        historyPanel_->setFixedWidth(lcd_->width());
+        historyPanel_->move(lcd_->mapToGlobal(QPoint(0, lcd_->height())));
+        historyPanel_->show();
+    });
+    connect(history_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) {
+        lcd_->setInput(item->data(Qt::UserRole).toString());
+        historyPanel_->hide();
+    });
     auto reevaluate = [this] {
         updateKeys();
         if (!lastExpression_.isEmpty() && !last_.error) request(lastExpression_, false);
@@ -133,7 +155,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     // Only the screen takes the keyboard; every other control is used with the mouse.
     for (QWidget* w : {static_cast<QWidget*>(modes_), static_cast<QWidget*>(type_), static_cast<QWidget*>(angle_),
                        static_cast<QWidget*>(equals), static_cast<QWidget*>(detailsButton_), static_cast<QWidget*>(proceed_),
-                       static_cast<QWidget*>(cancel_), static_cast<QWidget*>(history_)})
+                       static_cast<QWidget*>(cancel_), static_cast<QWidget*>(historyToggle_)})
         w->setFocusPolicy(Qt::NoFocus);
     lcd_->setFocus();
 }
@@ -304,7 +326,15 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
     }
     if (result.exact) lcd_->showExact(view::fractionParts(result));
     else lcd_->showValue(view::valueParts(result));
-    if (history_->count() == 0 || history_->item(0)->text() != expression) history_->insertItem(0, expression);
+    if (history_->count() == 0 || history_->item(0)->data(Qt::UserRole).toString() != expression) {
+        // "expression = value", the value cut short: the list only points back to the calculation.
+        QString value = lcd_->outputText();
+        if (value.size() > 28) value = value.left(28) + QStringLiteral("…");
+        auto* item = new QListWidgetItem(expression + QStringLiteral(" = ") + value);
+        item->setData(Qt::UserRole, expression);
+        history_->insertItem(0, item);
+        historyToggle_->setEnabled(true);
+    }
     historyIndex_ = -1;
 }
 
@@ -349,7 +379,7 @@ void MainWindow::popUp(QMenu* menu) { menu->popup(QCursor::pos()); }
 void MainWindow::replay(int index) {
     if (index < 0 || index >= history_->count()) return;
     historyIndex_ = index;
-    lcd_->setInput(history_->item(index)->text());
+    lcd_->setInput(history_->item(index)->data(Qt::UserRole).toString());
 }
 
 bool MainWindow::exactType() const { return static_cast<NumberType>(type_->currentIndex()) == NumberType::Exact; }

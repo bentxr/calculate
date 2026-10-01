@@ -101,7 +101,9 @@ TEST(MainWindow, EvaluatesAndShowsTheErrorReport) {
     EXPECT_EQ(detail(window, "bound"), "4.4e-17");
     EXPECT_EQ(detail(window, "trusted"), "15 by the bound, 15 by the measurement");
     EXPECT_EQ(detail(window, "type"), "double, 53-bit significand");
-    EXPECT_EQ(child<QListWidget>(window, "history")->item(0)->text(), "0.1 + 0.2");
+    QListWidgetItem* item = child<QListWidget>(window, "history")->item(0);
+    EXPECT_EQ(item->data(Qt::UserRole).toString(), "0.1 + 0.2");
+    EXPECT_EQ(item->text(), "0.1 + 0.2 = 0.300000000000000|0444089209…");
 }
 
 TEST(MainWindow, ChangingTheTypeReevaluates) {
@@ -321,4 +323,28 @@ TEST(MainWindow, EveryRowOfTheCardExplainsItself) {
         EXPECT_TRUE(text->isVisibleTo(card)) << key;
         EXPECT_EQ(text->text(), view::explanation(key));
     }
+}
+
+TEST(MainWindow, TheHistoryDropsDownUnderTheScreen) {
+    MainWindow window;
+    window.resize(900, 700);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    auto* toggle = child<QToolButton>(window, "historyToggle");
+    EXPECT_FALSE(toggle->isEnabled());  // nothing to show yet
+    run(window, "1+1");
+    run(window, "2+2");
+    EXPECT_TRUE(toggle->isEnabled());
+    auto* panel = child<QWidget>(window, "historyPanel");
+    auto* list = child<QListWidget>(window, "history");
+    const QRect keypad = child<QWidget>(window, "keypad")->geometry();
+    QTest::mouseClick(toggle, Qt::LeftButton);
+    EXPECT_TRUE(panel->isVisible());
+    EXPECT_EQ(child<QWidget>(window, "keypad")->geometry(), keypad);  // an overlay: nothing moves
+    ASSERT_EQ(list->count(), 2);
+    EXPECT_EQ(list->item(0)->text(), "2+2 = 4");
+    EXPECT_EQ(list->item(1)->text(), "1+1 = 2");
+    QTest::mouseClick(list->viewport(), Qt::LeftButton, {}, list->visualItemRect(list->item(1)).center());
+    EXPECT_EQ(lcd(window)->input(), "1+1");
+    EXPECT_FALSE(panel->isVisible());
 }
