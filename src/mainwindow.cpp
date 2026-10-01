@@ -455,7 +455,26 @@ QWidget* MainWindow::buildStatistics() {
     statisticsValues_ = new ValuesEdit(page);
     statisticsValues_->setObjectName("statisticsValues");
     entry->addWidget(statisticsValues_, 1);
-    // A numeric keypad for the values, so the page also works without a keyboard.
+    // Beside the values: the functions, and under them a numeric keypad, so the page also works
+    // without a keyboard.
+    auto* side = new QVBoxLayout;
+    auto* functions = new QGridLayout;
+    const char* names[] = {"mean", "median", "var", "stdev", "varp", "stdevp"};
+    for (int i = 0; i < int(std::size(names)); ++i) {
+        const QString f = QString::fromLatin1(names[i]);
+        auto* b = new QPushButton(f, page);
+        b->setObjectName(QStringLiteral("stat:") + f);
+        b->setFocusPolicy(Qt::NoFocus);
+        functions->addWidget(b, i / 3, i % 3);
+        connect(b, &QPushButton::clicked, this, [this, f] {
+            const QString e = view::statisticsExpression(f, statisticsValues_->toPlainText());
+            if (e.isEmpty()) return;
+            lcd_->setInput(e);
+            evaluate();
+        });
+    }
+    side->addLayout(functions);
+    side->addSpacing(keypadGap);
     auto* keys = new QWidget(page);
     keys->setObjectName("statisticsKeys");
     auto* grid = new QGridLayout(keys);
@@ -479,22 +498,11 @@ QWidget* MainWindow::buildStatistics() {
         });
         grid->addWidget(button, i / 4, i % 4);
     }
-    entry->addWidget(keys, 0, Qt::AlignTop);
+    side->addWidget(keys);
+    side->addStretch();
+    entry->addLayout(side);
     connect(statisticsKeysToggle_, &QToolButton::toggled, keys, &QWidget::setVisible);
     layout->addLayout(entry, 1);
-    auto* buttons = new QHBoxLayout;
-    for (const char* f : {"mean", "median", "var", "stdev", "varp", "stdevp"}) {
-        auto* b = new QPushButton(QString::fromLatin1(f), page);
-        b->setObjectName(QStringLiteral("stat:") + f);
-        buttons->addWidget(b);
-        connect(b, &QPushButton::clicked, this, [this, f] {
-            const QString e = view::statisticsExpression(QString::fromLatin1(f), statisticsValues_->toPlainText());
-            if (e.isEmpty()) return;
-            lcd_->setInput(e);
-            evaluate();
-        });
-    }
-    layout->addLayout(buttons);
     return page;
 }
 

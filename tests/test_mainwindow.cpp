@@ -487,3 +487,22 @@ TEST(MainWindow, ChangingTheLanguageMovesNothing) {
     QCoreApplication::processEvents();
     EXPECT_EQ(geometry(), english);
 }
+
+TEST(MainWindow, StatisticsFunctionsSitAboveTheNumberPad) {
+    MainWindow window;
+    window.resize(900, 800);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    child<QListWidget>(window, "modes")->setCurrentRow(1);
+    QTest::qWait(50);
+    const auto rect = [&](const char* name) {
+        QWidget* w = child<QWidget>(window, name);
+        return QRect(w->mapTo(&window, QPoint(0, 0)), w->size());
+    };
+    const QRect values = rect("statisticsValues");
+    const QRect seven = rect("statKey:7");
+    for (const char* name : {"stat:mean", "stat:median", "stat:var", "stat:stdev", "stat:varp", "stat:stdevp"}) {
+        EXPECT_LT(rect(name).bottom(), seven.top()) << name;   // the functions over the numbers
+        EXPECT_GT(rect(name).left(), values.right()) << name;  // beside the values, with the keypad
+    }
+}
