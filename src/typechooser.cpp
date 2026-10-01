@@ -8,7 +8,9 @@
 #include <QPainter>
 #include <QStyledItemDelegate>
 
+#include <algorithm>
 #include <cmath>
+#include <limits>
 
 namespace {
 
@@ -96,18 +98,31 @@ TypeChooser::TypeChooser(QWidget* parent) : QComboBox(parent) {
     list->setFrameShape(QFrame::StyledPanel);  // like the Details card (after setView, which resets it)
     list->viewport()->setBackgroundRole(QPalette::Window);
     list->setMouseTracking(true);  // for the hover highlight
-    for (const calculate_core::TypeInfo& t : calculate_core::numberTypes()) {
+    // From the least precise to the most; Exact, which never rounds, last.
+    std::vector<calculate_core::TypeInfo> types = calculate_core::numberTypes();
+    const auto rank = [](const calculate_core::TypeInfo& t) {
+        return t.type == calculate_core::NumberType::Exact ? std::numeric_limits<int>::max() : t.decimalDigits;
+    };
+    std::stable_sort(types.begin(), types.end(), [&](const auto& a, const auto& b) { return rank(a) < rank(b); });
+    for (const calculate_core::TypeInfo& t : types) {
         addItem({});
+        setItemData(count() - 1, static_cast<int>(t.type), TypeRole);
         setItemData(count() - 1, t.type == calculate_core::NumberType::Exact ? -1 : t.decimalDigits, PrecisionRole);
     }
-    setCurrentIndex(static_cast<int>(calculate_core::NumberType::Double));
+    setCurrentType(calculate_core::NumberType::Double);
     retranslate();
 }
+
+calculate_core::NumberType TypeChooser::currentType() const {
+    return static_cast<calculate_core::NumberType>(currentData(TypeRole).toInt());
+}
+
+void TypeChooser::setCurrentType(calculate_core::NumberType type) { setCurrentIndex(findData(static_cast<int>(type), TypeRole)); }
 
 void TypeChooser::retranslate() {
     const std::vector<calculate_core::TypeInfo> types = calculate_core::numberTypes();
     for (int i = 0; i < count(); ++i) {
-        const calculate_core::TypeInfo& t = types[static_cast<std::size_t>(i)];
+        const calculate_core::TypeInfo& t = types[static_cast<std::size_t>(itemData(i, TypeRole).toInt())];  // in enum order
         setItemText(i, view::shortTypeName(t));
         setItemData(i, view::typeLabel(t), Qt::ToolTipRole);
         setItemData(i, view::typeDigits(t), DigitsRole);
