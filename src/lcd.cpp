@@ -162,8 +162,8 @@ void Lcd::addToBar(QWidget* widget, bool right) {
 int Lcd::barHeight() const { return barLayout_->count() > 1 ? bar_->sizeHint().height() : 0; }  // more than the stretch
 
 QSize Lcd::sizeHint() const {
-    // One input line, and room for a stacked fraction; taller results scroll.
-    const qreal height = 2 * margin + spacing + QFontMetricsF(statusFont()).height() + QFontMetricsF(inputFont()).height()
+    // An input with a fraction, and a result with one; taller results scroll.
+    const qreal height = 2 * margin + spacing + QFontMetricsF(statusFont()).height() + 2.2 * QFontMetricsF(inputFont()).height()
                          + 2.4 * QFontMetricsF(outputFont()).height() + barHeight();
     return QSize(320, qCeil(height));
 }
@@ -172,8 +172,11 @@ QFont Lcd::statusFont() const { return scaled(font(), 0.8); }
 QFont Lcd::inputFont() const { return scaled(font(), 1.25); }
 QFont Lcd::outputFont() const { return scaled(font(), 1.6); }
 
-typeset::Box Lcd::inputBox() const {
-    return typeset::paragraph({{entry_.text()}}, inputFont(), width() - 2 * margin);
+typeset::Box Lcd::inputBox(QRectF* caret) const { return typeset::input(entry_, inputFont(), caret); }
+
+void Lcd::setEntry(const Entry& entry) {
+    entry_ = entry;
+    changed();
 }
 
 QRectF Lcd::resultArea(const typeset::Box& input) const {
@@ -222,17 +225,21 @@ void Lcd::paintEvent(QPaintEvent*) {
     painter.setPen(ink);
     painter.drawText(QPointF(margin, margin + status.ascent()), statusText());
 
-    const typeset::Box input = inputBox();
-    const QPointF inputOrigin(margin, margin + status.height() + input.ascent);
+    QRectF caret;
+    const typeset::Box input = inputBox(&caret);
+    // An input wider than the screen slides left, as in a text field, so the cursor stays in view.
+    const qreal room = width() - 2 * margin;
+    const qreal shift = caret.left() > room ? room - caret.left() - 2 : 0;
+    const QPointF inputOrigin(margin + shift, margin + status.height() + input.ascent);
+    painter.save();
+    painter.setClipRect(QRectF(margin, 0, room, height()));
     typeset::paint(painter, input, inputOrigin, ink, ink, rect());
     if (hasFocus()) {
-        const QStringList& pieces = entry_.pieces();
-        const QString before = QStringList(pieces.mid(0, entry_.cursor())).join(QString());
-        const QPointF at = inputOrigin + typeset::end(typeset::paragraph({{before}}, inputFont(), width() - 2 * margin));
-        const QFontMetricsF m(inputFont());
         painter.setPen(QPen(ink, 1.5));
-        painter.drawLine(QPointF(at.x(), at.y() - m.ascent()), QPointF(at.x(), at.y() + m.descent()));
+        const QRectF at = caret.translated(inputOrigin);
+        painter.drawLine(at.topLeft(), at.bottomLeft());
     }
+    painter.restore();
 
     const QRectF area = resultArea(input);
     painter.setClipRect(area);

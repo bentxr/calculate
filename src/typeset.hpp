@@ -1,5 +1,6 @@
 #pragma once
 
+#include "entry.hpp"
 #include "presenter.hpp"
 
 #include <QFont>
@@ -16,7 +17,7 @@ class QRectF;
 // relative to the box's baseline at y = 0, with y growing downwards as in Qt.
 namespace typeset {
 
-enum class Role { Plain, Noise };
+enum class Role { Plain, Noise, Caret };  // Caret: an empty run that marks where the cursor goes
 
 struct Run {
     QString text;
@@ -56,6 +57,10 @@ QPointF end(const Box& box);
 // Draws the box with its baseline origin at `origin`: text in `ink`, noise digits in `noise`. Runs
 // outside `clip` are skipped, so a result of thousands of lines paints quickly.
 void paint(QPainter& painter, const Box& box, QPointF origin, const QColor& ink, const QColor& noise, const QRectF& clip);
+
+// The input as the calculator draws it: templates in two dimensions, an empty box as □. `caret`
+// receives the cursor's rectangle (zero wide, one line of its box's font tall).
+Box input(const Entry& entry, const QFont& font, QRectF* caret);
 
 // The screen's results: trusted|noise digits with any ×10 exponent, and fraction = decimal.
 Box value(const view::ValueParts& parts, const QFont& font, qreal maxWidth);

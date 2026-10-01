@@ -581,3 +581,17 @@ TEST(MainWindow, TemplateKeysBuildTwoDimensionalInput) {
     click({"key:2", "key:square", "key:plus", "key:5", "key:reciprocal"});
     EXPECT_EQ(lcd(window)->input(), "2^(2)+5^(−1)");
 }
+
+TEST(MainWindow, TheHistoryBringsBackTheTwoDimensionalInput) {
+    MainWindow window;
+    for (const char* name : {"key:fraction", "key:1", "key:down", "key:3", "key:right"})
+        QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    lcd(window)->clear();
+    QTest::keyClick(lcd(window), Qt::Key_Up);
+    EXPECT_EQ(lcd(window)->input(), "((1)/(3))");
+    ASSERT_EQ(lcd(window)->entry().root().size(), 1u);
+    EXPECT_EQ(lcd(window)->entry().root()[0].kind, Template::Fraction);  // a fraction again, not text
+}

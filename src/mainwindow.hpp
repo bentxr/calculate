@@ -1,5 +1,7 @@
 #pragma once
 
+#include "entry.hpp"
+
 #include <calculate-core/calculate-core.hpp>
 
 #include <QMainWindow>
@@ -103,5 +105,7 @@ private:
     QListWidget* history_ = nullptr;
     QPlainTextEdit* statisticsValues_ = nullptr;
     QToolButton* statisticsKeysToggle_ = nullptr;
+    std::vector<Entry> historyEntries_;  // as typed, one per history row
+    Entry typed_;                        // the last input sent with =
     int historyIndex_ = -1;  // the history row ▲ and ▼ last showed
 };

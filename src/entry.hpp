@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QString>
-#include <QStringList>
 
 #include <utility>
 #include <vector>
@@ -40,7 +39,6 @@ public:
 
     bool isEmpty() const { return root_.empty(); }
     QString text() const;        // the expression for the engine
-    QStringList pieces() const;  // the outer row, one string per item
     int cursor() const { return index_; }  // the place in the cursor's row
     const Row& root() const { return root_; }
     // How to reach the cursor's row from the outer one: (item, box) at each level.

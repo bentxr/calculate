@@ -4,6 +4,8 @@
 
 #include <calculate-core/calculate-core.hpp>
 
+#include <QStringList>
+
 #include <gtest/gtest.h>
 
 TEST(Entry, KeysInsertPiecesThatDeleteWhole) {
@@ -41,7 +43,9 @@ TEST(Entry, InsertsAtTheCursor) {
 TEST(Entry, SetTextSplitsIntoPieces) {
     Entry e;
     e.setText("sin(1e10)+Ans×nCr(5, 2)");
-    EXPECT_EQ(e.pieces(), QStringList({"sin(", "1", "e", "1", "0", ")", "+", "Ans", "×", "nCr(", "5", ", ", "2", ")"}));
+    QStringList pieces;
+    for (const Item& item : e.root()) pieces << item.text;
+    EXPECT_EQ(pieces, QStringList({"sin(", "1", "e", "1", "0", ")", "+", "Ans", "×", "nCr(", "5", ", ", "2", ")"}));
     EXPECT_EQ(e.text(), "sin(1e10)+Ans×nCr(5, 2)");
     EXPECT_EQ(e.cursor(), 14);
     e.clear();
