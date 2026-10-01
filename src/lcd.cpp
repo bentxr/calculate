@@ -84,16 +84,14 @@ void Lcd::showExact(const view::FractionParts& parts) {
     changed();
 }
 
-void Lcd::showMessage(const QString& message) {
-    shown_ = message.isEmpty() ? Shown::Nothing : Shown::Message;
-    message_ = message;
+void Lcd::clearResult() {
+    shown_ = Shown::Nothing;
     changed();
 }
 
 QString Lcd::outputText() const {
     switch (shown_) {
     case Shown::Nothing: return {};
-    case Shown::Message: return message_;
     case Shown::Value: {
         QString s = value_.trusted;
         if (!value_.noise.isEmpty()) s += "|" + value_.noise;
@@ -169,7 +167,6 @@ void Lcd::changed() {
         case Shown::Nothing: return typeset::Box{};
         case Shown::Value: return typeset::value(value_, outputFont(), width);
         case Shown::Exact: return typeset::exact(exact_, outputFont(), width);
-        case Shown::Message: return typeset::paragraph({{message_}}, outputFont(), width);
         }
         return typeset::Box{};
     };

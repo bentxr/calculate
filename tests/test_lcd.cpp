@@ -56,8 +56,9 @@ TEST(Lcd, TheOutputIsTheValueOnly) {
     EXPECT_EQ(lcd.outputText(), "1/3 = 0.(3)");
     lcd.showExact({"−", "6", "1", "", ""});
     EXPECT_EQ(lcd.outputText(), "−6");
-    lcd.showMessage("Division by zero");
-    EXPECT_EQ(lcd.outputText(), "Division by zero");
+    lcd.clearResult();
+    EXPECT_EQ(lcd.outputText(), "");
+    lcd.showValue({"4", "", ""});
     lcd.clear();
     EXPECT_EQ(lcd.outputText(), "");
 }

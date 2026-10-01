@@ -121,16 +121,30 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     screenRow->addLayout(column);
     main->addLayout(screenRow);
 
+    // Under the screen, a strip of fixed height for messages (errors, cautions), so that showing one
+    // never moves anything; Proceed anyway sits at its end when it applies.
+    auto* strip = new QHBoxLayout;
+    message_ = new QLabel(central);
+    message_->setObjectName("message");
+    message_->setWordWrap(true);
+    message_->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+    proceed_ = new QPushButton(central);
+    proceed_->setObjectName("proceed");
+    proceed_->setVisible(false);
+    strip->addWidget(message_, 1);
+    strip->addWidget(proceed_, 0, Qt::AlignTop);
+    auto* stripHolder = new QWidget(central);
+    stripHolder->setLayout(strip);
+    strip->setContentsMargins(0, 0, 0, 0);
+    stripHolder->setFixedHeight(qMax(2 * fontMetrics().lineSpacing(), proceed_->sizeHint().height()) + 4);
+    main->addWidget(stripHolder);
+
     // Along the screen's bottom edge: Details, and the messages that need an answer.
     detailsButton_ = new QToolButton(lcd_);
     detailsButton_->setObjectName("detailsButton");
     detailsButton_->setAutoRaise(true);
     detailsButton_->setEnabled(false);
     lcd_->addToBar(detailsButton_);
-    proceed_ = new QPushButton(lcd_);
-    proceed_->setObjectName("proceed");
-    proceed_->setVisible(false);
-    lcd_->addToBar(proceed_);
     busy_ = new QLabel(lcd_);
     busy_->setObjectName("busy");
     cancel_ = new QPushButton(lcd_);
@@ -193,7 +207,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(this, &MainWindow::memoryClearRequested, worker_, &Worker::memoryClear);
     connect(worker_, &Worker::evaluated, this, &MainWindow::showResult);
     connect(worker_, &Worker::memoryChanged, lcd_, &Lcd::setMemory);
-    connect(worker_, &Worker::memoryFailed, this, [this] { lcd_->showMessage(tr("The memory needs a previous result")); });
+    connect(worker_, &Worker::memoryFailed, this, [this] { message_->setText(tr("The memory needs a previous result")); });
     thread_.start();
 
     busyTimer_.setSingleShot(true);
@@ -572,7 +586,8 @@ void MainWindow::present() {
     proceed_->setVisible(last_.error && last_.error->code == ErrorCode::UncertainDiscreteArgument);
     card_->setRows(view::details(last_, types_[static_cast<std::size_t>(last_.type)]));
     detailsButton_->setEnabled(!last_.error);
-    if (last_.error) lcd_->showMessage(view::errorText(*last_.error, lastExpression_));
+    message_->setText(last_.error ? view::errorText(*last_.error, lastExpression_) : QString());
+    if (last_.error) lcd_->clearResult();
     else if (last_.exact) lcd_->showExact(view::fractionParts(last_));
     else lcd_->showValue(view::valueParts(last_));
 }
