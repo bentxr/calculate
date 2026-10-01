@@ -87,7 +87,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     busyRow->addWidget(cancel_);
     busyRow->addStretch();
     main->addLayout(busyRow);
-    memory_ = label("memory");
 
     pages_ = new QStackedWidget(central);
     pages_->setObjectName("pages");
@@ -111,9 +110,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(this, &MainWindow::memorySubtractRequested, worker_, &Worker::memorySubtract);
     connect(this, &MainWindow::memoryClearRequested, worker_, &Worker::memoryClear);
     connect(worker_, &Worker::evaluated, this, &MainWindow::showResult);
-    connect(worker_, &Worker::memoryChanged, this, [this](const QString& m) {
-        memory_->setText(m.isEmpty() ? QString() : tr("M = %1").arg(m));
-    });
+    connect(worker_, &Worker::memoryChanged, lcd_, &Lcd::setMemory);
     connect(worker_, &Worker::memoryFailed, this, [this] { lcd_->showMessage(tr("The memory needs a previous result")); });
     thread_.start();
 
@@ -223,6 +220,7 @@ QWidget* MainWindow::buildKey(const Key& key, bool legends) {
         connect(button, &QPushButton::toggled, this, [this, button](bool on) {
             QPushButton* other = button == shift_ ? alpha_ : shift_;
             if (on) other->setChecked(false);  // SHIFT and ALPHA are never on together
+            lcd_->setStatus(shift_->isChecked(), alpha_->isChecked());
             updateKeys();
         });
     } else {

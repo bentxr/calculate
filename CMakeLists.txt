@@ -30,7 +30,19 @@ qt_add_library(calculate-ui STATIC
 target_include_directories(calculate-ui PUBLIC ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(calculate-ui PUBLIC Qt6::Widgets calculate-core)
 target_compile_options(calculate-ui PRIVATE -Wall -Wextra -Wpedantic -Werror)
-qt_add_translations(TARGETS calculate-ui TS_FILE_DIR i18n NO_GENERATE_PLURALS_TS_FILE)
+
+# The screen's typeface: JetBrains Mono, SIL Open Font License 1.1 (its licence ships with it).
+FetchContent_Declare(jetbrainsmono
+    URL      https://github.com/JetBrains/JetBrainsMono/releases/download/v2.304/JetBrainsMono-2.304.zip
+    URL_HASH SHA256=6f6376c6ed2960ea8a963cd7387ec9d76e3f629125bc33d1fdcd7eb7012f7bbf
+    SOURCE_SUBDIR no-cmake)
+FetchContent_MakeAvailable(jetbrainsmono)
+set(font_files ${jetbrainsmono_SOURCE_DIR}/fonts/ttf/JetBrainsMono-Regular.ttf ${jetbrainsmono_SOURCE_DIR}/OFL.txt)
+set_source_files_properties(${jetbrainsmono_SOURCE_DIR}/fonts/ttf/JetBrainsMono-Regular.ttf PROPERTIES QT_RESOURCE_ALIAS JetBrainsMono-Regular.ttf)
+set_source_files_properties(${jetbrainsmono_SOURCE_DIR}/OFL.txt PROPERTIES QT_RESOURCE_ALIAS JetBrainsMono-OFL.txt)
+qt_add_resources(calculate-ui fonts PREFIX /fonts FILES ${font_files})
+qt_add_translations(TARGETS calculate-ui TS_FILE_DIR i18n NO_GENERATE_PLURALS_TS_FILE
+    LUPDATE_OPTIONS -no-obsolete)
 
 qt_add_executable(calculate src/main.cpp)
 target_link_libraries(calculate PRIVATE calculate-ui)

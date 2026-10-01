@@ -6,7 +6,6 @@
 #include <QLabel>
 #include <QListWidget>
 #include <QMenu>
-#include <QPalette>
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QStackedWidget>
@@ -108,8 +107,10 @@ TEST(MainWindow, ShiftAndAlphaLastForOneKey) {
     auto* shift = child<QPushButton>(window, "key:shift");
     QTest::mouseClick(shift, Qt::LeftButton);
     EXPECT_TRUE(shift->isChecked());
+    EXPECT_EQ(lcd(window)->statusText(), "S");
     QTest::mouseClick(child<QPushButton>(window, "key:sin"), Qt::LeftButton);
     EXPECT_FALSE(shift->isChecked());
+    EXPECT_EQ(lcd(window)->statusText(), "");
     QTest::mouseClick(child<QPushButton>(window, "key:sin"), Qt::LeftButton);
     EXPECT_EQ(lcd(window)->input(), "asin(sin(");
     lcd(window)->clear();
@@ -145,13 +146,12 @@ TEST(MainWindow, UncertainArgumentsOfferToProceed) {
 TEST(MainWindow, MemoryKeys) {
     MainWindow window;
     run(window, "5");
-    auto* memory = child<QLabel>(window, "memory");
     QTest::mouseClick(child<QPushButton>(window, "key:memoryAdd"), Qt::LeftButton);
-    EXPECT_TRUE(QTest::qWaitFor([&] { return !memory->text().isEmpty(); }, 10000));
-    EXPECT_EQ(memory->text(), "M = 5");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->memory() == "5"; }, 10000));
+    EXPECT_EQ(lcd(window)->statusText(), "M");
     QTest::mouseClick(child<QPushButton>(window, "key:shift"), Qt::LeftButton);
     QTest::mouseClick(child<QPushButton>(window, "key:memoryAdd"), Qt::LeftButton);
-    EXPECT_TRUE(QTest::qWaitFor([&] { return memory->text() == "M = 5-(5)"; }, 10000)) << memory->text().toStdString();
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->memory() == "5-(5)"; }, 10000)) << lcd(window)->memory().toStdString();
 }
 
 TEST(MainWindow, StatisticsModeBuildsAnExpression) {
@@ -163,15 +163,6 @@ TEST(MainWindow, StatisticsModeBuildsAnExpression) {
     EXPECT_TRUE(answered(window));
     EXPECT_EQ(lcd(window)->input(), "stdevp(2, 4, 4, 4, 5, 5, 7, 9)");
     EXPECT_EQ(lcd(window)->outputText(), "2");
-}
-
-TEST(MainWindow, TheNoiseColourStaysVisibleWhenThePaletteIsTranslucent) {
-    MainWindow window;
-    QPalette palette = window.palette();
-    palette.setColor(QPalette::Base, Qt::white);  // the screen's background
-    palette.setColor(QPalette::PlaceholderText, QColor(0, 0, 0, 128));  // as in Fusion
-    window.setPalette(palette);
-    EXPECT_EQ(lcd(window)->noiseColor().name(), "#7f7f7f");
 }
 
 TEST(MainWindow, UpAndDownReplayTheHistory) {
@@ -221,11 +212,10 @@ TEST(MainWindow, OptionsHoldTheHyperbolicFunctionsModAndMemoryClear) {
     EXPECT_TRUE(action(options, "mod")->isEnabled());
     options->hide();
     run(window, "5");
-    auto* memory = child<QLabel>(window, "memory");
     QTest::mouseClick(child<QPushButton>(window, "key:memoryAdd"), Qt::LeftButton);
-    EXPECT_TRUE(QTest::qWaitFor([&] { return !memory->text().isEmpty(); }, 10000));
+    EXPECT_TRUE(QTest::qWaitFor([&] { return !lcd(window)->memory().isEmpty(); }, 10000));
     action(options, "MC")->trigger();
-    EXPECT_TRUE(QTest::qWaitFor([&] { return memory->text().isEmpty(); }, 10000));
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->memory().isEmpty(); }, 10000));
 }
 
 TEST(MainWindow, CancelStaysOfferedWhileALaterRequestRuns) {

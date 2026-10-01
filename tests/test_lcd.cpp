@@ -61,3 +61,39 @@ TEST(Lcd, TheOutputIsTheValueOnly) {
     lcd.clear();
     EXPECT_EQ(lcd.outputText(), "");
 }
+
+TEST(Lcd, TheScreenUsesTheBundledFont) {
+    EXPECT_EQ(Lcd::fontFamily(), "JetBrains Mono");
+}
+
+TEST(Lcd, ItsColoursFollowTheTheme) {
+    Lcd lcd;
+    QPalette light;
+    light.setColor(QPalette::Window, Qt::white);
+    lcd.setPalette(light);
+    EXPECT_GT(lcd.background().lightness(), 150);  // a pale panel with dark ink
+    EXPECT_LT(lcd.ink().lightness(), 80);
+    EXPECT_GT(lcd.noiseColor().lightness(), lcd.ink().lightness());
+    EXPECT_LT(lcd.noiseColor().lightness(), lcd.background().lightness());
+    QPalette dark;
+    dark.setColor(QPalette::Window, QColor(30, 30, 30));
+    lcd.setPalette(dark);
+    EXPECT_LT(lcd.background().lightness(), 80);
+    EXPECT_GT(lcd.ink().lightness(), 150);
+    EXPECT_LT(lcd.noiseColor().lightness(), lcd.ink().lightness());
+    EXPECT_GT(lcd.noiseColor().lightness(), lcd.background().lightness());
+}
+
+TEST(Lcd, TheStatusLineShowsShiftAlphaAndMemory) {
+    Lcd lcd;
+    EXPECT_EQ(lcd.statusText(), "");
+    lcd.setStatus(true, false);
+    EXPECT_EQ(lcd.statusText(), "S");
+    lcd.setStatus(false, true);
+    lcd.setMemory("5");
+    EXPECT_EQ(lcd.statusText(), "A M");
+    EXPECT_EQ(lcd.toolTip(), "M = 5");
+    lcd.setMemory({});
+    EXPECT_EQ(lcd.statusText(), "A");
+    EXPECT_EQ(lcd.toolTip(), "");
+}

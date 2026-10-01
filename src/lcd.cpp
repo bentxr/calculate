@@ -13,16 +13,14 @@ namespace {
 constexpr qreal margin = 8;
 constexpr qreal spacing = 6;
 
-// The colour that a translucent `ink` shows on `paper`: styles such as Fusion make the placeholder
-// colour translucent, and the noise digits must stay visible.
-QColor opaque(const QColor& ink, const QColor& paper) {
-    const int a = ink.alpha();
-    const auto mix = [a](int i, int p) { return (i * a + p * (255 - a)) / 255; };
-    return QColor(mix(ink.red(), paper.red()), mix(ink.green(), paper.green()), mix(ink.blue(), paper.blue()));
+// The colour a fraction `t` of the way from `a` to `b`.
+QColor mix(const QColor& a, const QColor& b, qreal t) {
+    const auto channel = [t](int x, int y) { return qRound(x + (y - x) * t); };
+    return QColor(channel(a.red(), b.red()), channel(a.green(), b.green()), channel(a.blue(), b.blue()));
 }
 
 QFont scaled(const QFont& base, qreal factor) {
-    QFont f = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    QFont f(Lcd::fontFamily());
     f.setPixelSize(qRound(QFontInfo(base).pixelSize() * factor));
     return f;
 }
@@ -108,16 +106,49 @@ QString Lcd::outputText() const {
     return {};
 }
 
-QColor Lcd::noiseColor() const {
-    return opaque(palette().color(QPalette::PlaceholderText), palette().color(QPalette::Base));
+void Lcd::setStatus(bool shift, bool alpha) {
+    shift_ = shift;
+    alpha_ = alpha;
+    update();
 }
+
+void Lcd::setMemory(const QString& memory) {
+    memory_ = memory;
+    setToolTip(memory.isEmpty() ? QString() : tr("M = %1").arg(memory));
+    update();
+}
+
+QString Lcd::statusText() const {
+    QStringList on;
+    if (shift_) on << QStringLiteral("S");
+    if (alpha_) on << QStringLiteral("A");
+    if (!memory_.isEmpty()) on << QStringLiteral("M");
+    return on.join(' ');
+}
+
+// JetBrains Mono, loaded once from the resources; the system's fixed font if that ever fails.
+QString Lcd::fontFamily() {
+    static const QString family = [] {
+        const int id = QFontDatabase::addApplicationFont(QStringLiteral(":/fonts/JetBrainsMono-Regular.ttf"));
+        const QStringList families = QFontDatabase::applicationFontFamilies(id);
+        return families.isEmpty() ? QFontDatabase::systemFont(QFontDatabase::FixedFont).family() : families.first();
+    }();
+    return family;
+}
+
+bool Lcd::dark() const { return palette().color(QPalette::Window).lightness() < 128; }
+QColor Lcd::background() const { return dark() ? QColor(0x1f, 0x26, 0x21) : QColor(0xc8, 0xd3, 0xbf); }
+QColor Lcd::ink() const { return dark() ? QColor(0xd4, 0xe2, 0xcc) : QColor(0x1c, 0x24, 0x1a); }
+QColor Lcd::noiseColor() const { return mix(ink(), background(), 0.5); }
 
 QSize Lcd::sizeHint() const {
     // One input line, and room for a stacked fraction; taller results scroll.
-    const qreal height = 2 * margin + spacing + QFontMetricsF(inputFont()).height() + 2.4 * QFontMetricsF(outputFont()).height();
+    const qreal height = 2 * margin + spacing + QFontMetricsF(statusFont()).height() + QFontMetricsF(inputFont()).height()
+                         + 2.4 * QFontMetricsF(outputFont()).height();
     return QSize(320, qCeil(height));
 }
 
+QFont Lcd::statusFont() const { return scaled(font(), 0.8); }
 QFont Lcd::inputFont() const { return scaled(font(), 1.25); }
 QFont Lcd::outputFont() const { return scaled(font(), 1.6); }
 
@@ -126,7 +157,7 @@ typeset::Box Lcd::inputBox() const {
 }
 
 QRectF Lcd::resultArea(const typeset::Box& input) const {
-    const qreal top = margin + input.ascent + input.descent + spacing;
+    const qreal top = margin + QFontMetricsF(statusFont()).height() + input.ascent + input.descent + spacing;
     const qreal right = scroll_->isVisible() ? width() - scroll_->width() : width() - margin;
     return QRectF(margin, top, right - margin, height() - top - margin);
 }
@@ -178,11 +209,18 @@ void draw(QPainter& painter, const typeset::Box& box, QPointF origin, const QCol
 void Lcd::paintEvent(QPaintEvent*) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
-    painter.fillRect(rect(), palette().color(QPalette::Base));
-    const QColor ink = palette().color(QPalette::Text);
+    painter.setPen(QPen(mix(background(), ink(), 0.35), 1));
+    painter.setBrush(background());
+    painter.drawRoundedRect(QRectF(rect()).adjusted(0.5, 0.5, -0.5, -0.5), 6, 6);
+    const QColor ink = this->ink();
+
+    const QFontMetricsF status(statusFont());
+    painter.setFont(statusFont());
+    painter.setPen(ink);
+    painter.drawText(QPointF(margin, margin + status.ascent()), statusText());
 
     const typeset::Box input = inputBox();
-    const QPointF inputOrigin(margin, margin + input.ascent);
+    const QPointF inputOrigin(margin, margin + status.height() + input.ascent);
     draw(painter, input, inputOrigin, ink, ink, rect());
     if (hasFocus()) {
         const QStringList& pieces = entry_.pieces();

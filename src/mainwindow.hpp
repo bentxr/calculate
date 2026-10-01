@@ -71,7 +71,6 @@ private:
     QPushButton* proceed_ = nullptr;
     QLabel* busy_ = nullptr;
     QPushButton* cancel_ = nullptr;
-    QLabel* memory_ = nullptr;
     QListWidget* history_ = nullptr;
     QPlainTextEdit* statisticsValues_ = nullptr;
     QPushButton* shift_ = nullptr;
