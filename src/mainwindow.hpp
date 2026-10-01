@@ -6,9 +6,9 @@
 #include <QThread>
 #include <QTimer>
 
+class Lcd;
 class QComboBox;
 class QLabel;
-class QLineEdit;
 class QListWidget;
 class QMenu;
 class QPlainTextEdit;
@@ -63,13 +63,11 @@ private:
     QStackedWidget* pages_ = nullptr;
     QComboBox* type_ = nullptr;
     QComboBox* angle_ = nullptr;
-    QLineEdit* expression_ = nullptr;
-    QLabel* value_ = nullptr;
+    Lcd* lcd_ = nullptr;
     QLabel* errorLine_ = nullptr;
     QLabel* whyLine_ = nullptr;
     QToolButton* detailsToggle_ = nullptr;
     QLabel* details_ = nullptr;
-    QLabel* message_ = nullptr;
     QPushButton* proceed_ = nullptr;
     QLabel* busy_ = nullptr;
     QPushButton* cancel_ = nullptr;

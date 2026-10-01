@@ -52,17 +52,6 @@ ValueParts split(const Digits& value, int trustedDigits) {
     return p;
 }
 
-QString fractionText(const Fraction& f) {
-    const QString sign = f.negative ? minus() : QString();
-    if (f.denominator == "1") return sign + fromStd(f.numerator);
-    QString s = sign + fromStd(f.numerator) + "/" + fromStd(f.denominator);
-    if (f.hasDecimal) {
-        s += " = " + sign + fromStd(f.integerPart) + "." + fromStd(f.fractionDigits);
-        if (!f.repeatingDigits.empty()) s += "(" + fromStd(f.repeatingDigits) + ")";
-    }
-    return s;
-}
-
 QString trustedText(const Result& r) {
     const int n = static_cast<int>(r.value.digits.size());
     if (r.trustedDigits >= n) return QCoreApplication::translate("view", "all digits trusted");
@@ -125,15 +114,6 @@ FractionParts fractionParts(const Result& r) {
         p.recurring = fromStd(f.repeatingDigits);
     }
     return p;
-}
-
-QString valueHtml(const Result& r, const QString& noiseColor) {
-    if (r.error) return {};
-    if (r.exact) return fractionText(*r.exact).toHtmlEscaped();
-    const ValueParts p = valueParts(r);
-    const QString suffix = p.exponent.isEmpty() ? QString() : QStringLiteral(" × 10<sup>%1</sup>").arg(p.exponent);
-    if (p.noise.isEmpty()) return p.trusted + suffix;
-    return p.trusted + QStringLiteral("<span style=\"color:%1\">|%2</span>").arg(noiseColor, p.noise) + suffix;
 }
 
 QString errorLine(const Result& r) {

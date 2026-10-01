@@ -17,14 +17,6 @@ void place(Box& box, const Box& part, qreal dx, qreal dy) {
 
 qreal advance(const Run& run) { return QFontMetricsF(run.font).horizontalAdvance(run.text); }
 
-// Where the last line of a paragraph ends, and its baseline.
-QPointF endOfLastLine(const Box& box) {
-    QPointF end;
-    for (const Run& run : box.runs)
-        if (run.origin.y() >= end.y()) end = QPointF(run.origin.x() + advance(run), run.origin.y());
-    return end;
-}
-
 QFont smaller(const QFont& font) {
     QFont f = font;
     f.setPixelSize(qMax(1, qRound(QFontMetricsF(font).height() * 0.6)));
@@ -32,6 +24,13 @@ QFont smaller(const QFont& font) {
 }
 
 }  // namespace
+
+QPointF end(const Box& box) {
+    QPointF point;
+    for (const Run& run : box.runs)
+        if (run.origin.y() >= point.y()) point = QPointF(run.origin.x() + advance(run), run.origin.y());
+    return point;
+}
 
 Box text(const QString& s, const QFont& font, Role role) {
     const QFontMetricsF m(font);
@@ -130,7 +129,7 @@ Box value(const view::ValueParts& parts, const QFont& font, qreal maxWidth) {
     Box b = paragraph(segments, font, maxWidth);
     if (parts.exponent.isEmpty()) return b;
     const Box tail = superscript(text(QStringLiteral("×10"), font), text(parts.exponent, smaller(font)));
-    QPointF at = endOfLastLine(b);
+    QPointF at = end(b);
     if (maxWidth > 0 && at.x() + tail.width > maxWidth) at = QPointF(0, at.y() + QFontMetricsF(font).lineSpacing());
     place(b, tail, at.x(), at.y());
     b.width = qMax(b.width, at.x() + tail.width);

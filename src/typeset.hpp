@@ -42,6 +42,8 @@ Box superscript(const Box& base, const Box& exponent);  // the exponent comes in
 Box overline(const Box& box);
 // Text in several roles, broken between characters into lines no wider than maxWidth.
 Box paragraph(const QList<Segment>& segments, const QFont& font, qreal maxWidth);
+// Where the box's last line of text ends, on its baseline (the origin for an empty box).
+QPointF end(const Box& box);
 
 // The screen's results: trusted|noise digits with any ×10 exponent, and fraction = decimal.
 Box value(const view::ValueParts& parts, const QFont& font, qreal maxWidth);

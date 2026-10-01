@@ -21,6 +21,7 @@ endif()
 qt_add_library(calculate-ui STATIC
     src/entry.cpp
     src/keypad.cpp
+    src/lcd.cpp
     src/mainwindow.cpp
     src/presenter.cpp
     src/typeset.cpp

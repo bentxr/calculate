@@ -27,18 +27,6 @@ TEST(Presenter, TypeLabelsShowTheCppNameAndTheTraits) {
               "Octuple · binary256 · 256-bit · ~71 digits · software, no subnormals");
 }
 
-TEST(Presenter, NoiseDigitsFollowABarSoColourIsNeverTheOnlyCue) {
-    EXPECT_EQ(view::valueHtml(evaluated("0.1 + 0.2"), "#888888"),
-              "0.300000000000000<span style=\"color:#888888\">|0444089209850062616169452667236328125</span>");
-}
-
-TEST(Presenter, ValuesWithoutNoiseAndLargeValues) {
-    EXPECT_EQ(view::valueHtml(evaluated("2+2"), "#888888"), "4");
-    EXPECT_EQ(view::valueHtml(evaluated("-1e30"), "#888888"),
-              "−1.000000000000000<span style=\"color:#888888\">|019884624838656</span> × 10<sup>30</sup>");
-    EXPECT_EQ(view::valueHtml(evaluated("1/3", NumberType::Exact), "#888888"), "1/3 = 0.(3)");
-}
-
 TEST(Presenter, TheErrorLineAndTheWhyLine) {
     const Result r = evaluated("0.1 + 0.2");
     EXPECT_EQ(view::errorLine(r), "± 4.4e-17 · 15 trusted digits");
