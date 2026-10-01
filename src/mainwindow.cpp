@@ -17,10 +17,13 @@
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QKeyEvent>
 #include <QListWidget>
 #include <QMenu>
+#include <QMimeData>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QScreen>
 #include <QScrollArea>
 #include <QStackedWidget>
@@ -28,7 +31,38 @@
 #include <QVBoxLayout>
 #include <QWindow>
 
+#include <algorithm>
+#include <iterator>
+
 using namespace calculate_core;
+
+namespace {
+
+// The statistics values box: only numbers and their separators get in, typed or pasted.
+class ValuesEdit : public QPlainTextEdit {
+public:
+    using QPlainTextEdit::QPlainTextEdit;
+
+protected:
+    void keyPressEvent(QKeyEvent* event) override {
+        const QString text = event->text();
+        const bool typing = !(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier));
+        if (typing && !text.isEmpty() && text.at(0).isPrint() && !onlyNumbers(text)) return;  // Enter, Backspace, Ctrl+V… pass
+        QPlainTextEdit::keyPressEvent(event);
+    }
+    void insertFromMimeData(const QMimeData* source) override {
+        QString text = source->text();
+        text.remove(QRegularExpression(QStringLiteral("[^0-9.,; \\n-]")));
+        insertPlainText(text);
+    }
+
+private:
+    static bool onlyNumbers(const QString& text) {
+        return std::all_of(text.begin(), text.end(), [](QChar c) { return c.isDigit() || QStringLiteral(".,;- ").contains(c); });
+    }
+};
+
+}  // namespace
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberTypes()) {
     auto* central = new QWidget(this);
@@ -416,6 +450,7 @@ void MainWindow::retranslate() {
     cancel_->setText(tr("Cancel"));
     historyToggle_->setToolTip(tr("History"));
     statisticsLabel_->setText(tr("Values (one per line, or separated by commas):"));
+    statisticsKeysToggle_->setToolTip(tr("Show or hide the keypad"));
     settings_->setWindowTitle(tr("Settings"));
     languageLabel_->setText(tr("Language"));
     themeLabel_->setText(tr("Theme"));
@@ -488,11 +523,50 @@ void MainWindow::buildMenus() {
 QWidget* MainWindow::buildStatistics() {
     auto* page = new QWidget;
     auto* layout = new QVBoxLayout(page);
+    auto* header = new QHBoxLayout;
     statisticsLabel_ = new QLabel(page);
-    layout->addWidget(statisticsLabel_);
-    statisticsValues_ = new QPlainTextEdit(page);
+    statisticsKeysToggle_ = new QToolButton(page);
+    statisticsKeysToggle_->setObjectName("statisticsKeysToggle");
+    statisticsKeysToggle_->setText(QStringLiteral("⌨"));
+    statisticsKeysToggle_->setCheckable(true);
+    statisticsKeysToggle_->setChecked(true);
+    statisticsKeysToggle_->setAutoRaise(true);
+    statisticsKeysToggle_->setFocusPolicy(Qt::NoFocus);
+    header->addWidget(statisticsLabel_, 1);
+    header->addWidget(statisticsKeysToggle_);
+    layout->addLayout(header);
+
+    auto* entry = new QHBoxLayout;
+    statisticsValues_ = new ValuesEdit(page);
     statisticsValues_->setObjectName("statisticsValues");
-    layout->addWidget(statisticsValues_, 1);
+    entry->addWidget(statisticsValues_, 1);
+    // A numeric keypad for the values, so the page also works without a keyboard.
+    auto* keys = new QWidget(page);
+    keys->setObjectName("statisticsKeys");
+    auto* grid = new QGridLayout(keys);
+    grid->setContentsMargins(0, 0, 0, 0);
+    const struct {
+        const char* id;
+        const char* label;
+        const char* insert;  // empty: delete the character before the cursor
+    } pad[] = {{"7", "7", "7"}, {"8", "8", "8"}, {"9", "9", "9"}, {"backspace", "⌫", ""},
+               {"4", "4", "4"}, {"5", "5", "5"}, {"6", "6", "6"}, {"next", "⏎", "\n"},
+               {"1", "1", "1"}, {"2", "2", "2"}, {"3", "3", "3"}, {"minus", "−", "-"},
+               {"0", "0", "0"}, {"point", ".", "."}, {"comma", ",", ", "}};
+    for (int i = 0; i < int(std::size(pad)); ++i) {
+        auto* button = new QPushButton(QString::fromUtf8(pad[i].label), keys);
+        button->setObjectName(QStringLiteral("statKey:") + pad[i].id);
+        button->setFocusPolicy(Qt::NoFocus);
+        const QString insert = QString::fromUtf8(pad[i].insert);
+        connect(button, &QPushButton::clicked, this, [this, insert] {
+            if (insert.isEmpty()) statisticsValues_->textCursor().deletePreviousChar();
+            else statisticsValues_->insertPlainText(insert);
+        });
+        grid->addWidget(button, i / 4, i % 4);
+    }
+    entry->addWidget(keys);
+    connect(statisticsKeysToggle_, &QToolButton::toggled, keys, &QWidget::setVisible);
+    layout->addLayout(entry, 1);
     auto* buttons = new QHBoxLayout;
     for (const char* f : {"mean", "median", "var", "stdev", "varp", "stdevp"}) {
         auto* b = new QPushButton(QString::fromLatin1(f), page);

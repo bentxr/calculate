@@ -104,6 +104,7 @@ private:
     QFrame* historyPanel_ = nullptr;
     QListWidget* history_ = nullptr;
     QPlainTextEdit* statisticsValues_ = nullptr;
+    QToolButton* statisticsKeysToggle_ = nullptr;
     QPushButton* shift_ = nullptr;
     QPushButton* alpha_ = nullptr;
     QMenu* modeMenu_ = nullptr;
