@@ -1,5 +1,6 @@
 #include "typeset.hpp"
 
+#include <QFontInfo>
 #include <QFontMetricsF>
 
 namespace typeset {
@@ -78,6 +79,59 @@ Box superscript(const Box& base, const Box& exponent) {
     b.width = base.width + exponent.width;
     b.ascent = qMax(base.ascent, raise + exponent.ascent);
     b.descent = qMax(base.descent, exponent.descent - raise);
+    return b;
+}
+
+Box subscript(const Box& base, const Box& index) {
+    const qreal lower = base.ascent * 0.3;
+    Box b;
+    place(b, base, 0, 0);
+    place(b, index, base.width, lower);
+    b.width = base.width + index.width;
+    b.ascent = qMax(base.ascent, index.ascent - lower);
+    b.descent = qMax(base.descent, lower + index.descent);
+    return b;
+}
+
+// The sign is drawn as four strokes: a short rise, the long stroke down, the stroke up to the bar,
+// and the bar over the content. The index, if any, sits over the rise.
+Box radical(const Box& content, const QFont& font, const Box& index) {
+    const QFontMetricsF m(font);
+    const qreal tick = m.horizontalAdvance('x') * 0.8;
+    const qreal gap = m.height() * 0.08;
+    const qreal pad = m.horizontalAdvance(' ') * 0.2;
+    const qreal top = -(content.ascent + 2 * gap);
+    const qreal bottom = content.descent;
+    const qreal x = qMax<qreal>(0, index.width - tick * 0.5);  // room for the index on the left
+    const QPointF rise(x, -0.35 * m.ascent()), knee(x + tick * 0.35, -0.45 * m.ascent()),
+        foot(x + tick * 0.6, bottom), corner(x + tick, top), end(x + tick + pad + content.width + pad, top);
+    Box b;
+    if (!index.runs.isEmpty()) {
+        const qreal baseline = knee.y() - gap - index.descent;
+        place(b, index, knee.x() - index.width, baseline);
+        b.ascent = index.ascent - baseline;
+    }
+    place(b, content, corner.x() + pad, 0);
+    b.lines << QLineF(rise, knee) << QLineF(knee, foot) << QLineF(foot, corner) << QLineF(corner, end);
+    b.width = end.x();
+    b.ascent = qMax(b.ascent, -top + gap);
+    b.descent = qMax(content.descent, bottom);
+    return b;
+}
+
+Box bigOperator(const QString& symbol, const Box& under, const Box& over, const QFont& font) {
+    QFont big = font;
+    big.setPixelSize(qRound(QFontInfo(font).pixelSize() * 1.5));
+    const Box sign = text(symbol, big);
+    const qreal gap = QFontMetricsF(font).height() * 0.05;
+    const qreal width = qMax(sign.width, qMax(under.width, over.width));
+    Box b;
+    place(b, sign, (width - sign.width) / 2, 0);
+    place(b, under, (width - under.width) / 2, sign.descent + gap + under.ascent);
+    place(b, over, (width - over.width) / 2, -(sign.ascent + gap + over.descent));
+    b.width = width;
+    b.ascent = sign.ascent + gap + over.descent + over.ascent;
+    b.descent = sign.descent + gap + under.ascent + under.descent;
     return b;
 }
 
