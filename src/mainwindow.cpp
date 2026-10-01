@@ -603,8 +603,12 @@ void MainWindow::apply(const Face& f) {
     case KeyAction::MemoryClear: emit memoryClearRequested(); break;
     case KeyAction::Left: lcd_->left(); break;
     case KeyAction::Right: lcd_->right(); break;
-    case KeyAction::Up: replay(historyIndex_ + 1); break;
-    case KeyAction::Down: replay(historyIndex_ - 1); break;
+    case KeyAction::Up:
+        if (!lcd_->up()) replay(historyIndex_ + 1);
+        break;
+    case KeyAction::Down:
+        if (!lcd_->down()) replay(historyIndex_ - 1);
+        break;
     }
     lcd_->setFocus();
 }

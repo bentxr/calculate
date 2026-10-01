@@ -20,6 +20,9 @@ public:
 
     QString input() const { return entry_.text(); }
     void insert(const QString& piece);
+    void insertTemplate(Template kind);
+    bool up();    // inside a fraction, to its numerator; false elsewhere (the history's turn)
+    bool down();
     void backspace();
     void left();
     void right();

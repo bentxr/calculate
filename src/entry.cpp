@@ -1,5 +1,7 @@
 #include "entry.hpp"
 
+#include <QtGlobal>
+
 namespace {
 
 int boxCount(Template kind) {
@@ -61,13 +63,72 @@ void Entry::insertTemplate(Template kind) {
 }
 
 void Entry::backspace() {
-    if (index_ == 0) return;
-    Row& r = row();
-    r.erase(r.begin() + --index_);
+    if (index_ > 0) {
+        Row& r = row();
+        r.erase(r.begin() + --index_);
+        return;
+    }
+    if (path_.empty()) return;
+    const auto [item, box] = path_.back();
+    if (box > 0) {  // a later box: back to the end of the previous one
+        left();
+        return;
+    }
+    // The first box: the template goes; what was typed in its boxes stays, in screen order (a fraction
+    // keeps a ÷ between its parts, so it still means the same).
+    Row& parent = rowAt(path_.size() - 1);
+    const Item gone = parent[static_cast<std::size_t>(item)];
+    Row kept;
+    for (std::size_t i = 0; i < gone.boxes.size(); ++i) {
+        if (i > 0 && gone.kind == Template::Fraction) kept.push_back(Item{Template::Text, QStringLiteral("÷"), {}});
+        kept.insert(kept.end(), gone.boxes[i].begin(), gone.boxes[i].end());
+    }
+    parent.erase(parent.begin() + item);
+    parent.insert(parent.begin() + item, kept.begin(), kept.end());
+    path_.pop_back();
+    index_ = item;
 }
 
+// Into a template's last box, from one box to the previous, and out before the template.
 void Entry::left() {
-    if (index_ > 0) --index_;
+    Row& r = row();
+    if (index_ > 0) {
+        const Item& before = r[static_cast<std::size_t>(index_ - 1)];
+        if (before.kind == Template::Text) {
+            --index_;
+        } else {
+            const int last = static_cast<int>(before.boxes.size()) - 1;
+            path_.emplace_back(index_ - 1, last);
+            index_ = static_cast<int>(before.boxes[static_cast<std::size_t>(last)].size());
+        }
+        return;
+    }
+    if (path_.empty()) return;
+    const auto [item, box] = path_.back();
+    if (box > 0) {
+        path_.back().second = box - 1;
+        index_ = static_cast<int>(row().size());
+    } else {
+        path_.pop_back();
+        index_ = item;
+    }
+}
+
+bool Entry::up() { return moveInFraction(0); }
+bool Entry::down() { return moveInFraction(1); }
+
+// To the numerator (0) or the denominator (1) of the innermost fraction around the cursor.
+bool Entry::moveInFraction(int box) {
+    for (std::size_t depth = path_.size(); depth-- > 0;) {
+        if (rowAt(depth)[static_cast<std::size_t>(path_[depth].first)].kind != Template::Fraction) continue;
+        if (path_[depth].second != box) {
+            path_.resize(depth + 1);
+            path_[depth].second = box;
+            index_ = qMin(index_, static_cast<int>(row().size()));
+        }
+        return true;
+    }
+    return false;
 }
 
 // Into a template's first box, from one box to the next, and out after the template.

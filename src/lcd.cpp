@@ -46,6 +46,23 @@ void Lcd::insert(const QString& piece) {
     changed();
 }
 
+void Lcd::insertTemplate(Template kind) {
+    entry_.insertTemplate(kind);
+    changed();
+}
+
+bool Lcd::up() {
+    const bool moved = entry_.up();
+    update();
+    return moved;
+}
+
+bool Lcd::down() {
+    const bool moved = entry_.down();
+    update();
+    return moved;
+}
+
 void Lcd::backspace() {
     entry_.backspace();
     changed();
@@ -228,8 +245,12 @@ void Lcd::keyPressEvent(QKeyEvent* event) {
     case Qt::Key_Escape: clear(); return;
     case Qt::Key_Left: left(); return;
     case Qt::Key_Right: right(); return;
-    case Qt::Key_Up: emit historyRequested(1); return;
-    case Qt::Key_Down: emit historyRequested(-1); return;
+    case Qt::Key_Up:
+        if (!up()) emit historyRequested(1);
+        return;
+    case Qt::Key_Down:
+        if (!down()) emit historyRequested(-1);
+        return;
     default: break;
     }
     // Typed characters, translated to what the calculator's keys insert.
