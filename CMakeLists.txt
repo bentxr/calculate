@@ -19,6 +19,7 @@ if(EMSCRIPTEN)  # the multithread Qt kit links a shared-memory module: every obj
 endif()
 
 qt_add_library(calculate-ui STATIC
+    src/keypad.cpp
     src/presenter.cpp
 )
 target_include_directories(calculate-ui PUBLIC ${PROJECT_SOURCE_DIR}/src)
