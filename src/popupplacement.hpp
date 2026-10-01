@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QObject>
 #include <QRect>
 
 class QWidget;
@@ -18,3 +19,15 @@ QRect globalGeometry(const QWidget* widget);
 
 // The global geometry of the window `widget` belongs to: its outermost window, past any popup or dialog.
 QRect popupBounds(const QWidget* widget);
+
+// Keeps every popup, tooltip and dialog the application shows inside `window` (installed on the
+// application, it also reaches Qt's own: menu lists, tooltips): one that would cross the window's edge
+// is moved in, and cut to its size if larger; a tooltip too wide wraps its words instead.
+class PopupBounds : public QObject {
+public:
+    explicit PopupBounds(QWidget* window);
+    bool eventFilter(QObject* watched, QEvent* event) override;
+
+private:
+    QWidget* window_;
+};

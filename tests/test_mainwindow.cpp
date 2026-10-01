@@ -23,6 +23,7 @@
 #include <QStackedWidget>
 #include <QTest>
 #include <QToolButton>
+#include <QToolTip>
 
 #include "printers.hpp"
 
@@ -297,6 +298,7 @@ TEST(MainWindow, EveryRowOfTheCardExplainsItselfInAPopup) {
                             "type", "evaluated"}) {
         auto* info = card->findChild<QToolButton*>(QString("info:") + key);
         ASSERT_NE(info, nullptr) << key;
+        card->findChild<QScrollArea*>()->ensureWidgetVisible(info);  // as the user scrolls to a row
         QTest::mouseClick(info, Qt::LeftButton);
         auto* tip = card->findChild<QFrame*>("explanation");
         ASSERT_NE(tip, nullptr);
@@ -411,6 +413,30 @@ TEST(MainWindow, PopupsStayInsideASmallWindow) {
     EXPECT_TRUE(bounds.contains(formula->geometry()));
     EXPECT_FALSE(formula->geometry().contains(pointer));
     formula->hide();
+}
+
+// Qt's own popups too: the lists of the type and angle menus, and tooltips.
+TEST(MainWindow, MenusAndTooltipsStayInsideANarrowWindow) {
+    MainWindow window;
+    window.setGeometry(40, 30, 380, 420);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    const QRect bounds = window.geometry();
+    for (const char* name : {"type", "angle"}) {
+        auto* menu = child<QComboBox>(window, name);
+        menu->showPopup();
+        QWidget* list = menu->view()->window();
+        EXPECT_TRUE(list->isVisible()) << name;
+        EXPECT_TRUE(bounds.contains(list->geometry())) << name;
+        menu->hidePopup();
+    }
+    QToolTip::showText(bounds.bottomRight() - QPoint(5, 5), QString("a long explanation ").repeated(12), &window);
+    QWidget* tip = nullptr;
+    for (QWidget* w : QApplication::topLevelWidgets())
+        if (w->objectName() == "qtooltip_label" && w->isVisible()) tip = w;
+    ASSERT_NE(tip, nullptr);
+    EXPECT_TRUE(bounds.contains(tip->geometry()));  // its words wrap to the window's width
+    QToolTip::hideText();
 }
 
 TEST(MainWindow, TheHistoryDropsDownUnderTheScreen) {
