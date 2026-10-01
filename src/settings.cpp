@@ -44,6 +44,8 @@ void setLanguage(Language language) {
         QCoreApplication::installTranslator(&translator());
 }
 
+Theme theme() { return currentTheme(); }
+
 void setTheme(Theme theme) {
     static const bool connected = [] {
         QObject::connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, qApp, [] {
