@@ -97,6 +97,19 @@ QString typeLabel(const TypeInfo& t) {
 
 QString shortTypeName(const TypeInfo& t) { return translatedLabel(t.label); }
 
+QString typeDigits(const TypeInfo& t) {
+    if (t.type == NumberType::Exact) return QCoreApplication::translate("view", "every digit exact");
+    return QCoreApplication::translate("view", "~%1 significant digits").arg(t.decimalDigits);
+}
+
+QString typeDetail(const TypeInfo& t) {
+    if (t.type == NumberType::Exact) return QCoreApplication::translate("view", "%1 · fractions, no rounding").arg(fromStd(t.cppName));
+    QString s = QCoreApplication::translate("view", "%1 · %2-bit storage · %3-bit significand")
+                    .arg(fromStd(t.cppName)).arg(t.storageBits).arg(t.precisionBits);
+    if (!t.note.empty()) s += QStringLiteral(" · ") + translatedNote(t.note);
+    return s;
+}
+
 ValueParts valueParts(const Result& r) {
     if (r.error || r.exact) return {};
     return split(r.value, r.trustedDigits);
