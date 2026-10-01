@@ -1,5 +1,7 @@
 #include "popupplacement.hpp"
 
+#include <QEvent>
+#include <QLabel>
 #include <QWidget>
 
 QRect placed(QSize size, QRect anchor, QRect bounds) {
@@ -27,4 +29,21 @@ QRect popupBounds(const QWidget* widget) {
     const QWidget* window = widget->window();
     while (window->parentWidget()) window = window->parentWidget()->window();
     return window->geometry();
+}
+
+PopupBounds::PopupBounds(QWidget* window) : QObject(window), window_(window) {}
+
+bool PopupBounds::eventFilter(QObject* watched, QEvent* event) {
+    if (event->type() != QEvent::Show || !watched->isWidgetType()) return false;
+    auto* popup = static_cast<QWidget*>(watched);
+    const Qt::WindowType type = popup->windowType();
+    if (type != Qt::Popup && type != Qt::ToolTip && type != Qt::Dialog) return false;
+    const QRect bounds = window_->geometry();
+    if (auto* label = qobject_cast<QLabel*>(popup); label && label->width() > bounds.width()) {
+        label->setWordWrap(true);
+        label->resize(bounds.width(), label->heightForWidth(bounds.width()));
+    }
+    const QRect inside = keptInside(popup->geometry(), bounds);
+    if (inside != popup->geometry()) popup->setGeometry(inside);
+    return false;
 }

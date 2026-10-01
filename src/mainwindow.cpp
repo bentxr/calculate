@@ -12,6 +12,7 @@
 #include "worker.hpp"
 
 #include <QActionGroup>
+#include <QApplication>
 #include <QComboBox>
 #include <QEvent>
 #include <QHelpEvent>
@@ -200,6 +201,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     main->addWidget(pages_, 1);
     setCentralWidget(central);
     modes_->setCurrentRow(0);
+    qApp->installEventFilter(new PopupBounds(this));  // Qt's own popups stay inside the window too
 
     worker_ = new Worker;
     worker_->moveToThread(&thread_);
