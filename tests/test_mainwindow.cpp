@@ -257,21 +257,29 @@ TEST(MainWindow, TheScreenShowsOnlyTheValueAndTheCardTheRest) {
     card->hide();
 }
 
-TEST(MainWindow, EveryRowOfTheCardExplainsItself) {
+TEST(MainWindow, EveryRowOfTheCardExplainsItselfInAPopup) {
     MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
     run(window, "0.1 + 0.2");
+    QTest::mouseClick(child<QToolButton>(window, "detailsButton"), Qt::LeftButton);
     auto* card = child<DetailsCard>(window, "detailsCard");
+    ASSERT_TRUE(card->isVisible());
+    const QSize size = card->size();
     for (const char* key : {"bound", "measured", "trusted", "condition", "input", "rounding", "library", "operations",
                             "type", "evaluated"}) {
         auto* info = card->findChild<QToolButton*>(QString("info:") + key);
-        auto* text = card->findChild<QLabel*>(QString("explanation:") + key);
         ASSERT_NE(info, nullptr) << key;
-        ASSERT_NE(text, nullptr) << key;
-        EXPECT_FALSE(text->isVisibleTo(card));
         QTest::mouseClick(info, Qt::LeftButton);
-        EXPECT_TRUE(text->isVisibleTo(card)) << key;
-        EXPECT_EQ(text->text(), view::explanation(key));
+        auto* tip = card->findChild<QFrame*>("explanation");
+        ASSERT_NE(tip, nullptr);
+        EXPECT_TRUE(tip->isVisible()) << key;
+        EXPECT_EQ(tip->findChild<QLabel*>()->text(), view::explanation(key));
+        EXPECT_LE(qAbs(tip->mapToGlobal(QPoint(0, 0)).y() - info->mapToGlobal(QPoint(0, info->height())).y()), 2);  // under its ⓘ
+        EXPECT_EQ(card->size(), size);  // the card itself never changes
+        tip->hide();
     }
+    card->hide();
 }
 
 TEST(MainWindow, TheHistoryDropsDownUnderTheScreen) {

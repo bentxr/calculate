@@ -4,7 +4,7 @@
 <context>
     <name>DetailsCard</name>
     <message>
-        <location filename="../src/detailscard.cpp" line="32"/>
+        <location filename="../src/detailscard.cpp" line="40"/>
         <source>What does this mean?</source>
         <translation>¿Qué significa esto?</translation>
     </message>
@@ -20,119 +20,119 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../src/mainwindow.cpp" line="379"/>
+        <location filename="../src/mainwindow.cpp" line="382"/>
         <source>calculate</source>
         <translation>calculate</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="380"/>
+        <location filename="../src/mainwindow.cpp" line="383"/>
         <source>Show or hide the panel</source>
         <translation>Mostrar u ocultar el panel</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="382"/>
+        <location filename="../src/mainwindow.cpp" line="385"/>
         <source>Calculator</source>
         <translation>Calculadora</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="382"/>
+        <location filename="../src/mainwindow.cpp" line="385"/>
         <source>Statistics</source>
         <translation>Estadística</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="381"/>
-        <location filename="../src/mainwindow.cpp" line="395"/>
+        <location filename="../src/mainwindow.cpp" line="384"/>
+        <location filename="../src/mainwindow.cpp" line="398"/>
         <source>Settings</source>
         <translation>Ajustes</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="384"/>
+        <location filename="../src/mainwindow.cpp" line="387"/>
         <source>RAD</source>
         <translation>RAD</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="384"/>
+        <location filename="../src/mainwindow.cpp" line="387"/>
         <source>DEG</source>
         <translation>DEG</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="384"/>
+        <location filename="../src/mainwindow.cpp" line="387"/>
         <source>GRAD</source>
         <translation>GRAD</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="387"/>
+        <location filename="../src/mainwindow.cpp" line="390"/>
         <source>=</source>
         <translation>=</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="388"/>
+        <location filename="../src/mainwindow.cpp" line="391"/>
         <source>Details</source>
         <translation>Detalles</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="389"/>
+        <location filename="../src/mainwindow.cpp" line="392"/>
         <source>Proceed anyway</source>
         <translation>Continuar de todos modos</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="390"/>
+        <location filename="../src/mainwindow.cpp" line="393"/>
         <source>Computing…</source>
         <translation>Calculando…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="391"/>
+        <location filename="../src/mainwindow.cpp" line="394"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="392"/>
+        <location filename="../src/mainwindow.cpp" line="395"/>
         <source>History</source>
         <translation>Historial</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="191"/>
+        <location filename="../src/mainwindow.cpp" line="192"/>
         <source>The memory needs a previous result</source>
         <translation>La memoria necesita un resultado anterior</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="393"/>
+        <location filename="../src/mainwindow.cpp" line="396"/>
         <source>Values (one per line, or separated by commas):</source>
         <translation>Valores (uno por línea, o separados por comas):</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="394"/>
+        <location filename="../src/mainwindow.cpp" line="397"/>
         <source>Show or hide the keypad</source>
         <translation>Mostrar u ocultar el teclado numérico</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="396"/>
+        <location filename="../src/mainwindow.cpp" line="399"/>
         <source>Language</source>
         <translation>Idioma</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="397"/>
+        <location filename="../src/mainwindow.cpp" line="400"/>
         <source>Theme</source>
         <translation>Tema</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="398"/>
-        <location filename="../src/mainwindow.cpp" line="399"/>
+        <location filename="../src/mainwindow.cpp" line="401"/>
+        <location filename="../src/mainwindow.cpp" line="402"/>
         <source>System</source>
         <translation>Sistema</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="400"/>
+        <location filename="../src/mainwindow.cpp" line="403"/>
         <source>Light</source>
         <translation>Claro</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="401"/>
+        <location filename="../src/mainwindow.cpp" line="404"/>
         <source>Dark</source>
         <translation>Oscuro</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="572"/>
+        <location filename="../src/mainwindow.cpp" line="582"/>
         <source>Exact arithmetic cannot represent %1: its result is irrational. Switch to a floating type to compute it.</source>
         <translation>La aritmética exacta no puede representar %1: su resultado es irracional. Cambia a un tipo de coma flotante para calcularlo.</translation>
     </message>
@@ -333,293 +333,293 @@
         <translation>~%1 dígitos</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="136"/>
+        <location filename="../src/presenter.cpp" line="137"/>
         <source>exact · no rounding error</source>
         <translation>exacto · sin error de redondeo</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="127"/>
+        <location filename="../src/presenter.cpp" line="128"/>
         <source>well-conditioned</source>
         <translation>bien condicionado</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="128"/>
+        <location filename="../src/presenter.cpp" line="129"/>
         <source>moderately conditioned</source>
         <translation>moderadamente condicionado</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="129"/>
+        <location filename="../src/presenter.cpp" line="130"/>
         <source>ill-conditioned: no algorithm can do better in this type</source>
         <translation>mal condicionado: ningún algoritmo puede hacerlo mejor en este tipo</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="136"/>
+        <location filename="../src/presenter.cpp" line="137"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="137"/>
-        <location filename="../src/presenter.cpp" line="152"/>
+        <location filename="../src/presenter.cpp" line="138"/>
+        <location filename="../src/presenter.cpp" line="153"/>
         <source>Number type</source>
         <translation>Tipo numérico</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="138"/>
+        <location filename="../src/presenter.cpp" line="139"/>
         <source>%1, exact fractions</source>
         <translation>%1, fracciones exactas</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="140"/>
+        <location filename="../src/presenter.cpp" line="141"/>
         <source>unavailable</source>
         <translation>no disponible</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="141"/>
+        <location filename="../src/presenter.cpp" line="142"/>
         <source>unreliable</source>
         <translation>poco fiable</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="143"/>
+        <location filename="../src/presenter.cpp" line="144"/>
         <source>Guaranteed bound</source>
         <translation>Cota garantizada</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="144"/>
+        <location filename="../src/presenter.cpp" line="145"/>
         <source>Measured error</source>
         <translation>Error medido</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="148"/>
+        <location filename="../src/presenter.cpp" line="149"/>
         <source>Input error</source>
         <translation>Error de entrada</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="149"/>
+        <location filename="../src/presenter.cpp" line="150"/>
         <source>Rounding error</source>
         <translation>Error de redondeo</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="150"/>
+        <location filename="../src/presenter.cpp" line="151"/>
         <source>Library error</source>
         <translation>Error de biblioteca</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="147"/>
+        <location filename="../src/presenter.cpp" line="148"/>
         <source>Condition number κ</source>
         <translation>Número de condición κ</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="145"/>
+        <location filename="../src/presenter.cpp" line="146"/>
         <source>Trusted digits</source>
         <translation>Dígitos fiables</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="146"/>
+        <location filename="../src/presenter.cpp" line="147"/>
         <source>%1 by the bound, %2 by the measurement</source>
         <translation>%1 según la cota, %2 según la medición</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="134"/>
+        <location filename="../src/presenter.cpp" line="135"/>
         <source>Evaluated</source>
         <translation>Evaluado</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="94"/>
+        <location filename="../src/presenter.cpp" line="95"/>
         <source>every digit exact</source>
         <translation>todos los dígitos exactos</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="95"/>
+        <location filename="../src/presenter.cpp" line="96"/>
         <source>~%1 significant digits</source>
         <translation>~%1 dígitos significativos</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="99"/>
+        <location filename="../src/presenter.cpp" line="100"/>
         <source>%1 · fractions, no rounding</source>
         <translation>%1 · fracciones, sin redondeo</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="100"/>
+        <location filename="../src/presenter.cpp" line="101"/>
         <source>%1 · %2-bit storage · %3-bit significand</source>
         <translation>%1 · %2 bits de almacenamiento · mantisa de %3 bits</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="151"/>
+        <location filename="../src/presenter.cpp" line="152"/>
         <source>Rounded operations</source>
         <translation>Operaciones redondeadas</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="153"/>
+        <location filename="../src/presenter.cpp" line="154"/>
         <source>%1, %2-bit significand</source>
         <translation>%1, mantisa de %2 bits</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="156"/>
+        <location filename="../src/presenter.cpp" line="157"/>
         <source>Incomplete</source>
         <translation>Incompleto</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="157"/>
+        <location filename="../src/presenter.cpp" line="158"/>
         <source>an uncertain argument was accepted</source>
         <translation>se aceptó un argumento incierto</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="164"/>
+        <location filename="../src/presenter.cpp" line="165"/>
         <source>A proven upper limit on how far the shown value can be from the exact result (to first order: it leaves out terms far smaller than itself).</source>
         <translation>Un límite superior demostrado de cuánto puede alejarse el valor mostrado del resultado exacto (en primer orden: omite términos mucho más pequeños que él).</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="167"/>
+        <location filename="../src/presenter.cpp" line="168"/>
         <source>The actual difference from the same calculation redone with far more precision. An estimate, usually much smaller than the guaranteed bound.</source>
         <translation>La diferencia real con el mismo cálculo repetido con mucha más precisión. Es una estimación, normalmente mucho menor que la cota garantizada.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="170"/>
+        <location filename="../src/presenter.cpp" line="171"/>
         <source>How many leading digits you can rely on: according to the guaranteed bound, and according to the measured error.</source>
         <translation>Cuántos dígitos iniciales son fiables: según la cota garantizada y según el error medido.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="173"/>
+        <location filename="../src/presenter.cpp" line="174"/>
         <source>How much the problem itself magnifies small changes in its input. When it is large, no algorithm can do better in this number type.</source>
         <translation>Cuánto amplifica el propio problema los pequeños cambios en su entrada. Cuando es grande, ningún algoritmo puede hacerlo mejor en este tipo numérico.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="176"/>
+        <location filename="../src/presenter.cpp" line="177"/>
         <source>The error of storing the numbers you typed in this type: 0.1, for example, has no exact binary form.</source>
         <translation>El error al guardar en este tipo los números que escribiste: 0.1, por ejemplo, no tiene una forma binaria exacta.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="179"/>
+        <location filename="../src/presenter.cpp" line="180"/>
         <source>The error added by rounding the result of each arithmetic operation.</source>
         <translation>El error añadido al redondear el resultado de cada operación aritmética.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="181"/>
+        <location filename="../src/presenter.cpp" line="182"/>
         <source>The error of functions such as sin or exp, which can&apos;t be computed exactly; it is bounded by their tested accuracy.</source>
         <translation>El error de funciones como sen o exp, que no se pueden calcular exactamente; está acotado por su precisión comprobada.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="184"/>
+        <location filename="../src/presenter.cpp" line="185"/>
         <source>How many operations had to round their result.</source>
         <translation>Cuántas operaciones tuvieron que redondear su resultado.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="186"/>
+        <location filename="../src/presenter.cpp" line="187"/>
         <source>The C++ type the calculation ran in, and the bits of its significand: more bits, more correct digits.</source>
         <translation>El tipo de C++ en el que se hizo el cálculo y los bits de su mantisa: más bits, más dígitos correctos.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="189"/>
+        <location filename="../src/presenter.cpp" line="190"/>
         <source>The expression as it was computed, with Ans and M replaced by what they stand for.</source>
         <translation>La expresión tal como se calculó, con Ans y M sustituidos por lo que representan.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="191"/>
+        <location filename="../src/presenter.cpp" line="192"/>
         <source>Exact arithmetic works with fractions of whole numbers, so nothing is ever rounded: the result is exactly right.</source>
         <translation>La aritmética exacta trabaja con fracciones de números enteros, así que nunca se redondea nada: el resultado es exactamente correcto.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="194"/>
+        <location filename="../src/presenter.cpp" line="195"/>
         <source>You chose to proceed with an uncertain argument for a whole-number function; that uncertainty is not included in the figures above.</source>
         <translation>Decidiste continuar con un argumento incierto en una función de números enteros; esa incertidumbre no está incluida en las cifras anteriores.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="204"/>
+        <location filename="../src/presenter.cpp" line="205"/>
         <source>Unexpected character “%1”</source>
         <translation>Carácter inesperado «%1»</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="205"/>
+        <location filename="../src/presenter.cpp" line="206"/>
         <source>“%1” is not a valid number</source>
         <translation>«%1» no es un número válido</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="206"/>
+        <location filename="../src/presenter.cpp" line="207"/>
         <source>Unexpected “%1”</source>
         <translation>«%1» inesperado</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="207"/>
+        <location filename="../src/presenter.cpp" line="208"/>
         <source>The expression ends too early</source>
         <translation>La expresión termina antes de tiempo</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="208"/>
+        <location filename="../src/presenter.cpp" line="209"/>
         <source>Missing “)”</source>
         <translation>Falta «)»</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="209"/>
+        <location filename="../src/presenter.cpp" line="210"/>
         <source>Missing operator before “%1” (write 2×π, not 2π)</source>
         <translation>Falta un operador antes de «%1» (escribe 2×π, no 2π)</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="211"/>
+        <location filename="../src/presenter.cpp" line="212"/>
         <source>There is no previous result yet</source>
         <translation>Todavía no hay un resultado anterior</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="212"/>
+        <location filename="../src/presenter.cpp" line="213"/>
         <source>The memory is empty</source>
         <translation>La memoria está vacía</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="213"/>
+        <location filename="../src/presenter.cpp" line="214"/>
         <source>Unknown name “%1”</source>
         <translation>Nombre desconocido «%1»</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="214"/>
+        <location filename="../src/presenter.cpp" line="215"/>
         <source>Wrong number of arguments for %1</source>
         <translation>Número de argumentos incorrecto para %1</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="216"/>
+        <location filename="../src/presenter.cpp" line="217"/>
         <source>Exact arithmetic cannot represent %1: its result is irrational. Switch to a floating type to compute it.</source>
         <translation>La aritmética exacta no puede representar %1: su resultado es irracional. Cambia a un tipo de coma flotante para calcularlo.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="217"/>
+        <location filename="../src/presenter.cpp" line="218"/>
         <source>%1 cannot be represented in this number type</source>
         <translation>%1 no se puede representar en este tipo numérico</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="218"/>
+        <location filename="../src/presenter.cpp" line="219"/>
         <source>Division by zero</source>
         <translation>División por cero</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="219"/>
+        <location filename="../src/presenter.cpp" line="220"/>
         <source>%1 is not defined here</source>
         <translation>%1 no está definido aquí</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="220"/>
+        <location filename="../src/presenter.cpp" line="221"/>
         <source>The result is too large for this number type</source>
         <translation>El resultado es demasiado grande para este tipo numérico</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="221"/>
+        <location filename="../src/presenter.cpp" line="222"/>
         <source>The exact result of %1 is irrational</source>
         <translation>El resultado exacto de %1 es irracional</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="222"/>
+        <location filename="../src/presenter.cpp" line="223"/>
         <source>The argument of %1 is too large to reduce accurately</source>
         <translation>El argumento de %1 es demasiado grande para reducirlo con exactitud</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="223"/>
+        <location filename="../src/presenter.cpp" line="224"/>
         <source>%1 needs whole numbers</source>
         <translation>%1 necesita números enteros</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="225"/>
+        <location filename="../src/presenter.cpp" line="226"/>
         <source>%1 needs an exactly known whole number, but its argument carries an error. If you proceed anyway, the error report will not include that error.</source>
         <translation>%1 necesita un número entero conocido con exactitud, pero su argumento arrastra un error. Si continúas de todos modos, el informe de error no incluirá ese error.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="227"/>
+        <location filename="../src/presenter.cpp" line="228"/>
         <source>Cancelled</source>
         <translation>Cancelado</translation>
     </message>
