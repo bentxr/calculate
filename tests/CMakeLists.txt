@@ -14,6 +14,7 @@ add_executable(calculate-tests
     test_lcd.cpp
     test_mainwindow.cpp
     test_presenter.cpp
+    test_settings.cpp
     test_translation.cpp
     test_typeset.cpp
     test_worker.cpp
