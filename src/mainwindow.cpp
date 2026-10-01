@@ -564,7 +564,7 @@ QWidget* MainWindow::buildStatistics() {
         });
         grid->addWidget(button, i / 4, i % 4);
     }
-    entry->addWidget(keys);
+    entry->addWidget(keys, 0, Qt::AlignTop);
     connect(statisticsKeysToggle_, &QToolButton::toggled, keys, &QWidget::setVisible);
     layout->addLayout(entry, 1);
     auto* buttons = new QHBoxLayout;

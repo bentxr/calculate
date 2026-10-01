@@ -508,3 +508,15 @@ TEST(MainWindow, AKeypadEntersValuesWithoutAKeyboard) {
     QTest::mouseClick(child<QToolButton>(window, "statisticsKeysToggle"), Qt::LeftButton);
     EXPECT_TRUE(keys->isHidden());
 }
+
+TEST(MainWindow, TheStatisticsKeypadStaysCompact) {
+    MainWindow window;
+    window.resize(700, 900);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    child<QListWidget>(window, "modes")->setCurrentRow(1);
+    QTest::qWait(50);
+    const QWidget* seven = child<QWidget>(window, "statKey:7");
+    const QWidget* four = child<QWidget>(window, "statKey:4");
+    EXPECT_LT(four->y() - seven->y(), 2 * seven->height());  // rows stay together however tall the page is
+}
