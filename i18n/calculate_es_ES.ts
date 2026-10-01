@@ -4,79 +4,147 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../src/mainwindow.cpp" line="23"/>
+        <location filename="../src/mainwindow.cpp" line="34"/>
         <source>calculate</source>
         <translation>calculate</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="29"/>
+        <location filename="../src/mainwindow.cpp" line="40"/>
         <source>Calculator</source>
         <translation>Calculadora</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="29"/>
+        <location filename="../src/mainwindow.cpp" line="40"/>
         <source>Statistics</source>
         <translation>Estadística</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="43"/>
+        <location filename="../src/mainwindow.cpp" line="54"/>
         <source>RAD</source>
         <translation>RAD</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="43"/>
+        <location filename="../src/mainwindow.cpp" line="54"/>
         <source>DEG</source>
         <translation>DEG</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="43"/>
+        <location filename="../src/mainwindow.cpp" line="54"/>
         <source>GRAD</source>
         <translation>GRAD</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="53"/>
+        <location filename="../src/mainwindow.cpp" line="64"/>
         <source>=</source>
         <translation>=</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="73"/>
+        <location filename="../src/mainwindow.cpp" line="84"/>
         <source>Details</source>
         <translation>Detalles</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="80"/>
+        <location filename="../src/mainwindow.cpp" line="91"/>
         <source>Proceed anyway</source>
         <translation>Continuar de todos modos</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="85"/>
+        <location filename="../src/mainwindow.cpp" line="96"/>
         <source>Computing…</source>
         <translation>Calculando…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="87"/>
+        <location filename="../src/mainwindow.cpp" line="98"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="120"/>
+        <location filename="../src/mainwindow.cpp" line="131"/>
         <source>M = %1</source>
         <translation>M = %1</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="122"/>
+        <location filename="../src/mainwindow.cpp" line="133"/>
         <source>The memory needs a previous result</source>
         <translation>La memoria necesita un resultado anterior</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="186"/>
+        <location filename="../src/mainwindow.cpp" line="239"/>
         <source>Values (one per line, or separated by commas):</source>
         <translation>Valores (uno por línea, o separados por comas):</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="260"/>
+        <location filename="../src/mainwindow.cpp" line="349"/>
+        <source>%1 is not available in this app yet</source>
+        <translation>%1 aún no está disponible en esta aplicación</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="351"/>
         <source>Exact arithmetic cannot represent %1: its result is irrational. Switch to a floating type to compute it.</source>
         <translation>La aritmética exacta no puede representar %1: su resultado es irracional. Cambia a un tipo de coma flotante para calcularlo.</translation>
+    </message>
+</context>
+<context>
+    <name>keypad</name>
+    <message>
+        <location filename="../src/keypad.cpp" line="39"/>
+        <source>sin</source>
+        <translation>sen</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="39"/>
+        <source>sin(</source>
+        <translation>sen(</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="40"/>
+        <source>asin</source>
+        <translation>Arcsen</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="40"/>
+        <source>asin(</source>
+        <translation>Arcsen(</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="42"/>
+        <source>acos</source>
+        <translation>Arccos</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="42"/>
+        <source>acos(</source>
+        <translation>Arccos(</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="44"/>
+        <source>atan</source>
+        <translation>Arctan</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="44"/>
+        <source>atan(</source>
+        <translation>Arctan(</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="56"/>
+        <source>gcd</source>
+        <translation>MCD</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="56"/>
+        <source>gcd(</source>
+        <translation>MCD(</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="58"/>
+        <source>lcm</source>
+        <translation>MCM</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="58"/>
+        <source>lcm(</source>
+        <translation>MCM(</translation>
     </message>
 </context>
 <context>
