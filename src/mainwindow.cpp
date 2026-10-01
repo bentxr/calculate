@@ -9,6 +9,7 @@
 #include "worker.hpp"
 
 #include <QComboBox>
+#include <QDialog>
 #include <QCursor>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -31,11 +32,36 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     auto* central = new QWidget(this);
     auto* outer = new QHBoxLayout(central);
 
-    modes_ = new QListWidget(central);
+    // The left panel: ☰ collapses it to a thin rail; ⚙ (settings) stays at its bottom either way.
+    auto* rail = new QWidget(central);
+    rail->setObjectName("rail");
+    auto* railLayout = new QVBoxLayout(rail);
+    railLayout->setContentsMargins(0, 0, 0, 0);
+    auto* panelToggle = new QToolButton(rail);
+    panelToggle->setObjectName("panelToggle");
+    panelToggle->setText(QStringLiteral("☰"));
+    panelToggle->setToolTip(tr("Show or hide the panel"));
+    panelToggle->setCheckable(true);
+    panelToggle->setAutoRaise(true);
+    modes_ = new QListWidget(rail);
     modes_->setObjectName("modes");
     modes_->addItems({tr("Calculator"), tr("Statistics")});
     modes_->setFixedWidth(140);
-    outer->addWidget(modes_);
+    auto* settingsButton = new QToolButton(rail);
+    settingsButton->setObjectName("settingsButton");
+    settingsButton->setText(QStringLiteral("⚙"));
+    settingsButton->setToolTip(tr("Settings"));
+    settingsButton->setAutoRaise(true);
+    railLayout->addWidget(panelToggle, 0, Qt::AlignLeft);
+    railLayout->addWidget(modes_, 1);
+    railLayout->addStretch();  // keeps ⚙ at the bottom while the list is hidden
+    railLayout->addWidget(settingsButton, 0, Qt::AlignLeft);
+    outer->addWidget(rail);
+    connect(panelToggle, &QToolButton::toggled, modes_, [this](bool collapsed) { modes_->setVisible(!collapsed); });
+    settings_ = new QDialog(this);
+    settings_->setObjectName("settings");
+    settings_->setWindowTitle(tr("Settings"));
+    connect(settingsButton, &QToolButton::clicked, settings_, &QDialog::open);
 
     auto* main = new QVBoxLayout;
     outer->addLayout(main, 1);
@@ -170,7 +196,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     buildMenus();
     updateKeys();
     // Only the screen takes the keyboard; every other control is used with the mouse.
-    for (QWidget* w : {static_cast<QWidget*>(modes_), static_cast<QWidget*>(type_), static_cast<QWidget*>(angle_),
+    for (QWidget* w : {static_cast<QWidget*>(modes_), static_cast<QWidget*>(panelToggle), static_cast<QWidget*>(settingsButton), static_cast<QWidget*>(type_), static_cast<QWidget*>(angle_),
                        static_cast<QWidget*>(equals), static_cast<QWidget*>(detailsButton_), static_cast<QWidget*>(proceed_),
                        static_cast<QWidget*>(cancel_), static_cast<QWidget*>(historyToggle_)})
         w->setFocusPolicy(Qt::NoFocus);
