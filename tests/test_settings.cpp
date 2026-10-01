@@ -34,3 +34,13 @@ TEST(Settings, LightIsLightEvenOnADarkDesktop) {
     QApplication::setPalette(previousPalette);
     QGuiApplication::styleHints()->unsetColorScheme();
 }
+
+TEST(Settings, TheDesktopStartsWithTheSystemTheme) {
+    EXPECT_EQ(settings::startTheme, settings::Theme::System);  // Dark only in the browser
+    const QPalette previous = QApplication::palette();
+    settings::setTheme(settings::Theme::Dark);
+    EXPECT_EQ(settings::theme(), settings::Theme::Dark);
+    settings::setTheme(settings::Theme::System);
+    EXPECT_EQ(settings::theme(), settings::Theme::System);
+    QApplication::setPalette(previous);
+}

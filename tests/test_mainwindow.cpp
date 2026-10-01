@@ -4,6 +4,7 @@
 #include "formulatip.hpp"
 #include "lcd.hpp"
 #include "presenter.hpp"
+#include "settings.hpp"
 #include "typechooser.hpp"
 
 #include <QAbstractItemView>
@@ -577,6 +578,23 @@ TEST(MainWindow, SpanishRelabelsEverythingWithoutARestart) {
     QCoreApplication::processEvents();
     EXPECT_EQ(child<QPushButton>(window, "key:sin")->text(), "sin");
     EXPECT_EQ(child<QListWidget>(window, "modes")->item(0)->text(), "Calculator");
+}
+
+// The browser starts dark: the menu shows the theme in use, not always System.
+TEST(MainWindow, TheSettingsShowTheThemeInUse) {
+    const QPalette original = QApplication::palette();
+    settings::setTheme(settings::Theme::Dark);
+    {
+        MainWindow window;
+        EXPECT_TRUE(setting(window, "theme:dark")->isChecked());
+        EXPECT_FALSE(setting(window, "theme:system")->isChecked());
+    }
+    settings::setTheme(settings::Theme::System);
+    {
+        MainWindow window;
+        EXPECT_TRUE(setting(window, "theme:system")->isChecked());
+    }
+    QApplication::setPalette(original);
 }
 
 TEST(MainWindow, TheThemeSwitchesBetweenLightAndDark) {

@@ -401,7 +401,7 @@ void MainWindow::buildSettings() {
     };
     addSetting(languageSection_, {"language:system", "language:en", "language:es"}, 0,
                [](int i) { settings::setLanguage(static_cast<settings::Language>(i)); });
-    addSetting(themeSection_, {"theme:system", "theme:light", "theme:dark"}, 0,
+    addSetting(themeSection_, {"theme:system", "theme:light", "theme:dark"}, static_cast<int>(settings::theme()),
                [](int i) { settings::setTheme(static_cast<settings::Theme>(i)); });
 }
 
