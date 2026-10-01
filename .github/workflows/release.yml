@@ -1,0 +1,96 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  appimage:
+    runs-on: ubuntu-22.04   # an older glibc makes the AppImage run on more systems
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4.4.1
+        with:
+          version: '6.11.2'
+          host: linux
+          target: desktop
+          arch: linux_gcc_64
+          cache: true
+      # The libxcb-* and libxkbcommon-x11 packages are what Qt's xcb plugin links against: linuxdeploy bundles them from here.
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libgl1-mesa-dev libxkbcommon-dev libfuse2 \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 \
+            libxcb-shape0 libxcb-xkb1 libxkbcommon-x11-0
+      - name: Build
+        run: |
+          cmake --preset desktop-ci -B build/release -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
+          cmake --build build/release
+      - name: Package
+        run: |
+          curl -sSLO https://github.com/linuxdeploy/linuxdeploy/releases/download/1-alpha-20251107-1/linuxdeploy-x86_64.AppImage
+          curl -sSLO https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/1-alpha-20250213-1/linuxdeploy-plugin-qt-x86_64.AppImage
+          printf '%s\n' \
+            "c20cd71e3a4e3b80c3483cef793cda3f4e990aca14014d23c544ca3ce1270b4d  linuxdeploy-x86_64.AppImage" \
+            "15106be885c1c48a021198e7e1e9a48ce9d02a86dd0a1848f00bdbf3c1c92724  linuxdeploy-plugin-qt-x86_64.AppImage" | sha256sum -c
+          chmod +x linuxdeploy*.AppImage
+          APPIMAGE_EXTRACT_AND_RUN=1 NO_STRIP=1 QMAKE="$QT_ROOT_DIR/bin/qmake" EXTRA_PLATFORM_PLUGINS="libqwayland.so" \
+            ./linuxdeploy-x86_64.AppImage --appdir AppDir --executable build/release/calculate \
+            --desktop-file packaging/calculate.desktop --icon-file packaging/calculate.svg --plugin qt --output appimage
+          mv calculate-x86_64.AppImage "calculate-${GITHUB_REF_NAME}-x86_64.AppImage"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: appimage
+          path: calculate-*-x86_64.AppImage
+
+  web:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: mymindstorm/setup-emsdk@4528d102f7230f0e7b276855c01ea1159be0e984 # v16
+        with:
+          version: 4.0.7
+          actions-cache-folder: emsdk-cache
+      - uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4.4.1
+        with:
+          version: '6.11.2'
+          host: all_os
+          target: wasm
+          arch: wasm_multithread
+          modules: ''
+          autodesktop: true
+          cache: true
+      - name: Install Ninja
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+      - name: Build
+        run: |
+          export QT_WASM="$QT_ROOT_DIR"
+          export QT_HOST="$(dirname "$QT_ROOT_DIR")/gcc_64"
+          cmake --preset wasm-ci && cmake --build --preset wasm-ci
+      - name: Bundle
+        run: |
+          mkdir web
+          cp build/wasm-ci/calculate.html build/wasm-ci/calculate.js build/wasm-ci/calculate.wasm build/wasm-ci/qtloader.js web/
+          cp docs/hosting.md web/HOSTING.md
+          (cd web && zip -r "../calculate-${GITHUB_REF_NAME}-web.zip" .)
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: web
+          path: calculate-*-web.zip
+
+  publish:
+    needs: [appimage, web]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          merge-multiple: true
+      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          files: |
+            calculate-*-x86_64.AppImage
+            calculate-*-web.zip

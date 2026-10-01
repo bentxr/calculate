@@ -1,0 +1,51 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "desktop",
+      "displayName": "Desktop, engine from ../calculate-core",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/desktop",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "FETCHCONTENT_SOURCE_DIR_CALCULATE-CORE": "${sourceDir}/../calculate-core"
+      }
+    },
+    {
+      "name": "desktop-ci",
+      "inherits": "desktop",
+      "displayName": "Desktop, engine from GitHub",
+      "binaryDir": "${sourceDir}/build/desktop-ci",
+      "cacheVariables": { "FETCHCONTENT_SOURCE_DIR_CALCULATE-CORE": "" }
+    },
+    {
+      "name": "wasm",
+      "displayName": "Browser (Qt for WebAssembly, multithread), engine from ../calculate-core",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/wasm",
+      "toolchainFile": "$env{QT_WASM}/lib/cmake/Qt6/qt.toolchain.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "QT_HOST_PATH": "$env{QT_HOST}",
+        "FETCHCONTENT_SOURCE_DIR_CALCULATE-CORE": "${sourceDir}/../calculate-core"
+      }
+    },
+    {
+      "name": "wasm-ci",
+      "inherits": "wasm",
+      "displayName": "Browser, engine from GitHub",
+      "binaryDir": "${sourceDir}/build/wasm-ci",
+      "cacheVariables": { "FETCHCONTENT_SOURCE_DIR_CALCULATE-CORE": "" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "desktop", "configurePreset": "desktop" },
+    { "name": "desktop-ci", "configurePreset": "desktop-ci" },
+    { "name": "wasm", "configurePreset": "wasm" },
+    { "name": "wasm-ci", "configurePreset": "wasm-ci" }
+  ],
+  "testPresets": [
+    { "name": "desktop", "configurePreset": "desktop", "output": { "outputOnFailure": true } },
+    { "name": "desktop-ci", "configurePreset": "desktop-ci", "output": { "outputOnFailure": true } }
+  ]
+}
