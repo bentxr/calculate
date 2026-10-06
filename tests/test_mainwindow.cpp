@@ -1057,7 +1057,9 @@ TEST(MainWindow, TheCopyMenuOffersEveryForm) {
     EXPECT_EQ(QGuiApplication::clipboard()->text(), "0.300000000000000");
     QTest::keyClick(lcd(window), Qt::Key_C, Qt::ControlModifier);  // nothing selected: the value
     EXPECT_EQ(QGuiApplication::clipboard()->text(), "0.3000000000000000444089209850062616169452667236328125");
-    EXPECT_TRUE(lcd(window)->editMenu()->actions().contains(child<QAction>(window, "copy:value")));
+    auto* copyAs = child<QMenu>(window, "copyAsMenu");  // in the edit menu, the forms under "Copy as"
+    EXPECT_TRUE(lcd(window)->editMenu()->actions().contains(copyAs->menuAction()));
+    EXPECT_TRUE(copyAs->actions().contains(child<QAction>(window, "copy:value")));
 }
 
 TEST(MainWindow, WithNoTrustedDigitTheTrustedFormIsOff) {
@@ -1134,4 +1136,15 @@ TEST(MainWindow, TheHistoryMenuBelongsToTheHistoryPanel) {
     // panel it opens from, or it opens hidden behind it.
     MainWindow window;
     EXPECT_EQ(child<QMenu>(window, "historyMenu")->parentWidget(), child<QWidget>(window, "historyPanel"));
+}
+
+TEST(MainWindow, CopyAsIsOffWithNothingToCopy) {
+    MainWindow window;
+    auto* copyAs = child<QMenu>(window, "copyAsMenu");
+    EXPECT_EQ(copyAs->title(), "Copy as");
+    EXPECT_FALSE(copyAs->menuAction()->isEnabled());
+    run(window, "1+1");
+    EXPECT_TRUE(copyAs->menuAction()->isEnabled());
+    run(window, "1/0");
+    EXPECT_FALSE(copyAs->menuAction()->isEnabled());
 }

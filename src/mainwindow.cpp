@@ -183,7 +183,10 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     // As text that reads back into the same templates.
     connect(copyExpression, &QAction::triggered, this, [this] { QGuiApplication::clipboard()->setText(lcd_->input()); });
     lcd_->editMenu()->addSeparator();
-    lcd_->editMenu()->addActions(copyMenu_->actions());
+    copyAsMenu_ = lcd_->editMenu()->addMenu(QString());
+    copyAsMenu_->setObjectName("copyAsMenu");
+    copyAsMenu_->setToolTipsVisible(true);
+    copyAsMenu_->addActions(copyMenu_->actions());
     enableCopy(nullptr);
     // Every edit action within reach of a button: undo, redo, cut, copy, paste, select all.
     editButton_ = new QToolButton(lcd_);
@@ -530,6 +533,7 @@ void MainWindow::retranslate() {
     detailsButton_->setText(tr("Details"));
     copyButton_->setText(tr("Copy"));
     copyButton_->setAccessibleName(copyButton_->text());
+    copyAsMenu_->setTitle(tr("Copy as"));
     findChild<QAction*>("copy:value")->setText(tr("Value"));
     findChild<QAction*>("copy:trusted")->setText(tr("Trusted digits"));
     findChild<QAction*>("copy:bound")->setText(tr("Value ± bound"));
@@ -774,6 +778,7 @@ void MainWindow::showNoPreview(const QString& notice) {
 
 void MainWindow::enableCopy(const Result* result) {
     copyButton_->setEnabled(result);
+    copyAsMenu_->menuAction()->setEnabled(result);
     for (QAction* action : copyMenu_->actions()) action->setEnabled(result);
     QAction* trusted = findChild<QAction*>("copy:trusted");
     const bool none = result && view::copyText(*result, view::CopyForm::Trusted, types_[static_cast<std::size_t>(result->type)]).isEmpty();

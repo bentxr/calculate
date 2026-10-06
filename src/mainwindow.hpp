@@ -114,6 +114,7 @@ private:
     QToolButton* detailsButton_ = nullptr;
     QToolButton* copyButton_ = nullptr;
     QMenu* copyMenu_ = nullptr;
+    QMenu* copyAsMenu_ = nullptr;  // the same forms in the edit menu, where "Value" alone would be unclear
     QToolButton* editButton_ = nullptr;
     QToolButton* keyboardButton_ = nullptr;
     DetailsCard* card_ = nullptr;
