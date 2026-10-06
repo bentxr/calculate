@@ -233,7 +233,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(this, &MainWindow::memoryAddRequested, worker_, &Worker::memoryAdd);
     connect(this, &MainWindow::memorySubtractRequested, worker_, &Worker::memorySubtract);
     connect(this, &MainWindow::memoryClearRequested, worker_, &Worker::memoryClear);
+    connect(this, &MainWindow::previewRequested, worker_, &Worker::preview);
     connect(worker_, &Worker::evaluated, this, &MainWindow::showResult);
+    connect(worker_, &Worker::previewed, this, &MainWindow::showPreview);
     connect(worker_, &Worker::memoryChanged, lcd_, &Lcd::setMemory);
     connect(worker_, &Worker::memoryFailed, this, [this] { message_->setText(tr("The memory needs a previous result")); });
     thread_.start();
@@ -245,6 +247,12 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
         cancel_->setVisible(true);
     });
     connect(cancel_, &QPushButton::clicked, this, [this] { worker_->cancelFlag() = true; });
+    liveTimer_.setSingleShot(true);
+    liveTimer_.setInterval(liveDelay);
+    connect(&liveTimer_, &QTimer::timeout, this, &MainWindow::requestPreview);
+    connect(lcd_, &Lcd::inputChanged, this, [this] {
+        if (settings::liveCalculation()) liveTimer_.start();
+    });
     connect(modes_, &QListWidget::currentRowChanged, pages_, &QStackedWidget::setCurrentIndex);
     connect(lcd_, &Lcd::evaluateRequested, this, &MainWindow::evaluate);
     connect(lcd_, &Lcd::historyRequested, this, [this](int step) { replay(historyIndex_ + step); });
@@ -286,6 +294,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
 
 MainWindow::~MainWindow() {
     worker_->cancelFlag() = true;
+    worker_->previewCancelFlag() = true;
     thread_.quit();
     thread_.wait();
 }
@@ -500,7 +509,7 @@ void MainWindow::retranslate() {
     for (QWidget* w : {static_cast<QWidget*>(angle_), static_cast<QWidget*>(type_), static_cast<QWidget*>(equals_)})
         w->setFixedWidth(width);
 
-    if (hasResult_) present();
+    if (hasResult_ || previewShown_) present();
     updateKeys();
     if (keysSized_) sizeKeys();  // labels changed width
 }
@@ -606,6 +615,8 @@ void MainWindow::evaluate() {
     keepsUnfinished_ = false;
     const QString text = lcd_->input().trimmed();
     if (text.isEmpty()) return;
+    liveTimer_.stop();
+    dropPreviews();
     typed_ = lcd_->entry();  // the history keeps it as typed, templates and all
     request(text, false);
 }
@@ -628,6 +639,7 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
     last_ = result;
     lastExpression_ = expression;
     hasResult_ = true;
+    previewShown_ = false;
     present();
     if (result.error) return;
     if (lcd_->input().trimmed() == expression) lcd_->setFresh(true);  // not when another input is being typed
@@ -646,15 +658,46 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
     historyIndex_ = -1;
 }
 
-// Shows the last result on the screen and in the card, in the current language.
+void MainWindow::requestPreview() {
+    const QString text = lcd_->input().trimmed();
+    dropPreviews();  // also when the input is now empty: an answer still on its way would show on a blank screen
+    if (text.isEmpty()) {
+        previewShown_ = false;
+        lcd_->setProvisional(false);
+        lcd_->clearResult();
+        message_->clear();
+        return;
+    }
+    emit previewRequested(previewSerial_, text, options());
+}
+
+void MainWindow::showPreview(int generation, const QString& expression, const Result& result) {
+    if (generation != previewSerial_) return;
+    preview_ = result;
+    previewExpression_ = expression;
+    previewShown_ = true;
+    present();
+}
+
+// The worker skips a request whose generation is no longer the newest; the flag stops one already running.
+// The generation goes first, so a request that starts between the two is skipped rather than run in full.
+void MainWindow::dropPreviews() {
+    worker_->previewGeneration() = ++previewSerial_;
+    worker_->previewCancelFlag() = true;
+}
+
+// Shows the result being typed, or else the last one, on the screen and in the card, in the current language.
 void MainWindow::present() {
-    proceed_->setVisible(last_.error && canProceed(last_.error->code));
-    card_->setRows(view::details(last_, types_[static_cast<std::size_t>(last_.type)]));
-    detailsButton_->setEnabled(!last_.error);
-    message_->setText(last_.error ? view::errorText(*last_.error, lastExpression_) : QString());
-    if (last_.error) lcd_->clearResult();
-    else if (last_.exact) lcd_->showExact(view::fractionParts(last_));
-    else lcd_->showValue(view::valueParts(last_));
+    const Result& shown = previewShown_ ? preview_ : last_;
+    const QString& expression = previewShown_ ? previewExpression_ : lastExpression_;
+    proceed_->setVisible(!previewShown_ && shown.error && canProceed(shown.error->code));  // it acts on the last request
+    card_->setRows(view::details(shown, types_[static_cast<std::size_t>(shown.type)]));
+    detailsButton_->setEnabled(!shown.error);
+    message_->setText(shown.error ? view::errorText(*shown.error, expression) : QString());
+    lcd_->setProvisional(previewShown_);
+    if (shown.error) lcd_->clearResult();
+    else if (shown.exact) lcd_->showExact(view::fractionParts(shown));
+    else lcd_->showValue(view::valueParts(shown));
 }
 
 void MainWindow::apply(const Face& f) {

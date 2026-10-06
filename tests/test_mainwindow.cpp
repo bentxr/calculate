@@ -915,3 +915,38 @@ TEST(MainWindow, TheSettingsOfferCalculatingAsYouType) {
     live->trigger();
     EXPECT_TRUE(settings::liveCalculation());
 }
+
+TEST(MainWindow, TheResultFollowsTheTyping) {
+    MainWindow window;
+    QTest::keyClicks(lcd(window), "1+2");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "3"; }, 10000));
+    EXPECT_TRUE(lcd(window)->provisional());
+    EXPECT_EQ(child<QListWidget>(window, "history")->count(), 0);  // nothing committed yet
+    QTest::keyClicks(lcd(window), "*4");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "9"; }, 10000));
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return !lcd(window)->provisional(); }, 10000));
+    EXPECT_EQ(lcd(window)->outputText(), "9");
+    EXPECT_EQ(child<QListWidget>(window, "history")->count(), 1);
+}
+
+TEST(MainWindow, WithoutLiveCalculationOnlyEqualsCalculates) {
+    MainWindow window;
+    setting(window, "live")->trigger();  // off
+    QTest::keyClicks(lcd(window), "1+2");
+    QTest::qWait(800);
+    EXPECT_EQ(lcd(window)->outputText(), "");
+    setting(window, "live")->trigger();  // on again for the other tests
+}
+
+TEST(MainWindow, UndoAndRedoRecalculateWhatIsBeingTyped) {
+    MainWindow window;
+    QTest::keyClicks(lcd(window), "1+2*4");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "9"; }, 10000));
+    QTest::keyClick(lcd(window), Qt::Key_Z, Qt::ControlModifier);
+    QTest::keyClick(lcd(window), Qt::Key_Z, Qt::ControlModifier);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "3"; }, 10000));
+    QTest::keyClick(lcd(window), Qt::Key_Y, Qt::ControlModifier);
+    QTest::keyClick(lcd(window), Qt::Key_Y, Qt::ControlModifier);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "9"; }, 10000));
+}

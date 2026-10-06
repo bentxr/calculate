@@ -47,6 +47,7 @@ signals:
     void memoryAddRequested();
     void memorySubtractRequested();
     void memoryClearRequested();
+    void previewRequested(int generation, const QString& expression, const calculate_core::Options& options);
 
 private:
     QWidget* buildKeypad();
@@ -59,6 +60,9 @@ private:
     calculate_core::Options options() const;
     void request(const QString& expression, bool allowUncertain);
     void showResult(const QString& expression, const calculate_core::Result& result);
+    void requestPreview();
+    void showPreview(int generation, const QString& expression, const calculate_core::Result& result);
+    void dropPreviews();  // previews asked for so far are skipped, or cancelled if running
     void apply(const Face& face);
     void replay(int index);
     bool exactType() const;
@@ -76,6 +80,13 @@ private:
     std::vector<calculate_core::TypeInfo> types_;
     calculate_core::Result last_;
     QString lastExpression_;
+    // The result while typing: asked for once the typing pauses, shown until = or the next edit replaces it.
+    static constexpr int liveDelay = 250;
+    QTimer liveTimer_;
+    int previewSerial_ = 0;
+    calculate_core::Result preview_;
+    QString previewExpression_;
+    bool previewShown_ = false;
 
     QListWidget* modes_ = nullptr;
     QToolButton* panelToggle_ = nullptr;

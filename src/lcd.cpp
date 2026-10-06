@@ -27,6 +27,8 @@ namespace {
 
 constexpr qreal margin = 8;
 constexpr qreal spacing = 6;
+constexpr qreal resultScale = 1.6;       // the result's size, relative to the widget's font
+constexpr qreal provisionalScale = 1.2;  // smaller while the expression is still being typed
 
 // The colour a fraction `t` of the way from `a` to `b`.
 QColor mix(const QColor& a, const QColor& b, qreal t) {
@@ -175,7 +177,7 @@ void Lcd::right() {
 
 void Lcd::setInput(const QString& text) {
     fresh_ = false;
-    edit([&] { entry_.setRoot(typing::read(text)); });
+    edit([&] { entry_.setRoot(typing::read(text)); }, false);
 }
 
 void Lcd::finishName() {
@@ -268,6 +270,14 @@ void Lcd::showExact(const view::FractionParts& parts) {
     announceResult();
 }
 
+void Lcd::setProvisional(bool provisional) {
+    if (provisional == provisional_) return;
+    provisional_ = provisional;
+    changed();
+}
+
+QSize Lcd::resultSize() const { return {qCeil(result_.width), qCeil(result_.ascent + result_.descent)}; }
+
 void Lcd::announceResult() {
     if (!QAccessible::isActive()) return;
     QAccessibleEvent event(this, QAccessible::DescriptionChanged);
@@ -333,13 +343,13 @@ int Lcd::barHeight() const { return barLayout_->count() > 1 ? bar_->sizeHint().h
 QSize Lcd::sizeHint() const {
     // An input with a fraction, and a result with one; taller results scroll.
     const qreal height = 2 * margin + spacing + QFontMetricsF(statusFont()).height() + 2.2 * QFontMetricsF(inputFont()).height()
-                         + 2.4 * QFontMetricsF(outputFont()).height() + barHeight();
+                         + 2.4 * QFontMetricsF(scaled(font(), resultScale)).height() + barHeight();
     return QSize(320, qCeil(height));
 }
 
 QFont Lcd::statusFont() const { return scaled(font(), 0.8); }
 QFont Lcd::inputFont() const { return scaled(font(), 1.25); }
-QFont Lcd::outputFont() const { return scaled(font(), 1.6); }
+QFont Lcd::outputFont() const { return scaled(font(), provisional_ ? provisionalScale : resultScale); }
 
 typeset::Box Lcd::inputBox(QRectF* caret) const { return typeset::input(entry_, inputFont(), caret); }
 
@@ -352,10 +362,10 @@ QPointF Lcd::inputOrigin(const typeset::Box& input, const QRectF& caret) const {
 
 void Lcd::setEntry(const Entry& entry) {
     fresh_ = false;
-    edit([&] { entry_ = entry; });
+    edit([&] { entry_ = entry; }, false);
 }
 
-void Lcd::edit(const std::function<void()>& change) {
+void Lcd::edit(const std::function<void()>& change, bool byUser) {
     const Entry before = entry_;
     change();
     if (entry_ == before) return;
@@ -365,6 +375,7 @@ void Lcd::edit(const std::function<void()>& change) {
         QAccessibleValueChangeEvent event(this, input());
         QAccessible::updateAccessibility(&event);
     }
+    if (byUser) emit inputChanged();
 }
 
 void Lcd::startEditing(bool needsLeftOperand) {
@@ -376,12 +387,16 @@ void Lcd::startEditing(bool needsLeftOperand) {
 
 void Lcd::undo() {
     fresh_ = false;
-    if (undo_.undo(entry_)) changed();
+    if (!undo_.undo(entry_)) return;
+    changed();
+    emit inputChanged();
 }
 
 void Lcd::redo() {
     fresh_ = false;
-    if (undo_.redo(entry_)) changed();
+    if (!undo_.redo(entry_)) return;
+    changed();
+    emit inputChanged();
 }
 
 QRectF Lcd::resultArea(const typeset::Box& input) const {

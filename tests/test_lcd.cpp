@@ -262,3 +262,15 @@ TEST(Lcd, ScreenReadersGetTheInputAndTheResult) {
     EXPECT_EQ(a->text(QAccessible::Value), "1+2");
     EXPECT_EQ(a->text(QAccessible::Description), "3");
 }
+
+TEST(Lcd, AProvisionalResultIsSmaller) {
+    Lcd lcd;
+    lcd.resize(400, 200);
+    lcd.showValue({"3", "", ""});
+    const QSize full = lcd.resultSize();
+    lcd.setProvisional(true);
+    EXPECT_TRUE(lcd.provisional());
+    EXPECT_LT(lcd.resultSize().height(), full.height());
+    lcd.setProvisional(false);
+    EXPECT_EQ(lcd.resultSize(), full);
+}

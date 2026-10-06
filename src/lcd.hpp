@@ -58,6 +58,10 @@ public:
     void showExact(const view::FractionParts& parts);
     void clearResult();  // the input stays
     QString outputText() const;  // the result on one line of plain text
+    // A result worked out while the expression is still being typed: drawn smaller until = confirms it.
+    void setProvisional(bool provisional);
+    bool provisional() const { return provisional_; }
+    QSize resultSize() const;  // the laid-out result, rounded up
     // The status line, as on the calculator: M while the memory holds something.
     void setMemory(const QString& memory);  // empty when cleared; its value is the screen's tooltip
     QString memory() const { return memory_; }
@@ -81,6 +85,7 @@ public slots:
 
 signals:
     void evaluateRequested();
+    void inputChanged();  // edited by the user, undo and redo included (not by setInput or setEntry)
     void historyRequested(int step);  // +1 for an older entry (▲, Page Up), −1 for a newer one (▼, Page Down)
     void copyRequested();
     void pastedFirstLine(int lines);  // of `lines` non-empty ones
@@ -117,12 +122,13 @@ private:
     void announceResult();  // to screen readers
     void retranslate();
     // Every change of the input goes through here, so that it can be undone (when it changed anything).
-    void edit(const std::function<void()>& change);
+    void edit(const std::function<void()>& change, bool byUser = true);
 
     Entry entry_;
     UndoStack undo_;
     QMenu* editMenu_ = nullptr;
     bool fresh_ = false;
+    bool provisional_ = false;
     Shown shown_ = Shown::Nothing;
     view::ValueParts value_;
     view::FractionParts exact_;
