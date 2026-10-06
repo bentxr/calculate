@@ -197,3 +197,35 @@ TEST(Typing, PasteGoesInAtTheCursor) {
     EXPECT_EQ(e.path(), (std::vector<std::pair<int, int>>{}));
     EXPECT_EQ(e.cursor(), 5);  // 1 + √(4) × 2
 }
+
+TEST(Typing, TypingOverASelectionReplacesOrWrapsIt) {
+    Entry e = typed("pi");
+    e.selectAll();
+    typing::typeCharacter(e, '+');  // replaced, not first finished into π
+    EXPECT_EQ(e.text(), "+");
+    Entry f = typed("1+2");
+    f.selectAll();
+    typing::typeCharacter(f, '(');
+    EXPECT_EQ(f.text(), "(1+2)");
+    Entry g = typed("sin");
+    g.selectAll();
+    typing::typeCharacter(g, '(');  // wraps: no name lookup
+    EXPECT_EQ(g.text(), "(sin)");
+    Entry h = typed("2^10");
+    h.extendLeft();
+    h.extendLeft();  // the 10, inside the exponent
+    typing::typeCharacter(h, '^');  // the selection is the new power's base, where it is
+    EXPECT_EQ(h.text(), "2^((10)^())");
+    Entry r = typed("√12");
+    r.left();
+    r.left();
+    r.extendRight();
+    r.extendRight();  // the 12, the cursor at the end of the root's box, where a ^ would end it
+    typing::typeCharacter(r, '^');
+    EXPECT_EQ(r.text(), "√((12)^())");
+    Entry k = typed("12");
+    k.selectAll();
+    typing::typeCharacter(k, QChar(0x221A));  // √ wraps it and is done
+    EXPECT_EQ(k.text(), "√(12)");
+    EXPECT_EQ(k.root()[0].closing, Closing::Key);
+}

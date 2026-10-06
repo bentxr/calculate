@@ -144,6 +144,7 @@ bool operatorPiece(const Item& item) {
 // Whether `piece` ends the box being typed, as it would end the operand in linear text: the cursor is at
 // the end of a finished (non-empty, balanced) box that ends like linear text.
 bool endsOperand(const Entry& e, const QString& piece) {
+    if (e.hasSelection()) return false;  // the selection stays where it is, for the key to wrap
     const Item* container = e.container();
     const Row& row = e.currentRow();
     if (!container || container->closing != Closing::Operand) return false;
@@ -261,7 +262,10 @@ bool typeCharacter(Entry& e, QChar c) {
         return true;
     }
     if (c.isSpace() && c != ' ') return true;  // thin and no-break spaces group digits: ignored
-    if (!identifierCharacter(c)) finishName(e);
+    // Typing replaces a selection; an opening parenthesis and the template signs wrap it.
+    const bool wraps = c == '(' || c == '^' || c == QChar(0x221A) || c == QChar(0x221B) || c == QChar(0x00B2) || c == QChar(0x00B3);
+    if (e.hasSelection() && !wraps) e.backspace();
+    if (!identifierCharacter(c) && !e.hasSelection()) finishName(e);
     const Row& row = e.currentRow();
     const Item* before = e.cursor() > 0 ? &row[static_cast<std::size_t>(e.cursor() - 1)] : nullptr;
     const Item* container = e.container();
@@ -292,6 +296,10 @@ bool typeCharacter(Entry& e, QChar c) {
         e.right();
         break;
     case '(': {
+        if (e.hasSelection()) {  // wraps it, whatever comes before
+            e.insert("(");
+            break;
+        }
         if (container && container->closing == Closing::Operand && row.empty()) {  // the box's own parentheses
             e.setClosing(Closing::Parenthesis);
             break;

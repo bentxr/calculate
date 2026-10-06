@@ -82,28 +82,82 @@ void Entry::stepOut() {
 }
 
 void Entry::insert(const QString& piece) {
-    anchor_ = -1;
+    const Row selection = removeSelection();
     Row& r = row();
+    if (!selection.empty() && piece.endsWith('(')) {  // wrap: piece, the selection, ")"
+        Row wrapped{Item{Template::Text, piece, {}}};
+        wrapped.insert(wrapped.end(), selection.begin(), selection.end());
+        wrapped.push_back(Item{Template::Text, QStringLiteral(")"), {}});
+        r.insert(r.begin() + index_, wrapped.begin(), wrapped.end());
+        index_ += static_cast<int>(wrapped.size());
+        return;
+    }
     r.insert(r.begin() + index_, Item{Template::Text, piece, {}});
     ++index_;
 }
 
 void Entry::insertRow(const Row& items) {
-    anchor_ = -1;
+    removeSelection();
     Row& r = row();
     r.insert(r.begin() + index_, items.begin(), items.end());
     index_ += static_cast<int>(items.size());
 }
 
 void Entry::insertTemplate(Template kind, Closing closing) {
-    anchor_ = -1;
+    Row selection = removeSelection();
+    if (kind == Template::Power && !selection.empty()) {  // the base, before the power
+        if (selection.size() > 1) {
+            selection.insert(selection.begin(), Item{Template::Text, QStringLiteral("("), {}});
+            selection.push_back(Item{Template::Text, QStringLiteral(")"), {}});
+        }
+        insertRow(selection);
+        selection.clear();
+    }
+    Item made{kind, {}, std::vector<Row>(static_cast<std::size_t>(boxCount(kind))), closing};
+    int box = 0;  // where the cursor goes; -1: after the template, which is done
+    if (!selection.empty()) {
+        switch (kind) {
+        case Template::Fraction:  // the numerator; on to the denominator
+            made.boxes[0] = selection;
+            box = 1;
+            break;
+        case Template::Root:  // the radicand or the argument; the index or the base is still to type
+        case Template::LogBase: made.boxes[1] = selection; break;
+        default:
+            made.boxes[0] = selection;
+            made.closing = Closing::Key;
+            box = -1;
+        }
+    }
     Row& r = row();
-    r.insert(r.begin() + index_, Item{kind, {}, std::vector<Row>(static_cast<std::size_t>(boxCount(kind))), closing});
-    path_.emplace_back(index_, 0);
+    r.insert(r.begin() + index_, made);
+    if (box < 0) {
+        ++index_;
+        return;
+    }
+    path_.emplace_back(index_, box);
     index_ = 0;
 }
 
+Row Entry::removeSelection() {
+    if (!hasSelection()) {
+        anchor_ = -1;
+        return {};
+    }
+    const Row taken = selected();
+    Row& r = row();
+    const int from = qMin(anchor_, index_);
+    r.erase(r.begin() + from, r.begin() + qMax(anchor_, index_));
+    index_ = from;
+    anchor_ = -1;
+    return taken;
+}
+
 void Entry::backspace() {
+    if (hasSelection()) {
+        removeSelection();
+        return;
+    }
     anchor_ = -1;
     if (index_ > 0) {
         Row& r = row();
@@ -221,6 +275,10 @@ void Entry::end() {
 }
 
 void Entry::deleteForward() {
+    if (hasSelection()) {
+        removeSelection();
+        return;
+    }
     anchor_ = -1;
     Row& r = row();
     if (index_ < static_cast<int>(r.size())) r.erase(r.begin() + index_);

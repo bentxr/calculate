@@ -38,9 +38,13 @@ bool operator!=(const Position& a, const Position& b);
 // them, possibly inside a template's box. A key's text is one item, so DEL removes it whole.
 class Entry {
 public:
-    void insert(const QString& piece);   // at the cursor, which moves past it
-    void insertTemplate(Template kind, Closing closing = Closing::Key);  // the cursor goes into its first box
-    void insertRow(const Row& items);  // at the cursor, which moves past them
+    // At the cursor, which moves past it. It replaces a selection, or wraps it when it opens a call
+    // ("sin(", "(").
+    void insert(const QString& piece);
+    // The cursor goes into its first box. A selection goes into the box it belongs in (a fraction's
+    // numerator, a root's radicand, a power's base) and the cursor to the box still to type, if any.
+    void insertTemplate(Template kind, Closing closing = Closing::Key);
+    void insertRow(const Row& items);  // at the cursor (replacing a selection), which moves past them
     // Removes the item before the cursor. At the start of a template's first box it removes the
     // template and keeps what was typed in it; at the start of a later box it goes back a box.
     void backspace();
@@ -94,6 +98,7 @@ private:
     Row& row() { return rowAt(path_.size()); }
     Item& containerItem();
     void stepOut();  // to just after the container, which is finished
+    Row removeSelection();  // the selected items, taken out; the cursor at their place
     bool moveInFraction(int box);
 
     Row root_;

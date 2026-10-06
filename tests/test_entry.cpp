@@ -292,3 +292,50 @@ TEST(Entry, ShiftRightAndEndMirrorLeftAndHome) {
     f.extendEnd();
     EXPECT_EQ(f.selectedText(), "1+((2)/())");
 }
+
+TEST(Entry, TypingReplacesTheSelection) {
+    Entry e;
+    type(e, {"1", "+", "2"});
+    e.selectAll();
+    e.insert("7");
+    EXPECT_EQ(e.text(), "7");
+    e.selectAll();
+    e.backspace();
+    EXPECT_TRUE(e.isEmpty());
+    type(e, {"4", "5"});
+    e.extendLeft();
+    e.deleteForward();
+    EXPECT_EQ(e.text(), "4");
+}
+
+TEST(Entry, FunctionsAndTemplatesWrapTheSelection) {
+    const auto selected = [] {
+        Entry e;
+        type(e, {"1", "+", "2"});
+        e.selectAll();
+        return e;
+    };
+    Entry e = selected();
+    e.insert("sin(");
+    EXPECT_EQ(e.text(), "sin(1+2)");
+    EXPECT_FALSE(e.hasSelection());
+    EXPECT_EQ(e.cursor(), 5);  // after the closing parenthesis
+    e.selectAll();
+    e.insert("(");
+    EXPECT_EQ(e.text(), "(sin(1+2))");
+    Entry f = selected();
+    f.insertTemplate(Template::Sqrt);
+    EXPECT_EQ(f.text(), "√(1+2)");
+    EXPECT_EQ(f.path(), Path{});  // after the root
+    Entry g = selected();
+    g.insertTemplate(Template::Fraction);
+    EXPECT_EQ(g.text(), "((1+2)/())");
+    EXPECT_EQ(g.path(), (Path{{0, 1}}));  // on to the denominator
+    Entry h = selected();
+    h.insertTemplate(Template::Power);
+    EXPECT_EQ(h.text(), "(1+2)^()");
+    Entry r = selected();
+    r.insertTemplate(Template::Root);
+    EXPECT_EQ(r.text(), "root(1+2, )");
+    EXPECT_EQ(r.path(), (Path{{0, 0}}));  // the index is still to type
+}
