@@ -92,6 +92,7 @@ signals:
     void inputChanged();  // edited by the user, undo and redo included (not by setInput or setEntry)
     void historyRequested(int step);  // +1 for an older entry (▲, Page Up), −1 for a newer one (▼, Page Down)
     void copyRequested();
+    void copyMenuRequested();  // Ctrl+Shift+C: every form of the result
     void pastedFirstLine(int lines);  // of `lines` non-empty ones
     void pasteRefused();
 

@@ -563,6 +563,10 @@ void Lcd::keyPressEvent(QKeyEvent* event) {
         cut();
         return;
     }
+    if (event->key() == Qt::Key_C && modifiers == (Qt::ControlModifier | Qt::ShiftModifier)) {
+        emit copyMenuRequested();
+        return;
+    }
     if (event->matches(QKeySequence::Copy)) {
         copy();
         return;

@@ -14,6 +14,7 @@
 
 #include <QActionGroup>
 #include <QApplication>
+#include <QClipboard>
 #include <QComboBox>
 #include <QEvent>
 #include <QHelpEvent>
@@ -156,6 +157,33 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     detailsButton_->setAutoRaise(true);
     detailsButton_->setEnabled(false);
     lcd_->addToBar(detailsButton_);
+    // The result in the form wanted: as shown, its trusted digits, with its bound, its details, or the expression.
+    copyButton_ = new QToolButton(lcd_);
+    copyButton_->setObjectName("copyButton");
+    copyButton_->setAutoRaise(true);
+    lcd_->addToBar(copyButton_);
+    copyMenu_ = new QMenu(this);
+    copyMenu_->setObjectName("copyMenu");
+    copyMenu_->setToolTipsVisible(true);  // why a form is unavailable
+    const std::pair<const char*, view::CopyForm> forms[] = {{"copy:value", view::CopyForm::Value},
+                                                            {"copy:trusted", view::CopyForm::Trusted},
+                                                            {"copy:bound", view::CopyForm::ValueAndBound},
+                                                            {"copy:details", view::CopyForm::Details}};
+    for (const auto& [name, form] : forms) {
+        QAction* action = copyMenu_->addAction(QString());  // the texts: see retranslate
+        action->setObjectName(QString::fromLatin1(name));
+        connect(action, &QAction::triggered, this, [this, form = form] {
+            const Result& r = shownResult();
+            QGuiApplication::clipboard()->setText(view::copyText(r, form, types_[static_cast<std::size_t>(r.type)]));
+        });
+    }
+    QAction* copyExpression = copyMenu_->addAction(QString());
+    copyExpression->setObjectName("copy:expression");
+    // As text that reads back into the same templates.
+    connect(copyExpression, &QAction::triggered, this, [this] { QGuiApplication::clipboard()->setText(lcd_->input()); });
+    lcd_->editMenu()->addSeparator();
+    lcd_->editMenu()->addActions(copyMenu_->actions());
+    enableCopy(nullptr);
     // Every edit action within reach of a button: undo, redo, cut, copy, paste, select all.
     editButton_ = new QToolButton(lcd_);
     editButton_->setObjectName("editButton");
@@ -266,6 +294,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(proceed_, &QPushButton::clicked, this, [this] { request(lastExpression_, true); });
     connect(detailsButton_, &QToolButton::clicked, this, [this] { card_->popUp(lcd_); });
     connect(keyboardButton_, &QToolButton::toggled, lcd_, &Lcd::setSystemKeyboard);
+    connect(copyButton_, &QToolButton::clicked, this, &MainWindow::popUpCopyMenu);
+    connect(lcd_, &Lcd::copyMenuRequested, this, &MainWindow::popUpCopyMenu);
+    connect(lcd_, &Lcd::copyRequested, findChild<QAction*>("copy:value"), &QAction::trigger);
     connect(editButton_, &QToolButton::clicked, this, [this] {
         QMenu* menu = lcd_->editMenu();
         menu->popup(placed(menu->sizeHint(), globalGeometry(editButton_), popupBounds(editButton_)).topLeft());
@@ -472,6 +503,13 @@ void MainWindow::retranslate() {
     type_->retranslate();
     equals_->setText(tr("="));
     detailsButton_->setText(tr("Details"));
+    copyButton_->setText(tr("Copy"));
+    copyButton_->setAccessibleName(copyButton_->text());
+    findChild<QAction*>("copy:value")->setText(tr("Value"));
+    findChild<QAction*>("copy:trusted")->setText(tr("Trusted digits"));
+    findChild<QAction*>("copy:bound")->setText(tr("Value ± bound"));
+    findChild<QAction*>("copy:details")->setText(tr("Details as text"));
+    findChild<QAction*>("copy:expression")->setText(tr("Expression"));
     editButton_->setText(tr("Edit"));
     editButton_->setAccessibleName(editButton_->text());
     keyboardButton_->setText(tr("Keyboard"));
@@ -700,8 +738,23 @@ void MainWindow::showNoPreview(const QString& notice) {
     lcd_->setProvisional(false);
     lcd_->clearResult();
     detailsButton_->setEnabled(false);
+    enableCopy(nullptr);
     message_->setText(notice);
     message_->setForegroundRole(QPalette::PlaceholderText);
+}
+
+void MainWindow::enableCopy(const Result* result) {
+    copyButton_->setEnabled(result);
+    for (QAction* action : copyMenu_->actions()) action->setEnabled(result);
+    QAction* trusted = findChild<QAction*>("copy:trusted");
+    const bool none = result && view::copyText(*result, view::CopyForm::Trusted, types_[static_cast<std::size_t>(result->type)]).isEmpty();
+    trusted->setEnabled(result && !none);
+    trusted->setToolTip(none ? tr("No digit is trusted") : QString());
+}
+
+void MainWindow::popUpCopyMenu() {
+    if (!copyButton_->isEnabled()) return;
+    copyMenu_->popup(placed(copyMenu_->sizeHint(), globalGeometry(copyButton_), popupBounds(copyButton_)).topLeft());
 }
 
 // Shows the result being typed, or else the last one, on the screen and in the card, in the current language.
@@ -713,6 +766,7 @@ void MainWindow::present() {
     proceed_->setVisible(!previewShown_ && shown.error && canProceed(shown.error->code));  // it acts on the last request
     card_->setRows(view::details(shown, types_[static_cast<std::size_t>(shown.type)]));
     detailsButton_->setEnabled(!shown.error);
+    enableCopy(shown.error ? nullptr : &shown);
     message_->setText(shown.error && !unfinished ? view::errorText(*shown.error, expression) : QString());
     message_->setForegroundRole(previewShown_ ? QPalette::PlaceholderText : QPalette::WindowText);
     lcd_->setProvisional(previewShown_);

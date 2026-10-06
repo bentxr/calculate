@@ -1041,3 +1041,44 @@ TEST(MainWindow, DetailsGoesOffWhenThePreviewGoes) {
     ASSERT_TRUE(QTest::qWaitFor([&] { return message(window)->text().startsWith("Too long"); }, 10000));
     EXPECT_FALSE(details->isEnabled());
 }
+
+TEST(MainWindow, TheCopyMenuOffersEveryForm) {
+    MainWindow window;
+    auto* button = child<QToolButton>(window, "copyButton");
+    EXPECT_FALSE(button->isEnabled());  // nothing to copy yet
+    EXPECT_FALSE(button->accessibleName().isEmpty());
+    run(window, "0.1 + 0.2");
+    EXPECT_TRUE(button->isEnabled());
+    child<QAction>(window, "copy:bound")->trigger();
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "0.3000000000000000444089209850062616169452667236328125 ± 4.4e-17");
+    child<QAction>(window, "copy:expression")->trigger();
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "0.1 + 0.2");
+    child<QAction>(window, "copy:trusted")->trigger();
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "0.300000000000000");
+    QTest::keyClick(lcd(window), Qt::Key_C, Qt::ControlModifier);  // nothing selected: the value
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "0.3000000000000000444089209850062616169452667236328125");
+    EXPECT_TRUE(lcd(window)->editMenu()->actions().contains(child<QAction>(window, "copy:value")));
+}
+
+TEST(MainWindow, WithNoTrustedDigitTheTrustedFormIsOff) {
+    MainWindow window;
+    run(window, "1e-17+1-1");  // 0, with a bound of 1e-17: no digit trusted
+    EXPECT_TRUE(child<QAction>(window, "copy:value")->isEnabled());
+    EXPECT_FALSE(child<QAction>(window, "copy:trusted")->isEnabled());
+    EXPECT_EQ(child<QAction>(window, "copy:trusted")->toolTip(), "No digit is trusted");
+    run(window, "1+1");
+    EXPECT_TRUE(child<QAction>(window, "copy:trusted")->isEnabled());
+}
+
+TEST(MainWindow, ControlShiftCOpensTheCopyMenu) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    auto* menu = child<QMenu>(window, "copyMenu");
+    QTest::keyClick(lcd(window), Qt::Key_C, Qt::ControlModifier | Qt::ShiftModifier);
+    EXPECT_FALSE(menu->isVisible());  // nothing to copy yet
+    run(window, "1+1");
+    QTest::keyClick(lcd(window), Qt::Key_C, Qt::ControlModifier | Qt::ShiftModifier);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return menu->isVisible(); }, 2000));
+    menu->hide();
+}

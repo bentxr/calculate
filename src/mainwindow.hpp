@@ -64,6 +64,9 @@ private:
     void showPreview(int generation, const QString& expression, const calculate_core::Result& result);
     void dropPreviews();  // previews asked for so far are skipped, or cancelled if running
     void showNoPreview(const QString& notice = {});
+    const calculate_core::Result& shownResult() const { return previewShown_ ? preview_ : last_; }
+    void enableCopy(const calculate_core::Result* result);  // nullptr: nothing to copy
+    void popUpCopyMenu();
     void apply(const Face& face);
     void replay(int index);
     bool exactType() const;
@@ -108,6 +111,8 @@ private:
     QComboBox* angle_ = nullptr;
     Lcd* lcd_ = nullptr;
     QToolButton* detailsButton_ = nullptr;
+    QToolButton* copyButton_ = nullptr;
+    QMenu* copyMenu_ = nullptr;
     QToolButton* editButton_ = nullptr;
     QToolButton* keyboardButton_ = nullptr;
     DetailsCard* card_ = nullptr;
