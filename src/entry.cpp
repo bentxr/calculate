@@ -82,18 +82,21 @@ void Entry::stepOut() {
 }
 
 void Entry::insert(const QString& piece) {
+    anchor_ = -1;
     Row& r = row();
     r.insert(r.begin() + index_, Item{Template::Text, piece, {}});
     ++index_;
 }
 
 void Entry::insertRow(const Row& items) {
+    anchor_ = -1;
     Row& r = row();
     r.insert(r.begin() + index_, items.begin(), items.end());
     index_ += static_cast<int>(items.size());
 }
 
 void Entry::insertTemplate(Template kind, Closing closing) {
+    anchor_ = -1;
     Row& r = row();
     r.insert(r.begin() + index_, Item{kind, {}, std::vector<Row>(static_cast<std::size_t>(boxCount(kind))), closing});
     path_.emplace_back(index_, 0);
@@ -101,6 +104,7 @@ void Entry::insertTemplate(Template kind, Closing closing) {
 }
 
 void Entry::backspace() {
+    anchor_ = -1;
     if (index_ > 0) {
         Row& r = row();
         r.erase(r.begin() + --index_);
@@ -129,6 +133,12 @@ void Entry::backspace() {
 
 // Into a template's last box, from one box to the previous, and out before the template.
 void Entry::left() {
+    if (hasSelection()) {  // a selection collapses to its start
+        index_ = qMin(anchor_, index_);
+        anchor_ = -1;
+        return;
+    }
+    anchor_ = -1;
     Row& r = row();
     if (index_ > 0) {
         const Item& before = r[static_cast<std::size_t>(index_ - 1)];
@@ -157,6 +167,7 @@ bool Entry::down() { return moveInFraction(1); }
 
 // To the numerator (0) or the denominator (1) of the innermost fraction around the cursor.
 bool Entry::moveInFraction(int box) {
+    anchor_ = -1;
     for (std::size_t depth = path_.size(); depth-- > 0;) {
         if (rowAt(depth)[static_cast<std::size_t>(path_[depth].first)].kind != Template::Fraction) continue;
         if (path_[depth].second != box) {
@@ -171,6 +182,12 @@ bool Entry::moveInFraction(int box) {
 
 // Into a template's first box, from one box to the next, and out after the template.
 void Entry::right() {
+    if (hasSelection()) {
+        index_ = qMax(anchor_, index_);
+        anchor_ = -1;
+        return;
+    }
+    anchor_ = -1;
     Row& r = row();
     if (index_ < static_cast<int>(r.size())) {
         if (r[static_cast<std::size_t>(index_)].kind == Template::Text) ++index_;
@@ -192,21 +209,25 @@ void Entry::right() {
 }
 
 void Entry::home() {
+    anchor_ = -1;
     path_.clear();
     index_ = 0;
 }
 
 void Entry::end() {
+    anchor_ = -1;
     path_.clear();
     index_ = static_cast<int>(root_.size());
 }
 
 void Entry::deleteForward() {
+    anchor_ = -1;
     Row& r = row();
     if (index_ < static_cast<int>(r.size())) r.erase(r.begin() + index_);
 }
 
 void Entry::clear() {
+    anchor_ = -1;
     root_.clear();
     path_.clear();
     index_ = 0;
@@ -218,6 +239,7 @@ void Entry::setRoot(Row root) {
 }
 
 void Entry::replaceInRow(int from, int to, const Row& items) {
+    anchor_ = -1;
     Row& r = row();
     r.erase(r.begin() + from, r.begin() + to);
     r.insert(r.begin() + from, items.begin(), items.end());
@@ -225,12 +247,87 @@ void Entry::replaceInRow(int from, int to, const Row& items) {
 }
 
 void Entry::setPosition(const Position& p) {
+    anchor_ = -1;
     path_ = p.path;
     index_ = qBound(0, p.index, static_cast<int>(row().size()));
 }
 
 bool Entry::operator==(const Entry& other) const {
-    return root_ == other.root_ && path_ == other.path_ && index_ == other.index_;
+    return root_ == other.root_ && path_ == other.path_ && index_ == other.index_ && anchor_ == other.anchor_;
+}
+
+Row Entry::selected() const {
+    if (!hasSelection()) return {};
+    const Row& r = currentRow();
+    return Row(r.begin() + qMin(anchor_, index_), r.begin() + qMax(anchor_, index_));
+}
+
+QString Entry::selectedText() const { return serialize(selected()); }
+
+void Entry::extendLeft() {
+    if (anchor_ < 0) anchor_ = index_;
+    if (index_ > 0) {
+        --index_;
+    } else if (!path_.empty()) {  // past the box's edge: the whole template
+        const int item = path_.back().first;
+        path_.pop_back();
+        anchor_ = item + 1;
+        index_ = item;
+    }
+}
+
+void Entry::extendRight() {
+    if (anchor_ < 0) anchor_ = index_;
+    if (index_ < static_cast<int>(row().size())) {
+        ++index_;
+    } else if (!path_.empty()) {
+        const int item = path_.back().first;
+        path_.pop_back();
+        anchor_ = item;
+        index_ = item + 1;
+    }
+}
+
+void Entry::extendHome() {
+    if (anchor_ < 0) anchor_ = index_;
+    if (!path_.empty()) {
+        anchor_ = path_[0].first + 1;
+        path_.clear();
+    }
+    index_ = 0;
+}
+
+void Entry::extendEnd() {
+    if (anchor_ < 0) anchor_ = index_;
+    if (!path_.empty()) {
+        anchor_ = path_[0].first;
+        path_.clear();
+    }
+    index_ = static_cast<int>(root_.size());
+}
+
+void Entry::selectAll() {
+    path_.clear();
+    anchor_ = 0;
+    index_ = static_cast<int>(root_.size());
+}
+
+void Entry::select(const Position& from, const Position& to) {
+    if (from == to) {
+        setPosition(to);
+        return;
+    }
+    std::size_t k = 0;  // the steps both paths share: the selection lives in that row
+    while (k < from.path.size() && k < to.path.size() && from.path[k] == to.path[k]) ++k;
+    // Each end, as the items it covers in that row: a place deeper down covers its whole template.
+    const auto first = [k](const Position& p) { return p.path.size() > k ? p.path[k].first : p.index; };
+    const auto last = [k](const Position& p) { return p.path.size() > k ? p.path[k].first + 1 : p.index; };
+    path_.assign(from.path.begin(), from.path.begin() + static_cast<std::ptrdiff_t>(k));
+    const int low = qMin(first(from), first(to));
+    const int high = qMax(last(from), last(to));
+    const bool backwards = first(to) < first(from) || (first(to) == first(from) && last(to) < last(from));
+    index_ = backwards ? low : high;
+    anchor_ = backwards ? high : low;
 }
 
 QString Entry::text() const { return serialize(root_); }

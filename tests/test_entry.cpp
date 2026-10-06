@@ -216,3 +216,79 @@ TEST(Entry, EntriesCompareByContentAndCursor) {
     c.setRoot({Item{Template::Text, "1", {}}});
     EXPECT_TRUE(a == c);  // setRoot puts the cursor at the end
 }
+
+TEST(Entry, ShiftArrowsSelectWholeItems) {
+    Entry e;
+    type(e, {"1", "+", "2"});
+    EXPECT_FALSE(e.hasSelection());
+    e.extendLeft();
+    e.extendLeft();
+    EXPECT_TRUE(e.hasSelection());
+    EXPECT_EQ(e.selectedText(), "+2");
+    e.left();  // a plain move ends the selection, at its start
+    EXPECT_FALSE(e.hasSelection());
+    EXPECT_EQ(e.cursor(), 1);
+}
+
+TEST(Entry, SelectingPastABoxTakesTheWholeTemplate) {
+    Entry e;
+    type(e, {"2", "+"});
+    e.insertTemplate(Template::Sqrt);
+    type(e, {"9"});
+    e.extendLeft();  // the 9
+    EXPECT_EQ(e.selectedText(), "9");
+    e.extendLeft();  // past the box: the whole √
+    EXPECT_EQ(e.path(), Path{});
+    EXPECT_EQ(e.selectedText(), "√(9)");
+    e.extendLeft();
+    EXPECT_EQ(e.selectedText(), "+√(9)");
+    e.selectAll();
+    EXPECT_EQ(e.selectedText(), "2+√(9)");
+}
+
+TEST(Entry, ShiftHomeAndEndSelectToTheEdgesOfTheInput) {
+    Entry e = fraction({"1"}, {"3"});
+    e.extendHome();
+    EXPECT_EQ(e.path(), Path{});
+    EXPECT_EQ(e.selectedText(), "((1)/(3))");
+    EXPECT_EQ(e.cursor(), 0);
+}
+
+TEST(Entry, ASelectionBetweenTwoBoxesCoversTheirTemplate) {
+    Entry e = fraction({"1"}, {"3"});
+    e.select(Position{{{0, 0}}, 0}, Position{{{0, 1}}, 1});  // from the numerator's start to the denominator's end
+    EXPECT_EQ(e.path(), Path{});
+    EXPECT_EQ(e.selectedText(), "((1)/(3))");
+    Entry f;
+    type(f, {"1", "2", "3"});
+    f.select(Position{{}, 3}, Position{{}, 1});  // backwards: the cursor goes where the drag ended
+    EXPECT_EQ(f.selectedText(), "23");
+    EXPECT_EQ(f.cursor(), 1);
+    f.select(Position{{}, 2}, Position{{}, 2});
+    EXPECT_FALSE(f.hasSelection());
+}
+
+TEST(Entry, ShiftRightAndEndMirrorLeftAndHome) {
+    Entry e;
+    type(e, {"2", "+"});
+    e.insertTemplate(Template::Sqrt);
+    type(e, {"9"});
+    e.left();         // the start of the radicand
+    e.extendRight();  // the 9
+    EXPECT_EQ(e.selectedText(), "9");
+    e.extendRight();  // past the box: the whole √
+    EXPECT_EQ(e.path(), Path{});
+    EXPECT_EQ(e.selectedText(), "√(9)");
+    EXPECT_EQ(e.cursor(), 3);
+    Entry f;
+    type(f, {"1", "+"});
+    f.insertTemplate(Template::Fraction);
+    type(f, {"2"});
+    f.extendEnd();  // from inside the numerator: the fraction and everything after it
+    EXPECT_EQ(f.path(), Path{});
+    EXPECT_EQ(f.selectedText(), "((2)/())");
+    EXPECT_EQ(f.cursor(), 3);
+    f.home();
+    f.extendEnd();
+    EXPECT_EQ(f.selectedText(), "1+((2)/())");
+}

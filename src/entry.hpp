@@ -61,6 +61,21 @@ public:
     Position position() const { return {path_, index_}; }
     void setPosition(const Position& p);  // the index is kept inside its row
 
+    // The selection: whole items of the cursor's row, between the anchor and the cursor. Moving it past
+    // a box's edge lifts it to the whole template. Any other movement or edit ends it.
+    bool hasSelection() const { return anchor_ >= 0 && anchor_ != index_; }
+    int anchor() const { return anchor_; }  // -1: none
+    Row selected() const;
+    QString selectedText() const;
+    void extendLeft();
+    void extendRight();
+    void extendHome();  // to the start of the whole input
+    void extendEnd();
+    void selectAll();
+    // From one place to another, in any rows: the selection is the smallest run of whole items in one row
+    // that holds both; the cursor goes to the `to` side.
+    void select(const Position& from, const Position& to);
+
     bool isEmpty() const { return root_.empty(); }
     QString text() const;        // the expression for the engine
     int cursor() const { return index_; }  // the place in the cursor's row
@@ -84,4 +99,5 @@ private:
     Row root_;
     std::vector<std::pair<int, int>> path_;
     int index_ = 0;
+    int anchor_ = -1;  // the selection's other end, in the cursor's row
 };
