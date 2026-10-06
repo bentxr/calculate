@@ -30,6 +30,7 @@ qt_add_library(calculate-ui STATIC
     src/popupplacement.cpp
     src/presenter.cpp
     src/settings.cpp
+    src/settingsfile.cpp
     src/typechooser.cpp
     src/typeset.cpp
     src/typing.cpp
