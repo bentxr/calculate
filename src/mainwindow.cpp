@@ -619,6 +619,7 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
     hasResult_ = true;
     present();
     if (result.error) return;
+    if (lcd_->input().trimmed() == expression) lcd_->setFresh(true);  // not when another input is being typed
     if (history_->count() == 0 || history_->item(0)->data(Qt::UserRole).toString() != expression) {
         // "expression = value", the value cut short: the list only points back to the calculation.
         QString value = lcd_->outputText();

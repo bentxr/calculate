@@ -861,3 +861,24 @@ TEST(MainWindow, TheEditButtonReachesEveryEditAction) {
     child<QAction>(window, "edit:redo")->trigger();
     EXPECT_EQ(lcd(window)->input(), "√(9)");
 }
+
+TEST(MainWindow, AfterEqualsADigitStartsAfreshAndAnOperatorGoesOnFromAns) {
+    MainWindow window;
+    run(window, "2+3");
+    QTest::keyClicks(lcd(window), "7");
+    EXPECT_EQ(lcd(window)->input(), "7");
+    run(window, "2+3");
+    QTest::keyClicks(lcd(window), "*2");
+    EXPECT_EQ(lcd(window)->input(), "Ans×2");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "10");
+    run(window, "2+3");
+    QTest::keyClick(lcd(window), Qt::Key_Left);  // an arrow edits the expression instead
+    QTest::keyClicks(lcd(window), "0");
+    EXPECT_EQ(lcd(window)->input(), "2+03");
+    run(window, "2+3");
+    QTest::mouseClick(child<QPushButton>(window, "key:square"), Qt::LeftButton);  // x² goes on from Ans too
+    EXPECT_EQ(lcd(window)->input(), "Ans^(2)");
+}

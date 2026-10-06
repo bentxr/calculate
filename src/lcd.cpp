@@ -32,6 +32,14 @@ QColor mix(const QColor& a, const QColor& b, qreal t) {
     return QColor(channel(a.red(), b.red()), channel(a.green(), b.green()), channel(a.blue(), b.blue()));
 }
 
+// The pieces and characters that need something on their left: after a result, that is Ans.
+bool needsLeftOperand(const QString& piece) {
+    static const QStringList operators{"+", "−", "×", "÷", "!", "%"};
+    return operators.contains(piece);
+}
+
+bool needsLeftOperand(QChar typed) { return QStringLiteral("+-*/^!%²³×÷−").contains(typed); }
+
 QFont scaled(const QFont& base, qreal factor) {
     QFont f(Lcd::fontFamily());
     f.setPixelSize(qRound(QFontInfo(base).pixelSize() * factor));
@@ -92,11 +100,15 @@ void Lcd::retranslate() {
 }
 
 void Lcd::insert(const QString& piece) {
-    edit([&] { entry_.insert(piece); });
+    edit([&] {
+        startEditing(needsLeftOperand(piece));
+        entry_.insert(piece);
+    });
 }
 
 void Lcd::insertTemplate(Template kind, const QString& fill) {
     edit([&] {
+        startEditing(kind == Template::Power);
         entry_.insertTemplate(kind);
         if (!fill.isEmpty()) {
             for (const QChar c : fill) entry_.insert(c);
@@ -106,32 +118,38 @@ void Lcd::insertTemplate(Template kind, const QString& fill) {
 }
 
 bool Lcd::up() {
+    fresh_ = false;
     const bool moved = entry_.up();
     update();
     return moved;
 }
 
 bool Lcd::down() {
+    fresh_ = false;
     const bool moved = entry_.down();
     update();
     return moved;
 }
 
 void Lcd::backspace() {
+    fresh_ = false;
     edit([this] { entry_.backspace(); });
 }
 
 void Lcd::left() {
+    fresh_ = false;
     entry_.left();
     update();
 }
 
 void Lcd::right() {
+    fresh_ = false;
     entry_.right();
     update();
 }
 
 void Lcd::setInput(const QString& text) {
+    fresh_ = false;
     edit([&] { entry_.setRoot(typing::read(text)); });
 }
 
@@ -151,6 +169,7 @@ void Lcd::setSystemKeyboard(bool on) {
 }
 
 void Lcd::selectAll() {
+    fresh_ = false;
     entry_.selectAll();
     update();
 }
@@ -188,7 +207,10 @@ void Lcd::pasteText(const QString& text) {
         if (!line.trimmed().isEmpty()) lines << line;
     }
     if (lines.isEmpty()) return;
-    edit([&] { typing::paste(entry_, lines.first()); });
+    edit([&] {
+        startEditing(false);  // a pasted expression is a new one
+        typing::paste(entry_, lines.first());
+    });
     if (lines.size() > 1) emit pastedFirstLine(static_cast<int>(lines.size()));
 }
 
@@ -201,6 +223,7 @@ void Lcd::requestPaste() {
 }
 
 void Lcd::clear() {
+    fresh_ = false;
     shown_ = Shown::Nothing;
     edit([this] { entry_.clear(); });
     changed();  // the result went even when the input was already empty
@@ -295,6 +318,7 @@ QPointF Lcd::inputOrigin(const typeset::Box& input, const QRectF& caret) const {
 }
 
 void Lcd::setEntry(const Entry& entry) {
+    fresh_ = false;
     edit([&] { entry_ = entry; });
 }
 
@@ -306,11 +330,20 @@ void Lcd::edit(const std::function<void()>& change) {
     changed();
 }
 
+void Lcd::startEditing(bool needsLeftOperand) {
+    if (!fresh_) return;
+    fresh_ = false;
+    if (needsLeftOperand) entry_.setRoot({Item{Template::Text, QStringLiteral("Ans"), {}}});
+    else entry_.clear();
+}
+
 void Lcd::undo() {
+    fresh_ = false;
     if (undo_.undo(entry_)) changed();
 }
 
 void Lcd::redo() {
+    fresh_ = false;
     if (undo_.redo(entry_)) changed();
 }
 
@@ -392,6 +425,7 @@ void Lcd::keyPressEvent(QKeyEvent* event) {
         return;
     case Qt::Key_Backspace: backspace(); return;
     case Qt::Key_Delete:
+        fresh_ = false;
         edit([this] { entry_.deleteForward(); });
         return;
     case Qt::Key_Escape: clear(); return;
@@ -399,6 +433,7 @@ void Lcd::keyPressEvent(QKeyEvent* event) {
     case Qt::Key_Right:
     case Qt::Key_Home:
     case Qt::Key_End: {
+        fresh_ = false;
         finishName();
         const bool select = event->modifiers() & Qt::ShiftModifier;  // Shift with a movement selects
         const int key = event->key();
@@ -471,6 +506,7 @@ void Lcd::keyPressEvent(QKeyEvent* event) {
     }
     bool typed = false;
     edit([&] {
+        if (!text.isEmpty() && text[0].isPrint()) startEditing(needsLeftOperand(text[0]));
         for (const QChar c : text) typed = typing::typeCharacter(entry_, c) || typed;
     });
     if (!typed) event->ignore();
@@ -483,6 +519,7 @@ void Lcd::mousePressEvent(QMouseEvent* event) {
         QWidget::mousePressEvent(event);
         return;
     }
+    fresh_ = false;
     const Position at = positionAt(event->position());
     if (event->modifiers() & Qt::ShiftModifier) {
         dragFrom_ = entry_.hasSelection() ? Position{entry_.path(), entry_.anchor()} : entry_.position();
@@ -512,8 +549,10 @@ void Lcd::mouseReleaseEvent(QMouseEvent* event) {
 // An input method's text (a dead key's ^, a phone's keyboard) is typed like the keyboard's; the text it is
 // still composing is not shown.
 void Lcd::inputMethodEvent(QInputMethodEvent* event) {
+    const QString text = event->commitString();
     edit([&] {
-        for (const QChar c : event->commitString()) typing::typeCharacter(entry_, c);
+        if (!text.isEmpty()) startEditing(needsLeftOperand(text[0]));
+        for (const QChar c : text) typing::typeCharacter(entry_, c);
     });
     event->accept();
 }

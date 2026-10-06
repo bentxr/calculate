@@ -44,6 +44,10 @@ public:
     // Pastes the first non-empty line of `text`, read into templates.
     void pasteText(const QString& text);
     QMenu* editMenu() const { return editMenu_; }  // undo, redo, cut, copy, paste, select all
+    // Just after a result: the next digit, name, ( or template starts a new expression, and the next
+    // operator goes on from Ans. Moving the cursor or deleting edits the expression instead.
+    void setFresh(bool fresh) { fresh_ = fresh; }
+    bool fresh() const { return fresh_; }
     void finishName();  // ends a name typed just before the cursor (pi becomes π)
     // The phone's on-screen keyboard (an input method): off in the browser, where it would cover the
     // keypad, until asked for. A physical keyboard types either way.
@@ -109,6 +113,7 @@ private:
     int barHeight() const;
     void changed();  // lays the result out again and repaints
     void buildEditMenu();
+    void startEditing(bool needsLeftOperand);  // the first edit after a result
     void retranslate();
     // Every change of the input goes through here, so that it can be undone (when it changed anything).
     void edit(const std::function<void()>& change);
@@ -116,6 +121,7 @@ private:
     Entry entry_;
     UndoStack undo_;
     QMenu* editMenu_ = nullptr;
+    bool fresh_ = false;
     Shown shown_ = Shown::Nothing;
     view::ValueParts value_;
     view::FractionParts exact_;
