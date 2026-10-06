@@ -189,3 +189,21 @@ TEST(Lcd, ATapPlacesTheCursor) {
     QTest::touchEvent(&lcd, finger).release(0, one, &lcd);
     EXPECT_TRUE(QTest::qWaitFor([&] { return lcd.entry().cursor() == 1; }, 1000));
 }
+
+TEST(Lcd, UndoAndRedo) {
+    Lcd lcd;
+    QTest::keyClicks(&lcd, "12");
+    QTest::keyClick(&lcd, Qt::Key_Escape);  // AC can be undone too
+    EXPECT_EQ(lcd.input(), "");
+    QTest::keyClick(&lcd, Qt::Key_Z, Qt::ControlModifier);
+    EXPECT_EQ(lcd.input(), "12");
+    QTest::keyClick(&lcd, Qt::Key_Z, Qt::ControlModifier);
+    EXPECT_EQ(lcd.input(), "1");
+    QTest::keyClick(&lcd, Qt::Key_Z, Qt::ControlModifier | Qt::ShiftModifier);
+    EXPECT_EQ(lcd.input(), "12");
+    QTest::keyClick(&lcd, Qt::Key_Y, Qt::ControlModifier);
+    EXPECT_EQ(lcd.input(), "");  // the AC again
+    lcd.setInput("7");  // a history replay is an edit too
+    lcd.undo();
+    EXPECT_EQ(lcd.input(), "");
+}

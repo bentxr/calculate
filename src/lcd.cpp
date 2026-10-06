@@ -52,17 +52,17 @@ Lcd::Lcd(QWidget* parent) : QWidget(parent) {
 }
 
 void Lcd::insert(const QString& piece) {
-    entry_.insert(piece);
-    changed();
+    edit([&] { entry_.insert(piece); });
 }
 
 void Lcd::insertTemplate(Template kind, const QString& fill) {
-    entry_.insertTemplate(kind);
-    if (!fill.isEmpty()) {
-        for (const QChar c : fill) entry_.insert(c);
-        entry_.right();
-    }
-    changed();
+    edit([&] {
+        entry_.insertTemplate(kind);
+        if (!fill.isEmpty()) {
+            for (const QChar c : fill) entry_.insert(c);
+            entry_.right();
+        }
+    });
 }
 
 bool Lcd::up() {
@@ -78,8 +78,7 @@ bool Lcd::down() {
 }
 
 void Lcd::backspace() {
-    entry_.backspace();
-    changed();
+    edit([this] { entry_.backspace(); });
 }
 
 void Lcd::left() {
@@ -93,8 +92,7 @@ void Lcd::right() {
 }
 
 void Lcd::setInput(const QString& text) {
-    entry_.setRoot(typing::read(text));
-    changed();
+    edit([&] { entry_.setRoot(typing::read(text)); });
 }
 
 void Lcd::finishName() {
@@ -133,9 +131,9 @@ Position Lcd::positionAt(QPointF point) const {
 }
 
 void Lcd::clear() {
-    entry_.clear();
     shown_ = Shown::Nothing;
-    changed();
+    edit([this] { entry_.clear(); });
+    changed();  // the result went even when the input was already empty
 }
 
 void Lcd::showValue(const view::ValueParts& parts) {
@@ -227,8 +225,23 @@ QPointF Lcd::inputOrigin(const typeset::Box& input, const QRectF& caret) const {
 }
 
 void Lcd::setEntry(const Entry& entry) {
-    entry_ = entry;
+    edit([&] { entry_ = entry; });
+}
+
+void Lcd::edit(const std::function<void()>& change) {
+    const Entry before = entry_;
+    change();
+    if (entry_ == before) return;
+    undo_.record(before);
     changed();
+}
+
+void Lcd::undo() {
+    if (undo_.undo(entry_)) changed();
+}
+
+void Lcd::redo() {
+    if (undo_.redo(entry_)) changed();
 }
 
 QRectF Lcd::resultArea(const typeset::Box& input) const {
@@ -309,8 +322,7 @@ void Lcd::keyPressEvent(QKeyEvent* event) {
         return;
     case Qt::Key_Backspace: backspace(); return;
     case Qt::Key_Delete:
-        entry_.deleteForward();
-        changed();
+        edit([this] { entry_.deleteForward(); });
         return;
     case Qt::Key_Escape: clear(); return;
     case Qt::Key_Left:
@@ -344,6 +356,17 @@ void Lcd::keyPressEvent(QKeyEvent* event) {
         return;
     default: break;
     }
+    // Redo is checked first and spelled out: not every platform binds both Ctrl+Y and Ctrl+Shift+Z.
+    const auto modifiers = event->modifiers() & ~Qt::KeypadModifier;
+    if (event->matches(QKeySequence::Redo) || (event->key() == Qt::Key_Y && modifiers == Qt::ControlModifier) ||
+        (event->key() == Qt::Key_Z && modifiers == (Qt::ControlModifier | Qt::ShiftModifier))) {
+        redo();
+        return;
+    }
+    if (event->matches(QKeySequence::Undo)) {
+        undo();
+        return;
+    }
     if (event->matches(QKeySequence::SelectAll)) {
         selectAll();
         return;
@@ -364,9 +387,10 @@ void Lcd::keyPressEvent(QKeyEvent* event) {
         return;
     }
     bool typed = false;
-    for (const QChar c : text) typed = typing::typeCharacter(entry_, c) || typed;
-    if (typed) changed();
-    else event->ignore();
+    edit([&] {
+        for (const QChar c : text) typed = typing::typeCharacter(entry_, c) || typed;
+    });
+    if (!typed) event->ignore();
 }
 
 // A click places the cursor at the nearest place, Shift+click selects up to it, a drag selects. (A tap
@@ -405,9 +429,9 @@ void Lcd::mouseReleaseEvent(QMouseEvent* event) {
 // An input method's text (a dead key's ^, a phone's keyboard) is typed like the keyboard's; the text it is
 // still composing is not shown.
 void Lcd::inputMethodEvent(QInputMethodEvent* event) {
-    bool typed = false;
-    for (const QChar c : event->commitString()) typed = typing::typeCharacter(entry_, c) || typed;
-    if (typed) changed();
+    edit([&] {
+        for (const QChar c : event->commitString()) typing::typeCharacter(entry_, c);
+    });
     event->accept();
 }
 

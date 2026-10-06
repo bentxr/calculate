@@ -3,8 +3,11 @@
 #include "entry.hpp"
 #include "presenter.hpp"
 #include "typeset.hpp"
+#include "undostack.hpp"
 
 #include <QWidget>
+
+#include <functional>
 
 class QHBoxLayout;
 class QScrollBar;
@@ -59,6 +62,10 @@ public:
     // Small controls along the screen's bottom edge (Details, Cancel…), on the left or the right.
     void addToBar(QWidget* widget, bool right = false);
 
+public slots:
+    void undo();
+    void redo();
+
 signals:
     void evaluateRequested();
     void historyRequested(int step);  // +1 for an older entry (▲), −1 for a newer one (▼)
@@ -88,8 +95,11 @@ private:
     QRectF resultArea(const typeset::Box& input) const;
     int barHeight() const;
     void changed();  // lays the result out again and repaints
+    // Every change of the input goes through here, so that it can be undone (when it changed anything).
+    void edit(const std::function<void()>& change);
 
     Entry entry_;
+    UndoStack undo_;
     Shown shown_ = Shown::Nothing;
     view::ValueParts value_;
     view::FractionParts exact_;
