@@ -232,8 +232,13 @@ void Lcd::cut() {
 }
 
 void Lcd::copy() {
-    if (entry_.hasSelection()) QGuiApplication::clipboard()->setText(entry_.selectedText());
-    else emit copyRequested();
+    if (!entry_.hasSelection()) {
+        emit copyRequested();
+        return;
+    }
+    // As the screen shows it, so that it reads back with the same decimal separator.
+    const QString text = entry_.selectedText();
+    QGuiApplication::clipboard()->setText(settings::decimalComma() ? view::withDecimalComma(text) : text);
 }
 
 void Lcd::pasteText(const QString& text) {

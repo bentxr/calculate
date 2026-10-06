@@ -1,6 +1,7 @@
 #include "lcd.hpp"
 
 #include "printers.hpp"
+#include "settings.hpp"
 
 #include <QAccessible>
 #include <QClipboard>
@@ -284,4 +285,17 @@ TEST(Lcd, AnEmptySpanMarksNothing) {
     EXPECT_EQ(lcd.markedText(), "1");
     lcd.insert("3");  // an edit ends the mark: its bytes were those of the input before
     EXPECT_EQ(lcd.markedText(), "");
+}
+
+TEST(Lcd, WithADecimalCommaACopiedSelectionReadsBack) {
+    settings::setDecimalComma(true);
+    Lcd lcd;
+    QTest::keyClicks(&lcd, "nCr(1,5;2)");
+    lcd.selectAll();
+    lcd.copy();
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "nCr(1,5; 2)");  // as the screen shows it
+    lcd.clear();
+    lcd.pasteText(QGuiApplication::clipboard()->text());
+    EXPECT_EQ(lcd.input(), "nCr(1.5, 2)");
+    settings::setDecimalComma(false);
 }
