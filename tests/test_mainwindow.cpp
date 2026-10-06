@@ -7,6 +7,8 @@
 #include "settings.hpp"
 #include "typechooser.hpp"
 
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QAbstractItemView>
 #include <QApplication>
 #include <QClipboard>
@@ -1254,4 +1256,41 @@ TEST(MainWindow, ANameStillBeingTypedShowsNoError) {
     QTest::keyClicks(lcd(window), "x");  // nothing starts with asx: now it is an unknown name
     EXPECT_TRUE(QTest::qWaitFor([&] { return message(window)->text() == "Unknown name “asx”"; }, 10000))
         << message(window)->text().toStdString();
+}
+
+TEST(MainWindow, SettingsExportAndImportRoundTrip) {
+    MainWindow window;
+    setting(window, "theme:dark")->trigger();
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Binary128);
+    const QByteArray file = window.exportSettings();
+    setting(window, "theme:light")->trigger();
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Double);
+    EXPECT_TRUE(window.importSettings(file).isEmpty());
+    EXPECT_TRUE(setting(window, "theme:dark")->isChecked());
+    EXPECT_EQ(child<TypeChooser>(window, "type")->currentType(), calculate_core::NumberType::Binary128);
+    EXPECT_FALSE(window.importSettings("{}").isEmpty());  // refused as a whole: nothing changes
+    EXPECT_TRUE(setting(window, "theme:dark")->isChecked());
+    setting(window, "theme:system")->trigger();
+}
+
+TEST(MainWindow, EverySettingIsInTheFile) {
+    MainWindow window;
+    const QMap<QString, QStringList> keys = window.settingKeys();
+    for (QAction* action : child<QMenu>(window, "settings")->actions()) {
+        if (!action->isCheckable()) continue;
+        const QString key = action->objectName().section(':', 0, 0);
+        EXPECT_TRUE(keys.contains(key)) << action->objectName().toStdString();
+    }
+    EXPECT_TRUE(keys.contains("type"));
+    EXPECT_TRUE(keys.contains("angle"));
+    EXPECT_NE(child<QAction>(window, "settings:export"), nullptr);
+    EXPECT_NE(child<QAction>(window, "settings:import"), nullptr);
+}
+
+TEST(MainWindow, AFreshWindowExportsNoSettings) {
+    MainWindow window;
+    EXPECT_TRUE(QJsonDocument::fromJson(window.exportSettings()).object().value("settings").toObject().isEmpty());
+    setting(window, "decimal:comma")->trigger();
+    EXPECT_EQ(QJsonDocument::fromJson(window.exportSettings()).object().value("settings").toObject().value("decimal").toString(), "comma");
+    setting(window, "decimal:language")->trigger();
 }

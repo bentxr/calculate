@@ -9,6 +9,7 @@
 #include "popupplacement.hpp"
 #include "presenter.hpp"
 #include "settings.hpp"
+#include "settingsfile.hpp"
 #include "typechooser.hpp"
 #include "typing.hpp"
 #include "worker.hpp"
@@ -18,6 +19,7 @@
 #include <QClipboard>
 #include <QComboBox>
 #include <QEvent>
+#include <QFileDialog>
 #include <QHelpEvent>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -371,6 +373,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
                        static_cast<QWidget*>(detailsButton_), static_cast<QWidget*>(editButton_), static_cast<QWidget*>(keyboardButton_),
                        static_cast<QWidget*>(proceed_), static_cast<QWidget*>(cancel_), static_cast<QWidget*>(historyToggle_)})
         w->setFocusPolicy(Qt::NoFocus);
+    defaults_ = settingValues();
     lcd_->setFocus();
 }
 
@@ -538,6 +541,75 @@ void MainWindow::buildSettings() {
     live->setCheckable(true);
     live->setChecked(settings::liveCalculation());
     connect(live, &QAction::toggled, this, [](bool on) { settings::setLiveCalculation(on); });
+    // Nothing is remembered between runs; a file keeps the settings instead. The same dialogs serve the desktop
+    // (native ones) and the browser (a download, and its file picker).
+    fileSection_ = settings_->addSection(QString());
+    QAction* exportAction = settings_->addAction(QString());
+    exportAction->setObjectName("settings:export");
+    connect(exportAction, &QAction::triggered, this,
+            [this] { QFileDialog::saveFileContent(exportSettings(), QStringLiteral("calculate-settings.json"), this); });
+    QAction* importAction = settings_->addAction(QString());
+    importAction->setObjectName("settings:import");
+    connect(importAction, &QAction::triggered, this, [this] {
+        QFileDialog::getOpenFileContent(
+            QStringLiteral("JSON (*.json)"),
+            [this](const QString& name, const QByteArray& content) {
+                if (name.isEmpty()) return;  // cancelled
+                const QStringList problems = importSettings(content);
+                if (!problems.isEmpty()) message_->setText(tr("Some settings were not imported: %1").arg(problems.join(QStringLiteral("; "))));
+            },
+            this);
+    });
+}
+
+namespace {
+
+// The file's names for the number types, in NumberType's order, and for the angle units, in the menu's.
+const QStringList typeIds{"float", "double", "longdouble", "exact", "binary128", "binary256", "binary512"};
+const QStringList angleIds{"rad", "deg", "grad"};
+
+}  // namespace
+
+QMap<QString, QStringList> MainWindow::settingKeys() const {
+    QMap<QString, QStringList> keys;
+    for (QAction* action : settings_->actions()) {
+        if (!action->isCheckable()) continue;
+        if (action->actionGroup()) keys[action->objectName().section(':', 0, 0)] << action->objectName().section(':', 1);
+        else keys[action->objectName()] = QStringList{"true", "false"};
+    }
+    keys["type"] = typeIds;
+    keys["angle"] = angleIds;
+    return keys;
+}
+
+QMap<QString, QString> MainWindow::settingValues() const {
+    QMap<QString, QString> values;
+    for (QAction* action : settings_->actions()) {
+        if (!action->isCheckable()) continue;
+        if (!action->actionGroup()) values[action->objectName()] = action->isChecked() ? "true" : "false";
+        else if (action->isChecked()) values[action->objectName().section(':', 0, 0)] = action->objectName().section(':', 1);
+    }
+    values["type"] = typeIds.value(static_cast<int>(type_->currentType()));
+    values["angle"] = angleIds.value(angle_->currentIndex());
+    return values;
+}
+
+QByteArray MainWindow::exportSettings() const { return settingsfile::write(settingValues(), defaults_); }
+
+QStringList MainWindow::importSettings(const QByteArray& file) {
+    const settingsfile::Read r = settingsfile::read(file, settingKeys());
+    for (auto it = r.values.cbegin(); it != r.values.cend(); ++it) {
+        if (it.key() == "type") {
+            type_->setCurrentType(static_cast<NumberType>(typeIds.indexOf(it.value())));
+        } else if (it.key() == "angle") {
+            angle_->setCurrentIndex(static_cast<int>(angleIds.indexOf(it.value())));
+        } else if (QAction* checkable = findChild<QAction*>(it.key())) {
+            checkable->setChecked(it.value() == "true");
+        } else {
+            findChild<QAction*>(it.key() + ":" + it.value())->trigger();
+        }
+    }
+    return r.problems;
 }
 
 // Every text of the window in the current language: run once when it is built, and again on every
@@ -590,6 +662,9 @@ void MainWindow::retranslate() {
     findChild<QAction*>("decimal:comma")->setText(tr("Comma"));
     inputSection_->setText(tr("Input"));
     findChild<QAction*>("live")->setText(tr("Calculate as you type"));
+    fileSection_->setText(tr("Settings file"));
+    findChild<QAction*>("settings:export")->setText(tr("Export settings…"));
+    findChild<QAction*>("settings:import")->setText(tr("Import settings…"));
 
     QList<Key> keys = cursorPad();
     for (const QList<Key>& row : keypad()) keys += row;

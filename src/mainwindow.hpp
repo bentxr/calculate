@@ -34,6 +34,12 @@ public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow() override;
 
+    // The settings as a file: each key with the values it can take (from the ⚙ menu, plus the type and the angle),
+    // the file of those that differ from the defaults, and reading one back. Import returns what it couldn't use.
+    QMap<QString, QStringList> settingKeys() const;
+    QByteArray exportSettings() const;
+    QStringList importSettings(const QByteArray& file);
+
 public slots:
     void evaluate();
 
@@ -55,6 +61,7 @@ private:
     QPushButton* buildKey(const Key& key, const QString& prefix);  // prefix: "key:" or "direct:"
     QWidget* buildStatistics();
     void buildSettings();
+    QMap<QString, QString> settingValues() const;
     void retranslate();
     void present();
     calculate_core::Options options() const;
@@ -111,6 +118,8 @@ private:
     QAction* themeSection_ = nullptr;
     QAction* decimalSection_ = nullptr;
     QAction* inputSection_ = nullptr;
+    QAction* fileSection_ = nullptr;
+    QMap<QString, QString> defaults_;  // settingValues() as the window started
     QPushButton* equals_ = nullptr;
     QLabel* statisticsLabel_ = nullptr;
     bool hasResult_ = false;  // whether last_ holds a result to present
