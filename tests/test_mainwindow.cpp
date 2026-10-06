@@ -1212,3 +1212,18 @@ TEST(MainWindow, UpGoesBackAndAClickChoosesACompletion) {
     EXPECT_FALSE(list->isVisible());
     EXPECT_TRUE(lcd(window)->hasFocus());
 }
+
+TEST(MainWindow, TheDecimalSeparatorFollowsTheLanguageUnlessChosen) {
+    MainWindow window;
+    EXPECT_TRUE(setting(window, "decimal:language")->isChecked());
+    EXPECT_FALSE(settings::decimalComma());  // English
+    setting(window, "language:es")->trigger();
+    EXPECT_TRUE(settings::decimalComma());
+    setting(window, "decimal:point")->trigger();
+    EXPECT_FALSE(settings::decimalComma());
+    setting(window, "decimal:comma")->trigger();
+    setting(window, "language:en")->trigger();
+    EXPECT_TRUE(settings::decimalComma());  // chosen: the language no longer matters
+    setting(window, "decimal:language")->trigger();
+    EXPECT_FALSE(settings::decimalComma());
+}

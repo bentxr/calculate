@@ -104,6 +104,7 @@ private:
     QMenu* settings_ = nullptr;
     QAction* languageSection_ = nullptr;  // the headings over each setting's values
     QAction* themeSection_ = nullptr;
+    QAction* decimalSection_ = nullptr;
     QAction* inputSection_ = nullptr;
     QPushButton* equals_ = nullptr;
     QLabel* statisticsLabel_ = nullptr;

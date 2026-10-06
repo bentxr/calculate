@@ -1,6 +1,7 @@
 #include "typing.hpp"
 
 #include "printers.hpp"
+#include "settings.hpp"
 
 #include <calculate-core/calculate-core.hpp>
 
@@ -264,4 +265,15 @@ TEST(Typing, CompletionsAreSortedAndCaseSensitive) {
     std::sort(sorted.begin(), sorted.end());
     EXPECT_EQ(typing::completions("a"), sorted);
     EXPECT_GT(sorted.size(), 5);
+}
+
+TEST(Typing, WithADecimalCommaTheSemicolonSeparates) {
+    settings::setDecimalComma(true);
+    EXPECT_EQ(typed("3,5").text(), "3.5");
+    EXPECT_EQ(typed("nCr(5;2)").text(), "nCr(5, 2)");
+    EXPECT_EQ(typed("mean(1,5;2,5)").text(), "mean(1.5, 2.5)");  // no ambiguity left
+    EXPECT_EQ(typed("log(2,5)").text(), "log(2.5)");
+    EXPECT_EQ(typed("1.5").text(), "1.5");  // the point still works
+    settings::setDecimalComma(false);
+    EXPECT_EQ(typed("nCr(5,2)").text(), "nCr(5, 2)");
 }

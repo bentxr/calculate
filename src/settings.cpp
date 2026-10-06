@@ -19,6 +19,16 @@ Theme& currentTheme() {
     return theme;
 }
 
+DecimalSeparator& currentDecimalSeparator() {
+    static DecimalSeparator separator = DecimalSeparator::Language;
+    return separator;
+}
+
+bool& spanishInUse() {  // whether the Spanish translation is installed
+    static bool spanish = false;
+    return spanish;
+}
+
 bool& currentLiveCalculation() {
     static bool on = true;
     return on;
@@ -45,8 +55,24 @@ void setLanguage(Language language) {
                            : language == Language::Spanish ? QLocale(QLocale::Spanish, QLocale::Spain)
                                                            : QLocale(QLocale::English);
     // English is the source language: no translator. (Removing and installing one tell every window.)
-    if (language != Language::English && translator().load(locale, "calculate", "_", ":/i18n"))
+    spanishInUse() = false;
+    if (language != Language::English && translator().load(locale, "calculate", "_", ":/i18n")) {
+        spanishInUse() = translator().language().startsWith("es");
         QCoreApplication::installTranslator(&translator());
+    }
+}
+
+void setDecimalSeparator(DecimalSeparator separator) { currentDecimalSeparator() = separator; }
+
+DecimalSeparator decimalSeparator() { return currentDecimalSeparator(); }
+
+bool decimalComma() {
+    switch (currentDecimalSeparator()) {
+    case DecimalSeparator::Language: return spanishInUse();
+    case DecimalSeparator::Point: return false;
+    case DecimalSeparator::Comma: return true;
+    }
+    return false;
 }
 
 Theme theme() { return currentTheme(); }

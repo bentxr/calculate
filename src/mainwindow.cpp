@@ -525,6 +525,11 @@ void MainWindow::buildSettings() {
                [](int i) { settings::setLanguage(static_cast<settings::Language>(i)); });
     addSetting(themeSection_, {"theme:system", "theme:light", "theme:dark"}, static_cast<int>(settings::theme()),
                [](int i) { settings::setTheme(static_cast<settings::Theme>(i)); });
+    addSetting(decimalSection_, {"decimal:language", "decimal:point", "decimal:comma"}, static_cast<int>(settings::decimalSeparator()),
+               [this](int i) {
+                   settings::setDecimalSeparator(static_cast<settings::DecimalSeparator>(i));
+                   lcd_->update();
+               });
     inputSection_ = settings_->addSection(QString());
     QAction* live = settings_->addAction(QString());
     live->setObjectName("live");
@@ -577,6 +582,10 @@ void MainWindow::retranslate() {
     findChild<QAction*>("theme:system")->setText(tr("System"));
     findChild<QAction*>("theme:light")->setText(tr("Light"));
     findChild<QAction*>("theme:dark")->setText(tr("Dark"));
+    decimalSection_->setText(tr("Decimal separator"));
+    findChild<QAction*>("decimal:language")->setText(tr("As the language"));
+    findChild<QAction*>("decimal:point")->setText(tr("Point"));
+    findChild<QAction*>("decimal:comma")->setText(tr("Comma"));
     inputSection_->setText(tr("Input"));
     findChild<QAction*>("live")->setText(tr("Calculate as you type"));
 

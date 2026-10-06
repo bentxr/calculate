@@ -323,7 +323,9 @@ bool typeCharacter(Entry& e, QChar c) {
     case '-': insertPiece(e, QStringLiteral("−")); break;
     case '+': insertPiece(e, "+"); break;
     case ';': insertPiece(e, ", "); break;
-    case ',': insertPiece(e, separatesArguments(e) ? QStringLiteral(", ") : QStringLiteral(".")); break;
+    case ',':  // with a decimal comma, always the decimal point; `;` separates
+        insertPiece(e, !settings::decimalComma() && separatesArguments(e) ? QStringLiteral(", ") : QStringLiteral("."));
+        break;
     case '^': openPower(e); break;
     case 0x221A: e.insertTemplate(Template::Sqrt, Closing::Operand); break;  // √
     case 0x221B: e.insertTemplate(Template::Cbrt, Closing::Operand); break;  // ∛

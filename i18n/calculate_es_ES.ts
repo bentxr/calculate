@@ -25,42 +25,42 @@
 <context>
     <name>Lcd</name>
     <message>
-        <location filename="../src/lcd.cpp" line="55"/>
+        <location filename="../src/lcd.cpp" line="58"/>
         <source>Calculator screen</source>
         <translation>Pantalla de la calculadora</translation>
     </message>
     <message>
-        <location filename="../src/lcd.cpp" line="121"/>
+        <location filename="../src/lcd.cpp" line="124"/>
         <source>Undo</source>
         <translation>Deshacer</translation>
     </message>
     <message>
-        <location filename="../src/lcd.cpp" line="122"/>
+        <location filename="../src/lcd.cpp" line="125"/>
         <source>Redo</source>
         <translation>Rehacer</translation>
     </message>
     <message>
-        <location filename="../src/lcd.cpp" line="123"/>
+        <location filename="../src/lcd.cpp" line="126"/>
         <source>Cut</source>
         <translation>Cortar</translation>
     </message>
     <message>
-        <location filename="../src/lcd.cpp" line="124"/>
+        <location filename="../src/lcd.cpp" line="127"/>
         <source>Copy</source>
         <translation>Copiar</translation>
     </message>
     <message>
-        <location filename="../src/lcd.cpp" line="125"/>
+        <location filename="../src/lcd.cpp" line="128"/>
         <source>Paste</source>
         <translation>Pegar</translation>
     </message>
     <message>
-        <location filename="../src/lcd.cpp" line="126"/>
+        <location filename="../src/lcd.cpp" line="129"/>
         <source>Select all</source>
         <translation>Seleccionar todo</translation>
     </message>
     <message>
-        <location filename="../src/lcd.cpp" line="331"/>
+        <location filename="../src/lcd.cpp" line="339"/>
         <source>M = %1</source>
         <translation>M = %1</translation>
     </message>
@@ -68,208 +68,228 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../src/mainwindow.cpp" line="524"/>
+        <location filename="../src/mainwindow.cpp" line="544"/>
         <source>calculate</source>
         <translation>calculate</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="525"/>
+        <location filename="../src/mainwindow.cpp" line="545"/>
         <source>Show or hide the panel</source>
         <translation>Mostrar u ocultar el panel</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="527"/>
+        <location filename="../src/mainwindow.cpp" line="547"/>
         <source>Calculator</source>
         <translation>Calculadora</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="527"/>
+        <location filename="../src/mainwindow.cpp" line="547"/>
         <source>Statistics</source>
         <translation>Estadística</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="526"/>
+        <location filename="../src/mainwindow.cpp" line="546"/>
         <source>Settings</source>
         <translation>Ajustes</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="313"/>
+        <location filename="../src/mainwindow.cpp" line="314"/>
         <source>Too long to work out while typing: press = to calculate it</source>
         <translation>Demasiado largo para calcularlo al escribir: pulsa = para calcularlo</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="332"/>
+        <location filename="../src/mainwindow.cpp" line="347"/>
         <source>Pasted the first of %1 lines</source>
         <translation>Se ha pegado la primera de %1 líneas</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="334"/>
+        <location filename="../src/mainwindow.cpp" line="349"/>
         <source>The browser did not allow reading the clipboard: paste with Ctrl+V</source>
         <translation>El navegador no ha permitido leer el portapapeles: pega con Ctrl+V</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="529"/>
+        <location filename="../src/mainwindow.cpp" line="549"/>
         <source>RAD</source>
         <translation>RAD</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="529"/>
+        <location filename="../src/mainwindow.cpp" line="549"/>
         <source>DEG</source>
         <translation>DEG</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="529"/>
+        <location filename="../src/mainwindow.cpp" line="549"/>
         <source>GRAD</source>
         <translation>GRAD</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="532"/>
+        <location filename="../src/mainwindow.cpp" line="552"/>
         <source>=</source>
         <translation>=</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="533"/>
+        <location filename="../src/mainwindow.cpp" line="553"/>
         <source>Details</source>
         <translation>Detalles</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="534"/>
+        <location filename="../src/mainwindow.cpp" line="554"/>
         <source>Copy</source>
         <translation>Copiar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="536"/>
+        <location filename="../src/mainwindow.cpp" line="556"/>
         <source>Copy as</source>
         <translation>Copiar como</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="537"/>
+        <location filename="../src/mainwindow.cpp" line="557"/>
         <source>Value</source>
         <translation>Valor</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="538"/>
+        <location filename="../src/mainwindow.cpp" line="558"/>
         <source>Trusted digits</source>
         <translation>Dígitos fiables</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="539"/>
+        <location filename="../src/mainwindow.cpp" line="559"/>
         <source>Value ± bound</source>
         <translation>Valor ± cota</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="540"/>
+        <location filename="../src/mainwindow.cpp" line="560"/>
         <source>Details as text</source>
         <translation>Detalles como texto</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="541"/>
+        <location filename="../src/mainwindow.cpp" line="561"/>
         <source>Expression</source>
         <translation>Expresión</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="542"/>
+        <location filename="../src/mainwindow.cpp" line="562"/>
         <source>Copy expression</source>
         <translation>Copiar expresión</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="543"/>
+        <location filename="../src/mainwindow.cpp" line="563"/>
         <source>Copy value</source>
         <translation>Copiar valor</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="544"/>
+        <location filename="../src/mainwindow.cpp" line="564"/>
         <source>Copy value ± bound</source>
         <translation>Copiar valor ± cota</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="545"/>
+        <location filename="../src/mainwindow.cpp" line="565"/>
         <source>Edit</source>
         <translation>Editar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="547"/>
+        <location filename="../src/mainwindow.cpp" line="567"/>
         <source>Keyboard</source>
         <translation>Teclado</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="549"/>
+        <location filename="../src/mainwindow.cpp" line="569"/>
         <source>Proceed anyway</source>
         <translation>Continuar de todos modos</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="550"/>
+        <location filename="../src/mainwindow.cpp" line="570"/>
         <source>Computing…</source>
         <translation>Calculando…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="551"/>
+        <location filename="../src/mainwindow.cpp" line="571"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="552"/>
+        <location filename="../src/mainwindow.cpp" line="572"/>
         <source>History</source>
         <translation>Historial</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="296"/>
+        <location filename="../src/mainwindow.cpp" line="297"/>
         <source>The memory needs a previous result</source>
         <translation>La memoria necesita un resultado anterior</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="555"/>
+        <location filename="../src/mainwindow.cpp" line="575"/>
         <source>Values (one per line, or separated by commas):</source>
         <translation>Valores (uno por línea, o separados por comas):</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="556"/>
+        <location filename="../src/mainwindow.cpp" line="576"/>
         <source>Show or hide the keypad</source>
         <translation>Mostrar u ocultar el teclado numérico</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="557"/>
+        <location filename="../src/mainwindow.cpp" line="577"/>
         <source>Language</source>
         <translation>Idioma</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="558"/>
+        <location filename="../src/mainwindow.cpp" line="578"/>
         <source>Theme</source>
         <translation>Tema</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="559"/>
-        <location filename="../src/mainwindow.cpp" line="562"/>
+        <location filename="../src/mainwindow.cpp" line="579"/>
+        <location filename="../src/mainwindow.cpp" line="582"/>
         <source>System</source>
         <translation>Sistema</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="563"/>
+        <location filename="../src/mainwindow.cpp" line="583"/>
         <source>Light</source>
         <translation>Claro</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="564"/>
+        <location filename="../src/mainwindow.cpp" line="584"/>
         <source>Dark</source>
         <translation>Oscuro</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="565"/>
+        <location filename="../src/mainwindow.cpp" line="585"/>
+        <source>Decimal separator</source>
+        <translation>Separador decimal</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="586"/>
+        <source>As the language</source>
+        <translation>Según el idioma</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="587"/>
+        <source>Point</source>
+        <translation>Punto</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="588"/>
+        <source>Comma</source>
+        <translation>Coma</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="589"/>
         <source>Input</source>
         <translation>Entrada</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="566"/>
+        <location filename="../src/mainwindow.cpp" line="590"/>
         <source>Calculate as you type</source>
         <translation>Calcular al escribir</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="786"/>
+        <location filename="../src/mainwindow.cpp" line="810"/>
         <source>No digit is trusted</source>
         <translation>Ningún dígito es fiable</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="873"/>
+        <location filename="../src/mainwindow.cpp" line="929"/>
         <source>Exact arithmetic cannot represent %1: its result is irrational. Switch to a floating type to compute it.</source>
         <translation>La aritmética exacta no puede representar %1: su resultado es irracional. Cambia a un tipo de coma flotante para calcularlo.</translation>
     </message>
