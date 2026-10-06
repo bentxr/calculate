@@ -187,3 +187,45 @@ TEST(Entry, DeleteAtTheStartOfABoxUnwrapsTheTemplate) {
     f.backspace();  // the first box: the fraction goes, its parts stay, divided
     EXPECT_EQ(f.text(), "1÷3");
 }
+
+TEST(Entry, HomeEndAndDeleteForward) {
+    Entry e;
+    type(e, {"1", "2", "3"});
+    e.home();
+    EXPECT_EQ(e.cursor(), 0);
+    e.deleteForward();
+    EXPECT_EQ(e.text(), "23");
+    e.end();
+    EXPECT_EQ(e.cursor(), 2);
+    e.deleteForward();  // nothing after the cursor
+    EXPECT_EQ(e.text(), "23");
+    Entry f = fraction({"1"}, {"3"});  // the cursor is in the denominator
+    f.home();                           // the start of the whole input, not of the box
+    EXPECT_EQ(f.path(), Path{});
+    EXPECT_EQ(f.cursor(), 0);
+    f.deleteForward();  // a template goes whole, like a piece
+    EXPECT_TRUE(f.isEmpty());
+}
+
+TEST(Entry, APositionCanBeReadAndSet) {
+    Entry e = fraction({"1", "2"}, {"3"});
+    const Position inNumerator{{{0, 0}}, 1};
+    e.setPosition(inNumerator);
+    EXPECT_TRUE(e.position() == inNumerator);
+    type(e, {"5"});
+    EXPECT_EQ(e.text(), "((152)/(3))");
+    e.setPosition(Position{{}, 9});  // past the end of the row: kept inside it
+    EXPECT_EQ(e.cursor(), 1);
+}
+
+TEST(Entry, EntriesCompareByContentAndCursor) {
+    Entry a, b;
+    type(a, {"1"});
+    type(b, {"1"});
+    EXPECT_TRUE(a == b);
+    b.left();
+    EXPECT_FALSE(a == b);
+    Entry c;
+    c.setRoot({Item{Template::Text, "1", {}}});
+    EXPECT_TRUE(a == c);  // setRoot puts the cursor at the end
+}

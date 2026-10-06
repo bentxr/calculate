@@ -43,6 +43,14 @@ QString serialize(const Row& row) {
 
 }  // namespace
 
+bool operator==(const Item& a, const Item& b) {
+    return a.kind == b.kind && a.text == b.text && a.boxes == b.boxes && a.closing == b.closing;
+}
+bool operator!=(const Item& a, const Item& b) { return !(a == b); }
+
+bool operator==(const Position& a, const Position& b) { return a.path == b.path && a.index == b.index; }
+bool operator!=(const Position& a, const Position& b) { return !(a == b); }
+
 Row& Entry::rowAt(std::size_t depth) {
     Row* r = &root_;
     for (std::size_t i = 0; i < depth; ++i) r = &(*r)[static_cast<std::size_t>(path_[i].first)].boxes[static_cast<std::size_t>(path_[i].second)];
@@ -154,6 +162,21 @@ void Entry::right() {
     }
 }
 
+void Entry::home() {
+    path_.clear();
+    index_ = 0;
+}
+
+void Entry::end() {
+    path_.clear();
+    index_ = static_cast<int>(root_.size());
+}
+
+void Entry::deleteForward() {
+    Row& r = row();
+    if (index_ < static_cast<int>(r.size())) r.erase(r.begin() + index_);
+}
+
 void Entry::clear() {
     root_.clear();
     path_.clear();
@@ -174,6 +197,20 @@ void Entry::setText(const QString& text) {
         i = end;
     }
     index_ = static_cast<int>(root_.size());
+}
+
+void Entry::setRoot(Row root) {
+    root_ = std::move(root);
+    end();
+}
+
+void Entry::setPosition(const Position& p) {
+    path_ = p.path;
+    index_ = qBound(0, p.index, static_cast<int>(row().size()));
+}
+
+bool Entry::operator==(const Entry& other) const {
+    return root_ == other.root_ && path_ == other.path_ && index_ == other.index_;
 }
 
 QString Entry::text() const { return serialize(root_); }
