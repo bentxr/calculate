@@ -57,6 +57,8 @@ public:
     // to the end. (Text from the history or the statistics page is always one row.)
     void setText(const QString& text);
     void setRoot(Row root);  // replaces the content; the cursor goes to the end
+    // Replaces the items [from, to) of the cursor's row with `items`; the cursor goes after them.
+    void replaceInRow(int from, int to, const Row& items);
 
     Position position() const { return {path_, index_}; }
     void setPosition(const Position& p);  // the index is kept inside its row

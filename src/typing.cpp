@@ -159,6 +159,70 @@ bool endsOperand(const Entry& e, const QString& piece) {
     return piece == QStringLiteral("×") || piece == QStringLiteral("÷") || piece == ", " || piece == ")";
 }
 
+// The ")" that closes the opener at `open`, or -1.
+int closerOf(const Row& row, int open) {
+    int depth = 0;
+    for (int i = open; i < static_cast<int>(row.size()); ++i) {
+        const Item& item = row[static_cast<std::size_t>(i)];
+        if (opener(item)) ++depth;
+        else if (closer(item) && --depth == 0) return i;
+    }
+    return -1;
+}
+
+bool textIs(const Row& row, int i, const QString& text) {
+    return i >= 0 && i < static_cast<int>(row.size()) && row[static_cast<std::size_t>(i)].kind == Template::Text &&
+           row[static_cast<std::size_t>(i)].text == text;
+}
+
+Row slice(const Row& row, int from, int to) { return Row(row.begin() + from, row.begin() + to); }
+
+// The template whose engine spelling ends with the ")" just typed, read back: ((N)/(D)), (10^(X)),
+// root(A, B) and log(A, B) (the engine takes the radicand and the argument first).
+void restore(Entry& e) {
+    const Row& row = e.currentRow();
+    const int end = e.cursor();  // just after the ")"
+    const int o = openOpener(row, end - 1);
+    if (o < 0) return;
+    Item made;
+    if (textIs(row, o, "(") && textIs(row, o + 1, "(")) {
+        const int j = closerOf(row, o + 1);
+        if (j < 0 || !textIs(row, j + 1, QStringLiteral("÷")) || !textIs(row, j + 2, "(")) return;
+        const int k = closerOf(row, j + 2);
+        if (k != end - 2) return;
+        made = Item{Template::Fraction, {}, {slice(row, o + 2, j), slice(row, j + 3, k)}};
+    } else if (end - o == 5 && textIs(row, o, "(") && textIs(row, o + 1, "1") && textIs(row, o + 2, "0") &&
+               row[static_cast<std::size_t>(o + 3)].kind == Template::Power) {
+        made = Item{Template::Pow10, {}, row[static_cast<std::size_t>(o + 3)].boxes};
+    } else if (textIs(row, o, "root(") || textIs(row, o, "log(")) {
+        int separator = -1;
+        int depth = 0;
+        for (int i = o + 1; i < end - 1; ++i) {
+            const Item& item = row[static_cast<std::size_t>(i)];
+            if (opener(item)) ++depth;
+            else if (closer(item)) --depth;
+            else if (depth == 0 && textIs(row, i, ", ")) {
+                if (separator >= 0) return;  // three arguments: not a template
+                separator = i;
+            }
+        }
+        if (separator < 0) return;
+        const Template kind = textIs(row, o, "root(") ? Template::Root : Template::LogBase;
+        made = Item{kind, {}, {slice(row, separator + 1, end - 1), slice(row, o + 1, separator)}};
+    } else {
+        return;
+    }
+    e.replaceInRow(o, end, {made});
+}
+
+// Inside a comment, after a # in the outer row, everything is typed as it is.
+bool inComment(const Entry& e) {
+    if (!e.path().empty()) return false;
+    for (int i = 0; i < e.cursor(); ++i)
+        if (textIs(e.root(), i, "#")) return true;
+    return false;
+}
+
 void leaveOperands(Entry& e, const QString& piece) {
     while (endsOperand(e, piece)) e.right();
 }
@@ -184,6 +248,10 @@ void finishName(Entry& e) {
 
 bool typeCharacter(Entry& e, QChar c) {
     if (!c.isPrint()) return false;
+    if (inComment(e)) {
+        e.insert(QString(c));
+        return true;
+    }
     if (c.isSpace() && c != ' ') return true;  // thin and no-break spaces group digits: ignored
     if (!identifierCharacter(c)) finishName(e);
     const Row& row = e.currentRow();
@@ -238,8 +306,18 @@ bool typeCharacter(Entry& e, QChar c) {
         if (e.container() && e.container()->closing == Closing::Parenthesis && e.cursor() == static_cast<int>(e.currentRow().size()) &&
             balanced(e.currentRow()))
             e.right();
-        else
+        else {
             e.insert(")");
+            restore(e);
+        }
+        break;
+    case '>':
+        if (before && before->text == QStringLiteral("−")) {
+            e.backspace();
+            e.insert(QStringLiteral("→"));
+        } else {
+            e.insert(">");
+        }
         break;
     default:
         // A word after a space is not part of the operand (2^10 to …): the space and the word go outside.

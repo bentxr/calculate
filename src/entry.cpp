@@ -227,6 +227,13 @@ void Entry::setRoot(Row root) {
     end();
 }
 
+void Entry::replaceInRow(int from, int to, const Row& items) {
+    Row& r = row();
+    r.erase(r.begin() + from, r.begin() + to);
+    r.insert(r.begin() + from, items.begin(), items.end());
+    index_ = from + static_cast<int>(items.size());
+}
+
 void Entry::setPosition(const Position& p) {
     path_ = p.path;
     index_ = qBound(0, p.index, static_cast<int>(row().size()));

@@ -99,3 +99,30 @@ TEST(Typing, TheRootSignTakesTheNextOperand) {
     EXPECT_EQ(typed("√(4+5)").text(), "√(4+5)");
     EXPECT_EQ(typed("∛8").root()[0].kind, Template::Cbrt);
 }
+
+namespace {
+
+QList<Template> kinds(const Entry& e) {
+    QList<Template> list;
+    for (const Item& item : e.root()) list << item.kind;
+    return list;
+}
+
+}  // namespace
+
+TEST(Typing, TheEnginesSpellingsOfTemplatesBecomeTemplates) {
+    EXPECT_EQ(kinds(typed("((1)/(3))")), QList<Template>({Template::Fraction}));
+    EXPECT_EQ(kinds(typed("root(32, 5)")), QList<Template>({Template::Root}));
+    EXPECT_EQ(typed("root(32, 5)").text(), "root(32, 5)");
+    EXPECT_EQ(kinds(typed("log(8,2)")), QList<Template>({Template::LogBase}));
+    EXPECT_EQ(typed("log(8,2)").text(), "log(8, 2)");
+    EXPECT_EQ(kinds(typed("(10^(3))")), QList<Template>({Template::Pow10}));
+    EXPECT_EQ(typed("log(8)").text(), "log(8)");     // one argument: log₁₀, a plain piece
+    EXPECT_EQ(kinds(typed("(1)/(3)")).size(), 7);    // no outer pair: a plain division
+    EXPECT_EQ(typed("1+((1)/(3))").root().size(), 3u);  // the cursor's place adjusts
+}
+
+TEST(Typing, SequencesForLaterSyntax) {
+    EXPECT_EQ(typed("1->x").text(), "1→x");
+    EXPECT_EQ(pieces(typed("1+2 #sqrt(x").root()), QStringList({"1", "+", "2", " ", "#", "s", "q", "r", "t", "(", "x"}));
+}
