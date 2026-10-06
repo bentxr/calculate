@@ -109,4 +109,6 @@ private:
     std::vector<Entry> historyEntries_;  // as typed, one per history row
     Entry typed_;                        // the last input sent with =
     int historyIndex_ = -1;  // the history row ▲ and ▼ last showed
+    Entry unfinished_;              // what was being typed when the browsing began
+    bool keepsUnfinished_ = false;
 };

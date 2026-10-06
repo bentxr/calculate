@@ -882,3 +882,18 @@ TEST(MainWindow, AfterEqualsADigitStartsAfreshAndAnOperatorGoesOnFromAns) {
     QTest::mouseClick(child<QPushButton>(window, "key:square"), Qt::LeftButton);  // x² goes on from Ans too
     EXPECT_EQ(lcd(window)->input(), "Ans^(2)");
 }
+
+TEST(MainWindow, PageUpAndDownBrowseTheHistoryAndKeepTheUnfinishedInput) {
+    MainWindow window;
+    run(window, "1+1");
+    run(window, "2+2");
+    lcd(window)->clear();
+    QTest::keyClicks(lcd(window), "9-");
+    QTest::keyClick(lcd(window), Qt::Key_PageUp);
+    EXPECT_EQ(lcd(window)->input(), "2+2");
+    QTest::keyClick(lcd(window), Qt::Key_PageUp);
+    EXPECT_EQ(lcd(window)->input(), "1+1");
+    QTest::keyClick(lcd(window), Qt::Key_PageDown);
+    QTest::keyClick(lcd(window), Qt::Key_PageDown);  // past the newest: back to what was being typed
+    EXPECT_EQ(lcd(window)->input(), "9−");
+}

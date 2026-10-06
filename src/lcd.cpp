@@ -459,6 +459,14 @@ void Lcd::keyPressEvent(QKeyEvent* event) {
     case Qt::Key_Down:
         if (!down()) emit historyRequested(-1);
         return;
+    case Qt::Key_PageUp:  // the history, even inside a fraction
+        fresh_ = false;
+        emit historyRequested(1);
+        return;
+    case Qt::Key_PageDown:
+        fresh_ = false;
+        emit historyRequested(-1);
+        return;
     default: break;
     }
     // Redo is checked first and spelled out: not every platform binds both Ctrl+Y and Ctrl+Shift+Z.

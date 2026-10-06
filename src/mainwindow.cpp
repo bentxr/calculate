@@ -593,6 +593,7 @@ Options MainWindow::options() const {
 
 void MainWindow::evaluate() {
     lcd_->finishName();  // the = key ends a name being typed, as Enter does
+    keepsUnfinished_ = false;
     const QString text = lcd_->input().trimmed();
     if (text.isEmpty()) return;
     typed_ = lcd_->entry();  // the history keeps it as typed, templates and all
@@ -669,8 +670,19 @@ void MainWindow::apply(const Face& f) {
 }
 
 // ▲ and ▼ step through the history, newest first, as the calculator's replay does.
+// Browsing past the newest row comes back to what was being typed before the browsing began.
 void MainWindow::replay(int index) {
+    if (index == -1 && keepsUnfinished_) {
+        historyIndex_ = -1;
+        keepsUnfinished_ = false;
+        lcd_->setEntry(unfinished_);
+        return;
+    }
     if (index < 0 || index >= history_->count()) return;
+    if (historyIndex_ == -1) {
+        unfinished_ = lcd_->entry();
+        keepsUnfinished_ = true;
+    }
     historyIndex_ = index;
     lcd_->setEntry(historyEntries_[static_cast<std::size_t>(index)]);
 }

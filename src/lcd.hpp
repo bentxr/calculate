@@ -81,7 +81,7 @@ public slots:
 
 signals:
     void evaluateRequested();
-    void historyRequested(int step);  // +1 for an older entry (▲), −1 for a newer one (▼)
+    void historyRequested(int step);  // +1 for an older entry (▲, Page Up), −1 for a newer one (▼, Page Down)
     void copyRequested();
     void pastedFirstLine(int lines);  // of `lines` non-empty ones
     void pasteRefused();
