@@ -6,6 +6,7 @@
 
 #include <QFontDatabase>
 #include <QFontMetricsF>
+#include <QStringList>
 
 #include <gtest/gtest.h>
 
@@ -267,4 +268,15 @@ TEST(Typeset, TheSelectionCoversWholeTemplates) {
     EXPECT_NEAR(s.width(), b.width, 0.01);
     e.end();  // no selection, no rectangle
     EXPECT_TRUE(typeset::selectionRect(typeset::input(e, font(), nullptr), e).isEmpty());
+}
+
+TEST(Typeset, WithADecimalCommaTheInputShowsCommasAndSemicolons) {
+    Entry e;
+    e.setRoot(typing::read("nCr(1.5, 2)"));
+    const Box b = typeset::input(e, font(), nullptr, true);
+    QStringList texts;
+    for (const typeset::Run& run : b.runs) texts << run.text;
+    EXPECT_TRUE(texts.contains(","));
+    EXPECT_TRUE(texts.contains("; "));
+    EXPECT_FALSE(texts.contains("."));
 }

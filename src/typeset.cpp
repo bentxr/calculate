@@ -221,6 +221,15 @@ using Path = std::vector<std::pair<int, int>>;
 
 // Lays out an entry's rows and templates, marking every place for the cursor.
 struct InputLayout {
+    bool decimalComma = false;
+
+    QString shown(const QString& piece) const {
+        if (!decimalComma) return piece;
+        if (piece == ".") return QStringLiteral(",");
+        if (piece == ", ") return QStringLiteral("; ");
+        return piece;
+    }
+
     // `path`: how to reach this row, as Entry::path().
     Box row(const Row& items, const QFont& font, const Path& path) const {
         QList<Box> parts;
@@ -249,7 +258,7 @@ struct InputLayout {
             return row(it.boxes[static_cast<std::size_t>(b)], f, inner);
         };
         switch (it.kind) {
-        case Template::Text: return text(it.text, font);
+        case Template::Text: return text(shown(it.text), font);
         case Template::Fraction: return fraction(box(0, font), box(1, font), font);
         case Template::Sqrt: return radical(box(0, font), font);
         case Template::Cbrt: return radical(box(0, font), font, text(QStringLiteral("3"), small));
@@ -268,8 +277,8 @@ struct InputLayout {
 
 }  // namespace
 
-Box input(const Entry& entry, const QFont& font, QRectF* caret) {
-    const Box b = InputLayout{}.row(entry.root(), font, {});
+Box input(const Entry& entry, const QFont& font, QRectF* caret, bool decimalComma) {
+    const Box b = InputLayout{decimalComma}.row(entry.root(), font, {});
     if (caret) {
         for (const Mark& mark : b.marks)
             if (mark.at == entry.position()) *caret = mark.caret;

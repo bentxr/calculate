@@ -1,5 +1,6 @@
 #include "lcd.hpp"
 
+#include "settings.hpp"
 #include "typing.hpp"
 #ifdef Q_OS_WASM
 #include "webclipboard.hpp"
@@ -376,7 +377,7 @@ QFont Lcd::statusFont() const { return scaled(font(), 0.8); }
 QFont Lcd::inputFont() const { return scaled(font(), 1.25); }
 QFont Lcd::outputFont() const { return scaled(font(), provisional_ ? provisionalScale : resultScale); }
 
-typeset::Box Lcd::inputBox(QRectF* caret) const { return typeset::input(entry_, inputFont(), caret); }
+typeset::Box Lcd::inputBox(QRectF* caret) const { return typeset::input(entry_, inputFont(), caret, settings::decimalComma()); }
 
 // An input wider than the screen slides left, as in a text field, so the cursor stays in view.
 QPointF Lcd::inputOrigin(const typeset::Box& input, const QRectF& caret) const {
@@ -699,6 +700,7 @@ void Lcd::changeEvent(QEvent* event) {
     if (event->type() == QEvent::LanguageChange) {
         setMemory(memory_);  // its tooltip
         retranslate();
+        changed();  // the decimal separator may follow the language
     }
     QWidget::changeEvent(event);
 }

@@ -67,8 +67,9 @@ QPointF end(const Box& box);
 void paint(QPainter& painter, const Box& box, QPointF origin, const QColor& ink, const QColor& noise, const QRectF& clip);
 
 // The input as the calculator draws it: templates in two dimensions, an empty box as □, every place
-// for the cursor marked. `caret` (if any) receives the cursor's rectangle.
-Box input(const Entry& entry, const QFont& font, QRectF* caret);
+// for the cursor marked. `caret` (if any) receives the cursor's rectangle. With `decimalComma`, the point is
+// drawn as a comma and the argument separator as a semicolon (the entry keeps the engine's pieces).
+Box input(const Entry& entry, const QFont& font, QRectF* caret, bool decimalComma = false);
 // The place for the cursor nearest to `point`: first the nearest line, then the nearest place on it.
 Position hit(const Box& input, QPointF point);
 // What the entry's selection covers in its input box; empty without a selection.
