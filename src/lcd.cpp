@@ -9,6 +9,7 @@
 #include <QInputMethodEvent>
 #include <QHBoxLayout>
 #include <QKeyEvent>
+#include <QMouseEvent>
 #include <QPainter>
 #include <QScrollBar>
 #include <QStyle>
@@ -109,6 +110,26 @@ void Lcd::setSystemKeyboard(bool on) {
     } else {
         QGuiApplication::inputMethod()->hide();
     }
+}
+
+void Lcd::selectAll() {
+    entry_.selectAll();
+    update();
+}
+
+QRectF Lcd::caretRectAt(const Position& p) const {
+    QRectF caret;
+    const typeset::Box input = inputBox(&caret);
+    const QPointF origin = inputOrigin(input, caret);
+    for (const typeset::Mark& mark : input.marks)
+        if (mark.at == p) return mark.caret.translated(origin);
+    return {};
+}
+
+Position Lcd::positionAt(QPointF point) const {
+    QRectF caret;
+    const typeset::Box input = inputBox(&caret);
+    return typeset::hit(input, point - inputOrigin(input, caret));
 }
 
 void Lcd::clear() {
@@ -262,6 +283,8 @@ void Lcd::paintEvent(QPaintEvent*) {
     const qreal room = width() - 2 * margin;
     painter.save();
     painter.setClipRect(QRectF(margin, 0, room, height()));
+    const QRectF selection = typeset::selectionRect(input, entry_);
+    if (!selection.isEmpty()) painter.fillRect(selection.translated(origin), mix(ink, background(), 0.75));  // readable in both themes
     typeset::paint(painter, input, origin, ink, ink, rect());
     if (hasFocus()) {
         painter.setPen(QPen(ink, 1.5));
@@ -291,21 +314,28 @@ void Lcd::keyPressEvent(QKeyEvent* event) {
         return;
     case Qt::Key_Escape: clear(); return;
     case Qt::Key_Left:
-        finishName();
-        left();
-        return;
     case Qt::Key_Right:
-        finishName();
-        right();
-        return;
     case Qt::Key_Home:
-        entry_.home();
+    case Qt::Key_End: {
+        finishName();
+        const bool select = event->modifiers() & Qt::ShiftModifier;  // Shift with a movement selects
+        const int key = event->key();
+        if (key == Qt::Key_Left) {
+            if (select) entry_.extendLeft();
+            else entry_.left();
+        } else if (key == Qt::Key_Right) {
+            if (select) entry_.extendRight();
+            else entry_.right();
+        } else if (key == Qt::Key_Home) {
+            if (select) entry_.extendHome();
+            else entry_.home();
+        } else {
+            if (select) entry_.extendEnd();
+            else entry_.end();
+        }
         update();
         return;
-    case Qt::Key_End:
-        entry_.end();
-        update();
-        return;
+    }
     case Qt::Key_Up:
         if (!up()) emit historyRequested(1);
         return;
@@ -313,6 +343,10 @@ void Lcd::keyPressEvent(QKeyEvent* event) {
         if (!down()) emit historyRequested(-1);
         return;
     default: break;
+    }
+    if (event->matches(QKeySequence::SelectAll)) {
+        selectAll();
+        return;
     }
     const QString text = event->text();
     if (event->modifiers() & (Qt::ControlModifier | Qt::MetaModifier)) {  // shortcuts are not typed
@@ -333,6 +367,39 @@ void Lcd::keyPressEvent(QKeyEvent* event) {
     for (const QChar c : text) typed = typing::typeCharacter(entry_, c) || typed;
     if (typed) changed();
     else event->ignore();
+}
+
+// A click places the cursor at the nearest place, Shift+click selects up to it, a drag selects. (A tap
+// arrives as a click: touches become mouse events for a widget that doesn't take them.)
+void Lcd::mousePressEvent(QMouseEvent* event) {
+    if (event->button() != Qt::LeftButton) {
+        QWidget::mousePressEvent(event);
+        return;
+    }
+    const Position at = positionAt(event->position());
+    if (event->modifiers() & Qt::ShiftModifier) {
+        dragFrom_ = entry_.hasSelection() ? Position{entry_.path(), entry_.anchor()} : entry_.position();
+        entry_.select(dragFrom_, at);
+    } else {
+        dragFrom_ = at;
+        entry_.setPosition(at);
+    }
+    dragging_ = true;
+    update();
+}
+
+void Lcd::mouseMoveEvent(QMouseEvent* event) {
+    if (!dragging_) {
+        QWidget::mouseMoveEvent(event);
+        return;
+    }
+    entry_.select(dragFrom_, positionAt(event->position()));
+    update();
+}
+
+void Lcd::mouseReleaseEvent(QMouseEvent* event) {
+    if (event->button() == Qt::LeftButton) dragging_ = false;
+    QWidget::mouseReleaseEvent(event);
 }
 
 // An input method's text (a dead key's ^, a phone's keyboard) is typed like the keyboard's; the text it is

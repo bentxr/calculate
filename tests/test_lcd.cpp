@@ -149,3 +149,43 @@ TEST(Lcd, TheSystemKeyboardCanBeTurnedOnAndOff) {
     lcd.setSystemKeyboard(true);
     EXPECT_TRUE(lcd.testAttribute(Qt::WA_InputMethodEnabled));
 }
+
+TEST(Lcd, ShiftMovesAndCtrlASelect) {
+    Lcd lcd;
+    QTest::keyClicks(&lcd, "1+2");
+    QTest::keyClick(&lcd, Qt::Key_Left, Qt::ShiftModifier);
+    EXPECT_EQ(lcd.selectedText(), "2");
+    QTest::keyClick(&lcd, Qt::Key_Home, Qt::ShiftModifier);
+    EXPECT_EQ(lcd.selectedText(), "1+2");
+    QTest::keyClicks(&lcd, "5");
+    EXPECT_EQ(lcd.input(), "5");
+    QTest::keyClick(&lcd, Qt::Key_A, Qt::ControlModifier);
+    EXPECT_EQ(lcd.selectedText(), "5");
+}
+
+TEST(Lcd, AClickPlacesTheCursorAndADragSelects) {
+    Lcd lcd;
+    lcd.resize(400, 200);
+    lcd.setInput("1234");
+    const QPoint one = lcd.caretRectAt(Position{{}, 1}).center().toPoint();
+    const QPoint three = lcd.caretRectAt(Position{{}, 3}).center().toPoint();
+    QTest::mouseClick(&lcd, Qt::LeftButton, {}, one);
+    EXPECT_EQ(lcd.entry().cursor(), 1);
+    QTest::mousePress(&lcd, Qt::LeftButton, {}, one);
+    QTest::mouseMove(&lcd, three);
+    QTest::mouseRelease(&lcd, Qt::LeftButton, {}, three);
+    EXPECT_EQ(lcd.selectedText(), "23");
+}
+
+TEST(Lcd, ATapPlacesTheCursor) {
+    Lcd lcd;
+    lcd.resize(400, 200);
+    lcd.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&lcd));
+    lcd.setInput("1234");
+    QPointingDevice* finger = QTest::createTouchDevice();
+    const QPoint one = lcd.caretRectAt(Position{{}, 1}).center().toPoint();
+    QTest::touchEvent(&lcd, finger).press(0, one, &lcd);
+    QTest::touchEvent(&lcd, finger).release(0, one, &lcd);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd.entry().cursor() == 1; }, 1000));
+}

@@ -31,6 +31,10 @@ public:
     void left();
     void right();
     void setInput(const QString& text);
+    QString selectedText() const { return entry_.selectedText(); }
+    bool hasSelection() const { return entry_.hasSelection(); }
+    void selectAll();
+    QRectF caretRectAt(const Position& p) const;  // where the cursor would be drawn at `p`
     void finishName();  // ends a name typed just before the cursor (pi becomes π)
     // The phone's on-screen keyboard (an input method): off in the browser, where it would cover the
     // keypad, until asked for. A physical keyboard types either way.
@@ -62,6 +66,9 @@ signals:
 protected:
     void paintEvent(QPaintEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
+    void mousePressEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
     void inputMethodEvent(QInputMethodEvent* event) override;
     QVariant inputMethodQuery(Qt::InputMethodQuery query) const override;
     void wheelEvent(QWheelEvent* event) override;
@@ -77,6 +84,7 @@ private:
     QFont outputFont() const;
     typeset::Box inputBox(QRectF* caret = nullptr) const;
     QPointF inputOrigin(const typeset::Box& input, const QRectF& caret) const;  // where the input is drawn
+    Position positionAt(QPointF point) const;  // the place for the cursor nearest to a point of the widget
     QRectF resultArea(const typeset::Box& input) const;
     int barHeight() const;
     void changed();  // lays the result out again and repaints
@@ -91,4 +99,6 @@ private:
     QWidget* bar_ = nullptr;
     QHBoxLayout* barLayout_ = nullptr;
     int leftOfBar_ = 0;  // widgets before the bar's stretch
+    Position dragFrom_;  // where a drag that selects began
+    bool dragging_ = false;
 };
