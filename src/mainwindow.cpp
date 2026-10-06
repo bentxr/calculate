@@ -182,7 +182,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     QAction* copyExpression = copyMenu_->addAction(QString());
     copyExpression->setObjectName("copy:expression");
     // As text that reads back into the same templates.
-    connect(copyExpression, &QAction::triggered, this, [this] { QGuiApplication::clipboard()->setText(lcd_->input()); });
+    connect(copyExpression, &QAction::triggered, this, [this] { QGuiApplication::clipboard()->setText(shownExpression(lcd_->input())); });
     lcd_->editMenu()->addSeparator();
     copyAsMenu_ = lcd_->editMenu()->addMenu(QString());
     copyAsMenu_->setObjectName("copyAsMenu");
@@ -243,7 +243,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     copyRowExpression->setObjectName("history:copyExpression");
     connect(copyRowExpression, &QAction::triggered, this, [this] {
         const int row = history_->currentRow();
-        if (row >= 0) QGuiApplication::clipboard()->setText(historyEntries_[static_cast<std::size_t>(row)].text());
+        if (row >= 0) QGuiApplication::clipboard()->setText(shownExpression(historyEntries_[static_cast<std::size_t>(row)].text()));
     });
     for (const auto& [name, form] : historyForms) {
         QAction* action = historyMenu_->addAction(QString());
@@ -528,6 +528,8 @@ void MainWindow::buildSettings() {
     addSetting(decimalSection_, {"decimal:language", "decimal:point", "decimal:comma"}, static_cast<int>(settings::decimalSeparator()),
                [this](int i) {
                    settings::setDecimalSeparator(static_cast<settings::DecimalSeparator>(i));
+                   if (hasResult_ || previewShown_) present();
+                   relabelHistory();
                    lcd_->update();
                });
     inputSection_ = settings_->addSection(QString());
@@ -612,6 +614,7 @@ void MainWindow::retranslate() {
         w->setFixedWidth(width);
 
     if (hasResult_ || previewShown_) present();
+    relabelHistory();  // the decimal separator may follow the language
     updateKeys();
     if (keysSized_) sizeKeys();  // labels changed width
 }
@@ -746,11 +749,11 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
     if (result.error) return;
     if (lcd_->input().trimmed() == expression) lcd_->setFresh(true);  // not when another input is being typed
     if (history_->count() == 0 || history_->item(0)->data(Qt::UserRole).toString() != expression) {
-        // "expression = value", the value cut short: the list only points back to the calculation.
         QString value = lcd_->outputText();
-        if (value.size() > 28) value = value.left(28) + QStringLiteral("…");
-        auto* item = new QListWidgetItem(expression + QStringLiteral(" = ") + value);
+        if (settings::decimalComma()) value.replace(',', '.');  // kept as the engine writes it, for relabelling
+        auto* item = new QListWidgetItem(historyLabel(expression, value));
         item->setData(Qt::UserRole, expression);
+        item->setData(Qt::UserRole + 1, value);
         history_->insertItem(0, item);
         Entry entry = typed_;
         if (entry.text().trimmed() != expression) entry.setRoot(typing::read(expression));  // not what was typed last
@@ -818,6 +821,24 @@ void MainWindow::popUpHistoryMenu(QPoint position) {
     historyMenu_->popup(placed(historyMenu_->sizeHint(), at, popupBounds(history_)).topLeft());
 }
 
+// "expression = value", the value cut short: the list only points back to the calculation.
+QString MainWindow::historyLabel(const QString& expression, const QString& value) const {
+    QString shown = shownExpression(value);
+    if (shown.size() > 28) shown = shown.left(28) + QStringLiteral("…");
+    return shownExpression(expression) + QStringLiteral(" = ") + shown;
+}
+
+void MainWindow::relabelHistory() {
+    for (int i = 0; i < history_->count(); ++i) {
+        QListWidgetItem* item = history_->item(i);
+        item->setText(historyLabel(item->data(Qt::UserRole).toString(), item->data(Qt::UserRole + 1).toString()));
+    }
+}
+
+QString MainWindow::shownExpression(const QString& expression) const {
+    return settings::decimalComma() ? view::withDecimalComma(expression) : expression;
+}
+
 void MainWindow::showCompletions(const QString& name) {
     const QStringList names = typing::completions(name);
     if (name.size() < 2 || names.isEmpty() || names == QStringList{name}) {
@@ -877,8 +898,8 @@ void MainWindow::present() {
         lcd_->clearMarked();
     }
     if (shown.error) lcd_->clearResult();
-    else if (shown.exact) lcd_->showExact(view::fractionParts(shown));
-    else lcd_->showValue(view::valueParts(shown));
+    else if (shown.exact) lcd_->showExact(settings::decimalComma() ? view::withDecimalComma(view::fractionParts(shown)) : view::fractionParts(shown));
+    else lcd_->showValue(settings::decimalComma() ? view::withDecimalComma(view::valueParts(shown)) : view::valueParts(shown));
 }
 
 void MainWindow::apply(const Face& f) {

@@ -68,6 +68,10 @@ private:
     void enableCopy(const calculate_core::Result* result);  // nullptr: nothing to copy
     void popUpCopyMenu();
     void showCompletions(const QString& name);  // under the caret, or hidden
+    // A history row's text from its expression and its value as the engine writes them (with a point).
+    QString historyLabel(const QString& expression, const QString& value) const;
+    void relabelHistory();  // after a change of the decimal separator
+    QString shownExpression(const QString& expression) const;  // with the decimal separator in use
     void hideCompletions();
     void chooseCompletion(const QString& name);
     void popUpHistoryMenu(QPoint position);  // at a row, in the list's viewport coordinates

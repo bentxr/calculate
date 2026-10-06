@@ -1,6 +1,9 @@
 #include "presenter.hpp"
 
+#include "entry.hpp"
 #include "printers.hpp"
+#include "settings.hpp"
+#include "typing.hpp"
 
 #include <gtest/gtest.h>
 
@@ -244,4 +247,21 @@ TEST(Presenter, ExactDetailsCopyAsLines) {
     EXPECT_EQ(lines.value(0), "-7/4 = -7/4");
     EXPECT_TRUE(lines.contains("Error: exact · no rounding error"));
     EXPECT_TRUE(lines.contains("Number type: cpp_rational, exact fractions"));
+}
+
+TEST(Presenter, WithADecimalCommaResultsUseIt) {
+    view::ValueParts p = view::valueParts(evaluated("0.1 + 0.2"));
+    EXPECT_EQ(view::withDecimalComma(p).trusted, "0,300000000000000");
+    EXPECT_EQ(view::withDecimalComma(QStringLiteral("nCr(1.5, 2)")), "nCr(1,5; 2)");
+    settings::setDecimalComma(true);
+    EXPECT_EQ(view::copyText(evaluated("0.1 + 0.2"), view::CopyForm::Trusted, typeInfo(NumberType::Double)), "0,300000000000000");
+    settings::setDecimalComma(false);
+}
+
+TEST(Presenter, PastedTextWithADecimalCommaReadsBack) {
+    settings::setDecimalComma(true);
+    Entry e;
+    e.setRoot(typing::read("nCr(1,5; 2)"));
+    EXPECT_EQ(e.text(), "nCr(1.5, 2)");
+    settings::setDecimalComma(false);
 }

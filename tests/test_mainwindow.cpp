@@ -1227,3 +1227,20 @@ TEST(MainWindow, TheDecimalSeparatorFollowsTheLanguageUnlessChosen) {
     setting(window, "decimal:language")->trigger();
     EXPECT_FALSE(settings::decimalComma());
 }
+
+TEST(MainWindow, TheScreenTheHistoryAndTheCopiesUseTheDecimalComma) {
+    MainWindow window;
+    setting(window, "decimal:comma")->trigger();
+    run(window, "1.5+1");
+    EXPECT_EQ(lcd(window)->outputText(), "2,5");
+    auto* history = child<QListWidget>(window, "history");
+    EXPECT_EQ(history->item(0)->text(), "1,5+1 = 2,5");
+    child<QAction>(window, "copy:expression")->trigger();
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "1,5+1");
+    history->setCurrentRow(0);
+    child<QAction>(window, "history:copyExpression")->trigger();
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "1,5+1");
+    setting(window, "decimal:language")->trigger();  // English: the point again, everywhere
+    EXPECT_EQ(lcd(window)->outputText(), "2.5");
+    EXPECT_EQ(history->item(0)->text(), "1.5+1 = 2.5");
+}

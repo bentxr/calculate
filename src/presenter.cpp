@@ -1,5 +1,7 @@
 #include "presenter.hpp"
 
+#include "settings.hpp"
+
 #include <QCoreApplication>
 #include <QRegularExpression>
 #include <QStringList>
@@ -13,6 +15,10 @@ namespace {
 QString fromStd(const std::string& s) { return QString::fromStdString(s); }
 
 QString minus() { return QString(QChar(0x2212)); }
+
+// A number for display, with the decimal separator chosen in the settings.
+QString decimal(QString number) { return settings::decimalComma() ? number.replace('.', ',') : number; }
+QString number(const std::string& s) { return decimal(fromStd(s)); }
 
 // Laid out like the CLI does: positional for −7 <= exponent < 21, d.ddd × 10^exponent otherwise.
 ValueParts split(const Digits& value, int trustedDigits) {
@@ -132,23 +138,24 @@ QString verdict(const QString& conditionNumber) {
 
 QList<DetailRow> details(const Result& r, const TypeInfo& t) {
     if (r.error) return {};
-    const DetailRow evaluated{"evaluated", QCoreApplication::translate("view", "Evaluated"), fromStd(r.expression)};
+    const QString expression = settings::decimalComma() ? withDecimalComma(fromStd(r.expression)) : fromStd(r.expression);
+    const DetailRow evaluated{"evaluated", QCoreApplication::translate("view", "Evaluated"), expression};
     if (r.exact)
         return {{"exact", QCoreApplication::translate("view", "Error"), QCoreApplication::translate("view", "exact · no rounding error")},
                 {"type", QCoreApplication::translate("view", "Number type"),
                  QCoreApplication::translate("view", "%1, exact fractions").arg(fromStd(t.cppName))},
                 evaluated};
-    QString measured = r.measuredAvailable ? fromStd(r.measured) : QCoreApplication::translate("view", "unavailable");
+    QString measured = r.measuredAvailable ? number(r.measured) : QCoreApplication::translate("view", "unavailable");
     if (r.measuredAvailable && !r.measurementReliable) measured += QStringLiteral(" (") + QCoreApplication::translate("view", "unreliable") + QStringLiteral(")");
     QList<DetailRow> rows{
-        {"bound", QCoreApplication::translate("view", "Guaranteed bound"), fromStd(r.bound)},
+        {"bound", QCoreApplication::translate("view", "Guaranteed bound"), number(r.bound)},
         {"measured", QCoreApplication::translate("view", "Measured error"), measured},
         {"trusted", QCoreApplication::translate("view", "Trusted digits"),
          QCoreApplication::translate("view", "%1 by the bound, %2 by the measurement").arg(r.trustedDigits).arg(r.trustedDigitsMeasured)},
-        {"condition", QCoreApplication::translate("view", "Condition number κ"), fromStd(r.conditionNumber) + QStringLiteral(" · ") + verdict(fromStd(r.conditionNumber))},
-        {"input", QCoreApplication::translate("view", "Input error"), fromStd(r.inputError)},
-        {"rounding", QCoreApplication::translate("view", "Rounding error"), fromStd(r.roundingError)},
-        {"library", QCoreApplication::translate("view", "Library error"), fromStd(r.libraryError)},
+        {"condition", QCoreApplication::translate("view", "Condition number κ"), number(r.conditionNumber) + QStringLiteral(" · ") + verdict(fromStd(r.conditionNumber))},
+        {"input", QCoreApplication::translate("view", "Input error"), number(r.inputError)},
+        {"rounding", QCoreApplication::translate("view", "Rounding error"), number(r.roundingError)},
+        {"library", QCoreApplication::translate("view", "Library error"), number(r.libraryError)},
         {"operations", QCoreApplication::translate("view", "Rounded operations"), QString::number(r.roundingOperations)},
         {"type", QCoreApplication::translate("view", "Number type"),
          QCoreApplication::translate("view", "%1, %2-bit significand").arg(fromStd(t.cppName)).arg(t.precisionBits)},
@@ -211,16 +218,34 @@ QString copyText(const Result& r, CopyForm form, const TypeInfo& t) {
             if (qMin(r.trustedDigits, static_cast<int>(r.value.digits.size())) == 0) return {};
             QString trusted = p.trusted;
             if (trusted.endsWith('.')) trusted.chop(1);
-            return trusted.replace(minus(), "-") + exponent;
+            return decimal(trusted.replace(minus(), "-")) + exponent;
         }
-        value = QString(p.trusted + p.noise).replace(minus(), "-") + exponent;
+        value = decimal(QString(p.trusted + p.noise).replace(minus(), "-")) + exponent;
         if (form == CopyForm::Value) return value;
-        if (form == CopyForm::ValueAndBound) return value + QStringLiteral(" ± ") + fromStd(r.bound);
+        if (form == CopyForm::ValueAndBound) return value + QStringLiteral(" ± ") + number(r.bound);
     }
-    QStringList lines{fromStd(r.expression) + QStringLiteral(" = ") + value};
+    const QString expression = settings::decimalComma() ? withDecimalComma(fromStd(r.expression)) : fromStd(r.expression);
+    QStringList lines{expression + QStringLiteral(" = ") + value};
     for (const DetailRow& row : details(r, t))
         if (row.key != "evaluated") lines << row.label + QStringLiteral(": ") + row.value;
     return lines.join('\n');
+}
+
+ValueParts withDecimalComma(ValueParts p) {
+    p.trusted.replace('.', ',');
+    p.noise.replace('.', ',');
+    return p;
+}
+
+FractionParts withDecimalComma(FractionParts p) {
+    p.decimal.replace('.', ',');
+    return p;
+}
+
+QString withDecimalComma(const QString& expression) {
+    QString s = expression;
+    s.replace(QStringLiteral(", "), QStringLiteral("; "));
+    return s.replace('.', ',');
 }
 
 bool incomplete(const Error& error) {
