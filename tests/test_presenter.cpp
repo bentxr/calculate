@@ -157,3 +157,7 @@ TEST(Presenter, EveryStatisticSaysHowItIsComputed) {
     EXPECT_TRUE(view::algorithm("variance").isEmpty());
     EXPECT_NE(view::algorithm("var"), view::algorithm("varp"));  // n − 1 against n
 }
+
+TEST(Presenter, TheBoundIsExplainedAsProven) {
+    EXPECT_EQ(view::explanation("bound"), "A proven upper limit on how far the shown value can be from the exact result.");
+}

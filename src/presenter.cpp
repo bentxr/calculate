@@ -162,8 +162,7 @@ QList<DetailRow> details(const Result& r, const TypeInfo& t) {
 
 QString explanation(const QString& key) {
     if (key == "bound")
-        return QCoreApplication::translate("view", "A proven upper limit on how far the shown value can be from the exact result "
-                                                   "(to first order: it leaves out terms far smaller than itself).");
+        return QCoreApplication::translate("view", "A proven upper limit on how far the shown value can be from the exact result.");
     if (key == "measured")
         return QCoreApplication::translate("view", "The actual difference from the same calculation redone with far more precision. "
                                                    "An estimate, usually much smaller than the guaranteed bound.");
