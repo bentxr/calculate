@@ -4,6 +4,9 @@
 
 #include <QFontDatabase>
 #include <QFontMetricsF>
+#include <QGuiApplication>
+#include <QInputMethod>
+#include <QInputMethodEvent>
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QPainter>
@@ -33,7 +36,11 @@ QFont scaled(const QFont& base, qreal factor) {
 Lcd::Lcd(QWidget* parent) : QWidget(parent) {
     setFocusPolicy(Qt::StrongFocus);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);  // never shorter than sizeHint()
-    setAttribute(Qt::WA_InputMethodEnabled, false);
+#ifdef Q_OS_WASM
+    setAttribute(Qt::WA_InputMethodEnabled, false);  // a phone's keyboard would cover the keypad
+#else
+    setAttribute(Qt::WA_InputMethodEnabled, true);
+#endif
     scroll_ = new QScrollBar(Qt::Vertical, this);
     scroll_->hide();
     bar_ = new QWidget(this);
@@ -87,6 +94,21 @@ void Lcd::right() {
 void Lcd::setInput(const QString& text) {
     entry_.setRoot(typing::read(text));
     changed();
+}
+
+void Lcd::finishName() {
+    typing::finishName(entry_);
+    changed();
+}
+
+void Lcd::setSystemKeyboard(bool on) {
+    setAttribute(Qt::WA_InputMethodEnabled, on);
+    if (on) {
+        setFocus();
+        QGuiApplication::inputMethod()->show();
+    } else {
+        QGuiApplication::inputMethod()->hide();
+    }
 }
 
 void Lcd::clear() {
@@ -176,6 +198,13 @@ QFont Lcd::outputFont() const { return scaled(font(), 1.6); }
 
 typeset::Box Lcd::inputBox(QRectF* caret) const { return typeset::input(entry_, inputFont(), caret); }
 
+// An input wider than the screen slides left, as in a text field, so the cursor stays in view.
+QPointF Lcd::inputOrigin(const typeset::Box& input, const QRectF& caret) const {
+    const qreal room = width() - 2 * margin;
+    const qreal shift = caret.left() > room ? room - caret.left() - 2 : 0;
+    return {margin + shift, margin + QFontMetricsF(statusFont()).height() + input.ascent};
+}
+
 void Lcd::setEntry(const Entry& entry) {
     entry_ = entry;
     changed();
@@ -229,16 +258,14 @@ void Lcd::paintEvent(QPaintEvent*) {
 
     QRectF caret;
     const typeset::Box input = inputBox(&caret);
-    // An input wider than the screen slides left, as in a text field, so the cursor stays in view.
+    const QPointF origin = inputOrigin(input, caret);
     const qreal room = width() - 2 * margin;
-    const qreal shift = caret.left() > room ? room - caret.left() - 2 : 0;
-    const QPointF inputOrigin(margin + shift, margin + status.height() + input.ascent);
     painter.save();
     painter.setClipRect(QRectF(margin, 0, room, height()));
-    typeset::paint(painter, input, inputOrigin, ink, ink, rect());
+    typeset::paint(painter, input, origin, ink, ink, rect());
     if (hasFocus()) {
         painter.setPen(QPen(ink, 1.5));
-        const QRectF at = caret.translated(inputOrigin);
+        const QRectF at = caret.translated(origin);
         painter.drawLine(at.topLeft(), at.bottomLeft());
     }
     painter.restore();
@@ -253,11 +280,32 @@ void Lcd::paintEvent(QPaintEvent*) {
 void Lcd::keyPressEvent(QKeyEvent* event) {
     switch (event->key()) {
     case Qt::Key_Return:
-    case Qt::Key_Enter: emit evaluateRequested(); return;
+    case Qt::Key_Enter:
+        finishName();
+        emit evaluateRequested();
+        return;
     case Qt::Key_Backspace: backspace(); return;
+    case Qt::Key_Delete:
+        entry_.deleteForward();
+        changed();
+        return;
     case Qt::Key_Escape: clear(); return;
-    case Qt::Key_Left: left(); return;
-    case Qt::Key_Right: right(); return;
+    case Qt::Key_Left:
+        finishName();
+        left();
+        return;
+    case Qt::Key_Right:
+        finishName();
+        right();
+        return;
+    case Qt::Key_Home:
+        entry_.home();
+        update();
+        return;
+    case Qt::Key_End:
+        entry_.end();
+        update();
+        return;
     case Qt::Key_Up:
         if (!up()) emit historyRequested(1);
         return;
@@ -266,29 +314,47 @@ void Lcd::keyPressEvent(QKeyEvent* event) {
         return;
     default: break;
     }
-    // Typed characters, translated to what the calculator's keys insert.
-    QString piece;
     const QString text = event->text();
-    const bool plain = !(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier));
-    if (plain && text.size() == 1) {
-        const QChar c = text[0];
-        if (c >= '0' && c <= '9') piece = text;
-        else if (c == '.' || c == ',') piece = QStringLiteral(".");
-        else if (c == '+') piece = QStringLiteral("+");
-        else if (c == '-') piece = QStringLiteral("−");
-        else if (c == '*') piece = QStringLiteral("×");
-        else if (c == '/') piece = QStringLiteral("÷");
-        else if (c == '(' || c == ')') piece = text;
-        else if (c == '=') {
-            emit evaluateRequested();
-            return;
-        }
-    }
-    if (!piece.isEmpty()) {
-        insert(piece);
+    if (event->modifiers() & (Qt::ControlModifier | Qt::MetaModifier)) {  // shortcuts are not typed
+        event->ignore();
         return;
     }
-    event->ignore();  // anything else is not on the calculator
+    if ((event->modifiers() & Qt::KeypadModifier) && (text == "," || text == ".")) {  // the keypad's decimal key
+        insert(QStringLiteral("."));
+        return;
+    }
+    if (text == "=") {
+        const Row& row = entry_.currentRow();
+        if (entry_.cursor() > 0 && row[static_cast<std::size_t>(entry_.cursor() - 1)].text == ":") insert("=");  // :=
+        else emit evaluateRequested();
+        return;
+    }
+    bool typed = false;
+    for (const QChar c : text) typed = typing::typeCharacter(entry_, c) || typed;
+    if (typed) changed();
+    else event->ignore();
+}
+
+// An input method's text (a dead key's ^, a phone's keyboard) is typed like the keyboard's; the text it is
+// still composing is not shown.
+void Lcd::inputMethodEvent(QInputMethodEvent* event) {
+    bool typed = false;
+    for (const QChar c : event->commitString()) typed = typing::typeCharacter(entry_, c) || typed;
+    if (typed) changed();
+    event->accept();
+}
+
+QVariant Lcd::inputMethodQuery(Qt::InputMethodQuery query) const {
+    switch (query) {
+    case Qt::ImEnabled: return true;
+    case Qt::ImCursorRectangle: {
+        QRectF caret;
+        const typeset::Box input = inputBox(&caret);
+        return caret.translated(inputOrigin(input, caret)).toAlignedRect();
+    }
+    case Qt::ImHints: return static_cast<int>(Qt::ImhNoPredictiveText | Qt::ImhNoAutoUppercase);
+    default: return QWidget::inputMethodQuery(query);
+    }
 }
 
 void Lcd::wheelEvent(QWheelEvent* event) {

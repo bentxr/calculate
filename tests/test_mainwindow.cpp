@@ -825,3 +825,25 @@ TEST(MainWindow, AnEdgeWithinTheErrorOffersToProceed) {
     run(window, "1/(0.1+0.2-0.3)");
     EXPECT_TRUE(child<QPushButton>(window, "proceed")->isVisibleTo(&window));
 }
+
+TEST(MainWindow, TypedFunctionsEvaluate) {
+    MainWindow window;
+    forget(window);
+    QTest::keyClicks(lcd(window), "sqrt(16)+sin(0)");
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "4");
+}
+
+TEST(MainWindow, AKeyboardButtonTurnsTheSystemKeyboardOnAndOff) {
+    MainWindow window;
+    auto* button = child<QToolButton>(window, "keyboardButton");
+    EXPECT_TRUE(button->isCheckable());
+    EXPECT_EQ(button->focusPolicy(), Qt::NoFocus);
+    EXPECT_FALSE(button->accessibleName().isEmpty());
+    EXPECT_EQ(button->isChecked(), lcd(window)->testAttribute(Qt::WA_InputMethodEnabled));
+    button->click();
+    EXPECT_EQ(button->isChecked(), lcd(window)->testAttribute(Qt::WA_InputMethodEnabled));
+    button->click();
+    EXPECT_EQ(button->isChecked(), lcd(window)->testAttribute(Qt::WA_InputMethodEnabled));
+}

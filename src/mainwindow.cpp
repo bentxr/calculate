@@ -156,6 +156,17 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     detailsButton_->setAutoRaise(true);
     detailsButton_->setEnabled(false);
     lcd_->addToBar(detailsButton_);
+    // The system keyboard on request: a phone shows it only when asked, so the keypad stays in view. On the
+    // desktop the keyboard is always there, so the button is only in the browser.
+    keyboardButton_ = new QToolButton(lcd_);
+    keyboardButton_->setObjectName("keyboardButton");
+    keyboardButton_->setAutoRaise(true);
+    keyboardButton_->setCheckable(true);
+    keyboardButton_->setChecked(lcd_->testAttribute(Qt::WA_InputMethodEnabled));
+    lcd_->addToBar(keyboardButton_);
+#ifndef Q_OS_WASM
+    keyboardButton_->hide();
+#endif
     busy_ = new QLabel(lcd_);
     busy_->setObjectName("busy");
     cancel_ = new QPushButton(lcd_);
@@ -235,6 +246,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(equals_, &QPushButton::clicked, this, &MainWindow::evaluate);
     connect(proceed_, &QPushButton::clicked, this, [this] { request(lastExpression_, true); });
     connect(detailsButton_, &QToolButton::clicked, this, [this] { card_->popUp(lcd_); });
+    connect(keyboardButton_, &QToolButton::toggled, lcd_, &Lcd::setSystemKeyboard);
     connect(historyToggle_, &QToolButton::clicked, this, [this] {
         const QSize size(lcd_->width(), historyPanel_->sizeHint().height());
         historyPanel_->setGeometry(placed(size, globalGeometry(lcd_), popupBounds(lcd_)));
@@ -254,8 +266,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     // Only the screen takes the keyboard; every other control is used with the mouse.
     for (QWidget* w : {static_cast<QWidget*>(modes_), static_cast<QWidget*>(panelToggle_), static_cast<QWidget*>(settingsButton_),
                        static_cast<QWidget*>(type_), static_cast<QWidget*>(angle_), static_cast<QWidget*>(equals_),
-                       static_cast<QWidget*>(detailsButton_), static_cast<QWidget*>(proceed_), static_cast<QWidget*>(cancel_),
-                       static_cast<QWidget*>(historyToggle_)})
+                       static_cast<QWidget*>(detailsButton_), static_cast<QWidget*>(keyboardButton_), static_cast<QWidget*>(proceed_),
+                       static_cast<QWidget*>(cancel_), static_cast<QWidget*>(historyToggle_)})
         w->setFocusPolicy(Qt::NoFocus);
     lcd_->setFocus();
 }
@@ -425,6 +437,8 @@ void MainWindow::retranslate() {
     type_->retranslate();
     equals_->setText(tr("="));
     detailsButton_->setText(tr("Details"));
+    keyboardButton_->setText(tr("Keyboard"));
+    keyboardButton_->setAccessibleName(keyboardButton_->text());
     proceed_->setText(tr("Proceed anyway"));
     busy_->setText(tr("Computing…"));
     cancel_->setText(tr("Cancel"));
@@ -564,6 +578,7 @@ Options MainWindow::options() const {
 }
 
 void MainWindow::evaluate() {
+    lcd_->finishName();  // the = key ends a name being typed, as Enter does
     const QString text = lcd_->input().trimmed();
     if (text.isEmpty()) return;
     typed_ = lcd_->entry();  // the history keeps it as typed, templates and all

@@ -10,8 +10,9 @@ class QHBoxLayout;
 class QScrollBar;
 
 // The calculator's screen: the input at the top and the result at the bottom right, drawn in two
-// dimensions. It owns the keyboard, and lets through only what the calculator's keys could type:
-// digits, the decimal point, + − × ÷, ( ), Enter, Backspace, Esc and the arrows.
+// dimensions. It owns the keyboard: everything typed goes through typing::typeCharacter, so a typed
+// name or sign becomes the same piece or template its key makes; Enter, Backspace, Delete, Esc, the
+// arrows, Home and End edit.
 class Lcd : public QWidget {
     Q_OBJECT
 
@@ -30,6 +31,10 @@ public:
     void left();
     void right();
     void setInput(const QString& text);
+    void finishName();  // ends a name typed just before the cursor (pi becomes π)
+    // The phone's on-screen keyboard (an input method): off in the browser, where it would cover the
+    // keypad, until asked for. A physical keyboard types either way.
+    void setSystemKeyboard(bool on);
     void clear();  // the input and the result, like AC
 
     void showValue(const view::ValueParts& parts);
@@ -57,6 +62,8 @@ signals:
 protected:
     void paintEvent(QPaintEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
+    void inputMethodEvent(QInputMethodEvent* event) override;
+    QVariant inputMethodQuery(Qt::InputMethodQuery query) const override;
     void wheelEvent(QWheelEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
     void changeEvent(QEvent* event) override;
@@ -69,6 +76,7 @@ private:
     QFont inputFont() const;
     QFont outputFont() const;
     typeset::Box inputBox(QRectF* caret = nullptr) const;
+    QPointF inputOrigin(const typeset::Box& input, const QRectF& caret) const;  // where the input is drawn
     QRectF resultArea(const typeset::Box& input) const;
     int barHeight() const;
     void changed();  // lays the result out again and repaints

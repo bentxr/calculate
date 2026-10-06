@@ -4,25 +4,11 @@
 
 #include <QClipboard>
 #include <QGuiApplication>
+#include <QInputMethodEvent>
 #include <QSignalSpy>
 #include <QTest>
 
 #include <gtest/gtest.h>
-
-TEST(Lcd, TheKeyboardTypesOnlyWhatTheCalculatorHas) {
-    Lcd lcd;
-    QTest::keyClicks(&lcd, "abc xyz^!");
-    EXPECT_EQ(lcd.input(), "");
-    QTest::keyClicks(&lcd, "12+3*4/5-(6,7)");
-    EXPECT_EQ(lcd.input(), "12+3×4÷5−(6.7)");
-    QTest::keyClick(&lcd, Qt::Key_Backspace);
-    EXPECT_EQ(lcd.input(), "12+3×4÷5−(6.7");
-    QTest::keyClick(&lcd, Qt::Key_Left);
-    QTest::keyClicks(&lcd, "0");
-    EXPECT_EQ(lcd.input(), "12+3×4÷5−(6.07");
-    QTest::keyClick(&lcd, Qt::Key_Escape);
-    EXPECT_EQ(lcd.input(), "");
-}
 
 TEST(Lcd, PasteDoesNothing) {
     Lcd lcd;
@@ -108,4 +94,58 @@ TEST(Lcd, InsideAFractionUpAndDownStayInTheEntry) {
     QTest::keyClick(&lcd, Qt::Key_Right);  // out of the fraction
     QTest::keyClick(&lcd, Qt::Key_Up);
     EXPECT_EQ(history.count(), 1);
+}
+
+TEST(Lcd, TheKeyboardTypesTheWholeLanguage) {
+    Lcd lcd;
+    QTest::keyClicks(&lcd, "sqrt(2)/3+nCr(5,2)");
+    EXPECT_EQ(lcd.input(), "√(2)÷3+nCr(5, 2)");
+    QTest::keyClick(&lcd, Qt::Key_Home);
+    QTest::keyClick(&lcd, Qt::Key_Delete);  // the root goes whole
+    EXPECT_EQ(lcd.input(), "÷3+nCr(5, 2)");
+    QTest::keyClick(&lcd, Qt::Key_End);
+    QTest::keyClick(&lcd, Qt::Key_Backspace);
+    EXPECT_EQ(lcd.input(), "÷3+nCr(5, 2");
+    QTest::keyClick(&lcd, Qt::Key_Comma, Qt::KeypadModifier);  // the keypad's decimal key: always a point
+    EXPECT_EQ(lcd.input(), "÷3+nCr(5, 2.");
+    QTest::keyClick(&lcd, Qt::Key_Escape);
+    EXPECT_EQ(lcd.input(), "");
+}
+
+TEST(Lcd, ShortcutsAreNotTyped) {
+    Lcd lcd;
+    QTest::keyClick(&lcd, Qt::Key_B, Qt::ControlModifier);
+    QTest::keyClick(&lcd, Qt::Key_B, Qt::MetaModifier);
+    EXPECT_EQ(lcd.input(), "");
+}
+
+TEST(Lcd, AnInputMethodTypesItsText) {
+    Lcd lcd;
+    EXPECT_TRUE(lcd.testAttribute(Qt::WA_InputMethodEnabled));
+    QInputMethodEvent compose;
+    compose.setCommitString(QStringLiteral("2^3"));  // a dead key's ^, or an input method's text
+    QCoreApplication::sendEvent(&lcd, &compose);
+    EXPECT_EQ(lcd.input(), "2^(3)");
+}
+
+TEST(Lcd, EnterEndsANameBeingTyped) {
+    Lcd lcd;
+    QSignalSpy evaluate(&lcd, &Lcd::evaluateRequested);
+    QTest::keyClicks(&lcd, "2*pi");
+    QTest::keyClick(&lcd, Qt::Key_Return);
+    EXPECT_EQ(lcd.input(), "2×π");
+    EXPECT_EQ(evaluate.count(), 1);
+    QTest::keyClicks(&lcd, ":=");  // after a colon, = is typed (assignment), not evaluated
+    EXPECT_EQ(evaluate.count(), 1);
+    EXPECT_EQ(lcd.input(), "2×π:=");
+}
+
+TEST(Lcd, TheSystemKeyboardCanBeTurnedOnAndOff) {
+    Lcd lcd;
+    lcd.setSystemKeyboard(false);
+    EXPECT_FALSE(lcd.testAttribute(Qt::WA_InputMethodEnabled));
+    QTest::keyClicks(&lcd, "12");  // a physical keyboard types either way
+    EXPECT_EQ(lcd.input(), "12");
+    lcd.setSystemKeyboard(true);
+    EXPECT_TRUE(lcd.testAttribute(Qt::WA_InputMethodEnabled));
 }

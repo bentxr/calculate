@@ -93,6 +93,7 @@ private:
     QComboBox* angle_ = nullptr;
     Lcd* lcd_ = nullptr;
     QToolButton* detailsButton_ = nullptr;
+    QToolButton* keyboardButton_ = nullptr;
     DetailsCard* card_ = nullptr;
     FormulaTip* formulaTip_ = nullptr;
     QLabel* message_ = nullptr;
