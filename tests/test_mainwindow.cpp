@@ -1128,3 +1128,10 @@ TEST(MainWindow, APressThatMovesIsNoLongPress) {
     EXPECT_FALSE(menu->isVisible());
     QTest::mouseRelease(history->viewport(), Qt::LeftButton, {}, where);
 }
+
+TEST(MainWindow, TheHistoryMenuBelongsToTheHistoryPanel) {
+    // The browser keeps an open popup above any later popup that is not its child: a row's menu must belong to the
+    // panel it opens from, or it opens hidden behind it.
+    MainWindow window;
+    EXPECT_EQ(child<QMenu>(window, "historyMenu")->parentWidget(), child<QWidget>(window, "historyPanel"));
+}

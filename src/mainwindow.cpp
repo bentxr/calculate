@@ -231,7 +231,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     historyLayout->addWidget(history_);
     // A row's own menu: a right click, or a long press on a touch screen.
     history_->setContextMenuPolicy(Qt::CustomContextMenu);
-    historyMenu_ = new QMenu(this);
+    historyMenu_ = new QMenu(historyPanel_);  // its own: in the browser a popup hides a later one that is not its child
     historyMenu_->setObjectName("historyMenu");
     const std::pair<const char*, view::CopyForm> historyForms[] = {{"history:copyValue", view::CopyForm::Value},
                                                                    {"history:copyBound", view::CopyForm::ValueAndBound}};
