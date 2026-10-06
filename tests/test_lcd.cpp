@@ -1,35 +1,17 @@
 #include "lcd.hpp"
 
 #include "printers.hpp"
+#include "settings.hpp"
 
+#include <QAccessible>
 #include <QClipboard>
 #include <QGuiApplication>
+#include <QInputMethodEvent>
+#include <QMenu>
 #include <QSignalSpy>
 #include <QTest>
 
 #include <gtest/gtest.h>
-
-TEST(Lcd, TheKeyboardTypesOnlyWhatTheCalculatorHas) {
-    Lcd lcd;
-    QTest::keyClicks(&lcd, "abc xyz^!");
-    EXPECT_EQ(lcd.input(), "");
-    QTest::keyClicks(&lcd, "12+3*4/5-(6,7)");
-    EXPECT_EQ(lcd.input(), "12+3×4÷5−(6.7)");
-    QTest::keyClick(&lcd, Qt::Key_Backspace);
-    EXPECT_EQ(lcd.input(), "12+3×4÷5−(6.7");
-    QTest::keyClick(&lcd, Qt::Key_Left);
-    QTest::keyClicks(&lcd, "0");
-    EXPECT_EQ(lcd.input(), "12+3×4÷5−(6.07");
-    QTest::keyClick(&lcd, Qt::Key_Escape);
-    EXPECT_EQ(lcd.input(), "");
-}
-
-TEST(Lcd, PasteDoesNothing) {
-    Lcd lcd;
-    QGuiApplication::clipboard()->setText("sin(1)");
-    QTest::keySequence(&lcd, QKeySequence::Paste);
-    EXPECT_EQ(lcd.input(), "");
-}
 
 TEST(Lcd, EnterEvaluatesAndUpDownAskForTheHistory) {
     Lcd lcd;
@@ -108,4 +90,212 @@ TEST(Lcd, InsideAFractionUpAndDownStayInTheEntry) {
     QTest::keyClick(&lcd, Qt::Key_Right);  // out of the fraction
     QTest::keyClick(&lcd, Qt::Key_Up);
     EXPECT_EQ(history.count(), 1);
+}
+
+TEST(Lcd, TheKeyboardTypesTheWholeLanguage) {
+    Lcd lcd;
+    QTest::keyClicks(&lcd, "sqrt(2)/3+nCr(5,2)");
+    EXPECT_EQ(lcd.input(), "√(2)÷3+nCr(5, 2)");
+    QTest::keyClick(&lcd, Qt::Key_Home);
+    QTest::keyClick(&lcd, Qt::Key_Delete);  // the root goes whole
+    EXPECT_EQ(lcd.input(), "÷3+nCr(5, 2)");
+    QTest::keyClick(&lcd, Qt::Key_End);
+    QTest::keyClick(&lcd, Qt::Key_Backspace);
+    EXPECT_EQ(lcd.input(), "÷3+nCr(5, 2");
+    QTest::keyClick(&lcd, Qt::Key_Comma, Qt::KeypadModifier);  // the keypad's decimal key: always a point
+    EXPECT_EQ(lcd.input(), "÷3+nCr(5, 2.");
+    QTest::keyClick(&lcd, Qt::Key_Escape);
+    EXPECT_EQ(lcd.input(), "");
+}
+
+TEST(Lcd, ShortcutsAreNotTyped) {
+    Lcd lcd;
+    QTest::keyClick(&lcd, Qt::Key_B, Qt::ControlModifier);
+    QTest::keyClick(&lcd, Qt::Key_B, Qt::MetaModifier);
+    EXPECT_EQ(lcd.input(), "");
+}
+
+TEST(Lcd, AnInputMethodTypesItsText) {
+    Lcd lcd;
+    EXPECT_TRUE(lcd.testAttribute(Qt::WA_InputMethodEnabled));
+    QInputMethodEvent compose;
+    compose.setCommitString(QStringLiteral("2^3"));  // a dead key's ^, or an input method's text
+    QCoreApplication::sendEvent(&lcd, &compose);
+    EXPECT_EQ(lcd.input(), "2^(3)");
+}
+
+TEST(Lcd, EnterEndsANameBeingTyped) {
+    Lcd lcd;
+    QSignalSpy evaluate(&lcd, &Lcd::evaluateRequested);
+    QTest::keyClicks(&lcd, "2*pi");
+    QTest::keyClick(&lcd, Qt::Key_Return);
+    EXPECT_EQ(lcd.input(), "2×π");
+    EXPECT_EQ(evaluate.count(), 1);
+    QTest::keyClicks(&lcd, ":=");  // after a colon, = is typed (assignment), not evaluated
+    EXPECT_EQ(evaluate.count(), 1);
+    EXPECT_EQ(lcd.input(), "2×π:=");
+}
+
+TEST(Lcd, TheSystemKeyboardCanBeTurnedOnAndOff) {
+    Lcd lcd;
+    lcd.setSystemKeyboard(false);
+    EXPECT_FALSE(lcd.testAttribute(Qt::WA_InputMethodEnabled));
+    QTest::keyClicks(&lcd, "12");  // a physical keyboard types either way
+    EXPECT_EQ(lcd.input(), "12");
+    lcd.setSystemKeyboard(true);
+    EXPECT_TRUE(lcd.testAttribute(Qt::WA_InputMethodEnabled));
+}
+
+TEST(Lcd, ShiftMovesAndCtrlASelect) {
+    Lcd lcd;
+    QTest::keyClicks(&lcd, "1+2");
+    QTest::keyClick(&lcd, Qt::Key_Left, Qt::ShiftModifier);
+    EXPECT_EQ(lcd.selectedText(), "2");
+    QTest::keyClick(&lcd, Qt::Key_Home, Qt::ShiftModifier);
+    EXPECT_EQ(lcd.selectedText(), "1+2");
+    QTest::keyClicks(&lcd, "5");
+    EXPECT_EQ(lcd.input(), "5");
+    QTest::keyClick(&lcd, Qt::Key_A, Qt::ControlModifier);
+    EXPECT_EQ(lcd.selectedText(), "5");
+}
+
+TEST(Lcd, AClickPlacesTheCursorAndADragSelects) {
+    Lcd lcd;
+    lcd.resize(400, 200);
+    lcd.setInput("1234");
+    const QPoint one = lcd.caretRectAt(Position{{}, 1}).center().toPoint();
+    const QPoint three = lcd.caretRectAt(Position{{}, 3}).center().toPoint();
+    QTest::mouseClick(&lcd, Qt::LeftButton, {}, one);
+    EXPECT_EQ(lcd.entry().cursor(), 1);
+    QTest::mousePress(&lcd, Qt::LeftButton, {}, one);
+    QTest::mouseMove(&lcd, three);
+    QTest::mouseRelease(&lcd, Qt::LeftButton, {}, three);
+    EXPECT_EQ(lcd.selectedText(), "23");
+}
+
+TEST(Lcd, ATapPlacesTheCursor) {
+    Lcd lcd;
+    lcd.resize(400, 200);
+    lcd.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&lcd));
+    lcd.setInput("1234");
+    QPointingDevice* finger = QTest::createTouchDevice();
+    const QPoint one = lcd.caretRectAt(Position{{}, 1}).center().toPoint();
+    QTest::touchEvent(&lcd, finger).press(0, one, &lcd);
+    QTest::touchEvent(&lcd, finger).release(0, one, &lcd);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd.entry().cursor() == 1; }, 1000));
+}
+
+TEST(Lcd, UndoAndRedo) {
+    Lcd lcd;
+    QTest::keyClicks(&lcd, "12");
+    QTest::keyClick(&lcd, Qt::Key_Escape);  // AC can be undone too
+    EXPECT_EQ(lcd.input(), "");
+    QTest::keyClick(&lcd, Qt::Key_Z, Qt::ControlModifier);
+    EXPECT_EQ(lcd.input(), "12");
+    QTest::keyClick(&lcd, Qt::Key_Z, Qt::ControlModifier);
+    EXPECT_EQ(lcd.input(), "1");
+    QTest::keyClick(&lcd, Qt::Key_Z, Qt::ControlModifier | Qt::ShiftModifier);
+    EXPECT_EQ(lcd.input(), "12");
+    QTest::keyClick(&lcd, Qt::Key_Y, Qt::ControlModifier);
+    EXPECT_EQ(lcd.input(), "");  // the AC again
+    lcd.setInput("7");  // a history replay is an edit too
+    lcd.undo();
+    EXPECT_EQ(lcd.input(), "");
+}
+
+TEST(Lcd, PasteReadsTheTextIntoTemplates) {
+    Lcd lcd;
+    QGuiApplication::clipboard()->setText("((1)/(3))+sqrt(2)");
+    QTest::keySequence(&lcd, QKeySequence::Paste);
+    EXPECT_EQ(lcd.input(), "((1)/(3))+√(2)");
+    EXPECT_EQ(lcd.entry().root()[0].kind, Template::Fraction);
+    QTest::keyClick(&lcd, Qt::Key_Z, Qt::ControlModifier);  // one paste, one undo
+    EXPECT_EQ(lcd.input(), "");
+}
+
+TEST(Lcd, CutAndCopyTakeTheSelectionAsText) {
+    Lcd lcd;
+    QSignalSpy copyResult(&lcd, &Lcd::copyRequested);
+    QTest::keyClicks(&lcd, "2+sqrt(9)");
+    QTest::keySequence(&lcd, QKeySequence::Copy);  // nothing selected: the result's turn
+    EXPECT_EQ(copyResult.count(), 1);
+    QTest::keyClick(&lcd, Qt::Key_Left, Qt::ShiftModifier);
+    QTest::keySequence(&lcd, QKeySequence::Copy);
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "√(9)");
+    QTest::keySequence(&lcd, QKeySequence::Cut);
+    EXPECT_EQ(lcd.input(), "2+");
+    QTest::keySequence(&lcd, QKeySequence::Paste);
+    EXPECT_EQ(lcd.input(), "2+√(9)");
+    EXPECT_EQ(copyResult.count(), 1);
+}
+
+TEST(Lcd, OnlyTheFirstLineIsPasted) {
+    Lcd lcd;
+    QSignalSpy partly(&lcd, &Lcd::pastedFirstLine);
+    lcd.pasteText("\n1+2\n3+4\n");
+    EXPECT_EQ(lcd.input(), "1+2");
+    ASSERT_EQ(partly.count(), 1);
+    EXPECT_EQ(partly.at(0).at(0).toInt(), 2);  // of two lines
+}
+
+TEST(Lcd, TheContextMenuEdits) {
+    Lcd lcd;
+    QTest::keyClicks(&lcd, "12");
+    QStringList names;
+    for (QAction* action : lcd.editMenu()->actions())
+        if (!action->isSeparator()) names << action->objectName();
+    EXPECT_EQ(names, QStringList({"edit:undo", "edit:redo", "edit:cut", "edit:copy", "edit:paste", "edit:selectAll"}));
+    lcd.findChild<QAction*>("edit:selectAll")->trigger();
+    EXPECT_EQ(lcd.selectedText(), "12");
+    lcd.findChild<QAction*>("edit:undo")->trigger();
+    EXPECT_EQ(lcd.input(), "1");
+}
+
+TEST(Lcd, ScreenReadersGetTheInputAndTheResult) {
+    Lcd lcd;
+    lcd.setInput("1+2");
+    lcd.showValue({"3", "", ""});
+    QAccessibleInterface* a = QAccessible::queryAccessibleInterface(&lcd);
+    ASSERT_NE(a, nullptr);
+    EXPECT_EQ(a->role(), QAccessible::EditableText);
+    EXPECT_EQ(a->text(QAccessible::Name), "Calculator screen");
+    EXPECT_EQ(a->text(QAccessible::Value), "1+2");
+    EXPECT_EQ(a->text(QAccessible::Description), "3");
+}
+
+TEST(Lcd, AProvisionalResultIsSmaller) {
+    Lcd lcd;
+    lcd.resize(400, 200);
+    lcd.showValue({"3", "", ""});
+    const QSize full = lcd.resultSize();
+    lcd.setProvisional(true);
+    EXPECT_TRUE(lcd.provisional());
+    EXPECT_LT(lcd.resultSize().height(), full.height());
+    lcd.setProvisional(false);
+    EXPECT_EQ(lcd.resultSize(), full);
+}
+
+TEST(Lcd, AnEmptySpanMarksNothing) {
+    Lcd lcd;
+    lcd.setInput("1+2");
+    lcd.setMarked(0, 0);
+    EXPECT_EQ(lcd.markedText(), "");
+    lcd.setMarked(0, 1);
+    EXPECT_EQ(lcd.markedText(), "1");
+    lcd.insert("3");  // an edit ends the mark: its bytes were those of the input before
+    EXPECT_EQ(lcd.markedText(), "");
+}
+
+TEST(Lcd, WithADecimalCommaACopiedSelectionReadsBack) {
+    settings::setDecimalComma(true);
+    Lcd lcd;
+    QTest::keyClicks(&lcd, "nCr(1,5;2)");
+    lcd.selectAll();
+    lcd.copy();
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "nCr(1,5; 2)");  // as the screen shows it
+    lcd.clear();
+    lcd.pasteText(QGuiApplication::clipboard()->text());
+    EXPECT_EQ(lcd.input(), "nCr(1.5, 2)");
+    settings::setDecimalComma(false);
 }

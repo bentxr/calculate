@@ -14,19 +14,26 @@ class Worker : public QObject {
 public:
     // Set from any thread to abort the evaluation in progress.
     std::atomic<bool>& cancelFlag() { return cancel_; }
+    // The newest preview asked for, and the flag that stops a running one; set from the window's thread.
+    std::atomic<int>& previewGeneration() { return previewGeneration_; }
+    std::atomic<bool>& previewCancelFlag() { return previewCancel_; }
 
 public slots:
     void evaluate(const QString& expression, const calculate_core::Options& options);
+    void preview(int generation, const QString& expression, const calculate_core::Options& options);
     void memoryAdd();
     void memorySubtract();
     void memoryClear();
 
 signals:
     void evaluated(const QString& expression, const calculate_core::Result& result);
+    void previewed(int generation, const QString& expression, const calculate_core::Result& result);
     void memoryChanged(const QString& memory);  // empty when cleared
     void memoryFailed();                        // M+ or M- without a previous result
 
 private:
     calculate_core::Session session_;
     std::atomic<bool> cancel_{false};
+    std::atomic<int> previewGeneration_{0};
+    std::atomic<bool> previewCancel_{false};
 };

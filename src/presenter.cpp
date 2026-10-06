@@ -1,5 +1,7 @@
 #include "presenter.hpp"
 
+#include "settings.hpp"
+
 #include <QCoreApplication>
 #include <QRegularExpression>
 #include <QStringList>
@@ -13,6 +15,10 @@ namespace {
 QString fromStd(const std::string& s) { return QString::fromStdString(s); }
 
 QString minus() { return QString(QChar(0x2212)); }
+
+// A number for display, with the decimal separator chosen in the settings.
+QString decimal(QString number) { return settings::decimalComma() ? number.replace('.', ',') : number; }
+QString number(const std::string& s) { return decimal(fromStd(s)); }
 
 // Laid out like the CLI does: positional for −7 <= exponent < 21, d.ddd × 10^exponent otherwise.
 ValueParts split(const Digits& value, int trustedDigits) {
@@ -132,23 +138,24 @@ QString verdict(const QString& conditionNumber) {
 
 QList<DetailRow> details(const Result& r, const TypeInfo& t) {
     if (r.error) return {};
-    const DetailRow evaluated{"evaluated", QCoreApplication::translate("view", "Evaluated"), fromStd(r.expression)};
+    const QString expression = settings::decimalComma() ? withDecimalComma(fromStd(r.expression)) : fromStd(r.expression);
+    const DetailRow evaluated{"evaluated", QCoreApplication::translate("view", "Evaluated"), expression};
     if (r.exact)
         return {{"exact", QCoreApplication::translate("view", "Error"), QCoreApplication::translate("view", "exact · no rounding error")},
                 {"type", QCoreApplication::translate("view", "Number type"),
                  QCoreApplication::translate("view", "%1, exact fractions").arg(fromStd(t.cppName))},
                 evaluated};
-    QString measured = r.measuredAvailable ? fromStd(r.measured) : QCoreApplication::translate("view", "unavailable");
+    QString measured = r.measuredAvailable ? number(r.measured) : QCoreApplication::translate("view", "unavailable");
     if (r.measuredAvailable && !r.measurementReliable) measured += QStringLiteral(" (") + QCoreApplication::translate("view", "unreliable") + QStringLiteral(")");
     QList<DetailRow> rows{
-        {"bound", QCoreApplication::translate("view", "Guaranteed bound"), fromStd(r.bound)},
+        {"bound", QCoreApplication::translate("view", "Guaranteed bound"), number(r.bound)},
         {"measured", QCoreApplication::translate("view", "Measured error"), measured},
         {"trusted", QCoreApplication::translate("view", "Trusted digits"),
          QCoreApplication::translate("view", "%1 by the bound, %2 by the measurement").arg(r.trustedDigits).arg(r.trustedDigitsMeasured)},
-        {"condition", QCoreApplication::translate("view", "Condition number κ"), fromStd(r.conditionNumber) + QStringLiteral(" · ") + verdict(fromStd(r.conditionNumber))},
-        {"input", QCoreApplication::translate("view", "Input error"), fromStd(r.inputError)},
-        {"rounding", QCoreApplication::translate("view", "Rounding error"), fromStd(r.roundingError)},
-        {"library", QCoreApplication::translate("view", "Library error"), fromStd(r.libraryError)},
+        {"condition", QCoreApplication::translate("view", "Condition number κ"), number(r.conditionNumber) + QStringLiteral(" · ") + verdict(fromStd(r.conditionNumber))},
+        {"input", QCoreApplication::translate("view", "Input error"), number(r.inputError)},
+        {"rounding", QCoreApplication::translate("view", "Rounding error"), number(r.roundingError)},
+        {"library", QCoreApplication::translate("view", "Library error"), number(r.libraryError)},
         {"operations", QCoreApplication::translate("view", "Rounded operations"), QString::number(r.roundingOperations)},
         {"type", QCoreApplication::translate("view", "Number type"),
          QCoreApplication::translate("view", "%1, %2-bit significand").arg(fromStd(t.cppName)).arg(t.precisionBits)},
@@ -162,8 +169,7 @@ QList<DetailRow> details(const Result& r, const TypeInfo& t) {
 
 QString explanation(const QString& key) {
     if (key == "bound")
-        return QCoreApplication::translate("view", "A proven upper limit on how far the shown value can be from the exact result "
-                                                   "(to first order: it leaves out terms far smaller than itself).");
+        return QCoreApplication::translate("view", "A proven upper limit on how far the shown value can be from the exact result.");
     if (key == "measured")
         return QCoreApplication::translate("view", "The actual difference from the same calculation redone with far more precision. "
                                                    "An estimate, usually much smaller than the guaranteed bound.");
@@ -197,9 +203,59 @@ QString explanation(const QString& key) {
     return {};
 }
 
+QString copyText(const Result& r, CopyForm form, const TypeInfo& t) {
+    if (r.error) return {};
+    QString value;
+    if (r.exact) {
+        const Fraction& f = *r.exact;
+        value = QString(f.negative ? "-" : "") + fromStd(f.numerator);
+        if (f.denominator != "1") value += "/" + fromStd(f.denominator);
+        if (form != CopyForm::Details) return value;  // exact: every digit trusted, and no bound
+    } else {
+        const ValueParts p = split(r.value, r.trustedDigits);
+        const QString exponent = p.exponent.isEmpty() ? QString() : "e" + QString(p.exponent).replace(minus(), "-");
+        if (form == CopyForm::Trusted) {
+            if (qMin(r.trustedDigits, static_cast<int>(r.value.digits.size())) == 0) return {};
+            QString trusted = p.trusted;
+            if (trusted.endsWith('.')) trusted.chop(1);
+            return decimal(trusted.replace(minus(), "-")) + exponent;
+        }
+        value = decimal(QString(p.trusted + p.noise).replace(minus(), "-")) + exponent;
+        if (form == CopyForm::Value) return value;
+        if (form == CopyForm::ValueAndBound) return value + QStringLiteral(" ± ") + number(r.bound);
+    }
+    const QString expression = settings::decimalComma() ? withDecimalComma(fromStd(r.expression)) : fromStd(r.expression);
+    QStringList lines{expression + QStringLiteral(" = ") + value};
+    for (const DetailRow& row : details(r, t))
+        if (row.key != "evaluated") lines << row.label + QStringLiteral(": ") + row.value;
+    return lines.join('\n');
+}
+
+ValueParts withDecimalComma(ValueParts p) {
+    p.trusted.replace('.', ',');
+    p.noise.replace('.', ',');
+    return p;
+}
+
+FractionParts withDecimalComma(FractionParts p) {
+    p.decimal.replace('.', ',');
+    return p;
+}
+
+QString withDecimalComma(const QString& expression) {
+    QString s = expression;
+    s.replace(',', ';');  // in the engine's text a comma only ever separates arguments
+    return s.replace('.', ',');
+}
+
+bool incomplete(const Error& error) {
+    return error.code == ErrorCode::UnexpectedEnd || error.code == ErrorCode::MissingClosingParenthesis;
+}
+
 QString errorText(const Error& e, const QString& expression) {
     const QByteArray bytes = expression.toUtf8();
-    const QString part = QString::fromUtf8(bytes.mid(static_cast<int>(e.begin), static_cast<int>(e.end - e.begin)));
+    QString part = QString::fromUtf8(bytes.mid(static_cast<int>(e.begin), static_cast<int>(e.end - e.begin)));
+    if (settings::decimalComma()) part = withDecimalComma(part);  // quoted as the screen shows it
     const QString name = part.section('(', 0, 0).trimmed();
     switch (e.code) {
     case ErrorCode::InvalidCharacter: return QCoreApplication::translate("view", "Unexpected character “%1”").arg(part);
@@ -225,6 +281,8 @@ QString errorText(const Error& e, const QString& expression) {
     case ErrorCode::UncertainDiscreteArgument:
         return QCoreApplication::translate("view", "%1 needs an exactly known whole number, but its argument carries an error. "
                   "If you proceed anyway, the error report will not include that error.").arg(part);
+    case ErrorCode::ArgumentNearJump: return QCoreApplication::translate("view", "%1 jumps within the error of its arguments, so the result could be off by a whole step. If you proceed anyway, the error report will not include that error.").arg(part);
+    case ErrorCode::ArgumentNearEdge: return QCoreApplication::translate("view", "The error of the argument of %1 reaches a point where it is not defined or not smooth, so no bound can be given. If you proceed anyway, the error report will not include that.").arg(part);
     case ErrorCode::Cancelled: return QCoreApplication::translate("view", "Cancelled");
     }
     return {};

@@ -1,10 +1,12 @@
 #include "entry.hpp"
 #include "typeset.hpp"
+#include "typing.hpp"
 
 #include "printers.hpp"
 
 #include <QFontDatabase>
 #include <QFontMetricsF>
+#include <QStringList>
 
 #include <gtest/gtest.h>
 
@@ -201,7 +203,7 @@ TEST(Typeset, AnEmptyInputDrawsNothingButTheCursor) {
 
 TEST(Typeset, PlainInputStaysOnOneLineWithTheCursorAtTheEnd) {
     Entry e;
-    e.setText("12+3");
+    e.setRoot(typing::read("12+3"));
     QRectF caret;
     const Box b = typeset::input(e, font(), &caret);
     for (const typeset::Run& run : b.runs) EXPECT_EQ(run.origin.y(), 0);
@@ -222,4 +224,59 @@ TEST(Typeset, TheInputRaisesExponentsAndDrawsRadicals) {
     EXPECT_LT(runWith(b, "8")->origin.y(), runWith(b, "2")->origin.y());  // the exponent is raised
     EXPECT_LT(runWith(b, "8")->font.pixelSize(), runWith(b, "2")->font.pixelSize());
     EXPECT_GE(b.lines.size(), 4);  // the radical's strokes
+}
+
+TEST(Typeset, EveryPlaceForTheCursorIsMarked) {
+    Entry e;
+    e.setRoot(typing::read("12+3"));
+    const Box b = typeset::input(e, font(), nullptr);
+    ASSERT_EQ(b.marks.size(), 5);  // before each of the four pieces, and at the end
+    for (int i = 1; i < b.marks.size(); ++i) EXPECT_GT(b.marks[i].caret.left(), b.marks[i - 1].caret.left());
+    EXPECT_TRUE(typeset::hit(b, QPointF(b.marks[2].caret.left() + 1, 0)) == (Position{{}, 2}));
+    EXPECT_TRUE(typeset::hit(b, QPointF(-50, 0)) == (Position{{}, 0}));
+    EXPECT_TRUE(typeset::hit(b, QPointF(b.width + 50, 0)) == (Position{{}, 4}));
+}
+
+TEST(Typeset, AClickInADenominatorPutsTheCursorThere) {
+    Entry e;
+    e.insertTemplate(Template::Fraction);
+    e.insert("1");
+    e.right();
+    e.insert("3");
+    e.right();
+    const Box b = typeset::input(e, font(), nullptr);
+    const typeset::Run* three = runWith(b, "3");
+    ASSERT_NE(three, nullptr);
+    const Position p = typeset::hit(b, QPointF(three->origin.x() + width(*three) + 1, three->origin.y() - 2));
+    EXPECT_TRUE(p == (Position{{{0, 1}}, 1}));  // after the 3, in the denominator
+}
+
+TEST(Typeset, TheSelectionCoversWholeTemplates) {
+    Entry e;
+    e.insert("2");
+    e.insertTemplate(Template::Fraction);
+    e.insert("1");
+    e.right();
+    e.insert("3");
+    e.right();
+    e.selectAll();
+    const Box b = typeset::input(e, font(), nullptr);
+    const QRectF s = typeset::selectionRect(b, e);
+    EXPECT_LE(s.top(), top(*runWith(b, "1")));
+    EXPECT_GE(s.bottom(), bottom(*runWith(b, "3")));
+    EXPECT_NEAR(s.left(), 0, 0.01);
+    EXPECT_NEAR(s.width(), b.width, 0.01);
+    e.end();  // no selection, no rectangle
+    EXPECT_TRUE(typeset::selectionRect(typeset::input(e, font(), nullptr), e).isEmpty());
+}
+
+TEST(Typeset, WithADecimalCommaTheInputShowsCommasAndSemicolons) {
+    Entry e;
+    e.setRoot(typing::read("nCr(1.5, 2)"));
+    const Box b = typeset::input(e, font(), nullptr, true);
+    QStringList texts;
+    for (const typeset::Run& run : b.runs) texts << run.text;
+    EXPECT_TRUE(texts.contains(","));
+    EXPECT_TRUE(texts.contains("; "));
+    EXPECT_FALSE(texts.contains("."));
 }

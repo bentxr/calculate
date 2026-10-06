@@ -43,6 +43,19 @@ QString verdict(const QString& conditionNumber);
 QList<DetailRow> details(const calculate_core::Result& result, const calculate_core::TypeInfo& type);
 QString explanation(const QString& key);
 QString errorText(const calculate_core::Error& error, const QString& expression);
+// The expression only stops short (an operand or a ")" still to come): no fault yet while it is typed.
+bool incomplete(const calculate_core::Error& error);
+
+// The decimal comma, for display (the engine always writes a point): a value's digits, a fraction's decimal, or an
+// expression or a part of one (`.` → `,`, and the argument separator `,` → `;`).
+ValueParts withDecimalComma(ValueParts parts);
+FractionParts withDecimalComma(FractionParts parts);
+QString withDecimalComma(const QString& expression);
+
+enum class CopyForm { Value, Trusted, ValueAndBound, Details };
+// The result as plain text for the clipboard: ASCII signs ("-", "e30"), no bar; empty when the form has
+// nothing to give (an error, or no trusted digit).
+QString copyText(const calculate_core::Result& result, CopyForm form, const calculate_core::TypeInfo& type);
 QString statisticsExpression(const QString& function, const QString& values);
 // How the engine computes a statistic, in one line; empty for anything else.
 QString algorithm(const QString& function);

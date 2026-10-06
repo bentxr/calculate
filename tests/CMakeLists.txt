@@ -16,8 +16,11 @@ add_executable(calculate-tests
     test_popupplacement.cpp
     test_presenter.cpp
     test_settings.cpp
+    test_settingsfile.cpp
     test_translation.cpp
     test_typeset.cpp
+    test_typing.cpp
+    test_undostack.cpp
     test_worker.cpp
 )
 target_link_libraries(calculate-tests PRIVATE calculate-ui Qt6::Test GTest::gtest)

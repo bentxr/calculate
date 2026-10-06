@@ -5,16 +5,21 @@
 #include "keypad.hpp"
 #include "keysizing.hpp"
 #include "lcd.hpp"
+#include "longpress.hpp"
 #include "popupplacement.hpp"
 #include "presenter.hpp"
 #include "settings.hpp"
+#include "settingsfile.hpp"
 #include "typechooser.hpp"
+#include "typing.hpp"
 #include "worker.hpp"
 
 #include <QActionGroup>
 #include <QApplication>
+#include <QClipboard>
 #include <QComboBox>
 #include <QEvent>
+#include <QFileDialog>
 #include <QHelpEvent>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -28,6 +33,7 @@
 #include <QRegularExpression>
 #include <QScreen>
 #include <QScrollArea>
+#include <QScrollBar>
 #include <QStackedWidget>
 #include <QStyleOptionComboBox>
 #include <QToolButton>
@@ -40,6 +46,12 @@
 using namespace calculate_core;
 
 namespace {
+
+// Errors that "Proceed anyway" can accept, leaving the bound incomplete.
+bool canProceed(ErrorCode code) {
+    return code == ErrorCode::UncertainDiscreteArgument || code == ErrorCode::ArgumentNearJump
+           || code == ErrorCode::ArgumentNearEdge;
+}
 
 // The statistics values box: only numbers and their separators get in, typed or pasted.
 class ValuesEdit : public QPlainTextEdit {
@@ -149,6 +161,52 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     detailsButton_->setAutoRaise(true);
     detailsButton_->setEnabled(false);
     lcd_->addToBar(detailsButton_);
+    // The result in the form wanted: as shown, its trusted digits, with its bound, its details, or the expression.
+    copyButton_ = new QToolButton(lcd_);
+    copyButton_->setObjectName("copyButton");
+    copyButton_->setAutoRaise(true);
+    lcd_->addToBar(copyButton_);
+    copyMenu_ = new QMenu(this);
+    copyMenu_->setObjectName("copyMenu");
+    copyMenu_->setToolTipsVisible(true);  // why a form is unavailable
+    const std::pair<const char*, view::CopyForm> forms[] = {{"copy:value", view::CopyForm::Value},
+                                                            {"copy:trusted", view::CopyForm::Trusted},
+                                                            {"copy:bound", view::CopyForm::ValueAndBound},
+                                                            {"copy:details", view::CopyForm::Details}};
+    for (const auto& [name, form] : forms) {
+        QAction* action = copyMenu_->addAction(QString());  // the texts: see retranslate
+        action->setObjectName(QString::fromLatin1(name));
+        connect(action, &QAction::triggered, this, [this, form = form] {
+            const Result& r = shownResult();
+            QGuiApplication::clipboard()->setText(view::copyText(r, form, types_[static_cast<std::size_t>(r.type)]));
+        });
+    }
+    QAction* copyExpression = copyMenu_->addAction(QString());
+    copyExpression->setObjectName("copy:expression");
+    // As text that reads back into the same templates.
+    connect(copyExpression, &QAction::triggered, this, [this] { QGuiApplication::clipboard()->setText(shownExpression(lcd_->input())); });
+    lcd_->editMenu()->addSeparator();
+    copyAsMenu_ = lcd_->editMenu()->addMenu(QString());
+    copyAsMenu_->setObjectName("copyAsMenu");
+    copyAsMenu_->setToolTipsVisible(true);
+    copyAsMenu_->addActions(copyMenu_->actions());
+    enableCopy(nullptr);
+    // Every edit action within reach of a button: undo, redo, cut, copy, paste, select all.
+    editButton_ = new QToolButton(lcd_);
+    editButton_->setObjectName("editButton");
+    editButton_->setAutoRaise(true);
+    lcd_->addToBar(editButton_);
+    // The system keyboard on request: a phone shows it only when asked, so the keypad stays in view. On the
+    // desktop the keyboard is always there, so the button is only in the browser.
+    keyboardButton_ = new QToolButton(lcd_);
+    keyboardButton_->setObjectName("keyboardButton");
+    keyboardButton_->setAutoRaise(true);
+    keyboardButton_->setCheckable(true);
+    keyboardButton_->setChecked(lcd_->testAttribute(Qt::WA_InputMethodEnabled));
+    lcd_->addToBar(keyboardButton_);
+#ifndef Q_OS_WASM
+    keyboardButton_->hide();
+#endif
     busy_ = new QLabel(lcd_);
     busy_->setObjectName("busy");
     cancel_ = new QPushButton(lcd_);
@@ -177,6 +235,30 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     history_ = new QListWidget(historyPanel_);
     history_->setObjectName("history");
     historyLayout->addWidget(history_);
+    // A row's own menu: a right click, or a long press on a touch screen.
+    history_->setContextMenuPolicy(Qt::CustomContextMenu);
+    historyMenu_ = new QMenu(historyPanel_);  // its own: in the browser a popup hides a later one that is not its child
+    historyMenu_->setObjectName("historyMenu");
+    const std::pair<const char*, view::CopyForm> historyForms[] = {{"history:copyValue", view::CopyForm::Value},
+                                                                   {"history:copyBound", view::CopyForm::ValueAndBound}};
+    QAction* copyRowExpression = historyMenu_->addAction(QString());
+    copyRowExpression->setObjectName("history:copyExpression");
+    connect(copyRowExpression, &QAction::triggered, this, [this] {
+        const int row = history_->currentRow();
+        if (row >= 0) QGuiApplication::clipboard()->setText(shownExpression(historyEntries_[static_cast<std::size_t>(row)].text()));
+    });
+    for (const auto& [name, form] : historyForms) {
+        QAction* action = historyMenu_->addAction(QString());
+        action->setObjectName(QString::fromLatin1(name));
+        connect(action, &QAction::triggered, this, [this, form = form] {
+            const int row = history_->currentRow();
+            if (row < 0) return;
+            const Result& r = historyResults_[static_cast<std::size_t>(row)];
+            QGuiApplication::clipboard()->setText(view::copyText(r, form, types_[static_cast<std::size_t>(r.type)]));
+        });
+    }
+    connect(history_, &QListWidget::customContextMenuRequested, this, &MainWindow::popUpHistoryMenu);
+    connect(new LongPress(history_->viewport()), &LongPress::longPressed, this, &MainWindow::popUpHistoryMenu);
 
     pages_ = new QStackedWidget(central);
     pages_->setObjectName("pages");
@@ -210,7 +292,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(this, &MainWindow::memoryAddRequested, worker_, &Worker::memoryAdd);
     connect(this, &MainWindow::memorySubtractRequested, worker_, &Worker::memorySubtract);
     connect(this, &MainWindow::memoryClearRequested, worker_, &Worker::memoryClear);
+    connect(this, &MainWindow::previewRequested, worker_, &Worker::preview);
     connect(worker_, &Worker::evaluated, this, &MainWindow::showResult);
+    connect(worker_, &Worker::previewed, this, &MainWindow::showPreview);
     connect(worker_, &Worker::memoryChanged, lcd_, &Lcd::setMemory);
     connect(worker_, &Worker::memoryFailed, this, [this] { message_->setText(tr("The memory needs a previous result")); });
     thread_.start();
@@ -222,12 +306,49 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
         cancel_->setVisible(true);
     });
     connect(cancel_, &QPushButton::clicked, this, [this] { worker_->cancelFlag() = true; });
+    liveTimer_.setSingleShot(true);
+    liveTimer_.setInterval(liveDelay);
+    connect(&liveTimer_, &QTimer::timeout, this, &MainWindow::requestPreview);
+    previewLimit_.setSingleShot(true);
+    previewLimit_.setInterval(previewLimit);
+    connect(&previewLimit_, &QTimer::timeout, this, [this] {
+        dropPreviews();
+        showNoPreview(tr("Too long to work out while typing: press = to calculate it"));
+    });
+    connect(lcd_, &Lcd::inputChanged, this, [this] {
+        if (settings::liveCalculation()) liveTimer_.start();
+    });
     connect(modes_, &QListWidget::currentRowChanged, pages_, &QStackedWidget::setCurrentIndex);
     connect(lcd_, &Lcd::evaluateRequested, this, &MainWindow::evaluate);
     connect(lcd_, &Lcd::historyRequested, this, [this](int step) { replay(historyIndex_ + step); });
     connect(equals_, &QPushButton::clicked, this, &MainWindow::evaluate);
     connect(proceed_, &QPushButton::clicked, this, [this] { request(lastExpression_, true); });
     connect(detailsButton_, &QToolButton::clicked, this, [this] { card_->popUp(lcd_); });
+    connect(keyboardButton_, &QToolButton::toggled, lcd_, &Lcd::setSystemKeyboard);
+    connect(copyButton_, &QToolButton::clicked, this, &MainWindow::popUpCopyMenu);
+    connect(lcd_, &Lcd::copyMenuRequested, this, &MainWindow::popUpCopyMenu);
+    connect(lcd_, &Lcd::copyRequested, findChild<QAction*>("copy:value"), &QAction::trigger);
+    connect(editButton_, &QToolButton::clicked, this, [this] {
+        QMenu* menu = lcd_->editMenu();
+        menu->popup(placed(menu->sizeHint(), globalGeometry(editButton_), popupBounds(editButton_)).topLeft());
+    });
+    // The names that complete a typed one: a list over the keys, not a window, so the keyboard stays with the screen.
+    completions_ = new QListWidget(centralWidget());
+    completions_->setObjectName("completions");
+    completions_->setFocusPolicy(Qt::NoFocus);
+    completions_->hide();
+    connect(lcd_, &Lcd::nameTyped, this, &MainWindow::showCompletions);
+    connect(completions_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) { chooseCompletion(item->text()); });
+    connect(lcd_, &Lcd::completionKey, this, [this](int key) {
+        const int row = completions_->currentRow();
+        if (key == Qt::Key_Up) completions_->setCurrentRow(qMax(row - 1, 0));
+        else if (key == Qt::Key_Down) completions_->setCurrentRow(qMin(row + 1, completions_->count() - 1));
+        else if (key == Qt::Key_Escape) hideCompletions();
+        else chooseCompletion(completions_->currentItem()->text());  // Tab, Enter: choose, don't evaluate
+    });
+    connect(lcd_, &Lcd::pastedFirstLine, this, [this](int lines) { message_->setText(tr("Pasted the first of %1 lines").arg(lines)); });
+    connect(lcd_, &Lcd::pasteRefused, this,
+            [this] { message_->setText(tr("The browser did not allow reading the clipboard: paste with Ctrl+V")); });
     connect(historyToggle_, &QToolButton::clicked, this, [this] {
         const QSize size(lcd_->width(), historyPanel_->sizeHint().height());
         historyPanel_->setGeometry(placed(size, globalGeometry(lcd_), popupBounds(lcd_)));
@@ -237,9 +358,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
         lcd_->setEntry(historyEntries_[static_cast<std::size_t>(history_->row(item))]);
         historyPanel_->hide();
     });
+    // A new type or angle: what is being typed is worked out again, else the last result.
     auto reevaluate = [this] {
         updateKeys();
-        if (!lastExpression_.isEmpty() && !last_.error) request(lastExpression_, false);
+        if (settings::liveCalculation() && (previewShown_ || lcd_->input().trimmed() != lastExpression_)) requestPreview();
+        else if (!lastExpression_.isEmpty() && !last_.error) request(lastExpression_, false);
     };
     connect(type_, &QComboBox::currentIndexChanged, this, reevaluate);
     connect(angle_, &QComboBox::currentIndexChanged, this, reevaluate);
@@ -247,14 +370,16 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     // Only the screen takes the keyboard; every other control is used with the mouse.
     for (QWidget* w : {static_cast<QWidget*>(modes_), static_cast<QWidget*>(panelToggle_), static_cast<QWidget*>(settingsButton_),
                        static_cast<QWidget*>(type_), static_cast<QWidget*>(angle_), static_cast<QWidget*>(equals_),
-                       static_cast<QWidget*>(detailsButton_), static_cast<QWidget*>(proceed_), static_cast<QWidget*>(cancel_),
-                       static_cast<QWidget*>(historyToggle_)})
+                       static_cast<QWidget*>(detailsButton_), static_cast<QWidget*>(editButton_), static_cast<QWidget*>(keyboardButton_),
+                       static_cast<QWidget*>(proceed_), static_cast<QWidget*>(cancel_), static_cast<QWidget*>(historyToggle_)})
         w->setFocusPolicy(Qt::NoFocus);
+    defaults_ = settingValues();
     lcd_->setFocus();
 }
 
 MainWindow::~MainWindow() {
     worker_->cancelFlag() = true;
+    worker_->previewCancelFlag() = true;
     thread_.quit();
     thread_.wait();
 }
@@ -380,7 +505,7 @@ void MainWindow::showEvent(QShowEvent* event) {
 }
 
 // ⚙: a small menu that opens from the button, with the values of the language and of the theme listed
-// in place. A choice applies at once and is forgotten at exit.
+// in place, then whether to calculate while typing. A choice applies at once and is forgotten at exit.
 void MainWindow::buildSettings() {
     settings_ = new QMenu(this);
     settings_->setObjectName("settings");
@@ -403,6 +528,88 @@ void MainWindow::buildSettings() {
                [](int i) { settings::setLanguage(static_cast<settings::Language>(i)); });
     addSetting(themeSection_, {"theme:system", "theme:light", "theme:dark"}, static_cast<int>(settings::theme()),
                [](int i) { settings::setTheme(static_cast<settings::Theme>(i)); });
+    addSetting(decimalSection_, {"decimal:language", "decimal:point", "decimal:comma"}, static_cast<int>(settings::decimalSeparator()),
+               [this](int i) {
+                   settings::setDecimalSeparator(static_cast<settings::DecimalSeparator>(i));
+                   if (hasResult_ || previewShown_) present();
+                   relabelHistory();
+                   lcd_->update();
+               });
+    inputSection_ = settings_->addSection(QString());
+    QAction* live = settings_->addAction(QString());
+    live->setObjectName("live");
+    live->setCheckable(true);
+    live->setChecked(settings::liveCalculation());
+    connect(live, &QAction::toggled, this, [](bool on) { settings::setLiveCalculation(on); });
+    // Nothing is remembered between runs; a file keeps the settings instead. The same dialogs serve the desktop
+    // (native ones) and the browser (a download, and its file picker).
+    fileSection_ = settings_->addSection(QString());
+    QAction* exportAction = settings_->addAction(QString());
+    exportAction->setObjectName("settings:export");
+    connect(exportAction, &QAction::triggered, this,
+            [this] { QFileDialog::saveFileContent(exportSettings(), QStringLiteral("calculate-settings.json"), this); });
+    QAction* importAction = settings_->addAction(QString());
+    importAction->setObjectName("settings:import");
+    connect(importAction, &QAction::triggered, this, [this] {
+        QFileDialog::getOpenFileContent(
+            QStringLiteral("JSON (*.json)"),
+            [this](const QString& name, const QByteArray& content) {
+                if (name.isEmpty()) return;  // cancelled
+                const QStringList problems = importSettings(content);
+                if (!problems.isEmpty()) message_->setText(tr("Some settings were not imported: %1").arg(problems.join(QStringLiteral("; "))));
+            },
+            this);
+    });
+}
+
+namespace {
+
+// The file's names for the number types, in NumberType's order, and for the angle units, in the menu's.
+const QStringList typeIds{"float", "double", "longdouble", "exact", "binary128", "binary256", "binary512"};
+const QStringList angleIds{"rad", "deg", "grad"};
+
+}  // namespace
+
+QMap<QString, QStringList> MainWindow::settingKeys() const {
+    QMap<QString, QStringList> keys;
+    for (QAction* action : settings_->actions()) {
+        if (!action->isCheckable()) continue;
+        if (action->actionGroup()) keys[action->objectName().section(':', 0, 0)] << action->objectName().section(':', 1);
+        else keys[action->objectName()] = QStringList{"true", "false"};
+    }
+    keys["type"] = typeIds;
+    keys["angle"] = angleIds;
+    return keys;
+}
+
+QMap<QString, QString> MainWindow::settingValues() const {
+    QMap<QString, QString> values;
+    for (QAction* action : settings_->actions()) {
+        if (!action->isCheckable()) continue;
+        if (!action->actionGroup()) values[action->objectName()] = action->isChecked() ? "true" : "false";
+        else if (action->isChecked()) values[action->objectName().section(':', 0, 0)] = action->objectName().section(':', 1);
+    }
+    values["type"] = typeIds.value(static_cast<int>(type_->currentType()));
+    values["angle"] = angleIds.value(angle_->currentIndex());
+    return values;
+}
+
+QByteArray MainWindow::exportSettings() const { return settingsfile::write(settingValues(), defaults_); }
+
+QStringList MainWindow::importSettings(const QByteArray& file) {
+    const settingsfile::Read r = settingsfile::read(file, settingKeys());
+    for (auto it = r.values.cbegin(); it != r.values.cend(); ++it) {
+        if (it.key() == "type") {
+            type_->setCurrentType(static_cast<NumberType>(typeIds.indexOf(it.value())));
+        } else if (it.key() == "angle") {
+            angle_->setCurrentIndex(static_cast<int>(angleIds.indexOf(it.value())));
+        } else if (QAction* checkable = findChild<QAction*>(it.key())) {
+            checkable->setChecked(it.value() == "true");
+        } else {
+            findChild<QAction*>(it.key() + ":" + it.value())->trigger();
+        }
+    }
+    return r.problems;
 }
 
 // Every text of the window in the current language: run once when it is built, and again on every
@@ -418,10 +625,27 @@ void MainWindow::retranslate() {
     type_->retranslate();
     equals_->setText(tr("="));
     detailsButton_->setText(tr("Details"));
+    copyButton_->setText(tr("Copy"));
+    copyButton_->setAccessibleName(copyButton_->text());
+    copyAsMenu_->setTitle(tr("Copy as"));
+    findChild<QAction*>("copy:value")->setText(tr("Value"));
+    findChild<QAction*>("copy:trusted")->setText(tr("Trusted digits"));
+    findChild<QAction*>("copy:bound")->setText(tr("Value ± bound"));
+    findChild<QAction*>("copy:details")->setText(tr("Details as text"));
+    findChild<QAction*>("copy:expression")->setText(tr("Expression"));
+    findChild<QAction*>("history:copyExpression")->setText(tr("Copy expression"));
+    findChild<QAction*>("history:copyValue")->setText(tr("Copy value"));
+    findChild<QAction*>("history:copyBound")->setText(tr("Copy value ± bound"));
+    editButton_->setText(tr("Edit"));
+    editButton_->setAccessibleName(editButton_->text());
+    keyboardButton_->setText(tr("Keyboard"));
+    keyboardButton_->setAccessibleName(keyboardButton_->text());
     proceed_->setText(tr("Proceed anyway"));
     busy_->setText(tr("Computing…"));
     cancel_->setText(tr("Cancel"));
     historyToggle_->setToolTip(tr("History"));
+    // The symbol buttons (☰ ⚙ ▾) are spoken by their tooltips.
+    for (QToolButton* button : {panelToggle_, settingsButton_, historyToggle_}) button->setAccessibleName(button->toolTip());
     statisticsLabel_->setText(tr("Values (one per line, or separated by commas):"));
     statisticsKeysToggle_->setToolTip(tr("Show or hide the keypad"));
     languageSection_->setText(tr("Language"));
@@ -432,6 +656,15 @@ void MainWindow::retranslate() {
     findChild<QAction*>("theme:system")->setText(tr("System"));
     findChild<QAction*>("theme:light")->setText(tr("Light"));
     findChild<QAction*>("theme:dark")->setText(tr("Dark"));
+    decimalSection_->setText(tr("Decimal separator"));
+    findChild<QAction*>("decimal:language")->setText(tr("As the language"));
+    findChild<QAction*>("decimal:point")->setText(tr("Point"));
+    findChild<QAction*>("decimal:comma")->setText(tr("Comma"));
+    inputSection_->setText(tr("Input"));
+    findChild<QAction*>("live")->setText(tr("Calculate as you type"));
+    fileSection_->setText(tr("Settings file"));
+    findChild<QAction*>("settings:export")->setText(tr("Export settings…"));
+    findChild<QAction*>("settings:import")->setText(tr("Import settings…"));
 
     QList<Key> keys = cursorPad();
     for (const QList<Key>& row : keypad()) keys += row;
@@ -455,7 +688,8 @@ void MainWindow::retranslate() {
     for (QWidget* w : {static_cast<QWidget*>(angle_), static_cast<QWidget*>(type_), static_cast<QWidget*>(equals_)})
         w->setFixedWidth(width);
 
-    if (hasResult_) present();
+    if (hasResult_ || previewShown_) present();
+    relabelHistory();  // the decimal separator may follow the language
     updateKeys();
     if (keysSized_) sizeKeys();  // labels changed width
 }
@@ -557,8 +791,12 @@ Options MainWindow::options() const {
 }
 
 void MainWindow::evaluate() {
+    lcd_->finishName();  // the = key ends a name being typed, as Enter does
+    keepsUnfinished_ = false;
     const QString text = lcd_->input().trimmed();
     if (text.isEmpty()) return;
+    liveTimer_.stop();
+    dropPreviews();
     typed_ = lcd_->entry();  // the history keeps it as typed, templates and all
     request(text, false);
 }
@@ -581,32 +819,171 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
     last_ = result;
     lastExpression_ = expression;
     hasResult_ = true;
+    previewShown_ = false;
     present();
     if (result.error) return;
+    if (lcd_->input().trimmed() == expression) lcd_->setFresh(true);  // not when another input is being typed
     if (history_->count() == 0 || history_->item(0)->data(Qt::UserRole).toString() != expression) {
-        // "expression = value", the value cut short: the list only points back to the calculation.
         QString value = lcd_->outputText();
-        if (value.size() > 28) value = value.left(28) + QStringLiteral("…");
-        auto* item = new QListWidgetItem(expression + QStringLiteral(" = ") + value);
+        if (settings::decimalComma()) value.replace(',', '.');  // kept as the engine writes it, for relabelling
+        auto* item = new QListWidgetItem(historyLabel(expression, value));
         item->setData(Qt::UserRole, expression);
+        item->setData(Qt::UserRole + 1, value);
         history_->insertItem(0, item);
         Entry entry = typed_;
-        if (entry.text().trimmed() != expression) entry.setText(expression);  // not what was typed last
+        if (entry.text().trimmed() != expression) entry.setRoot(typing::read(expression));  // not what was typed last
         historyEntries_.insert(historyEntries_.begin(), entry);
+        historyResults_.insert(historyResults_.begin(), result);
         historyToggle_->setEnabled(true);
     }
     historyIndex_ = -1;
 }
 
-// Shows the last result on the screen and in the card, in the current language.
+void MainWindow::requestPreview() {
+    const QString text = lcd_->input().trimmed();
+    dropPreviews();  // also when the input is now empty: an answer still on its way would show on a blank screen
+    if (text.isEmpty()) {
+        showNoPreview();
+        return;
+    }
+    emit previewRequested(previewSerial_, text, options());
+    previewLimit_.start();
+}
+
+void MainWindow::showPreview(int generation, const QString& expression, const Result& result) {
+    if (generation != previewSerial_) return;
+    previewLimit_.stop();
+    preview_ = result;
+    previewExpression_ = expression;
+    previewShown_ = true;
+    present();
+}
+
+// The worker skips a request whose generation is no longer the newest; the flag stops one already running.
+// The generation goes first, so a request that starts between the two is skipped rather than run in full.
+void MainWindow::dropPreviews() {
+    worker_->previewGeneration() = ++previewSerial_;
+    worker_->previewCancelFlag() = true;
+    previewLimit_.stop();
+}
+
+// An unknown name that is the one being typed, and that some name completes: not wrong yet, only unfinished.
+bool MainWindow::namePending(const Error& error, const QString& expression) const {
+    if (error.code != ErrorCode::UnknownName) return false;
+    const QString name = typing::nameBeingTyped(lcd_->entry());
+    const QString part = QString::fromUtf8(expression.toUtf8().mid(static_cast<int>(error.begin), static_cast<int>(error.end - error.begin)));
+    return !name.isEmpty() && part == name && !typing::completions(name).isEmpty();
+}
+
+// Nothing to show while typing: the result, the strip (but for the notice) and Details are blank.
+void MainWindow::showNoPreview(const QString& notice) {
+    previewShown_ = false;
+    lcd_->setProvisional(false);
+    lcd_->clearResult();
+    detailsButton_->setEnabled(false);
+    enableCopy(nullptr);
+    message_->setText(notice);
+    message_->setForegroundRole(QPalette::PlaceholderText);
+}
+
+void MainWindow::enableCopy(const Result* result) {
+    copyButton_->setEnabled(result);
+    copyAsMenu_->menuAction()->setEnabled(result);
+    for (QAction* action : copyMenu_->actions()) action->setEnabled(result);
+    QAction* trusted = findChild<QAction*>("copy:trusted");
+    const bool none = result && view::copyText(*result, view::CopyForm::Trusted, types_[static_cast<std::size_t>(result->type)]).isEmpty();
+    trusted->setEnabled(result && !none);
+    trusted->setToolTip(none ? tr("No digit is trusted") : QString());
+}
+
+void MainWindow::popUpHistoryMenu(QPoint position) {
+    QListWidgetItem* item = history_->itemAt(position);
+    if (!item) return;
+    history_->setCurrentItem(item);
+    const QRect at(history_->viewport()->mapToGlobal(position), QSize(1, 1));
+    historyMenu_->popup(placed(historyMenu_->sizeHint(), at, popupBounds(history_)).topLeft());
+}
+
+// "expression = value", the value cut short: the list only points back to the calculation.
+QString MainWindow::historyLabel(const QString& expression, const QString& value) const {
+    QString shown = shownExpression(value);
+    if (shown.size() > 28) shown = shown.left(28) + QStringLiteral("…");
+    return shownExpression(expression) + QStringLiteral(" = ") + shown;
+}
+
+void MainWindow::relabelHistory() {
+    for (int i = 0; i < history_->count(); ++i) {
+        QListWidgetItem* item = history_->item(i);
+        item->setText(historyLabel(item->data(Qt::UserRole).toString(), item->data(Qt::UserRole + 1).toString()));
+    }
+}
+
+QString MainWindow::shownExpression(const QString& expression) const {
+    return settings::decimalComma() ? view::withDecimalComma(expression) : expression;
+}
+
+void MainWindow::showCompletions(const QString& name) {
+    const QStringList names = typing::completions(name);
+    if (name.size() < 2 || names.isEmpty() || names == QStringList{name}) {
+        hideCompletions();
+        return;
+    }
+    completions_->clear();
+    completions_->addItems(names);
+    completions_->setCurrentRow(0);
+    const int frame = 2 * completions_->frameWidth();
+    const QSize size(completions_->sizeHintForColumn(0) + frame + completions_->verticalScrollBar()->sizeHint().width(),
+                     static_cast<int>(qMin(names.size(), completionRows)) * completions_->sizeHintForRow(0) + frame);
+    QWidget* central = centralWidget();
+    const QRect caret = lcd_->caretRectAt(lcd_->entry().position()).toAlignedRect();
+    const QRect anchor(lcd_->mapTo(central, caret.topLeft()), caret.size());
+    completions_->setGeometry(placed(size, anchor, central->rect()));
+    completions_->raise();
+    completions_->show();
+    lcd_->setCompleting(true);
+}
+
+void MainWindow::hideCompletions() {
+    completions_->hide();
+    lcd_->setCompleting(false);
+}
+
+void MainWindow::chooseCompletion(const QString& name) {
+    hideCompletions();
+    lcd_->complete(name);
+    lcd_->setFocus();
+}
+
+void MainWindow::popUpCopyMenu() {
+    if (!copyButton_->isEnabled()) return;
+    copyMenu_->popup(placed(copyMenu_->sizeHint(), globalGeometry(copyButton_), popupBounds(copyButton_)).topLeft());
+}
+
+// Shows the result being typed, or else the last one, on the screen and in the card, in the current language.
 void MainWindow::present() {
-    proceed_->setVisible(last_.error && last_.error->code == ErrorCode::UncertainDiscreteArgument);
-    card_->setRows(view::details(last_, types_[static_cast<std::size_t>(last_.type)]));
-    detailsButton_->setEnabled(!last_.error);
-    message_->setText(last_.error ? view::errorText(*last_.error, lastExpression_) : QString());
-    if (last_.error) lcd_->clearResult();
-    else if (last_.exact) lcd_->showExact(view::fractionParts(last_));
-    else lcd_->showValue(view::valueParts(last_));
+    const Result& shown = shownResult();
+    const QString& expression = previewShown_ ? previewExpression_ : lastExpression_;
+    // While typing, an expression that only stops short is not a fault yet; the others are told, dimmed.
+    const bool unfinished = previewShown_ && shown.error
+                            && (view::incomplete(*shown.error) || lcd_->entry().hasEmptyBox() || namePending(*shown.error, expression));
+    proceed_->setVisible(!previewShown_ && shown.error && canProceed(shown.error->code));  // it acts on the last request
+    card_->setRows(view::details(shown, types_[static_cast<std::size_t>(shown.type)]));
+    detailsButton_->setEnabled(!shown.error);
+    enableCopy(shown.error ? nullptr : &shown);
+    message_->setText(shown.error && !unfinished ? view::errorText(*shown.error, expression) : QString());
+    message_->setForegroundRole(previewShown_ ? QPalette::PlaceholderText : QPalette::WindowText);
+    lcd_->setProvisional(previewShown_);
+    // The error's span is in bytes of the text that was evaluated: mark it only on that same input.
+    const QString input = lcd_->input();
+    if (shown.error && !unfinished && input.trimmed() == expression) {
+        const int lead = static_cast<int>(input.left(input.indexOf(expression)).toUtf8().size());
+        lcd_->setMarked(lead + static_cast<int>(shown.error->begin), lead + static_cast<int>(shown.error->end));
+    } else {
+        lcd_->clearMarked();
+    }
+    if (shown.error) lcd_->clearResult();
+    else if (shown.exact) lcd_->showExact(settings::decimalComma() ? view::withDecimalComma(view::fractionParts(shown)) : view::fractionParts(shown));
+    else lcd_->showValue(settings::decimalComma() ? view::withDecimalComma(view::valueParts(shown)) : view::valueParts(shown));
 }
 
 void MainWindow::apply(const Face& f) {
@@ -632,10 +1009,23 @@ void MainWindow::apply(const Face& f) {
 }
 
 // ▲ and ▼ step through the history, newest first, as the calculator's replay does.
+// Browsing past the newest row comes back to what was being typed before the browsing began.
 void MainWindow::replay(int index) {
+    if (index == -1 && keepsUnfinished_) {
+        historyIndex_ = -1;
+        keepsUnfinished_ = false;
+        lcd_->setEntry(unfinished_);
+        if (settings::liveCalculation()) liveTimer_.start();
+        return;
+    }
     if (index < 0 || index >= history_->count()) return;
+    if (historyIndex_ == -1) {
+        unfinished_ = lcd_->entry();
+        keepsUnfinished_ = true;
+    }
     historyIndex_ = index;
     lcd_->setEntry(historyEntries_[static_cast<std::size_t>(index)]);
+    if (settings::liveCalculation()) liveTimer_.start();
 }
 
 bool MainWindow::exactType() const { return type_->currentType() == NumberType::Exact; }

@@ -1,6 +1,9 @@
 #include "presenter.hpp"
 
+#include "entry.hpp"
 #include "printers.hpp"
+#include "settings.hpp"
+#include "typing.hpp"
 
 #include <gtest/gtest.h>
 
@@ -156,4 +159,119 @@ TEST(Presenter, EveryStatisticSaysHowItIsComputed) {
     for (const char* f : {"mean", "median", "var", "stdev", "varp", "stdevp"}) EXPECT_FALSE(view::algorithm(f).isEmpty()) << f;
     EXPECT_TRUE(view::algorithm("variance").isEmpty());
     EXPECT_NE(view::algorithm("var"), view::algorithm("varp"));  // n − 1 against n
+}
+
+TEST(Presenter, TheBoundIsExplainedAsProven) {
+    EXPECT_EQ(view::explanation("bound"), "A proven upper limit on how far the shown value can be from the exact result.");
+}
+
+TEST(Presenter, AJumpWithinTheErrorIsExplained) {
+    const Result r = evaluated("mod(0.7 + 0.1, 0.8)");
+    ASSERT_TRUE(r.error);
+    EXPECT_EQ(view::errorText(*r.error, "mod(0.7 + 0.1, 0.8)"),
+              "mod(0.7 + 0.1, 0.8) jumps within the error of its arguments, so the result could be off by a whole step. "
+              "If you proceed anyway, the error report will not include that error.");
+}
+
+TEST(Presenter, AnEdgeWithinTheErrorIsExplained) {
+    const Result r = evaluated("sqrt(0.1+0.2-0.3)");
+    ASSERT_TRUE(r.error);
+    EXPECT_EQ(view::errorText(*r.error, "sqrt(0.1+0.2-0.3)"),
+              "The error of the argument of sqrt(0.1+0.2-0.3) reaches a point where it is not defined or not smooth, "
+              "so no bound can be given. If you proceed anyway, the error report will not include that.");
+}
+
+TEST(Presenter, UnfinishedExpressionsAreToldApart) {
+    EXPECT_TRUE(view::incomplete(*evaluate("2*").error));
+    EXPECT_TRUE(view::incomplete(*evaluate("sin(1").error));
+    EXPECT_FALSE(view::incomplete(*evaluate("1/0").error));
+    EXPECT_FALSE(view::incomplete(*evaluate("2 3").error));
+}
+
+namespace {
+
+Result floating(const char* digits, long long exponent, int trusted) {
+    Result r;
+    r.value = Digits{false, digits, exponent};
+    r.trustedDigits = trusted;
+    r.bound = "1e0";
+    return r;
+}
+
+}  // namespace
+
+TEST(Presenter, CopiedValuesArePlainText) {
+    const TypeInfo d = typeInfo(NumberType::Double);
+    const Result sum = evaluated("0.1 + 0.2");
+    EXPECT_EQ(view::copyText(sum, view::CopyForm::Value, d), "0.3000000000000000444089209850062616169452667236328125");
+    EXPECT_EQ(view::copyText(sum, view::CopyForm::Trusted, d), "0.300000000000000");
+    EXPECT_EQ(view::copyText(sum, view::CopyForm::ValueAndBound, d),
+              "0.3000000000000000444089209850062616169452667236328125 ± 4.4e-17");
+    const Result big = evaluated("-1e30");
+    EXPECT_EQ(view::copyText(big, view::CopyForm::Value, d), "-1.000000000000000019884624838656e30");
+    EXPECT_EQ(view::copyText(big, view::CopyForm::Trusted, d), "-1.000000000000000e30");
+    EXPECT_TRUE(view::copyText(evaluated("1e-30"), view::CopyForm::Value, d).endsWith("e-30"));
+}
+
+TEST(Presenter, NothingTrustedCopiesNothing) {
+    const TypeInfo d = typeInfo(NumberType::Double);
+    EXPECT_EQ(view::copyText(floating("5", 0, 0), view::CopyForm::Trusted, d), "");
+    EXPECT_EQ(view::copyText(floating("5", 0, 0), view::CopyForm::Value, d), "5");
+    EXPECT_EQ(view::copyText(floating("25", 0, 1), view::CopyForm::Trusted, d), "2");  // "2." loses its point
+}
+
+TEST(Presenter, ExactResultsCopyAsFractions) {
+    const TypeInfo x = typeInfo(NumberType::Exact);
+    const Result third = evaluated("1/3", NumberType::Exact);
+    EXPECT_EQ(view::copyText(third, view::CopyForm::Value, x), "1/3");
+    EXPECT_EQ(view::copyText(third, view::CopyForm::Trusted, x), "1/3");
+    EXPECT_EQ(view::copyText(third, view::CopyForm::ValueAndBound, x), "1/3");  // exact: there is no bound
+    EXPECT_EQ(view::copyText(evaluated("-7/4", NumberType::Exact), view::CopyForm::Value, x), "-7/4");
+    EXPECT_EQ(view::copyText(evaluated("6", NumberType::Exact), view::CopyForm::Value, x), "6");
+}
+
+TEST(Presenter, DetailsCopyAsLines) {
+    const QStringList lines =
+        view::copyText(evaluated("0.1 + 0.2"), view::CopyForm::Details, typeInfo(NumberType::Double)).split('\n');
+    EXPECT_EQ(lines.value(0), "0.1 + 0.2 = 0.3000000000000000444089209850062616169452667236328125");
+    EXPECT_TRUE(lines.contains("Guaranteed bound: 4.4e-17"));
+    EXPECT_TRUE(lines.contains("Trusted digits: 15 by the bound, 15 by the measurement"));
+    EXPECT_TRUE(lines.contains("Number type: double, 53-bit significand"));
+    EXPECT_FALSE(lines.contains("Evaluated: 0.1 + 0.2"));  // already the first line
+    EXPECT_EQ(view::copyText(evaluate("1/0"), view::CopyForm::Details, typeInfo(NumberType::Double)), "");
+}
+
+TEST(Presenter, ExactDetailsCopyAsLines) {
+    const QStringList lines =
+        view::copyText(evaluated("-7/4", NumberType::Exact), view::CopyForm::Details, typeInfo(NumberType::Exact)).split('\n');
+    EXPECT_EQ(lines.value(0), "-7/4 = -7/4");
+    EXPECT_TRUE(lines.contains("Error: exact · no rounding error"));
+    EXPECT_TRUE(lines.contains("Number type: cpp_rational, exact fractions"));
+}
+
+TEST(Presenter, WithADecimalCommaResultsUseIt) {
+    view::ValueParts p = view::valueParts(evaluated("0.1 + 0.2"));
+    EXPECT_EQ(view::withDecimalComma(p).trusted, "0,300000000000000");
+    EXPECT_EQ(view::withDecimalComma(QStringLiteral("nCr(1.5, 2)")), "nCr(1,5; 2)");
+    settings::setDecimalComma(true);
+    EXPECT_EQ(view::copyText(evaluated("0.1 + 0.2"), view::CopyForm::Trusted, typeInfo(NumberType::Double)), "0,300000000000000");
+    settings::setDecimalComma(false);
+}
+
+TEST(Presenter, PastedTextWithADecimalCommaReadsBack) {
+    settings::setDecimalComma(true);
+    Entry e;
+    e.setRoot(typing::read("nCr(1,5; 2)"));
+    EXPECT_EQ(e.text(), "nCr(1.5, 2)");
+    settings::setDecimalComma(false);
+}
+
+TEST(Presenter, WithADecimalCommaErrorsQuoteTheInputAsShown) {
+    settings::setDecimalComma(true);
+    const Error unexpected = *evaluate("3.5, ").error;
+    EXPECT_EQ(view::errorText(unexpected, "3.5, "), "Unexpected “;”");
+    const Error whole = *evaluated("nCr(1.5, 2)").error;
+    EXPECT_TRUE(view::errorText(whole, "nCr(1.5, 2)").startsWith("nCr(1,5; 2)")) << view::errorText(whole, "nCr(1.5, 2)").toStdString();
+    settings::setDecimalComma(false);
+    EXPECT_EQ(view::errorText(unexpected, "3.5, "), "Unexpected “,”");
 }

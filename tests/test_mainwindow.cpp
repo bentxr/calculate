@@ -7,6 +7,8 @@
 #include "settings.hpp"
 #include "typechooser.hpp"
 
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QAbstractItemView>
 #include <QApplication>
 #include <QClipboard>
@@ -807,4 +809,488 @@ TEST(MainWindow, TheHistoryBringsBackTheTwoDimensionalInput) {
     EXPECT_EQ(lcd(window)->input(), "((1)/(3))");
     ASSERT_EQ(lcd(window)->entry().root().size(), 1u);
     EXPECT_EQ(lcd(window)->entry().root()[0].kind, Template::Fraction);  // a fraction again, not text
+}
+
+TEST(MainWindow, AJumpWithinTheErrorOffersToProceed) {
+    MainWindow window;
+    auto* proceed = child<QPushButton>(window, "proceed");
+    run(window, "mod(0.7+0.1, 0.8)");
+    EXPECT_TRUE(proceed->isVisibleTo(&window));
+    forget(window);
+    QTest::mouseClick(proceed, Qt::LeftButton);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(detail(window, "incomplete"), "an uncertain argument was accepted");
+}
+
+TEST(MainWindow, AnEdgeWithinTheErrorOffersToProceed) {
+    MainWindow window;
+    run(window, "1/(0.1+0.2-0.3)");
+    EXPECT_TRUE(child<QPushButton>(window, "proceed")->isVisibleTo(&window));
+}
+
+TEST(MainWindow, TypedFunctionsEvaluate) {
+    MainWindow window;
+    forget(window);
+    QTest::keyClicks(lcd(window), "sqrt(16)+sin(0)");
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "4");
+}
+
+TEST(MainWindow, AKeyboardButtonTurnsTheSystemKeyboardOnAndOff) {
+    MainWindow window;
+    auto* button = child<QToolButton>(window, "keyboardButton");
+    EXPECT_TRUE(button->isCheckable());
+    EXPECT_EQ(button->focusPolicy(), Qt::NoFocus);
+    EXPECT_FALSE(button->accessibleName().isEmpty());
+    EXPECT_EQ(button->isChecked(), lcd(window)->testAttribute(Qt::WA_InputMethodEnabled));
+    button->click();
+    EXPECT_EQ(button->isChecked(), lcd(window)->testAttribute(Qt::WA_InputMethodEnabled));
+    button->click();
+    EXPECT_EQ(button->isChecked(), lcd(window)->testAttribute(Qt::WA_InputMethodEnabled));
+}
+
+TEST(MainWindow, TheEditButtonReachesEveryEditAction) {
+    MainWindow window;
+    auto* edit = child<QToolButton>(window, "editButton");
+    EXPECT_EQ(edit->focusPolicy(), Qt::NoFocus);
+    EXPECT_FALSE(edit->accessibleName().isEmpty());
+    QGuiApplication::clipboard()->setText("sqrt(9)");
+    child<QAction>(window, "edit:paste")->trigger();
+    EXPECT_EQ(lcd(window)->input(), "√(9)");
+    child<QAction>(window, "edit:undo")->trigger();
+    EXPECT_EQ(lcd(window)->input(), "");
+    child<QAction>(window, "edit:redo")->trigger();
+    EXPECT_EQ(lcd(window)->input(), "√(9)");
+}
+
+TEST(MainWindow, AfterEqualsADigitStartsAfreshAndAnOperatorGoesOnFromAns) {
+    MainWindow window;
+    run(window, "2+3");
+    QTest::keyClicks(lcd(window), "7");
+    EXPECT_EQ(lcd(window)->input(), "7");
+    run(window, "2+3");
+    QTest::keyClicks(lcd(window), "*2");
+    EXPECT_EQ(lcd(window)->input(), "Ans×2");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "10");
+    run(window, "2+3");
+    QTest::keyClick(lcd(window), Qt::Key_Left);  // an arrow edits the expression instead
+    QTest::keyClicks(lcd(window), "0");
+    EXPECT_EQ(lcd(window)->input(), "2+03");
+    run(window, "2+3");
+    QTest::mouseClick(child<QPushButton>(window, "key:square"), Qt::LeftButton);  // x² goes on from Ans too
+    EXPECT_EQ(lcd(window)->input(), "Ans^(2)");
+}
+
+TEST(MainWindow, PageUpAndDownBrowseTheHistoryAndKeepTheUnfinishedInput) {
+    MainWindow window;
+    run(window, "1+1");
+    run(window, "2+2");
+    lcd(window)->clear();
+    QTest::keyClicks(lcd(window), "9-");
+    QTest::keyClick(lcd(window), Qt::Key_PageUp);
+    EXPECT_EQ(lcd(window)->input(), "2+2");
+    QTest::keyClick(lcd(window), Qt::Key_PageUp);
+    EXPECT_EQ(lcd(window)->input(), "1+1");
+    QTest::keyClick(lcd(window), Qt::Key_PageDown);
+    QTest::keyClick(lcd(window), Qt::Key_PageDown);  // past the newest: back to what was being typed
+    EXPECT_EQ(lcd(window)->input(), "9−");
+}
+
+TEST(MainWindow, SymbolButtonsHaveSpokenNames) {
+    MainWindow window;
+    for (const char* name : {"panelToggle", "settingsButton", "historyToggle"})
+        EXPECT_FALSE(child<QToolButton>(window, name)->accessibleName().isEmpty()) << name;
+}
+
+TEST(MainWindow, TheSettingsOfferCalculatingAsYouType) {
+    MainWindow window;
+    QAction* live = setting(window, "live");
+    ASSERT_NE(live, nullptr);
+    EXPECT_TRUE(live->isCheckable());
+    EXPECT_TRUE(live->isChecked());  // on by default
+    live->trigger();
+    EXPECT_FALSE(settings::liveCalculation());
+    live->trigger();
+    EXPECT_TRUE(settings::liveCalculation());
+}
+
+TEST(MainWindow, TheResultFollowsTheTyping) {
+    MainWindow window;
+    QTest::keyClicks(lcd(window), "1+2");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "3"; }, 10000));
+    EXPECT_TRUE(lcd(window)->provisional());
+    EXPECT_EQ(child<QListWidget>(window, "history")->count(), 0);  // nothing committed yet
+    QTest::keyClicks(lcd(window), "*4");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "9"; }, 10000));
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return !lcd(window)->provisional(); }, 10000));
+    EXPECT_EQ(lcd(window)->outputText(), "9");
+    EXPECT_EQ(child<QListWidget>(window, "history")->count(), 1);
+}
+
+TEST(MainWindow, WithoutLiveCalculationOnlyEqualsCalculates) {
+    MainWindow window;
+    setting(window, "live")->trigger();  // off
+    QTest::keyClicks(lcd(window), "1+2");
+    QTest::qWait(800);
+    EXPECT_EQ(lcd(window)->outputText(), "");
+    setting(window, "live")->trigger();  // on again for the other tests
+}
+
+TEST(MainWindow, UndoAndRedoRecalculateWhatIsBeingTyped) {
+    MainWindow window;
+    QTest::keyClicks(lcd(window), "1+2*4");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "9"; }, 10000));
+    QTest::keyClick(lcd(window), Qt::Key_Z, Qt::ControlModifier);
+    QTest::keyClick(lcd(window), Qt::Key_Z, Qt::ControlModifier);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "3"; }, 10000));
+    QTest::keyClick(lcd(window), Qt::Key_Y, Qt::ControlModifier);
+    QTest::keyClick(lcd(window), Qt::Key_Y, Qt::ControlModifier);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "9"; }, 10000));
+}
+
+TEST(MainWindow, AnUnfinishedExpressionShowsNoErrorAndOthersAreDimmed) {
+    MainWindow window;
+    QTest::keyClicks(lcd(window), "2*");
+    QTest::qWait(800);  // well past the typing delay
+    EXPECT_EQ(message(window)->text(), "");
+    EXPECT_EQ(lcd(window)->outputText(), "");
+    QTest::keyClicks(lcd(window), "1/0");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return message(window)->text() == "Division by zero"; }, 10000));
+    EXPECT_EQ(message(window)->foregroundRole(), QPalette::PlaceholderText);  // dimmed while typing
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return message(window)->foregroundRole() == QPalette::WindowText; }, 10000));
+    EXPECT_EQ(message(window)->text(), "Division by zero");
+}
+
+TEST(MainWindow, ALongCalculationIsLeftForEquals) {
+    MainWindow window;
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
+    QTest::keyClicks(lcd(window), "200000!");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return message(window)->text().startsWith("Too long"); }, 10000))
+        << message(window)->text().toStdString();
+    EXPECT_FALSE(child<QPushButton>(window, "cancel")->isVisibleTo(&window));  // nothing to cancel: it was dropped
+}
+
+TEST(MainWindow, ATemplateWithAnEmptyBoxShowsNoError) {
+    MainWindow window;
+    lcd(window)->insertTemplate(Template::Fraction);
+    lcd(window)->insert("1");
+    lcd(window)->right();  // into the empty denominator: the engine reads an unexpected ")"
+    QTest::qWait(800);
+    EXPECT_EQ(message(window)->text(), "");
+    lcd(window)->insert("4");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "0.25"; }, 10000));
+}
+
+TEST(MainWindow, ChangingTheTypeRecalculatesWhatIsBeingTyped) {
+    MainWindow window;
+    QTest::keyClicks(lcd(window), "1/3");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText().startsWith("0.33"); }, 10000));
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "1/3 = 0.(3)"; }, 10000));
+    EXPECT_TRUE(lcd(window)->provisional());
+    EXPECT_EQ(child<QListWidget>(window, "history")->count(), 0);
+}
+
+TEST(MainWindow, AReplayedEntryIsPreviewed) {
+    MainWindow window;
+    run(window, "2+2");
+    run(window, "5");
+    lcd(window)->clear();
+    QTest::keyClick(lcd(window), Qt::Key_Up);
+    QTest::keyClick(lcd(window), Qt::Key_Up);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "4" && lcd(window)->provisional(); }, 10000));
+}
+
+TEST(MainWindow, AnEntryReplayedAfterAPauseIsPreviewed) {
+    MainWindow window;
+    run(window, "2+2");
+    run(window, "5");
+    lcd(window)->clear();
+    QTest::qWait(800);  // the clearing's own preview is long done
+    QTest::keyClick(lcd(window), Qt::Key_Up);
+    QTest::keyClick(lcd(window), Qt::Key_Up);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "4" && lcd(window)->provisional(); }, 10000));
+}
+
+TEST(MainWindow, TheFaultyPartOfTheInputIsMarked) {
+    MainWindow window;
+    run(window, "1+2÷0");
+    EXPECT_EQ(lcd(window)->markedText(), "2÷0");
+    run(window, "1+1");
+    EXPECT_EQ(lcd(window)->markedText(), "");
+}
+
+TEST(MainWindow, DetailsGoesOffWhenThePreviewGoes) {
+    MainWindow window;
+    auto* details = child<QToolButton>(window, "detailsButton");
+    QTest::keyClicks(lcd(window), "1+2");
+    ASSERT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "3"; }, 10000));
+    EXPECT_TRUE(details->isEnabled());
+    lcd(window)->clear();  // an empty input: nothing to describe
+    EXPECT_TRUE(QTest::qWaitFor([&] { return !details->isEnabled(); }, 10000));
+
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
+    QTest::keyClicks(lcd(window), "2");
+    ASSERT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "2"; }, 10000));
+    EXPECT_TRUE(details->isEnabled());
+    QTest::keyClicks(lcd(window), "00000!");  // too long while typing: dropped
+    ASSERT_TRUE(QTest::qWaitFor([&] { return message(window)->text().startsWith("Too long"); }, 10000));
+    EXPECT_FALSE(details->isEnabled());
+}
+
+TEST(MainWindow, TheCopyMenuOffersEveryForm) {
+    MainWindow window;
+    auto* button = child<QToolButton>(window, "copyButton");
+    EXPECT_FALSE(button->isEnabled());  // nothing to copy yet
+    EXPECT_FALSE(button->accessibleName().isEmpty());
+    run(window, "0.1 + 0.2");
+    EXPECT_TRUE(button->isEnabled());
+    child<QAction>(window, "copy:bound")->trigger();
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "0.3000000000000000444089209850062616169452667236328125 ± 4.4e-17");
+    child<QAction>(window, "copy:expression")->trigger();
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "0.1 + 0.2");
+    child<QAction>(window, "copy:trusted")->trigger();
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "0.300000000000000");
+    QTest::keyClick(lcd(window), Qt::Key_C, Qt::ControlModifier);  // nothing selected: the value
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "0.3000000000000000444089209850062616169452667236328125");
+    auto* copyAs = child<QMenu>(window, "copyAsMenu");  // in the edit menu, the forms under "Copy as"
+    EXPECT_TRUE(lcd(window)->editMenu()->actions().contains(copyAs->menuAction()));
+    EXPECT_TRUE(copyAs->actions().contains(child<QAction>(window, "copy:value")));
+}
+
+TEST(MainWindow, WithNoTrustedDigitTheTrustedFormIsOff) {
+    MainWindow window;
+    run(window, "1e-17+1-1");  // 0, with a bound of 1e-17: no digit trusted
+    EXPECT_TRUE(child<QAction>(window, "copy:value")->isEnabled());
+    EXPECT_FALSE(child<QAction>(window, "copy:trusted")->isEnabled());
+    EXPECT_EQ(child<QAction>(window, "copy:trusted")->toolTip(), "No digit is trusted");
+    run(window, "1+1");
+    EXPECT_TRUE(child<QAction>(window, "copy:trusted")->isEnabled());
+}
+
+TEST(MainWindow, ControlShiftCOpensTheCopyMenu) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    auto* menu = child<QMenu>(window, "copyMenu");
+    QTest::keyClick(lcd(window), Qt::Key_C, Qt::ControlModifier | Qt::ShiftModifier);
+    EXPECT_FALSE(menu->isVisible());  // nothing to copy yet
+    run(window, "1+1");
+    QTest::keyClick(lcd(window), Qt::Key_C, Qt::ControlModifier | Qt::ShiftModifier);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return menu->isVisible(); }, 2000));
+    menu->hide();
+}
+
+TEST(MainWindow, HistoryEntriesCanBeCopied) {
+    MainWindow window;
+    run(window, "1/4");
+    run(window, "2+2");
+    auto* history = child<QListWidget>(window, "history");
+    EXPECT_EQ(history->contextMenuPolicy(), Qt::CustomContextMenu);
+    history->setCurrentRow(1);  // 1/4, the older one
+    child<QAction>(window, "history:copyValue")->trigger();
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "0.25");
+    child<QAction>(window, "history:copyExpression")->trigger();
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "1÷4");  // as the screen wrote it
+    child<QAction>(window, "history:copyBound")->trigger();
+    EXPECT_TRUE(QGuiApplication::clipboard()->text().startsWith("0.25 ± "));
+}
+
+TEST(MainWindow, ALongPressOnAHistoryRowOpensItsMenu) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    run(window, "1/4");
+    lcd(window)->clear();  // so that a replay of the row would show
+    auto* history = child<QListWidget>(window, "history");
+    auto* menu = child<QMenu>(window, "historyMenu");
+    const QPoint where = history->visualItemRect(history->item(0)).center();
+    QTest::mousePress(history->viewport(), Qt::LeftButton, {}, where);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return menu->isVisible(); }, 2000));  // after half a second, without a release
+    menu->hide();
+    QTest::mouseRelease(history->viewport(), Qt::LeftButton, {}, where);
+    EXPECT_EQ(lcd(window)->input(), "");  // the release after a long press does not replay the row
+}
+
+TEST(MainWindow, APressThatMovesIsNoLongPress) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    run(window, "1/4");
+    auto* history = child<QListWidget>(window, "history");
+    auto* menu = child<QMenu>(window, "historyMenu");
+    const QPoint where = history->visualItemRect(history->item(0)).center();
+    QTest::mousePress(history->viewport(), Qt::LeftButton, {}, where);
+    QTest::mouseMove(history->viewport(), where + QPoint(0, 3 * QApplication::startDragDistance()));  // scrolling
+    QTest::qWait(800);
+    EXPECT_FALSE(menu->isVisible());
+    QTest::mouseRelease(history->viewport(), Qt::LeftButton, {}, where);
+}
+
+TEST(MainWindow, TheHistoryMenuBelongsToTheHistoryPanel) {
+    // The browser keeps an open popup above any later popup that is not its child: a row's menu must belong to the
+    // panel it opens from, or it opens hidden behind it.
+    MainWindow window;
+    EXPECT_EQ(child<QMenu>(window, "historyMenu")->parentWidget(), child<QWidget>(window, "historyPanel"));
+}
+
+TEST(MainWindow, CopyAsIsOffWithNothingToCopy) {
+    MainWindow window;
+    auto* copyAs = child<QMenu>(window, "copyAsMenu");
+    EXPECT_EQ(copyAs->title(), "Copy as");
+    EXPECT_FALSE(copyAs->menuAction()->isEnabled());
+    run(window, "1+1");
+    EXPECT_TRUE(copyAs->menuAction()->isEnabled());
+    run(window, "1/0");
+    EXPECT_FALSE(copyAs->menuAction()->isEnabled());
+}
+
+TEST(MainWindow, CompletionsDropDownUnderTheName) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    auto* list = child<QListWidget>(window, "completions");
+    QTest::keyClicks(lcd(window), "a");
+    EXPECT_FALSE(list->isVisible());  // from the second letter
+    QTest::keyClicks(lcd(window), "s");
+    ASSERT_TRUE(list->isVisible());
+    EXPECT_EQ(list->currentItem()->text(), "asin");
+    EXPECT_GE(list->mapTo(&window, QPoint(0, 0)).y(),
+              lcd(window)->mapTo(&window, lcd(window)->caretRectAt(lcd(window)->entry().position()).bottomLeft().toPoint()).y());
+    EXPECT_TRUE(window.rect().contains(QRect(list->mapTo(&window, QPoint(0, 0)), list->size())));  // inside the window
+    QTest::keyClicks(lcd(window), "x");  // nothing starts with asx
+    EXPECT_FALSE(list->isVisible());
+}
+
+TEST(MainWindow, MovingTheCursorClosesTheCompletions) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    auto* list = child<QListWidget>(window, "completions");
+    QTest::keyClicks(lcd(window), "as");
+    ASSERT_TRUE(list->isVisible());
+    QTest::keyClick(lcd(window), Qt::Key_Left);
+    EXPECT_FALSE(list->isVisible());
+}
+
+TEST(MainWindow, TabOrEnterChoosesACompletionAndEscCloses) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    auto* list = child<QListWidget>(window, "completions");
+    QTest::keyClicks(lcd(window), "as");
+    QTest::keyClick(lcd(window), Qt::Key_Down);
+    QTest::keyClick(lcd(window), Qt::Key_Tab);
+    EXPECT_EQ(lcd(window)->input(), "asinh(");
+    EXPECT_FALSE(list->isVisible());
+    lcd(window)->clear();
+    QTest::keyClicks(lcd(window), "sq");
+    QTest::keyClick(lcd(window), Qt::Key_Return);  // chooses, does not evaluate
+    EXPECT_EQ(lcd(window)->entry().root()[0].kind, Template::Sqrt);
+    lcd(window)->clear();
+    QTest::keyClicks(lcd(window), "co");
+    QTest::keyClick(lcd(window), Qt::Key_Escape);  // closes the list, keeps the input
+    EXPECT_FALSE(list->isVisible());
+    EXPECT_EQ(lcd(window)->input(), "co");
+}
+
+TEST(MainWindow, UpGoesBackAndAClickChoosesACompletion) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    auto* list = child<QListWidget>(window, "completions");
+    QTest::keyClicks(lcd(window), "as");
+    QTest::keyClick(lcd(window), Qt::Key_Down);
+    QTest::keyClick(lcd(window), Qt::Key_Up);
+    EXPECT_EQ(list->currentRow(), 0);
+    QTest::mouseClick(list->viewport(), Qt::LeftButton, {}, list->visualItemRect(list->item(1)).center());
+    EXPECT_EQ(lcd(window)->input(), "asinh(");
+    EXPECT_FALSE(list->isVisible());
+    EXPECT_TRUE(lcd(window)->hasFocus());
+}
+
+TEST(MainWindow, TheDecimalSeparatorFollowsTheLanguageUnlessChosen) {
+    MainWindow window;
+    EXPECT_TRUE(setting(window, "decimal:language")->isChecked());
+    EXPECT_FALSE(settings::decimalComma());  // English
+    setting(window, "language:es")->trigger();
+    EXPECT_TRUE(settings::decimalComma());
+    setting(window, "decimal:point")->trigger();
+    EXPECT_FALSE(settings::decimalComma());
+    setting(window, "decimal:comma")->trigger();
+    setting(window, "language:en")->trigger();
+    EXPECT_TRUE(settings::decimalComma());  // chosen: the language no longer matters
+    setting(window, "decimal:language")->trigger();
+    EXPECT_FALSE(settings::decimalComma());
+}
+
+TEST(MainWindow, TheScreenTheHistoryAndTheCopiesUseTheDecimalComma) {
+    MainWindow window;
+    setting(window, "decimal:comma")->trigger();
+    run(window, "1.5+1");
+    EXPECT_EQ(lcd(window)->outputText(), "2,5");
+    auto* history = child<QListWidget>(window, "history");
+    EXPECT_EQ(history->item(0)->text(), "1,5+1 = 2,5");
+    child<QAction>(window, "copy:expression")->trigger();
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "1,5+1");
+    history->setCurrentRow(0);
+    child<QAction>(window, "history:copyExpression")->trigger();
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "1,5+1");
+    setting(window, "decimal:language")->trigger();  // English: the point again, everywhere
+    EXPECT_EQ(lcd(window)->outputText(), "2.5");
+    EXPECT_EQ(history->item(0)->text(), "1.5+1 = 2.5");
+}
+
+TEST(MainWindow, ANameStillBeingTypedShowsNoError) {
+    MainWindow window;
+    QTest::keyClicks(lcd(window), "2+as");
+    QTest::qWait(800);  // well past the typing delay
+    EXPECT_EQ(message(window)->text(), "");
+    EXPECT_EQ(lcd(window)->markedText(), "");
+    QTest::keyClicks(lcd(window), "x");  // nothing starts with asx: now it is an unknown name
+    EXPECT_TRUE(QTest::qWaitFor([&] { return message(window)->text() == "Unknown name “asx”"; }, 10000))
+        << message(window)->text().toStdString();
+}
+
+TEST(MainWindow, SettingsExportAndImportRoundTrip) {
+    MainWindow window;
+    setting(window, "theme:dark")->trigger();
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Binary128);
+    const QByteArray file = window.exportSettings();
+    setting(window, "theme:light")->trigger();
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Double);
+    EXPECT_TRUE(window.importSettings(file).isEmpty());
+    EXPECT_TRUE(setting(window, "theme:dark")->isChecked());
+    EXPECT_EQ(child<TypeChooser>(window, "type")->currentType(), calculate_core::NumberType::Binary128);
+    EXPECT_FALSE(window.importSettings("{}").isEmpty());  // refused as a whole: nothing changes
+    EXPECT_TRUE(setting(window, "theme:dark")->isChecked());
+    setting(window, "theme:system")->trigger();
+}
+
+TEST(MainWindow, EverySettingIsInTheFile) {
+    MainWindow window;
+    const QMap<QString, QStringList> keys = window.settingKeys();
+    for (QAction* action : child<QMenu>(window, "settings")->actions()) {
+        if (!action->isCheckable()) continue;
+        const QString key = action->objectName().section(':', 0, 0);
+        EXPECT_TRUE(keys.contains(key)) << action->objectName().toStdString();
+    }
+    EXPECT_TRUE(keys.contains("type"));
+    EXPECT_TRUE(keys.contains("angle"));
+    EXPECT_NE(child<QAction>(window, "settings:export"), nullptr);
+    EXPECT_NE(child<QAction>(window, "settings:import"), nullptr);
+}
+
+TEST(MainWindow, AFreshWindowExportsNoSettings) {
+    MainWindow window;
+    EXPECT_TRUE(QJsonDocument::fromJson(window.exportSettings()).object().value("settings").toObject().isEmpty());
+    setting(window, "decimal:comma")->trigger();
+    EXPECT_EQ(QJsonDocument::fromJson(window.exportSettings()).object().value("settings").toObject().value("decimal").toString(), "comma");
+    setting(window, "decimal:language")->trigger();
 }

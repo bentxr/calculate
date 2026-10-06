@@ -54,3 +54,60 @@ TEST(Worker, RunsOnItsOwnThreadAndCanBeCancelled) {
     thread.wait();
     delete worker;
 }
+
+TEST(Worker, APreviewLeavesAnsAlone) {
+    Worker worker;
+    QSignalSpy evaluated(&worker, &Worker::evaluated);
+    QSignalSpy previewed(&worker, &Worker::previewed);
+    worker.evaluate("2", Options{});
+    worker.previewGeneration() = 1;
+    worker.preview(1, "Ans * 3", Options{});
+    ASSERT_EQ(previewed.count(), 1);
+    EXPECT_EQ(previewed.at(0).at(0).toInt(), 1);
+    EXPECT_EQ(previewed.at(0).at(2).value<Result>().value.digits, "6");
+    worker.evaluate("Ans + 1", Options{});
+    ASSERT_EQ(evaluated.count(), 2);
+    EXPECT_EQ(evaluated.at(1).at(1).value<Result>().value.digits, "3");  // still 2 + 1
+}
+
+TEST(Worker, AStalePreviewIsSkipped) {
+    Worker worker;
+    QSignalSpy previewed(&worker, &Worker::previewed);
+    worker.previewGeneration() = 2;
+    worker.preview(1, "1 + 1", Options{});  // request 2 already replaced it
+    EXPECT_EQ(previewed.count(), 0);
+    worker.preview(2, "2 + 2", Options{});
+    EXPECT_EQ(previewed.count(), 1);
+}
+
+TEST(Worker, ARunningPreviewCanBeCancelled) {
+    QThread thread;
+    auto* worker = new Worker;
+    worker->moveToThread(&thread);
+    thread.start();
+    QSignalSpy previewed(worker, &Worker::previewed);
+    Options exact;
+    exact.type = NumberType::Exact;
+    worker->previewGeneration() = 1;
+    QMetaObject::invokeMethod(worker, "preview", Qt::QueuedConnection, Q_ARG(int, 1), Q_ARG(QString, "200000!"),
+                              Q_ARG(calculate_core::Options, exact));
+    QThread::msleep(100);
+    worker->previewCancelFlag() = true;
+    ASSERT_TRUE(previewed.wait(10000));
+    const Result r = previewed.at(0).at(2).value<Result>();
+    ASSERT_TRUE(r.error);
+    EXPECT_EQ(r.error->code, ErrorCode::Cancelled);
+    thread.quit();
+    thread.wait();
+    delete worker;
+}
+
+TEST(Worker, APreviewStartsWithItsCancelFlagDown) {
+    Worker worker;
+    QSignalSpy previewed(&worker, &Worker::previewed);
+    worker.previewGeneration() = 1;
+    worker.previewCancelFlag() = true;  // left raised by the window when it replaced an earlier request
+    worker.preview(1, "1 + 1", Options{});
+    ASSERT_EQ(previewed.count(), 1);
+    EXPECT_FALSE(previewed.at(0).at(2).value<Result>().error);
+}

@@ -3,6 +3,7 @@
 #include <QFontInfo>
 #include <QFontMetricsF>
 #include <QPainter>
+#include <QtNumeric>
 
 namespace typeset {
 
@@ -15,6 +16,11 @@ void place(Box& box, const Box& part, qreal dx, qreal dy) {
         box.runs << run;
     }
     for (const QLineF& line : part.lines) box.lines << line.translated(dx, dy);
+    for (Mark mark : part.marks) {
+        mark.caret.translate(dx, dy);
+        mark.item.translate(dx, dy);
+        box.marks << mark;
+    }
 }
 
 qreal advance(const Run& run) { return QFontMetricsF(run.font).horizontalAdvance(run.text); }
@@ -211,37 +217,48 @@ void paint(QPainter& painter, const Box& box, QPointF origin, const QColor& ink,
 
 namespace {
 
-// Lays out an entry's rows and templates, marking the cursor with an empty Caret run in its row.
-struct InputLayout {
-    const Entry& entry;
+using Path = std::vector<std::pair<int, int>>;
 
-    Box caret(const QFont& font) const {
-        Box b = strut(font);
-        b.runs << Run{QString(), QPointF(0, 0), font, Role::Caret};
+// Lays out an entry's rows and templates, marking every place for the cursor.
+struct InputLayout {
+    bool decimalComma = false;
+
+    QString shown(const QString& piece) const {
+        if (!decimalComma) return piece;
+        if (piece == ".") return QStringLiteral(",");
+        if (piece == ", ") return QStringLiteral("; ");
+        return piece;
+    }
+
+    // `path`: how to reach this row, as Entry::path().
+    Box row(const Row& items, const QFont& font, const Path& path) const {
+        QList<Box> parts;
+        for (std::size_t i = 0; i < items.size(); ++i) parts << item(items[i], font, path, static_cast<int>(i));
+        if (items.empty()) parts << (path.empty() ? strut(font) : text(QStringLiteral("□"), font));  // □: an empty template box
+        Box b = typeset::row(parts);
+        const QFontMetricsF m(font);
+        qreal x = 0;
+        for (int i = 0; i <= static_cast<int>(items.size()); ++i) {
+            Mark mark{Position{path, i}, QRectF(x, -m.ascent(), 0, m.ascent() + m.descent()), QRectF()};
+            if (i < static_cast<int>(items.size())) {
+                const Box& part = parts[i];
+                mark.item = QRectF(x, -part.ascent, part.width, part.ascent + part.descent);
+                x += part.width;
+            }
+            b.marks << mark;
+        }
         return b;
     }
 
-    // `onPath`: the rows that lead to the cursor; the cursor's own row is the last of them.
-    Box row(const Row& items, const QFont& font, std::size_t depth, bool onPath) const {
-        const bool here = onPath && depth == entry.path().size();
-        QList<Box> parts;
-        for (std::size_t i = 0; i < items.size(); ++i) {
-            if (here && static_cast<int>(i) == entry.cursor()) parts << caret(font);
-            parts << item(items[i], font, depth, onPath, static_cast<int>(i));
-        }
-        if (here && entry.cursor() == static_cast<int>(items.size())) parts << caret(font);
-        if (items.empty() && depth > 0) parts << text(QStringLiteral("□"), font);  // an empty template box, not the screen
-        return typeset::row(parts);
-    }
-
-    Box item(const Item& it, const QFont& font, std::size_t depth, bool onPath, int index) const {
+    Box item(const Item& it, const QFont& font, const Path& path, int index) const {
         const QFont small = scaled(font, 0.7);
         const auto box = [&](int b, const QFont& f) {
-            const bool on = onPath && depth < entry.path().size() && entry.path()[depth] == std::make_pair(index, b);
-            return row(it.boxes[static_cast<std::size_t>(b)], f, depth + 1, on);
+            Path inner = path;
+            inner.emplace_back(index, b);
+            return row(it.boxes[static_cast<std::size_t>(b)], f, inner);
         };
         switch (it.kind) {
-        case Template::Text: return text(it.text, font);
+        case Template::Text: return text(shown(it.text), font);
         case Template::Fraction: return fraction(box(0, font), box(1, font), font);
         case Template::Sqrt: return radical(box(0, font), font);
         case Template::Cbrt: return radical(box(0, font), font, text(QStringLiteral("3"), small));
@@ -260,16 +277,39 @@ struct InputLayout {
 
 }  // namespace
 
-Box input(const Entry& entry, const QFont& font, QRectF* caret) {
-    Box b = InputLayout{entry}.row(entry.root(), font, 0, true);
-    for (int i = 0; i < b.runs.size(); ++i) {
-        if (b.runs[i].role != Role::Caret) continue;
-        const QFontMetricsF m(b.runs[i].font);
-        if (caret) *caret = QRectF(b.runs[i].origin.x(), b.runs[i].origin.y() - m.ascent(), 0, m.ascent() + m.descent());
-        b.runs.removeAt(i);
-        break;
+Box input(const Entry& entry, const QFont& font, QRectF* caret, bool decimalComma) {
+    const Box b = InputLayout{decimalComma}.row(entry.root(), font, {});
+    if (caret) {
+        for (const Mark& mark : b.marks)
+            if (mark.at == entry.position()) *caret = mark.caret;
     }
     return b;
+}
+
+Position hit(const Box& input, QPointF point) {
+    Position nearest;
+    qreal nearestDy = qInf();  // to the mark's line
+    qreal nearestDx = qInf();  // along it
+    for (const Mark& mark : input.marks) {
+        const qreal dy = qMax<qreal>(0, qMax(mark.caret.top() - point.y(), point.y() - mark.caret.bottom()));
+        const qreal dx = qAbs(point.x() - mark.caret.left());
+        if (dy < nearestDy || (dy == nearestDy && dx < nearestDx)) {
+            nearestDy = dy;
+            nearestDx = dx;
+            nearest = mark.at;
+        }
+    }
+    return nearest;
+}
+
+QRectF selectionRect(const Box& input, const Entry& entry) {
+    if (!entry.hasSelection()) return {};
+    const int from = qMin(entry.anchor(), entry.cursor());
+    const int to = qMax(entry.anchor(), entry.cursor());
+    QRectF covered;
+    for (const Mark& mark : input.marks)
+        if (mark.at.path == entry.path() && mark.at.index >= from && mark.at.index < to) covered |= mark.item;
+    return covered;
 }
 
 Box value(const view::ValueParts& parts, const QFont& font, qreal maxWidth) {
