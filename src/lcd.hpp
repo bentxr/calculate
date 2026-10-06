@@ -10,6 +10,7 @@
 #include <functional>
 
 class QHBoxLayout;
+class QMenu;
 class QScrollBar;
 
 // The calculator's screen: the input at the top and the result at the bottom right, drawn in two
@@ -38,6 +39,11 @@ public:
     bool hasSelection() const { return entry_.hasSelection(); }
     void selectAll();
     QRectF caretRectAt(const Position& p) const;  // where the cursor would be drawn at `p`
+    void cut();
+    void copy();  // the selection as text; without one, copyRequested (the result's turn)
+    // Pastes the first non-empty line of `text`, read into templates.
+    void pasteText(const QString& text);
+    QMenu* editMenu() const { return editMenu_; }  // undo, redo, cut, copy, paste, select all
     void finishName();  // ends a name typed just before the cursor (pi becomes π)
     // The phone's on-screen keyboard (an input method): off in the browser, where it would cover the
     // keypad, until asked for. A physical keyboard types either way.
@@ -65,10 +71,16 @@ public:
 public slots:
     void undo();
     void redo();
+    // Paste from the clipboard, for buttons and menus. In the browser the clipboard is read
+    // asynchronously, and the browser may refuse.
+    void requestPaste();
 
 signals:
     void evaluateRequested();
     void historyRequested(int step);  // +1 for an older entry (▲), −1 for a newer one (▼)
+    void copyRequested();
+    void pastedFirstLine(int lines);  // of `lines` non-empty ones
+    void pasteRefused();
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -81,6 +93,7 @@ protected:
     void wheelEvent(QWheelEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
     void changeEvent(QEvent* event) override;
+    void contextMenuEvent(QContextMenuEvent* event) override;
 
 private:
     enum class Shown { Nothing, Value, Exact };
@@ -95,11 +108,14 @@ private:
     QRectF resultArea(const typeset::Box& input) const;
     int barHeight() const;
     void changed();  // lays the result out again and repaints
+    void buildEditMenu();
+    void retranslate();
     // Every change of the input goes through here, so that it can be undone (when it changed anything).
     void edit(const std::function<void()>& change);
 
     Entry entry_;
     UndoStack undo_;
+    QMenu* editMenu_ = nullptr;
     Shown shown_ = Shown::Nothing;
     view::ValueParts value_;
     view::FractionParts exact_;

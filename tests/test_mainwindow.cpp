@@ -847,3 +847,17 @@ TEST(MainWindow, AKeyboardButtonTurnsTheSystemKeyboardOnAndOff) {
     button->click();
     EXPECT_EQ(button->isChecked(), lcd(window)->testAttribute(Qt::WA_InputMethodEnabled));
 }
+
+TEST(MainWindow, TheEditButtonReachesEveryEditAction) {
+    MainWindow window;
+    auto* edit = child<QToolButton>(window, "editButton");
+    EXPECT_EQ(edit->focusPolicy(), Qt::NoFocus);
+    EXPECT_FALSE(edit->accessibleName().isEmpty());
+    QGuiApplication::clipboard()->setText("sqrt(9)");
+    child<QAction>(window, "edit:paste")->trigger();
+    EXPECT_EQ(lcd(window)->input(), "√(9)");
+    child<QAction>(window, "edit:undo")->trigger();
+    EXPECT_EQ(lcd(window)->input(), "");
+    child<QAction>(window, "edit:redo")->trigger();
+    EXPECT_EQ(lcd(window)->input(), "√(9)");
+}

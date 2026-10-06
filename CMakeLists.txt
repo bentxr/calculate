@@ -35,6 +35,9 @@ qt_add_library(calculate-ui STATIC
     src/undostack.cpp
     src/worker.cpp
 )
+if(EMSCRIPTEN)  # the browser's asynchronous clipboard
+    target_sources(calculate-ui PRIVATE src/webclipboard.cpp)
+endif()
 target_include_directories(calculate-ui PUBLIC ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(calculate-ui PUBLIC Qt6::Widgets calculate-core)
 target_compile_options(calculate-ui PRIVATE -Wall -Wextra -Wpedantic -Werror)

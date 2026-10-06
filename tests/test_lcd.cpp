@@ -5,17 +5,11 @@
 #include <QClipboard>
 #include <QGuiApplication>
 #include <QInputMethodEvent>
+#include <QMenu>
 #include <QSignalSpy>
 #include <QTest>
 
 #include <gtest/gtest.h>
-
-TEST(Lcd, PasteDoesNothing) {
-    Lcd lcd;
-    QGuiApplication::clipboard()->setText("sin(1)");
-    QTest::keySequence(&lcd, QKeySequence::Paste);
-    EXPECT_EQ(lcd.input(), "");
-}
 
 TEST(Lcd, EnterEvaluatesAndUpDownAskForTheHistory) {
     Lcd lcd;
@@ -206,4 +200,52 @@ TEST(Lcd, UndoAndRedo) {
     lcd.setInput("7");  // a history replay is an edit too
     lcd.undo();
     EXPECT_EQ(lcd.input(), "");
+}
+
+TEST(Lcd, PasteReadsTheTextIntoTemplates) {
+    Lcd lcd;
+    QGuiApplication::clipboard()->setText("((1)/(3))+sqrt(2)");
+    QTest::keySequence(&lcd, QKeySequence::Paste);
+    EXPECT_EQ(lcd.input(), "((1)/(3))+√(2)");
+    EXPECT_EQ(lcd.entry().root()[0].kind, Template::Fraction);
+    QTest::keyClick(&lcd, Qt::Key_Z, Qt::ControlModifier);  // one paste, one undo
+    EXPECT_EQ(lcd.input(), "");
+}
+
+TEST(Lcd, CutAndCopyTakeTheSelectionAsText) {
+    Lcd lcd;
+    QSignalSpy copyResult(&lcd, &Lcd::copyRequested);
+    QTest::keyClicks(&lcd, "2+sqrt(9)");
+    QTest::keySequence(&lcd, QKeySequence::Copy);  // nothing selected: the result's turn
+    EXPECT_EQ(copyResult.count(), 1);
+    QTest::keyClick(&lcd, Qt::Key_Left, Qt::ShiftModifier);
+    QTest::keySequence(&lcd, QKeySequence::Copy);
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "√(9)");
+    QTest::keySequence(&lcd, QKeySequence::Cut);
+    EXPECT_EQ(lcd.input(), "2+");
+    QTest::keySequence(&lcd, QKeySequence::Paste);
+    EXPECT_EQ(lcd.input(), "2+√(9)");
+    EXPECT_EQ(copyResult.count(), 1);
+}
+
+TEST(Lcd, OnlyTheFirstLineIsPasted) {
+    Lcd lcd;
+    QSignalSpy partly(&lcd, &Lcd::pastedFirstLine);
+    lcd.pasteText("\n1+2\n3+4\n");
+    EXPECT_EQ(lcd.input(), "1+2");
+    ASSERT_EQ(partly.count(), 1);
+    EXPECT_EQ(partly.at(0).at(0).toInt(), 2);  // of two lines
+}
+
+TEST(Lcd, TheContextMenuEdits) {
+    Lcd lcd;
+    QTest::keyClicks(&lcd, "12");
+    QStringList names;
+    for (QAction* action : lcd.editMenu()->actions())
+        if (!action->isSeparator()) names << action->objectName();
+    EXPECT_EQ(names, QStringList({"edit:undo", "edit:redo", "edit:cut", "edit:copy", "edit:paste", "edit:selectAll"}));
+    lcd.findChild<QAction*>("edit:selectAll")->trigger();
+    EXPECT_EQ(lcd.selectedText(), "12");
+    lcd.findChild<QAction*>("edit:undo")->trigger();
+    EXPECT_EQ(lcd.input(), "1");
 }

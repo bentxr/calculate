@@ -1,7 +1,12 @@
 #include "lcd.hpp"
 
 #include "typing.hpp"
+#ifdef Q_OS_WASM
+#include "webclipboard.hpp"
+#endif
 
+#include <QClipboard>
+#include <QContextMenuEvent>
 #include <QFontDatabase>
 #include <QFontMetricsF>
 #include <QGuiApplication>
@@ -9,6 +14,7 @@
 #include <QInputMethodEvent>
 #include <QHBoxLayout>
 #include <QKeyEvent>
+#include <QMenu>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QScrollBar>
@@ -49,6 +55,40 @@ Lcd::Lcd(QWidget* parent) : QWidget(parent) {
     barLayout_->setContentsMargins(0, 0, 0, 0);
     barLayout_->addStretch();
     connect(scroll_, &QScrollBar::valueChanged, this, qOverload<>(&QWidget::update));
+    buildEditMenu();
+    retranslate();
+}
+
+void Lcd::buildEditMenu() {
+    editMenu_ = new QMenu(this);
+    const auto add = [this](const char* name, void (Lcd::*slot)()) {
+        QAction* action = editMenu_->addAction(QString());
+        action->setObjectName(name);
+        connect(action, &QAction::triggered, this, slot);
+        return action;
+    };
+    QAction* undo = add("edit:undo", &Lcd::undo);
+    QAction* redo = add("edit:redo", &Lcd::redo);
+    editMenu_->addSeparator();
+    QAction* cut = add("edit:cut", &Lcd::cut);
+    add("edit:copy", &Lcd::copy);
+    add("edit:paste", &Lcd::requestPaste);
+    editMenu_->addSeparator();
+    add("edit:selectAll", &Lcd::selectAll);
+    connect(editMenu_, &QMenu::aboutToShow, this, [this, undo, redo, cut] {
+        undo->setEnabled(undo_.canUndo());
+        redo->setEnabled(undo_.canRedo());
+        cut->setEnabled(entry_.hasSelection());
+    });
+}
+
+void Lcd::retranslate() {
+    findChild<QAction*>("edit:undo")->setText(tr("Undo"));
+    findChild<QAction*>("edit:redo")->setText(tr("Redo"));
+    findChild<QAction*>("edit:cut")->setText(tr("Cut"));
+    findChild<QAction*>("edit:copy")->setText(tr("Copy"));
+    findChild<QAction*>("edit:paste")->setText(tr("Paste"));
+    findChild<QAction*>("edit:selectAll")->setText(tr("Select all"));
 }
 
 void Lcd::insert(const QString& piece) {
@@ -128,6 +168,36 @@ Position Lcd::positionAt(QPointF point) const {
     QRectF caret;
     const typeset::Box input = inputBox(&caret);
     return typeset::hit(input, point - inputOrigin(input, caret));
+}
+
+void Lcd::cut() {
+    if (!entry_.hasSelection()) return;
+    copy();
+    edit([this] { entry_.backspace(); });  // removes the selection
+}
+
+void Lcd::copy() {
+    if (entry_.hasSelection()) QGuiApplication::clipboard()->setText(entry_.selectedText());
+    else emit copyRequested();
+}
+
+void Lcd::pasteText(const QString& text) {
+    QStringList lines;
+    for (QString line : text.split('\n')) {
+        line.remove('\r');
+        if (!line.trimmed().isEmpty()) lines << line;
+    }
+    if (lines.isEmpty()) return;
+    edit([&] { typing::paste(entry_, lines.first()); });
+    if (lines.size() > 1) emit pastedFirstLine(static_cast<int>(lines.size()));
+}
+
+void Lcd::requestPaste() {
+#ifdef Q_OS_WASM
+    webclipboard::readText(this, [this](const QString& text) { pasteText(text); }, [this] { emit pasteRefused(); });
+#else
+    pasteText(QGuiApplication::clipboard()->text());
+#endif
 }
 
 void Lcd::clear() {
@@ -367,6 +437,19 @@ void Lcd::keyPressEvent(QKeyEvent* event) {
         undo();
         return;
     }
+    // Ctrl+V reads the clipboard directly, in the browser too: its own paste event has filled it.
+    if (event->matches(QKeySequence::Cut)) {
+        cut();
+        return;
+    }
+    if (event->matches(QKeySequence::Copy)) {
+        copy();
+        return;
+    }
+    if (event->matches(QKeySequence::Paste)) {
+        pasteText(QGuiApplication::clipboard()->text());
+        return;
+    }
     if (event->matches(QKeySequence::SelectAll)) {
         selectAll();
         return;
@@ -459,6 +542,11 @@ void Lcd::wheelEvent(QWheelEvent* event) {
 void Lcd::resizeEvent(QResizeEvent*) { changed(); }
 
 void Lcd::changeEvent(QEvent* event) {
-    if (event->type() == QEvent::LanguageChange) setMemory(memory_);  // its tooltip
+    if (event->type() == QEvent::LanguageChange) {
+        setMemory(memory_);  // its tooltip
+        retranslate();
+    }
     QWidget::changeEvent(event);
 }
+
+void Lcd::contextMenuEvent(QContextMenuEvent* event) { editMenu_->popup(event->globalPos()); }

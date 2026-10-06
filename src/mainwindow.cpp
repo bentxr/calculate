@@ -156,6 +156,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     detailsButton_->setAutoRaise(true);
     detailsButton_->setEnabled(false);
     lcd_->addToBar(detailsButton_);
+    // Every edit action within reach of a button: undo, redo, cut, copy, paste, select all.
+    editButton_ = new QToolButton(lcd_);
+    editButton_->setObjectName("editButton");
+    editButton_->setAutoRaise(true);
+    lcd_->addToBar(editButton_);
     // The system keyboard on request: a phone shows it only when asked, so the keypad stays in view. On the
     // desktop the keyboard is always there, so the button is only in the browser.
     keyboardButton_ = new QToolButton(lcd_);
@@ -247,6 +252,13 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(proceed_, &QPushButton::clicked, this, [this] { request(lastExpression_, true); });
     connect(detailsButton_, &QToolButton::clicked, this, [this] { card_->popUp(lcd_); });
     connect(keyboardButton_, &QToolButton::toggled, lcd_, &Lcd::setSystemKeyboard);
+    connect(editButton_, &QToolButton::clicked, this, [this] {
+        QMenu* menu = lcd_->editMenu();
+        menu->popup(placed(menu->sizeHint(), globalGeometry(editButton_), popupBounds(editButton_)).topLeft());
+    });
+    connect(lcd_, &Lcd::pastedFirstLine, this, [this](int lines) { message_->setText(tr("Pasted the first of %1 lines").arg(lines)); });
+    connect(lcd_, &Lcd::pasteRefused, this,
+            [this] { message_->setText(tr("The browser did not allow reading the clipboard: paste with Ctrl+V")); });
     connect(historyToggle_, &QToolButton::clicked, this, [this] {
         const QSize size(lcd_->width(), historyPanel_->sizeHint().height());
         historyPanel_->setGeometry(placed(size, globalGeometry(lcd_), popupBounds(lcd_)));
@@ -266,8 +278,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     // Only the screen takes the keyboard; every other control is used with the mouse.
     for (QWidget* w : {static_cast<QWidget*>(modes_), static_cast<QWidget*>(panelToggle_), static_cast<QWidget*>(settingsButton_),
                        static_cast<QWidget*>(type_), static_cast<QWidget*>(angle_), static_cast<QWidget*>(equals_),
-                       static_cast<QWidget*>(detailsButton_), static_cast<QWidget*>(keyboardButton_), static_cast<QWidget*>(proceed_),
-                       static_cast<QWidget*>(cancel_), static_cast<QWidget*>(historyToggle_)})
+                       static_cast<QWidget*>(detailsButton_), static_cast<QWidget*>(editButton_), static_cast<QWidget*>(keyboardButton_),
+                       static_cast<QWidget*>(proceed_), static_cast<QWidget*>(cancel_), static_cast<QWidget*>(historyToggle_)})
         w->setFocusPolicy(Qt::NoFocus);
     lcd_->setFocus();
 }
@@ -437,6 +449,8 @@ void MainWindow::retranslate() {
     type_->retranslate();
     equals_->setText(tr("="));
     detailsButton_->setText(tr("Details"));
+    editButton_->setText(tr("Edit"));
+    editButton_->setAccessibleName(editButton_->text());
     keyboardButton_->setText(tr("Keyboard"));
     keyboardButton_->setAccessibleName(keyboardButton_->text());
     proceed_->setText(tr("Proceed anyway"));
