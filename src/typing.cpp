@@ -4,6 +4,9 @@
 
 #include <calculate-core/calculate-core.hpp>
 
+#include <utility>
+#include <vector>
+
 namespace typing {
 
 namespace {
@@ -50,6 +53,15 @@ QString nameBefore(const Entry& e, int* start) {
         }
     }
     return {};
+}
+
+// Every name the engine knows, in every language the app ships, and whether it takes arguments.
+std::vector<std::pair<QString, bool>> knownNames() {
+    std::vector<std::pair<QString, bool>> names{{QStringLiteral("Ans"), false}, {QStringLiteral("M"), false}};
+    for (const calculate_core::FunctionDescription& f : calculate_core::functions())
+        for (const QString& spelling : settings::inEveryLanguage("keypad", QString::fromStdString(f.name) + "("))
+            if (spelling.endsWith('(')) names.push_back({spelling.chopped(1), f.minArgs > 0});
+    return names;
 }
 
 // Removes the letters from `start` to the cursor.
@@ -253,6 +265,32 @@ void finishName(Entry& e) {
     const QString name = nameBefore(e, &start);
     if (name == "pi") replaceName(e, start, QStringLiteral("π"));
     else if (name == "Ans" || name == "M") replaceName(e, start, name);
+}
+
+QString nameBeingTyped(const Entry& e) {
+    int start = 0;
+    return nameBefore(e, &start);
+}
+
+QStringList completions(const QString& prefix) {
+    QStringList list;
+    if (prefix.isEmpty()) return list;
+    for (const auto& [name, arguments] : knownNames())
+        if (name.startsWith(prefix)) list << name;
+    list.sort();
+    list.removeDuplicates();
+    return list;
+}
+
+void complete(Entry& e, const QString& name) {
+    int start = e.cursor();
+    if (!nameBefore(e, &start).isEmpty()) removeName(e, start);
+    for (const QChar c : name) typeCharacter(e, c);
+    bool arguments = false;
+    for (const auto& [known, takes] : knownNames())
+        if (known == name && takes) arguments = true;
+    if (arguments) typeCharacter(e, '(');
+    else finishName(e);
 }
 
 bool typeCharacter(Entry& e, QChar c) {

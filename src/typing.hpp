@@ -3,6 +3,7 @@
 #include "entry.hpp"
 
 #include <QString>
+#include <QStringList>
 
 // The keyboard and the clipboard: typed characters and pasted text become the same pieces and templates
 // that the calculator's keys make, so the input stays two-dimensional however it was entered.
@@ -19,5 +20,13 @@ Row read(const QString& text);
 
 // Inserts read(text) at the cursor, replacing a selection; the cursor goes after it.
 void paste(Entry& entry, const QString& text);
+
+// The name that ends at the cursor (letters and digits, as the engine reads them), or "".
+QString nameBeingTyped(const Entry& entry);
+// Every name that starts with `prefix` (case-sensitive, as the engine): functions and constants in every
+// language the app ships, Ans and M; sorted, none for an empty prefix.
+QStringList completions(const QString& prefix);
+// Replaces the name being typed with `name`, and opens its call when it takes arguments.
+void complete(Entry& entry, const QString& name);
 
 }  // namespace typing

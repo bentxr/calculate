@@ -6,6 +6,8 @@
 
 #include <QStringList>
 
+#include <algorithm>
+
 #include <gtest/gtest.h>
 
 namespace {
@@ -228,4 +230,38 @@ TEST(Typing, TypingOverASelectionReplacesOrWrapsIt) {
     typing::typeCharacter(k, QChar(0x221A));  // √ wraps it and is done
     EXPECT_EQ(k.text(), "√(12)");
     EXPECT_EQ(k.root()[0].closing, Closing::Key);
+}
+
+TEST(Typing, CompletionsListTheNamesThatStartWithWhatIsTyped) {
+    EXPECT_EQ(typing::completions("sq"), QStringList({"sqrt"}));
+    const QStringList as = typing::completions("as");
+    EXPECT_TRUE(as.contains("asin"));
+    EXPECT_TRUE(as.contains("asinh"));
+    EXPECT_FALSE(as.contains("sin"));
+    EXPECT_TRUE(typing::completions("arcs").contains("arcsen"));  // the Spanish names too
+    EXPECT_TRUE(typing::completions("A").contains("Ans"));
+    EXPECT_TRUE(typing::completions("").isEmpty());
+    EXPECT_EQ(typing::nameBeingTyped(typed("2+co")), "co");
+    EXPECT_EQ(typing::nameBeingTyped(typed("2+")), "");
+}
+
+TEST(Typing, CompletingANameTypesItsParenthesis) {
+    Entry e = typed("2+sq");
+    typing::complete(e, "sqrt");
+    ASSERT_EQ(e.root().size(), 3u);
+    EXPECT_EQ(e.root()[2].kind, Template::Sqrt);  // the cursor is in its box
+    Entry p = typed("p");
+    typing::complete(p, "pi");
+    EXPECT_EQ(p.text(), "π");
+    Entry n = typed("nc");
+    typing::complete(n, "nCr");
+    EXPECT_EQ(n.text(), "nCr(");
+}
+
+TEST(Typing, CompletionsAreSortedAndCaseSensitive) {
+    EXPECT_FALSE(typing::completions("A").contains("asin"));  // as the engine: Asin is not asin
+    QStringList sorted = typing::completions("a");
+    std::sort(sorted.begin(), sorted.end());
+    EXPECT_EQ(typing::completions("a"), sorted);
+    EXPECT_GT(sorted.size(), 5);
 }
