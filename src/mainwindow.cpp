@@ -5,6 +5,7 @@
 #include "keypad.hpp"
 #include "keysizing.hpp"
 #include "lcd.hpp"
+#include "longpress.hpp"
 #include "popupplacement.hpp"
 #include "presenter.hpp"
 #include "settings.hpp"
@@ -228,6 +229,30 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     history_ = new QListWidget(historyPanel_);
     history_->setObjectName("history");
     historyLayout->addWidget(history_);
+    // A row's own menu: a right click, or a long press on a touch screen.
+    history_->setContextMenuPolicy(Qt::CustomContextMenu);
+    historyMenu_ = new QMenu(this);
+    historyMenu_->setObjectName("historyMenu");
+    const std::pair<const char*, view::CopyForm> historyForms[] = {{"history:copyValue", view::CopyForm::Value},
+                                                                   {"history:copyBound", view::CopyForm::ValueAndBound}};
+    QAction* copyRowExpression = historyMenu_->addAction(QString());
+    copyRowExpression->setObjectName("history:copyExpression");
+    connect(copyRowExpression, &QAction::triggered, this, [this] {
+        const int row = history_->currentRow();
+        if (row >= 0) QGuiApplication::clipboard()->setText(historyEntries_[static_cast<std::size_t>(row)].text());
+    });
+    for (const auto& [name, form] : historyForms) {
+        QAction* action = historyMenu_->addAction(QString());
+        action->setObjectName(QString::fromLatin1(name));
+        connect(action, &QAction::triggered, this, [this, form = form] {
+            const int row = history_->currentRow();
+            if (row < 0) return;
+            const Result& r = historyResults_[static_cast<std::size_t>(row)];
+            QGuiApplication::clipboard()->setText(view::copyText(r, form, types_[static_cast<std::size_t>(r.type)]));
+        });
+    }
+    connect(history_, &QListWidget::customContextMenuRequested, this, &MainWindow::popUpHistoryMenu);
+    connect(new LongPress(history_->viewport()), &LongPress::longPressed, this, &MainWindow::popUpHistoryMenu);
 
     pages_ = new QStackedWidget(central);
     pages_->setObjectName("pages");
@@ -510,6 +535,9 @@ void MainWindow::retranslate() {
     findChild<QAction*>("copy:bound")->setText(tr("Value ± bound"));
     findChild<QAction*>("copy:details")->setText(tr("Details as text"));
     findChild<QAction*>("copy:expression")->setText(tr("Expression"));
+    findChild<QAction*>("history:copyExpression")->setText(tr("Copy expression"));
+    findChild<QAction*>("history:copyValue")->setText(tr("Copy value"));
+    findChild<QAction*>("history:copyBound")->setText(tr("Copy value ± bound"));
     editButton_->setText(tr("Edit"));
     editButton_->setAccessibleName(editButton_->text());
     keyboardButton_->setText(tr("Keyboard"));
@@ -699,6 +727,7 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
         Entry entry = typed_;
         if (entry.text().trimmed() != expression) entry.setRoot(typing::read(expression));  // not what was typed last
         historyEntries_.insert(historyEntries_.begin(), entry);
+        historyResults_.insert(historyResults_.begin(), result);
         historyToggle_->setEnabled(true);
     }
     historyIndex_ = -1;
@@ -752,6 +781,14 @@ void MainWindow::enableCopy(const Result* result) {
     trusted->setToolTip(none ? tr("No digit is trusted") : QString());
 }
 
+void MainWindow::popUpHistoryMenu(QPoint position) {
+    QListWidgetItem* item = history_->itemAt(position);
+    if (!item) return;
+    history_->setCurrentItem(item);
+    const QRect at(history_->viewport()->mapToGlobal(position), QSize(1, 1));
+    historyMenu_->popup(placed(historyMenu_->sizeHint(), at, popupBounds(history_)).topLeft());
+}
+
 void MainWindow::popUpCopyMenu() {
     if (!copyButton_->isEnabled()) return;
     copyMenu_->popup(placed(copyMenu_->sizeHint(), globalGeometry(copyButton_), popupBounds(copyButton_)).topLeft());
@@ -759,7 +796,7 @@ void MainWindow::popUpCopyMenu() {
 
 // Shows the result being typed, or else the last one, on the screen and in the card, in the current language.
 void MainWindow::present() {
-    const Result& shown = previewShown_ ? preview_ : last_;
+    const Result& shown = shownResult();
     const QString& expression = previewShown_ ? previewExpression_ : lastExpression_;
     // While typing, an expression that only stops short is not a fault yet; the others are told, dimmed.
     const bool unfinished = previewShown_ && shown.error && (view::incomplete(*shown.error) || lcd_->entry().hasEmptyBox());

@@ -1082,3 +1082,49 @@ TEST(MainWindow, ControlShiftCOpensTheCopyMenu) {
     EXPECT_TRUE(QTest::qWaitFor([&] { return menu->isVisible(); }, 2000));
     menu->hide();
 }
+
+TEST(MainWindow, HistoryEntriesCanBeCopied) {
+    MainWindow window;
+    run(window, "1/4");
+    run(window, "2+2");
+    auto* history = child<QListWidget>(window, "history");
+    EXPECT_EQ(history->contextMenuPolicy(), Qt::CustomContextMenu);
+    history->setCurrentRow(1);  // 1/4, the older one
+    child<QAction>(window, "history:copyValue")->trigger();
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "0.25");
+    child<QAction>(window, "history:copyExpression")->trigger();
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), "1÷4");  // as the screen wrote it
+    child<QAction>(window, "history:copyBound")->trigger();
+    EXPECT_TRUE(QGuiApplication::clipboard()->text().startsWith("0.25 ± "));
+}
+
+TEST(MainWindow, ALongPressOnAHistoryRowOpensItsMenu) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    run(window, "1/4");
+    lcd(window)->clear();  // so that a replay of the row would show
+    auto* history = child<QListWidget>(window, "history");
+    auto* menu = child<QMenu>(window, "historyMenu");
+    const QPoint where = history->visualItemRect(history->item(0)).center();
+    QTest::mousePress(history->viewport(), Qt::LeftButton, {}, where);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return menu->isVisible(); }, 2000));  // after half a second, without a release
+    menu->hide();
+    QTest::mouseRelease(history->viewport(), Qt::LeftButton, {}, where);
+    EXPECT_EQ(lcd(window)->input(), "");  // the release after a long press does not replay the row
+}
+
+TEST(MainWindow, APressThatMovesIsNoLongPress) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    run(window, "1/4");
+    auto* history = child<QListWidget>(window, "history");
+    auto* menu = child<QMenu>(window, "historyMenu");
+    const QPoint where = history->visualItemRect(history->item(0)).center();
+    QTest::mousePress(history->viewport(), Qt::LeftButton, {}, where);
+    QTest::mouseMove(history->viewport(), where + QPoint(0, 3 * QApplication::startDragDistance()));  // scrolling
+    QTest::qWait(800);
+    EXPECT_FALSE(menu->isVisible());
+    QTest::mouseRelease(history->viewport(), Qt::LeftButton, {}, where);
+}

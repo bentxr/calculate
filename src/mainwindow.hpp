@@ -67,6 +67,7 @@ private:
     const calculate_core::Result& shownResult() const { return previewShown_ ? preview_ : last_; }
     void enableCopy(const calculate_core::Result* result);  // nullptr: nothing to copy
     void popUpCopyMenu();
+    void popUpHistoryMenu(QPoint position);  // at a row, in the list's viewport coordinates
     void apply(const Face& face);
     void replay(int index);
     bool exactType() const;
@@ -127,6 +128,8 @@ private:
     QPlainTextEdit* statisticsValues_ = nullptr;
     QToolButton* statisticsKeysToggle_ = nullptr;
     std::vector<Entry> historyEntries_;  // as typed, one per history row
+    std::vector<calculate_core::Result> historyResults_;  // the same rows' results
+    QMenu* historyMenu_ = nullptr;
     Entry typed_;                        // the last input sent with =
     int historyIndex_ = -1;  // the history row ▲ and ▼ last showed
     Entry unfinished_;              // what was being typed when the browsing began
