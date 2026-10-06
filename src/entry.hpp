@@ -39,7 +39,7 @@ bool operator!=(const Position& a, const Position& b);
 class Entry {
 public:
     void insert(const QString& piece);   // at the cursor, which moves past it
-    void insertTemplate(Template kind);  // the cursor goes into its first box
+    void insertTemplate(Template kind, Closing closing = Closing::Key);  // the cursor goes into its first box
     // Removes the item before the cursor. At the start of a template's first box it removes the
     // template and keeps what was typed in it; at the start of a later box it goes back a box.
     void backspace();
@@ -66,6 +66,8 @@ public:
     int cursor() const { return index_; }  // the place in the cursor's row
     const Row& root() const { return root_; }
     const Row& currentRow() const;  // the cursor's row
+    const Item* container() const;  // the innermost template around the cursor; nullptr at the root
+    void setClosing(Closing closing);  // of that template
     // How to reach the cursor's row from the outer one: (item, box) at each level.
     const std::vector<std::pair<int, int>>& path() const { return path_; }
 
@@ -75,6 +77,8 @@ public:
 private:
     Row& rowAt(std::size_t depth);  // the row after the first `depth` steps of the path
     Row& row() { return rowAt(path_.size()); }
+    Item& containerItem();
+    void stepOut();  // to just after the container, which is finished
     bool moveInFraction(int box);
 
     Row root_;

@@ -63,15 +63,33 @@ Row& Entry::rowAt(std::size_t depth) { return walk(root_, path_, depth); }
 
 const Row& Entry::currentRow() const { return walk(root_, path_, path_.size()); }
 
+const Item* Entry::container() const {
+    if (path_.empty()) return nullptr;
+    return &walk(root_, path_, path_.size() - 1)[static_cast<std::size_t>(path_.back().first)];
+}
+
+Item& Entry::containerItem() { return rowAt(path_.size() - 1)[static_cast<std::size_t>(path_.back().first)]; }
+
+void Entry::setClosing(Closing closing) {
+    if (!path_.empty()) containerItem().closing = closing;
+}
+
+// Leaving a box ends its typing: from now on it behaves like one a key made.
+void Entry::stepOut() {
+    containerItem().closing = Closing::Key;
+    index_ = path_.back().first + 1;
+    path_.pop_back();
+}
+
 void Entry::insert(const QString& piece) {
     Row& r = row();
     r.insert(r.begin() + index_, Item{Template::Text, piece, {}});
     ++index_;
 }
 
-void Entry::insertTemplate(Template kind) {
+void Entry::insertTemplate(Template kind, Closing closing) {
     Row& r = row();
-    r.insert(r.begin() + index_, Item{kind, {}, std::vector<Row>(static_cast<std::size_t>(boxCount(kind)))});
+    r.insert(r.begin() + index_, Item{kind, {}, std::vector<Row>(static_cast<std::size_t>(boxCount(kind))), closing});
     path_.emplace_back(index_, 0);
     index_ = 0;
 }
@@ -123,7 +141,7 @@ void Entry::left() {
         path_.back().second = box - 1;
         index_ = static_cast<int>(row().size());
     } else {
-        path_.pop_back();
+        stepOut();
         index_ = item;
     }
 }
@@ -163,8 +181,7 @@ void Entry::right() {
         path_.back().second = box + 1;
         index_ = 0;
     } else {
-        path_.pop_back();
-        index_ = item + 1;
+        stepOut();
     }
 }
 

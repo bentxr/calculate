@@ -65,3 +65,37 @@ TEST(Typing, TheCommaSeparatesArgumentsOnlyInACallThatTakesSeveral) {
     EXPECT_EQ(typed("sin(1;2)").text(), "sin(1, 2)");      // ; always separates (the engine then says sin takes 1)
     EXPECT_EQ(typed("3;5").text(), "3, 5");
 }
+
+TEST(Typing, TypedRootsAndAbsAreTheKeysTemplates) {
+    Entry e = typed("sqrt(2");
+    ASSERT_EQ(e.root().size(), 1u);
+    EXPECT_EQ(e.root()[0].kind, Template::Sqrt);
+    EXPECT_EQ(e.path(), (std::vector<std::pair<int, int>>{{0, 0}}));  // typing goes on inside
+    for (const QChar c : QString(")+1")) typing::typeCharacter(e, c);
+    EXPECT_EQ(e.text(), "√(2)+1");                  // ) left the root
+    EXPECT_EQ(e.root()[0].closing, Closing::Key);  // finished: from now on like a key's
+    EXPECT_EQ(typed("cbrt(8)").root()[0].kind, Template::Cbrt);
+    EXPECT_EQ(typed("abs(-3)").text(), "abs(−3)");
+    EXPECT_EQ(typed("exp(1)").root()[0].kind, Template::Exp);
+    EXPECT_EQ(typed("sqrt((1+2)*3)").text(), "√((1+2)×3)");  // the ) of an inner pair stays a piece
+}
+
+TEST(Typing, ACaretOpensAnExponentThatEndsLikeLinearText) {
+    EXPECT_EQ(typed("2^10+1").text(), "2^(10)+1");  // 1025, as the text means
+    EXPECT_EQ(typed("2^-3*4").text(), "2^(−3)×4");
+    EXPECT_EQ(typed("2^3^2").text(), "2^(3^(2))");  // a tower, right to left
+    EXPECT_EQ(typed("2^(1+2)*3").text(), "2^(1+2)×3");  // its own parentheses are the box's
+    EXPECT_EQ(typed("2^3!").text(), "2^(3!)");
+    EXPECT_EQ(typed("2^1e-5").text(), "2^(1e−5)");  // a number's exponent sign stays in the number
+    EXPECT_EQ(typed("2**3").text(), "2^(3)");
+    EXPECT_EQ(typed("x²+1").text(), "x^(2)+1");
+    EXPECT_EQ(typed("nCr(2^3,4)").text(), "nCr(2^(3), 4)");  // the separator ends the exponent too
+    EXPECT_EQ(typed("2^10 to").text(), "2^(10) to");      // a word after a space is not the exponent
+}
+
+TEST(Typing, TheRootSignTakesTheNextOperand) {
+    EXPECT_EQ(typed("√4+5").text(), "√(4)+5");
+    EXPECT_EQ(typed("√2^2").text(), "√(2)^(2)");  // √ binds tighter than ^, as in linear text
+    EXPECT_EQ(typed("√(4+5)").text(), "√(4+5)");
+    EXPECT_EQ(typed("∛8").root()[0].kind, Template::Cbrt);
+}

@@ -52,9 +52,14 @@ QString nameBefore(const Entry& e, int* start) {
     return {};
 }
 
-// Replaces the letters from `start` to the cursor with one piece.
-void replaceName(Entry& e, int start, const QString& piece) {
+// Removes the letters from `start` to the cursor.
+void removeName(Entry& e, int start) {
     while (e.cursor() > start) e.backspace();
+}
+
+// Replaces them with one piece.
+void replaceName(Entry& e, int start, const QString& piece) {
+    removeName(e, start);
     e.insert(piece);
 }
 
@@ -67,22 +72,105 @@ bool takesSeveral(const QString& piece) {
     return false;
 }
 
-// Whether a typed comma is an argument separator: the innermost open opener before the cursor is a call
-// of a function that takes several arguments.
-bool separatesArguments(const Entry& e) {
-    const Row& row = e.currentRow();
+// The row after the first `depth` steps of the cursor's path.
+const Row& rowAt(const Entry& e, std::size_t depth) {
+    const Row* row = &e.root();
+    for (std::size_t i = 0; i < depth; ++i) {
+        const auto [item, box] = e.path()[i];
+        row = &(*row)[static_cast<std::size_t>(item)].boxes[static_cast<std::size_t>(box)];
+    }
+    return *row;
+}
+
+bool opener(const Item& item) { return item.kind == Template::Text && item.text.endsWith('('); }
+bool closer(const Item& item) { return item.kind == Template::Text && item.text == ")"; }
+
+// The innermost opener before `end` that no ")" closes, or -1.
+int openOpener(const Row& row, int end) {
     int depth = 0;
-    for (int i = e.cursor(); i-- > 0;) {
+    for (int i = end; i-- > 0;) {
         const Item& item = row[static_cast<std::size_t>(i)];
-        if (item.kind != Template::Text) continue;
-        if (item.text == ")") {
+        if (closer(item)) {
             ++depth;
-        } else if (item.text.endsWith('(')) {
-            if (depth == 0) return item.text != "(" && takesSeveral(item.text);
+        } else if (opener(item)) {
+            if (depth == 0) return i;
             --depth;
         }
     }
-    return false;
+    return -1;
+}
+
+bool balanced(const Row& row) {
+    int openers = 0;
+    for (const Item& item : row) openers += opener(item) ? 1 : closer(item) ? -1 : 0;
+    return openers == 0;
+}
+
+// Whether a typed comma is an argument separator: the innermost open opener before the cursor is a call
+// of a function that takes several arguments. A box that ends like linear text is part of its parent's
+// text, so the search goes on there.
+bool separatesArguments(const Entry& e) {
+    std::size_t depth = e.path().size();
+    int end = e.cursor();
+    for (;;) {
+        const Row& row = rowAt(e, depth);
+        const int open = openOpener(row, end);
+        if (open >= 0) {
+            const QString& piece = row[static_cast<std::size_t>(open)].text;
+            return piece != "(" && takesSeveral(piece);
+        }
+        if (depth == 0) return false;
+        const int container = e.path()[depth - 1].first;
+        if (rowAt(e, depth - 1)[static_cast<std::size_t>(container)].closing != Closing::Operand) return false;
+        --depth;
+        end = container;
+    }
+}
+
+// The names that open a template, closed by a typed ")".
+Template callTemplate(const QString& name) {
+    if (name == "sqrt") return Template::Sqrt;
+    if (name == "cbrt") return Template::Cbrt;
+    if (name == "abs") return Template::Abs;
+    if (name == "exp") return Template::Exp;
+    return Template::Text;
+}
+
+bool operatorPiece(const Item& item) {
+    return item.kind == Template::Text &&
+           (item.text == "+" || item.text == QStringLiteral("−") || item.text == QStringLiteral("×") || item.text == QStringLiteral("÷"));
+}
+
+// Whether `piece` ends the box being typed, as it would end the operand in linear text: the cursor is at
+// the end of a finished (non-empty, balanced) box that ends like linear text.
+bool endsOperand(const Entry& e, const QString& piece) {
+    const Item* container = e.container();
+    const Row& row = e.currentRow();
+    if (!container || container->closing != Closing::Operand) return false;
+    if (row.empty() || e.cursor() != static_cast<int>(row.size()) || !balanced(row)) return false;
+    if (piece == "^") return container->kind == Template::Sqrt || container->kind == Template::Cbrt;  // √ binds tighter
+    if (piece == "+" || piece == QStringLiteral("−")) {
+        const Item& last = row.back();
+        if (operatorPiece(last) || opener(last) || last.text == ", ") return false;  // a sign
+        const bool afterNumber = row.size() > 1 && (digit(character(row[row.size() - 2])) || character(row[row.size() - 2]) == '.');
+        if ((last.text == "e" || last.text == "E") && afterNumber) return false;  // a number's exponent sign
+        return true;
+    }
+    return piece == QStringLiteral("×") || piece == QStringLiteral("÷") || piece == ", " || piece == ")";
+}
+
+void leaveOperands(Entry& e, const QString& piece) {
+    while (endsOperand(e, piece)) e.right();
+}
+
+void insertPiece(Entry& e, const QString& piece) {
+    leaveOperands(e, piece);
+    e.insert(piece);
+}
+
+void openPower(Entry& e) {
+    leaveOperands(e, "^");
+    e.insertTemplate(Template::Power, Closing::Operand);
 }
 
 }  // namespace
@@ -99,23 +187,69 @@ bool typeCharacter(Entry& e, QChar c) {
     if (c.isSpace() && c != ' ') return true;  // thin and no-break spaces group digits: ignored
     if (!identifierCharacter(c)) finishName(e);
     const Row& row = e.currentRow();
+    const Item* before = e.cursor() > 0 ? &row[static_cast<std::size_t>(e.cursor() - 1)] : nullptr;
+    const Item* container = e.container();
     switch (c.unicode()) {
     case ' ':
-        if (e.cursor() == 0 || !row[static_cast<std::size_t>(e.cursor() - 1)].text.endsWith(' ')) e.insert(" ");
+        if (!before || !before->text.endsWith(' ')) e.insert(" ");
         break;
-    case '*': e.insert(QStringLiteral("×")); break;
-    case '/': e.insert(QStringLiteral("÷")); break;
-    case '-': e.insert(QStringLiteral("−")); break;
-    case ';': e.insert(", "); break;
-    case ',': e.insert(separatesArguments(e) ? QStringLiteral(", ") : QStringLiteral(".")); break;
+    case '*':
+        if (before && before->text == QStringLiteral("×")) {  // ** is a power
+            e.backspace();
+            openPower(e);
+        } else {
+            insertPiece(e, QStringLiteral("×"));
+        }
+        break;
+    case '/': insertPiece(e, QStringLiteral("÷")); break;
+    case '-': insertPiece(e, QStringLiteral("−")); break;
+    case '+': insertPiece(e, "+"); break;
+    case ';': insertPiece(e, ", "); break;
+    case ',': insertPiece(e, separatesArguments(e) ? QStringLiteral(", ") : QStringLiteral(".")); break;
+    case '^': openPower(e); break;
+    case 0x221A: e.insertTemplate(Template::Sqrt, Closing::Operand); break;  // √
+    case 0x221B: e.insertTemplate(Template::Cbrt, Closing::Operand); break;  // ∛
+    case 0x00B2:  // ², as the x² key
+    case 0x00B3:
+        e.insertTemplate(Template::Power);
+        e.insert(c == QChar(0x00B2) ? "2" : "3");
+        e.right();
+        break;
     case '(': {
+        if (container && container->closing == Closing::Operand && row.empty()) {  // the box's own parentheses
+            e.setClosing(Closing::Parenthesis);
+            break;
+        }
         int start = 0;
         const QString name = nameBefore(e, &start);
-        if (name.isEmpty()) e.insert("(");
-        else replaceName(e, start, name + "(");
+        const Template kind = callTemplate(name);
+        if (name.isEmpty()) {
+            e.insert("(");
+        } else if (kind != Template::Text) {
+            removeName(e, start);
+            e.insertTemplate(kind, Closing::Parenthesis);
+        } else {
+            replaceName(e, start, name + "(");
+        }
         break;
     }
-    default: e.insert(QString(c));
+    case ')':
+        leaveOperands(e, ")");
+        if (e.container() && e.container()->closing == Closing::Parenthesis && e.cursor() == static_cast<int>(e.currentRow().size()) &&
+            balanced(e.currentRow()))
+            e.right();
+        else
+            e.insert(")");
+        break;
+    default:
+        // A word after a space is not part of the operand (2^10 to …): the space and the word go outside.
+        if (c.isLetter() && container && container->closing == Closing::Operand && before && before->text == " " &&
+            e.cursor() == static_cast<int>(row.size())) {
+            e.backspace();
+            e.right();
+            e.insert(" ");
+        }
+        e.insert(QString(c));
     }
     return true;
 }
