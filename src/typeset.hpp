@@ -7,17 +7,17 @@
 #include <QLineF>
 #include <QList>
 #include <QPointF>
+#include <QRectF>
 #include <QString>
 
 class QPainter;
-class QRectF;
 
 // A small layout engine for the calculator's screen: it places text and lines in two dimensions
 // (fractions, raised exponents, recurring bars, long values wrapped to the screen). Coordinates are
 // relative to the box's baseline at y = 0, with y growing downwards as in Qt.
 namespace typeset {
 
-enum class Role { Plain, Noise, Caret };  // Caret: an empty run that marks where the cursor goes
+enum class Role { Plain, Noise };
 
 struct Run {
     QString text;
@@ -26,9 +26,17 @@ struct Run {
     Role role = Role::Plain;
 };
 
+// A place for the cursor in the input, where it is drawn: for clicks, the caret and the selection.
+struct Mark {
+    Position at;
+    QRectF caret;  // zero wide, one line of its row's font tall
+    QRectF item;   // the item that starts here, ascent to descent; empty at the end of a row
+};
+
 struct Box {
     QList<Run> runs;
     QList<QLineF> lines;
+    QList<Mark> marks;  // the input's only
     qreal width = 0;
     qreal ascent = 0;   // extent above the baseline
     qreal descent = 0;  // extent below it
@@ -58,9 +66,13 @@ QPointF end(const Box& box);
 // outside `clip` are skipped, so a result of thousands of lines paints quickly.
 void paint(QPainter& painter, const Box& box, QPointF origin, const QColor& ink, const QColor& noise, const QRectF& clip);
 
-// The input as the calculator draws it: templates in two dimensions, an empty box as □. `caret`
-// receives the cursor's rectangle (zero wide, one line of its box's font tall).
+// The input as the calculator draws it: templates in two dimensions, an empty box as □, every place
+// for the cursor marked. `caret` (if any) receives the cursor's rectangle.
 Box input(const Entry& entry, const QFont& font, QRectF* caret);
+// The place for the cursor nearest to `point`: first the nearest line, then the nearest place on it.
+Position hit(const Box& input, QPointF point);
+// What the entry's selection covers in its input box; empty without a selection.
+QRectF selectionRect(const Box& input, const Entry& entry);
 
 // The screen's results: trusted|noise digits with any ×10 exponent, and fraction = decimal.
 Box value(const view::ValueParts& parts, const QFont& font, qreal maxWidth);
