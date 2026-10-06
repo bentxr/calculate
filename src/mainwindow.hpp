@@ -64,6 +64,7 @@ private:
     void showPreview(int generation, const QString& expression, const calculate_core::Result& result);
     void dropPreviews();  // previews asked for so far are skipped, or cancelled if running
     void showNoPreview(const QString& notice = {});
+    bool namePending(const calculate_core::Error& error, const QString& expression) const;
     const calculate_core::Result& shownResult() const { return previewShown_ ? preview_ : last_; }
     void enableCopy(const calculate_core::Result* result);  // nullptr: nothing to copy
     void popUpCopyMenu();

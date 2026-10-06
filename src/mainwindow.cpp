@@ -792,6 +792,14 @@ void MainWindow::dropPreviews() {
     previewLimit_.stop();
 }
 
+// An unknown name that is the one being typed, and that some name completes: not wrong yet, only unfinished.
+bool MainWindow::namePending(const Error& error, const QString& expression) const {
+    if (error.code != ErrorCode::UnknownName) return false;
+    const QString name = typing::nameBeingTyped(lcd_->entry());
+    const QString part = QString::fromUtf8(expression.toUtf8().mid(static_cast<int>(error.begin), static_cast<int>(error.end - error.begin)));
+    return !name.isEmpty() && part == name && !typing::completions(name).isEmpty();
+}
+
 // Nothing to show while typing: the result, the strip (but for the notice) and Details are blank.
 void MainWindow::showNoPreview(const QString& notice) {
     previewShown_ = false;
@@ -881,7 +889,8 @@ void MainWindow::present() {
     const Result& shown = shownResult();
     const QString& expression = previewShown_ ? previewExpression_ : lastExpression_;
     // While typing, an expression that only stops short is not a fault yet; the others are told, dimmed.
-    const bool unfinished = previewShown_ && shown.error && (view::incomplete(*shown.error) || lcd_->entry().hasEmptyBox());
+    const bool unfinished = previewShown_ && shown.error
+                            && (view::incomplete(*shown.error) || lcd_->entry().hasEmptyBox() || namePending(*shown.error, expression));
     proceed_->setVisible(!previewShown_ && shown.error && canProceed(shown.error->code));  // it acts on the last request
     card_->setRows(view::details(shown, types_[static_cast<std::size_t>(shown.type)]));
     detailsButton_->setEnabled(!shown.error);

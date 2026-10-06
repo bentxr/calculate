@@ -1244,3 +1244,14 @@ TEST(MainWindow, TheScreenTheHistoryAndTheCopiesUseTheDecimalComma) {
     EXPECT_EQ(lcd(window)->outputText(), "2.5");
     EXPECT_EQ(history->item(0)->text(), "1.5+1 = 2.5");
 }
+
+TEST(MainWindow, ANameStillBeingTypedShowsNoError) {
+    MainWindow window;
+    QTest::keyClicks(lcd(window), "2+as");
+    QTest::qWait(800);  // well past the typing delay
+    EXPECT_EQ(message(window)->text(), "");
+    EXPECT_EQ(lcd(window)->markedText(), "");
+    QTest::keyClicks(lcd(window), "x");  // nothing starts with asx: now it is an unknown name
+    EXPECT_TRUE(QTest::qWaitFor([&] { return message(window)->text() == "Unknown name “asx”"; }, 10000))
+        << message(window)->text().toStdString();
+}
