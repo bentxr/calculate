@@ -1,5 +1,7 @@
 #include "lcd.hpp"
 
+#include "typing.hpp"
+
 #include <QFontDatabase>
 #include <QFontMetricsF>
 #include <QHBoxLayout>
@@ -83,7 +85,7 @@ void Lcd::right() {
 }
 
 void Lcd::setInput(const QString& text) {
-    entry_.setText(text);
+    entry_.setRoot(typing::read(text));
     changed();
 }
 

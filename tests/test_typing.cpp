@@ -126,3 +126,74 @@ TEST(Typing, SequencesForLaterSyntax) {
     EXPECT_EQ(typed("1->x").text(), "1→x");
     EXPECT_EQ(pieces(typed("1+2 #sqrt(x").root()), QStringList({"1", "+", "2", " ", "#", "s", "q", "r", "t", "(", "x"}));
 }
+
+TEST(Typing, ReadSplitsTextIntoTheKeysPieces) {
+    const Row row = typing::read("sin(1e10)+Ans×nCr(5, 2)");
+    EXPECT_EQ(pieces(row), QStringList({"sin(", "1", "e", "1", "0", ")", "+", "Ans", "×", "nCr(", "5", ", ", "2", ")"}));
+    Entry e;
+    e.setRoot(row);
+    EXPECT_EQ(e.text(), "sin(1e10)+Ans×nCr(5, 2)");
+    EXPECT_EQ(e.cursor(), 14);
+}
+
+TEST(Typing, ReadFinishesEveryBox) {
+    const Row row = typing::read("sqrt(2");  // the template closes what the text left open
+    ASSERT_EQ(row.size(), 1u);
+    EXPECT_EQ(row[0].closing, Closing::Key);
+    EXPECT_EQ(typing::read("2^10")[1].closing, Closing::Key);
+}
+
+// Every template as its key makes it, holding a second template in two-box cases: the text it gives reads
+// back into exactly the same items, so "copy expression" and paste undo each other.
+TEST(Typing, CopiedTextReadsBackIntoTheSameTemplates) {
+    for (Template t : {Template::Fraction, Template::Sqrt, Template::Cbrt, Template::Root, Template::Power, Template::Exp,
+                       Template::Pow10, Template::LogBase, Template::Abs}) {
+        Entry e;
+        e.insert("1");
+        e.insert("+");
+        e.insertTemplate(t);
+        e.insert("7");
+        if (t == Template::Fraction || t == Template::Root || t == Template::LogBase) {
+            e.right();
+            e.insertTemplate(Template::Sqrt);
+            e.insert("9");
+            e.right();
+        }
+        e.right();
+        e.insert("−");
+        e.insert("4");
+        EXPECT_TRUE(typing::read(e.text()) == e.root()) << e.text().toStdString();
+    }
+}
+
+namespace {
+
+QString valueOf(const QString& expression) {
+    const calculate_core::Result r = calculate_core::evaluate(expression.toStdString());
+    if (r.error) return QStringLiteral("error ") + QString::number(static_cast<int>(r.error->code));
+    return QString::fromStdString(r.value.digits) + "e" + QString::number(r.value.exponent10);
+}
+
+}  // namespace
+
+// Read into templates and written back, linear text keeps its value.
+TEST(Typing, PastedTextMeansWhatItSays) {
+    for (const char* text : {"2^10+1", "-2^2", "2^-1", "√4+5", "√2^2", "sqrt(16)/4", "1/3", "((1)/(3))+1", "root(27, 3)",
+                             "log(8, 2)", "log(100)", "10^3", "(10^(3))", "e^1", "exp(1)", "abs(-3)*2", "3!^2", "2^3!",
+                             "nCr(5, 2)", "50%", "1e3+2", "1.5e-3*2", "pi*2", "mean(1, 2, 3)", "2^(1+2)*3"}) {
+        Entry e;
+        e.setRoot(typing::read(QString::fromUtf8(text)));
+        EXPECT_EQ(valueOf(e.text()), valueOf(QString::fromUtf8(text))) << text << " → " << e.text().toStdString();
+    }
+    Entry e;
+    e.setRoot(typing::read("2**3**2"));  // the engine doesn't read ** yet: compared with what it means
+    EXPECT_EQ(valueOf(e.text()), valueOf("2^3^2"));
+}
+
+TEST(Typing, PasteGoesInAtTheCursor) {
+    Entry e = typed("1+");
+    typing::paste(e, "sqrt(4)*2");
+    EXPECT_EQ(e.text(), "1+√(4)×2");
+    EXPECT_EQ(e.path(), (std::vector<std::pair<int, int>>{}));
+    EXPECT_EQ(e.cursor(), 5);  // 1 + √(4) × 2
+}

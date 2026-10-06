@@ -87,6 +87,12 @@ void Entry::insert(const QString& piece) {
     ++index_;
 }
 
+void Entry::insertRow(const Row& items) {
+    Row& r = row();
+    r.insert(r.begin() + index_, items.begin(), items.end());
+    index_ += static_cast<int>(items.size());
+}
+
 void Entry::insertTemplate(Template kind, Closing closing) {
     Row& r = row();
     r.insert(r.begin() + index_, Item{kind, {}, std::vector<Row>(static_cast<std::size_t>(boxCount(kind))), closing});
@@ -204,22 +210,6 @@ void Entry::clear() {
     root_.clear();
     path_.clear();
     index_ = 0;
-}
-
-void Entry::setText(const QString& text) {
-    clear();
-    int i = 0;
-    while (i < text.size()) {
-        int end = i + 1;
-        if (text[i].isLetter()) {
-            while (end < text.size() && text[end].isLetter()) ++end;
-            if (end < text.size() && text[end] == '(') ++end;
-        }
-        while (end < text.size() && text[end] == ' ') ++end;
-        root_.push_back(Item{Template::Text, text.mid(i, end - i), {}});
-        i = end;
-    }
-    index_ = static_cast<int>(root_.size());
 }
 
 void Entry::setRoot(Row root) {

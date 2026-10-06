@@ -40,6 +40,7 @@ class Entry {
 public:
     void insert(const QString& piece);   // at the cursor, which moves past it
     void insertTemplate(Template kind, Closing closing = Closing::Key);  // the cursor goes into its first box
+    void insertRow(const Row& items);  // at the cursor, which moves past them
     // Removes the item before the cursor. At the start of a template's first box it removes the
     // template and keeps what was typed in it; at the start of a later box it goes back a box.
     void backspace();
@@ -53,9 +54,6 @@ public:
     void end();   // its end
     void deleteForward();  // removes the item after the cursor, a whole template included
     void clear();
-    // Replaces the content with `text`, split into the pieces the keys would make; the cursor goes
-    // to the end. (Text from the history or the statistics page is always one row.)
-    void setText(const QString& text);
     void setRoot(Row root);  // replaces the content; the cursor goes to the end
     // Replaces the items [from, to) of the cursor's row with `items`; the cursor goes after them.
     void replaceInRow(int from, int to, const Row& items);

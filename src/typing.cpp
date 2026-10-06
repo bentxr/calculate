@@ -215,6 +215,14 @@ void restore(Entry& e) {
     e.replaceInRow(o, end, {made});
 }
 
+// Every box finished: from now on they behave like the keys' boxes.
+void finishBoxes(Row& row) {
+    for (Item& item : row) {
+        item.closing = Closing::Key;
+        for (Row& box : item.boxes) finishBoxes(box);
+    }
+}
+
 // Inside a comment, after a # in the outer row, everything is typed as it is.
 bool inComment(const Entry& e) {
     if (!e.path().empty()) return false;
@@ -331,5 +339,16 @@ bool typeCharacter(Entry& e, QChar c) {
     }
     return true;
 }
+
+Row read(const QString& text) {
+    Entry e;
+    for (const QChar c : text) typeCharacter(e, c);
+    finishName(e);
+    Row row = e.root();
+    finishBoxes(row);
+    return row;
+}
+
+void paste(Entry& e, const QString& text) { e.insertRow(read(text)); }
 
 }  // namespace typing

@@ -1,5 +1,6 @@
 #include "entry.hpp"
 #include "typeset.hpp"
+#include "typing.hpp"
 
 #include "printers.hpp"
 
@@ -201,7 +202,7 @@ TEST(Typeset, AnEmptyInputDrawsNothingButTheCursor) {
 
 TEST(Typeset, PlainInputStaysOnOneLineWithTheCursorAtTheEnd) {
     Entry e;
-    e.setText("12+3");
+    e.setRoot(typing::read("12+3"));
     QRectF caret;
     const Box b = typeset::input(e, font(), &caret);
     for (const typeset::Run& run : b.runs) EXPECT_EQ(run.origin.y(), 0);

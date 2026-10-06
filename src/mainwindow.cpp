@@ -9,6 +9,7 @@
 #include "presenter.hpp"
 #include "settings.hpp"
 #include "typechooser.hpp"
+#include "typing.hpp"
 #include "worker.hpp"
 
 #include <QActionGroup>
@@ -597,7 +598,7 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
         item->setData(Qt::UserRole, expression);
         history_->insertItem(0, item);
         Entry entry = typed_;
-        if (entry.text().trimmed() != expression) entry.setText(expression);  // not what was typed last
+        if (entry.text().trimmed() != expression) entry.setRoot(typing::read(expression));  // not what was typed last
         historyEntries_.insert(historyEntries_.begin(), entry);
         historyToggle_->setEnabled(true);
     }
