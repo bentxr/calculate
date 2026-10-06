@@ -45,6 +45,11 @@ QString explanation(const QString& key);
 QString errorText(const calculate_core::Error& error, const QString& expression);
 // The expression only stops short (an operand or a ")" still to come): no fault yet while it is typed.
 bool incomplete(const calculate_core::Error& error);
+
+enum class CopyForm { Value, Trusted, ValueAndBound, Details };
+// The result as plain text for the clipboard: ASCII signs ("-", "e30"), no bar; empty when the form has
+// nothing to give (an error, or no trusted digit).
+QString copyText(const calculate_core::Result& result, CopyForm form, const calculate_core::TypeInfo& type);
 QString statisticsExpression(const QString& function, const QString& values);
 // How the engine computes a statistic, in one line; empty for anything else.
 QString algorithm(const QString& function);

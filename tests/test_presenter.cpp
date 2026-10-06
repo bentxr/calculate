@@ -184,3 +184,64 @@ TEST(Presenter, UnfinishedExpressionsAreToldApart) {
     EXPECT_FALSE(view::incomplete(*evaluate("1/0").error));
     EXPECT_FALSE(view::incomplete(*evaluate("2 3").error));
 }
+
+namespace {
+
+Result floating(const char* digits, long long exponent, int trusted) {
+    Result r;
+    r.value = Digits{false, digits, exponent};
+    r.trustedDigits = trusted;
+    r.bound = "1e0";
+    return r;
+}
+
+}  // namespace
+
+TEST(Presenter, CopiedValuesArePlainText) {
+    const TypeInfo d = typeInfo(NumberType::Double);
+    const Result sum = evaluated("0.1 + 0.2");
+    EXPECT_EQ(view::copyText(sum, view::CopyForm::Value, d), "0.3000000000000000444089209850062616169452667236328125");
+    EXPECT_EQ(view::copyText(sum, view::CopyForm::Trusted, d), "0.300000000000000");
+    EXPECT_EQ(view::copyText(sum, view::CopyForm::ValueAndBound, d),
+              "0.3000000000000000444089209850062616169452667236328125 ± 4.4e-17");
+    const Result big = evaluated("-1e30");
+    EXPECT_EQ(view::copyText(big, view::CopyForm::Value, d), "-1.000000000000000019884624838656e30");
+    EXPECT_EQ(view::copyText(big, view::CopyForm::Trusted, d), "-1.000000000000000e30");
+    EXPECT_TRUE(view::copyText(evaluated("1e-30"), view::CopyForm::Value, d).endsWith("e-30"));
+}
+
+TEST(Presenter, NothingTrustedCopiesNothing) {
+    const TypeInfo d = typeInfo(NumberType::Double);
+    EXPECT_EQ(view::copyText(floating("5", 0, 0), view::CopyForm::Trusted, d), "");
+    EXPECT_EQ(view::copyText(floating("5", 0, 0), view::CopyForm::Value, d), "5");
+    EXPECT_EQ(view::copyText(floating("25", 0, 1), view::CopyForm::Trusted, d), "2");  // "2." loses its point
+}
+
+TEST(Presenter, ExactResultsCopyAsFractions) {
+    const TypeInfo x = typeInfo(NumberType::Exact);
+    const Result third = evaluated("1/3", NumberType::Exact);
+    EXPECT_EQ(view::copyText(third, view::CopyForm::Value, x), "1/3");
+    EXPECT_EQ(view::copyText(third, view::CopyForm::Trusted, x), "1/3");
+    EXPECT_EQ(view::copyText(third, view::CopyForm::ValueAndBound, x), "1/3");  // exact: there is no bound
+    EXPECT_EQ(view::copyText(evaluated("-7/4", NumberType::Exact), view::CopyForm::Value, x), "-7/4");
+    EXPECT_EQ(view::copyText(evaluated("6", NumberType::Exact), view::CopyForm::Value, x), "6");
+}
+
+TEST(Presenter, DetailsCopyAsLines) {
+    const QStringList lines =
+        view::copyText(evaluated("0.1 + 0.2"), view::CopyForm::Details, typeInfo(NumberType::Double)).split('\n');
+    EXPECT_EQ(lines.value(0), "0.1 + 0.2 = 0.3000000000000000444089209850062616169452667236328125");
+    EXPECT_TRUE(lines.contains("Guaranteed bound: 4.4e-17"));
+    EXPECT_TRUE(lines.contains("Trusted digits: 15 by the bound, 15 by the measurement"));
+    EXPECT_TRUE(lines.contains("Number type: double, 53-bit significand"));
+    EXPECT_FALSE(lines.contains("Evaluated: 0.1 + 0.2"));  // already the first line
+    EXPECT_EQ(view::copyText(evaluate("1/0"), view::CopyForm::Details, typeInfo(NumberType::Double)), "");
+}
+
+TEST(Presenter, ExactDetailsCopyAsLines) {
+    const QStringList lines =
+        view::copyText(evaluated("-7/4", NumberType::Exact), view::CopyForm::Details, typeInfo(NumberType::Exact)).split('\n');
+    EXPECT_EQ(lines.value(0), "-7/4 = -7/4");
+    EXPECT_TRUE(lines.contains("Error: exact · no rounding error"));
+    EXPECT_TRUE(lines.contains("Number type: cpp_rational, exact fractions"));
+}

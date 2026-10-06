@@ -196,6 +196,33 @@ QString explanation(const QString& key) {
     return {};
 }
 
+QString copyText(const Result& r, CopyForm form, const TypeInfo& t) {
+    if (r.error) return {};
+    QString value;
+    if (r.exact) {
+        const Fraction& f = *r.exact;
+        value = QString(f.negative ? "-" : "") + fromStd(f.numerator);
+        if (f.denominator != "1") value += "/" + fromStd(f.denominator);
+        if (form != CopyForm::Details) return value;  // exact: every digit trusted, and no bound
+    } else {
+        const ValueParts p = split(r.value, r.trustedDigits);
+        const QString exponent = p.exponent.isEmpty() ? QString() : "e" + QString(p.exponent).replace(minus(), "-");
+        if (form == CopyForm::Trusted) {
+            if (qMin(r.trustedDigits, static_cast<int>(r.value.digits.size())) == 0) return {};
+            QString trusted = p.trusted;
+            if (trusted.endsWith('.')) trusted.chop(1);
+            return trusted.replace(minus(), "-") + exponent;
+        }
+        value = QString(p.trusted + p.noise).replace(minus(), "-") + exponent;
+        if (form == CopyForm::Value) return value;
+        if (form == CopyForm::ValueAndBound) return value + QStringLiteral(" ± ") + fromStd(r.bound);
+    }
+    QStringList lines{fromStd(r.expression) + QStringLiteral(" = ") + value};
+    for (const DetailRow& row : details(r, t))
+        if (row.key != "evaluated") lines << row.label + QStringLiteral(": ") + row.value;
+    return lines.join('\n');
+}
+
 bool incomplete(const Error& error) {
     return error.code == ErrorCode::UnexpectedEnd || error.code == ErrorCode::MissingClosingParenthesis;
 }
