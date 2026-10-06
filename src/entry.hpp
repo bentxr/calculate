@@ -81,6 +81,7 @@ public:
     void select(const Position& from, const Position& to);
 
     bool isEmpty() const { return root_.empty(); }
+    bool hasEmptyBox() const;  // some template's box, at any depth, has nothing in it yet
     QString text() const;        // the expression for the engine
     int cursor() const { return index_; }  // the place in the cursor's row
     const Row& root() const { return root_; }

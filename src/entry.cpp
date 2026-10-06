@@ -49,6 +49,13 @@ R& walk(R& root, const std::vector<std::pair<int, int>>& path, std::size_t depth
     return *r;
 }
 
+bool hasEmptyBox(const Row& row) {
+    for (const Item& item : row)
+        for (const Row& box : item.boxes)
+            if (box.empty() || hasEmptyBox(box)) return true;
+    return false;
+}
+
 }  // namespace
 
 bool operator==(const Item& a, const Item& b) {
@@ -389,3 +396,5 @@ void Entry::select(const Position& from, const Position& to) {
 }
 
 QString Entry::text() const { return serialize(root_); }
+
+bool Entry::hasEmptyBox() const { return ::hasEmptyBox(root_); }

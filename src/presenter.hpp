@@ -43,6 +43,8 @@ QString verdict(const QString& conditionNumber);
 QList<DetailRow> details(const calculate_core::Result& result, const calculate_core::TypeInfo& type);
 QString explanation(const QString& key);
 QString errorText(const calculate_core::Error& error, const QString& expression);
+// The expression only stops short (an operand or a ")" still to come): no fault yet while it is typed.
+bool incomplete(const calculate_core::Error& error);
 QString statisticsExpression(const QString& function, const QString& values);
 // How the engine computes a statistic, in one line; empty for anything else.
 QString algorithm(const QString& function);

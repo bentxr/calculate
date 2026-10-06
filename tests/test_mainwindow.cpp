@@ -950,3 +950,37 @@ TEST(MainWindow, UndoAndRedoRecalculateWhatIsBeingTyped) {
     QTest::keyClick(lcd(window), Qt::Key_Y, Qt::ControlModifier);
     EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "9"; }, 10000));
 }
+
+TEST(MainWindow, AnUnfinishedExpressionShowsNoErrorAndOthersAreDimmed) {
+    MainWindow window;
+    QTest::keyClicks(lcd(window), "2*");
+    QTest::qWait(800);  // well past the typing delay
+    EXPECT_EQ(message(window)->text(), "");
+    EXPECT_EQ(lcd(window)->outputText(), "");
+    QTest::keyClicks(lcd(window), "1/0");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return message(window)->text() == "Division by zero"; }, 10000));
+    EXPECT_EQ(message(window)->foregroundRole(), QPalette::PlaceholderText);  // dimmed while typing
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return message(window)->foregroundRole() == QPalette::WindowText; }, 10000));
+    EXPECT_EQ(message(window)->text(), "Division by zero");
+}
+
+TEST(MainWindow, ALongCalculationIsLeftForEquals) {
+    MainWindow window;
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
+    QTest::keyClicks(lcd(window), "200000!");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return message(window)->text().startsWith("Too long"); }, 10000))
+        << message(window)->text().toStdString();
+    EXPECT_FALSE(child<QPushButton>(window, "cancel")->isVisibleTo(&window));  // nothing to cancel: it was dropped
+}
+
+TEST(MainWindow, ATemplateWithAnEmptyBoxShowsNoError) {
+    MainWindow window;
+    lcd(window)->insertTemplate(Template::Fraction);
+    lcd(window)->insert("1");
+    lcd(window)->right();  // into the empty denominator: the engine reads an unexpected ")"
+    QTest::qWait(800);
+    EXPECT_EQ(message(window)->text(), "");
+    lcd(window)->insert("4");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "0.25"; }, 10000));
+}

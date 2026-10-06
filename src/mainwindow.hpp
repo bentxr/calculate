@@ -83,6 +83,8 @@ private:
     // The result while typing: asked for once the typing pauses, shown until = or the next edit replaces it.
     static constexpr int liveDelay = 250;
     QTimer liveTimer_;
+    static constexpr int previewLimit = 2000;  // longer than this is left for =
+    QTimer previewLimit_;
     int previewSerial_ = 0;
     calculate_core::Result preview_;
     QString previewExpression_;

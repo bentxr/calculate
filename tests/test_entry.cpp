@@ -339,3 +339,18 @@ TEST(Entry, FunctionsAndTemplatesWrapTheSelection) {
     EXPECT_EQ(r.text(), "root(1+2, )");
     EXPECT_EQ(r.path(), (Path{{0, 0}}));  // the index is still to type
 }
+
+TEST(Entry, AnEmptyBoxIsUnfinished) {
+    Entry e = fraction({"1"}, {});
+    EXPECT_TRUE(e.hasEmptyBox());
+    type(e, {"2"});
+    EXPECT_FALSE(e.hasEmptyBox());
+}
+
+TEST(Entry, AnEmptyBoxIsFoundAtAnyDepth) {
+    Entry e = fraction({"1"}, {});
+    e.insertTemplate(Template::Sqrt);  // in the denominator, which is no longer empty
+    EXPECT_TRUE(e.hasEmptyBox());
+    type(e, {"4"});
+    EXPECT_FALSE(e.hasEmptyBox());
+}

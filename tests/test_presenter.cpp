@@ -177,3 +177,10 @@ TEST(Presenter, AnEdgeWithinTheErrorIsExplained) {
               "The error of the argument of sqrt(0.1+0.2-0.3) reaches a point where it is not defined or not smooth, "
               "so no bound can be given. If you proceed anyway, the error report will not include that.");
 }
+
+TEST(Presenter, UnfinishedExpressionsAreToldApart) {
+    EXPECT_TRUE(view::incomplete(*evaluate("2*").error));
+    EXPECT_TRUE(view::incomplete(*evaluate("sin(1").error));
+    EXPECT_FALSE(view::incomplete(*evaluate("1/0").error));
+    EXPECT_FALSE(view::incomplete(*evaluate("2 3").error));
+}

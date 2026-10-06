@@ -196,6 +196,10 @@ QString explanation(const QString& key) {
     return {};
 }
 
+bool incomplete(const Error& error) {
+    return error.code == ErrorCode::UnexpectedEnd || error.code == ErrorCode::MissingClosingParenthesis;
+}
+
 QString errorText(const Error& e, const QString& expression) {
     const QByteArray bytes = expression.toUtf8();
     const QString part = QString::fromUtf8(bytes.mid(static_cast<int>(e.begin), static_cast<int>(e.end - e.begin)));
