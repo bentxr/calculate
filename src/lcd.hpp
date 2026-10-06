@@ -62,6 +62,10 @@ public:
     void setProvisional(bool provisional);
     bool provisional() const { return provisional_; }
     QSize resultSize() const;  // the laid-out result, rounded up
+    // Underlines the items that bytes [begin, end) of input() come from (an error's span), until the next edit.
+    void setMarked(int begin, int end);
+    void clearMarked();
+    QString markedText() const { return marked_.selectedText(); }
     // The status line, as on the calculator: M while the memory holds something.
     void setMemory(const QString& memory);  // empty when cleared; its value is the screen's tooltip
     QString memory() const { return memory_; }
@@ -129,6 +133,7 @@ private:
     QMenu* editMenu_ = nullptr;
     bool fresh_ = false;
     bool provisional_ = false;
+    Entry marked_;  // a copy of the input whose selection is the marked part; none when nothing is marked
     Shown shown_ = Shown::Nothing;
     view::ValueParts value_;
     view::FractionParts exact_;

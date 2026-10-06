@@ -1015,3 +1015,11 @@ TEST(MainWindow, AnEntryReplayedAfterAPauseIsPreviewed) {
     QTest::keyClick(lcd(window), Qt::Key_Up);
     EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "4" && lcd(window)->provisional(); }, 10000));
 }
+
+TEST(MainWindow, TheFaultyPartOfTheInputIsMarked) {
+    MainWindow window;
+    run(window, "1+2÷0");
+    EXPECT_EQ(lcd(window)->markedText(), "2÷0");
+    run(window, "1+1");
+    EXPECT_EQ(lcd(window)->markedText(), "");
+}

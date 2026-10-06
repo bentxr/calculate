@@ -354,3 +354,32 @@ TEST(Entry, AnEmptyBoxIsFoundAtAnyDepth) {
     type(e, {"4"});
     EXPECT_FALSE(e.hasEmptyBox());
 }
+
+TEST(Entry, AByteOfTheTextLeadsBackToItsItem) {
+    Entry e;
+    e.insert("1");
+    e.insert("+");
+    e.insertTemplate(Template::Sqrt);
+    e.insert("4");
+    e.right();
+    e.insert("÷");
+    e.insert("0");
+    ASSERT_EQ(e.text(), "1+√(4)÷0");  // bytes: 1 | + | √ √ √ | ( | 4 | ) | ÷ ÷ | 0
+    EXPECT_TRUE(e.positionAt(0) == (Position{{}, 0}));
+    EXPECT_TRUE(e.positionAt(2) == (Position{{}, 2}));       // the sign belongs to the template
+    EXPECT_TRUE(e.positionAt(6) == (Position{{{2, 0}}, 0}));  // the 4 inside it
+    EXPECT_TRUE(e.positionAt(10) == (Position{{}, 4}));
+}
+
+TEST(Entry, AByteOfARootLeadsToTheBoxItIsWrittenIn) {
+    Entry e;
+    e.insertTemplate(Template::Root);
+    e.insert("3");  // the index, the first box on the screen
+    e.right();
+    e.insert("8");
+    ASSERT_EQ(e.text(), "root(8, 3)");  // the engine reads the radicand first
+    EXPECT_TRUE(e.positionAt(5) == (Position{{{0, 1}}, 0}));
+    EXPECT_TRUE(e.positionAt(6) == (Position{{}, 0}));
+    EXPECT_TRUE(e.positionAt(8) == (Position{{{0, 0}}, 0}));
+    EXPECT_TRUE(e.positionAt(10) == (Position{{}, 1}));  // past the end
+}

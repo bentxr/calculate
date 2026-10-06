@@ -713,6 +713,14 @@ void MainWindow::present() {
     message_->setText(shown.error && !unfinished ? view::errorText(*shown.error, expression) : QString());
     message_->setForegroundRole(previewShown_ ? QPalette::PlaceholderText : QPalette::WindowText);
     lcd_->setProvisional(previewShown_);
+    // The error's span is in bytes of the text that was evaluated: mark it only on that same input.
+    const QString input = lcd_->input();
+    if (shown.error && !unfinished && input.trimmed() == expression) {
+        const int lead = static_cast<int>(input.left(input.indexOf(expression)).toUtf8().size());
+        lcd_->setMarked(lead + static_cast<int>(shown.error->begin), lead + static_cast<int>(shown.error->end));
+    } else {
+        lcd_->clearMarked();
+    }
     if (shown.error) lcd_->clearResult();
     else if (shown.exact) lcd_->showExact(view::fractionParts(shown));
     else lcd_->showValue(view::valueParts(shown));

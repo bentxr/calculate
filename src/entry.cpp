@@ -4,41 +4,76 @@
 
 namespace {
 
-int boxCount(Template kind) {
-    switch (kind) {
-    case Template::Text: return 0;
-    case Template::Fraction:
-    case Template::Root:
-    case Template::LogBase: return 2;
-    default: return 1;
-    }
-}
-
 QString serialize(const Row& row);
 
-// Templates become plain engine text. Fractions and 10ˣ get parentheses of their own, so that a
-// template typed right after a digit is an error for the engine and never merges with it.
-QString serialize(const Item& item) {
-    const auto box = [&](int i) { return serialize(item.boxes[static_cast<std::size_t>(i)]); };
-    switch (item.kind) {
-    case Template::Text: return item.text;
-    case Template::Fraction: return "((" + box(0) + ")/(" + box(1) + "))";
-    case Template::Sqrt: return "√(" + box(0) + ")";
-    case Template::Cbrt: return "∛(" + box(0) + ")";
-    case Template::Root: return "root(" + box(1) + ", " + box(0) + ")";
-    case Template::Power: return "^(" + box(0) + ")";
-    case Template::Exp: return "exp(" + box(0) + ")";
-    case Template::Pow10: return "(10^(" + box(0) + "))";
-    case Template::LogBase: return "log(" + box(1) + ", " + box(0) + ")";  // the engine takes the base second
-    case Template::Abs: return "abs(" + box(0) + ")";
+// A template's engine text: its decoration, with its boxes in the gaps in the order the engine reads
+// them. Fractions and 10ˣ get parentheses of their own, so that a template typed right after a digit is
+// an error for the engine and never merges with it.
+struct Spelling {
+    std::vector<QString> decoration;  // one more than the boxes
+    std::vector<int> boxes;
+};
+
+Spelling spelling(Template kind) {
+    switch (kind) {
+    case Template::Text: break;
+    case Template::Fraction: return {{"((", ")/(", "))"}, {0, 1}};
+    case Template::Sqrt: return {{"√(", ")"}, {0}};
+    case Template::Cbrt: return {{"∛(", ")"}, {0}};
+    case Template::Root: return {{"root(", ", ", ")"}, {1, 0}};
+    case Template::Power: return {{"^(", ")"}, {0}};
+    case Template::Exp: return {{"exp(", ")"}, {0}};
+    case Template::Pow10: return {{"(10^(", "))"}, {0}};
+    case Template::LogBase: return {{"log(", ", ", ")"}, {1, 0}};  // the engine takes the base second
+    case Template::Abs: return {{"abs(", ")"}, {0}};
     }
     return {};
+}
+
+int boxCount(Template kind) { return static_cast<int>(spelling(kind).boxes.size()); }
+
+QString serialize(const Item& item) {
+    if (item.kind == Template::Text) return item.text;
+    const Spelling sp = spelling(item.kind);
+    QString s = sp.decoration[0];
+    for (std::size_t i = 0; i < sp.boxes.size(); ++i)
+        s += serialize(item.boxes[static_cast<std::size_t>(sp.boxes[i])]) + sp.decoration[i + 1];
+    return s;
 }
 
 QString serialize(const Row& row) {
     QString s;
     for (const Item& item : row) s += serialize(item);
     return s;
+}
+
+int utf8Length(const QString& s) { return static_cast<int>(s.toUtf8().size()); }
+
+// The place of byte `byte` of `row`'s engine text, `path` leading to `row`: the item it belongs to (a
+// template's own decoration counts as the template), or a place inside the box it falls in.
+Position positionIn(const Row& row, std::vector<std::pair<int, int>> path, int byte) {
+    for (int i = 0; i < static_cast<int>(row.size()); ++i) {
+        const Item& item = row[static_cast<std::size_t>(i)];
+        if (item.kind == Template::Text) {
+            if (byte < utf8Length(item.text)) return {path, i};
+            byte -= utf8Length(item.text);
+            continue;
+        }
+        const Spelling sp = spelling(item.kind);
+        for (std::size_t k = 0; k < sp.decoration.size(); ++k) {
+            if (byte < utf8Length(sp.decoration[k])) return {path, i};
+            byte -= utf8Length(sp.decoration[k]);
+            if (k == sp.boxes.size()) break;
+            const Row& box = item.boxes[static_cast<std::size_t>(sp.boxes[k])];
+            const int length = utf8Length(serialize(box));
+            if (byte < length) {
+                path.push_back({i, sp.boxes[k]});
+                return positionIn(box, path, byte);
+            }
+            byte -= length;
+        }
+    }
+    return {path, static_cast<int>(row.size())};  // past the end
 }
 
 // The row after the first `depth` steps of `path` (Row or const Row).
@@ -396,5 +431,7 @@ void Entry::select(const Position& from, const Position& to) {
 }
 
 QString Entry::text() const { return serialize(root_); }
+
+Position Entry::positionAt(int byte) const { return positionIn(root_, {}, byte); }
 
 bool Entry::hasEmptyBox() const { return ::hasEmptyBox(root_); }

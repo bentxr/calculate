@@ -274,3 +274,14 @@ TEST(Lcd, AProvisionalResultIsSmaller) {
     lcd.setProvisional(false);
     EXPECT_EQ(lcd.resultSize(), full);
 }
+
+TEST(Lcd, AnEmptySpanMarksNothing) {
+    Lcd lcd;
+    lcd.setInput("1+2");
+    lcd.setMarked(0, 0);
+    EXPECT_EQ(lcd.markedText(), "");
+    lcd.setMarked(0, 1);
+    EXPECT_EQ(lcd.markedText(), "1");
+    lcd.insert("3");  // an edit ends the mark: its bytes were those of the input before
+    EXPECT_EQ(lcd.markedText(), "");
+}

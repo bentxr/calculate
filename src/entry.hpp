@@ -83,6 +83,7 @@ public:
     bool isEmpty() const { return root_.empty(); }
     bool hasEmptyBox() const;  // some template's box, at any depth, has nothing in it yet
     QString text() const;        // the expression for the engine
+    Position positionAt(int byte) const;  // where byte `byte` of text() comes from (an error's span)
     int cursor() const { return index_; }  // the place in the cursor's row
     const Row& root() const { return root_; }
     const Row& currentRow() const;  // the cursor's row

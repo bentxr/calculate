@@ -276,6 +276,23 @@ void Lcd::setProvisional(bool provisional) {
     changed();
 }
 
+void Lcd::setMarked(int begin, int end) {
+    if (end <= begin) {
+        clearMarked();
+        return;
+    }
+    marked_ = entry_;
+    Position last = entry_.positionAt(end - 1);
+    ++last.index;  // so that the last item is included
+    marked_.select(entry_.positionAt(begin), last);
+    update();
+}
+
+void Lcd::clearMarked() {
+    marked_ = Entry();
+    update();
+}
+
 QSize Lcd::resultSize() const { return {qCeil(result_.width), qCeil(result_.ascent + result_.descent)}; }
 
 void Lcd::announceResult() {
@@ -370,6 +387,7 @@ void Lcd::edit(const std::function<void()>& change, bool byUser) {
     change();
     if (entry_ == before) return;
     undo_.record(before);
+    marked_ = Entry();  // its bytes were those of the input before
     changed();
     if (QAccessible::isActive()) {
         QAccessibleValueChangeEvent event(this, input());
@@ -388,6 +406,7 @@ void Lcd::startEditing(bool needsLeftOperand) {
 void Lcd::undo() {
     fresh_ = false;
     if (!undo_.undo(entry_)) return;
+    marked_ = Entry();
     changed();
     emit inputChanged();
 }
@@ -395,6 +414,7 @@ void Lcd::undo() {
 void Lcd::redo() {
     fresh_ = false;
     if (!undo_.redo(entry_)) return;
+    marked_ = Entry();
     changed();
     emit inputChanged();
 }
@@ -453,6 +473,12 @@ void Lcd::paintEvent(QPaintEvent*) {
     painter.setClipRect(QRectF(margin, 0, room, height()));
     const QRectF selection = typeset::selectionRect(input, entry_);
     if (!selection.isEmpty()) painter.fillRect(selection.translated(origin), mix(ink, background(), 0.75));  // readable in both themes
+    const QRectF marked = typeset::selectionRect(input, marked_);
+    if (!marked.isEmpty()) {
+        painter.setPen(QPen(ink, 1, Qt::DotLine));
+        const QRectF under = marked.translated(origin);
+        painter.drawLine(under.bottomLeft(), under.bottomRight());
+    }
     typeset::paint(painter, input, origin, ink, ink, rect());
     if (hasFocus()) {
         painter.setPen(QPen(ink, 1.5));
