@@ -23,6 +23,9 @@
 #include <QStyle>
 #include <QWheelEvent>
 
+#include <algorithm>
+#include <iterator>
+
 namespace {
 
 constexpr qreal margin = 8;
@@ -502,7 +505,19 @@ void Lcd::paintEvent(QPaintEvent*) {
     typeset::paint(painter, result_, QPointF(area.right() - result_.width, baseline), ink, noiseColor(), area);
 }
 
+bool Lcd::focusNextPrevChild(bool) { return false; }
+
+void Lcd::complete(const QString& name) {
+    fresh_ = false;
+    edit([&] { typing::complete(entry_, name); });
+}
+
 void Lcd::keyPressEvent(QKeyEvent* event) {
+    const int completionKeys[] = {Qt::Key_Up, Qt::Key_Down, Qt::Key_Tab, Qt::Key_Return, Qt::Key_Enter, Qt::Key_Escape};
+    if (completing_ && std::find(std::begin(completionKeys), std::end(completionKeys), event->key()) != std::end(completionKeys)) {
+        emit completionKey(event->key());
+        return;
+    }
     switch (event->key()) {
     case Qt::Key_Return:
     case Qt::Key_Enter:

@@ -336,6 +336,14 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     completions_->setFocusPolicy(Qt::NoFocus);
     completions_->hide();
     connect(lcd_, &Lcd::nameTyped, this, &MainWindow::showCompletions);
+    connect(completions_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) { chooseCompletion(item->text()); });
+    connect(lcd_, &Lcd::completionKey, this, [this](int key) {
+        const int row = completions_->currentRow();
+        if (key == Qt::Key_Up) completions_->setCurrentRow(qMax(row - 1, 0));
+        else if (key == Qt::Key_Down) completions_->setCurrentRow(qMin(row + 1, completions_->count() - 1));
+        else if (key == Qt::Key_Escape) hideCompletions();
+        else chooseCompletion(completions_->currentItem()->text());  // Tab, Enter: choose, don't evaluate
+    });
     connect(lcd_, &Lcd::pastedFirstLine, this, [this](int lines) { message_->setText(tr("Pasted the first of %1 lines").arg(lines)); });
     connect(lcd_, &Lcd::pasteRefused, this,
             [this] { message_->setText(tr("The browser did not allow reading the clipboard: paste with Ctrl+V")); });
@@ -804,7 +812,7 @@ void MainWindow::popUpHistoryMenu(QPoint position) {
 void MainWindow::showCompletions(const QString& name) {
     const QStringList names = typing::completions(name);
     if (name.size() < 2 || names.isEmpty() || names == QStringList{name}) {
-        completions_->hide();
+        hideCompletions();
         return;
     }
     completions_->clear();
@@ -819,6 +827,18 @@ void MainWindow::showCompletions(const QString& name) {
     completions_->setGeometry(placed(size, anchor, central->rect()));
     completions_->raise();
     completions_->show();
+    lcd_->setCompleting(true);
+}
+
+void MainWindow::hideCompletions() {
+    completions_->hide();
+    lcd_->setCompleting(false);
+}
+
+void MainWindow::chooseCompletion(const QString& name) {
+    hideCompletions();
+    lcd_->complete(name);
+    lcd_->setFocus();
 }
 
 void MainWindow::popUpCopyMenu() {

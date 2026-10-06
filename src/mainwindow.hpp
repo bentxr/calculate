@@ -68,6 +68,8 @@ private:
     void enableCopy(const calculate_core::Result* result);  // nullptr: nothing to copy
     void popUpCopyMenu();
     void showCompletions(const QString& name);  // under the caret, or hidden
+    void hideCompletions();
+    void chooseCompletion(const QString& name);
     void popUpHistoryMenu(QPoint position);  // at a row, in the list's viewport coordinates
     void apply(const Face& face);
     void replay(int index);

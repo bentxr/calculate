@@ -1176,3 +1176,39 @@ TEST(MainWindow, MovingTheCursorClosesTheCompletions) {
     QTest::keyClick(lcd(window), Qt::Key_Left);
     EXPECT_FALSE(list->isVisible());
 }
+
+TEST(MainWindow, TabOrEnterChoosesACompletionAndEscCloses) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    auto* list = child<QListWidget>(window, "completions");
+    QTest::keyClicks(lcd(window), "as");
+    QTest::keyClick(lcd(window), Qt::Key_Down);
+    QTest::keyClick(lcd(window), Qt::Key_Tab);
+    EXPECT_EQ(lcd(window)->input(), "asinh(");
+    EXPECT_FALSE(list->isVisible());
+    lcd(window)->clear();
+    QTest::keyClicks(lcd(window), "sq");
+    QTest::keyClick(lcd(window), Qt::Key_Return);  // chooses, does not evaluate
+    EXPECT_EQ(lcd(window)->entry().root()[0].kind, Template::Sqrt);
+    lcd(window)->clear();
+    QTest::keyClicks(lcd(window), "co");
+    QTest::keyClick(lcd(window), Qt::Key_Escape);  // closes the list, keeps the input
+    EXPECT_FALSE(list->isVisible());
+    EXPECT_EQ(lcd(window)->input(), "co");
+}
+
+TEST(MainWindow, UpGoesBackAndAClickChoosesACompletion) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    auto* list = child<QListWidget>(window, "completions");
+    QTest::keyClicks(lcd(window), "as");
+    QTest::keyClick(lcd(window), Qt::Key_Down);
+    QTest::keyClick(lcd(window), Qt::Key_Up);
+    EXPECT_EQ(list->currentRow(), 0);
+    QTest::mouseClick(list->viewport(), Qt::LeftButton, {}, list->visualItemRect(list->item(1)).center());
+    EXPECT_EQ(lcd(window)->input(), "asinh(");
+    EXPECT_FALSE(list->isVisible());
+    EXPECT_TRUE(lcd(window)->hasFocus());
+}

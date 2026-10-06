@@ -49,6 +49,9 @@ public:
     void setFresh(bool fresh) { fresh_ = fresh; }
     bool fresh() const { return fresh_; }
     void finishName();  // ends a name typed just before the cursor (pi becomes π)
+    // While completions are offered, ▲ ▼ Tab Enter Esc are theirs: emitted as completionKey, not handled here.
+    void setCompleting(bool completing) { completing_ = completing; }
+    void complete(const QString& name);  // replaces the name being typed with `name`
     // The phone's on-screen keyboard (an input method): off in the browser, where it would cover the
     // keypad, until asked for. A physical keyboard types either way.
     void setSystemKeyboard(bool on);
@@ -92,6 +95,7 @@ signals:
     void inputChanged();  // edited by the user, undo and redo included (not by setInput or setEntry)
     // After each edit or movement: the name being typed at the cursor, or "" when none is (or the cursor moved).
     void nameTyped(const QString& name);
+    void completionKey(int key);
     void historyRequested(int step);  // +1 for an older entry (▲, Page Up), −1 for a newer one (▼, Page Down)
     void copyRequested();
     void copyMenuRequested();  // Ctrl+Shift+C: every form of the result
@@ -110,6 +114,7 @@ protected:
     void resizeEvent(QResizeEvent* event) override;
     void changeEvent(QEvent* event) override;
     void contextMenuEvent(QContextMenuEvent* event) override;
+    bool focusNextPrevChild(bool next) override;  // false: Tab stays in the screen
 
 private:
     enum class Shown { Nothing, Value, Exact };
@@ -135,6 +140,7 @@ private:
     UndoStack undo_;
     QMenu* editMenu_ = nullptr;
     bool fresh_ = false;
+    bool completing_ = false;
     bool provisional_ = false;
     Entry marked_;  // a copy of the input whose selection is the marked part; none when nothing is marked
     Shown shown_ = Shown::Nothing;
