@@ -65,6 +65,7 @@ public:
     QString text() const;        // the expression for the engine
     int cursor() const { return index_; }  // the place in the cursor's row
     const Row& root() const { return root_; }
+    const Row& currentRow() const;  // the cursor's row
     // How to reach the cursor's row from the outer one: (item, box) at each level.
     const std::vector<std::pair<int, int>>& path() const { return path_; }
 

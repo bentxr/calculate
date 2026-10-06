@@ -31,6 +31,7 @@ qt_add_library(calculate-ui STATIC
     src/settings.cpp
     src/typechooser.cpp
     src/typeset.cpp
+    src/typing.cpp
     src/worker.cpp
 )
 target_include_directories(calculate-ui PUBLIC ${PROJECT_SOURCE_DIR}/src)

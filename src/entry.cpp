@@ -41,6 +41,14 @@ QString serialize(const Row& row) {
     return s;
 }
 
+// The row after the first `depth` steps of `path` (Row or const Row).
+template <typename R>
+R& walk(R& root, const std::vector<std::pair<int, int>>& path, std::size_t depth) {
+    R* r = &root;
+    for (std::size_t i = 0; i < depth; ++i) r = &(*r)[static_cast<std::size_t>(path[i].first)].boxes[static_cast<std::size_t>(path[i].second)];
+    return *r;
+}
+
 }  // namespace
 
 bool operator==(const Item& a, const Item& b) {
@@ -51,11 +59,9 @@ bool operator!=(const Item& a, const Item& b) { return !(a == b); }
 bool operator==(const Position& a, const Position& b) { return a.path == b.path && a.index == b.index; }
 bool operator!=(const Position& a, const Position& b) { return !(a == b); }
 
-Row& Entry::rowAt(std::size_t depth) {
-    Row* r = &root_;
-    for (std::size_t i = 0; i < depth; ++i) r = &(*r)[static_cast<std::size_t>(path_[i].first)].boxes[static_cast<std::size_t>(path_[i].second)];
-    return *r;
-}
+Row& Entry::rowAt(std::size_t depth) { return walk(root_, path_, depth); }
+
+const Row& Entry::currentRow() const { return walk(root_, path_, path_.size()); }
 
 void Entry::insert(const QString& piece) {
     Row& r = row();
