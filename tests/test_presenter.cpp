@@ -265,3 +265,13 @@ TEST(Presenter, PastedTextWithADecimalCommaReadsBack) {
     EXPECT_EQ(e.text(), "nCr(1.5, 2)");
     settings::setDecimalComma(false);
 }
+
+TEST(Presenter, WithADecimalCommaErrorsQuoteTheInputAsShown) {
+    settings::setDecimalComma(true);
+    const Error unexpected = *evaluate("3.5, ").error;
+    EXPECT_EQ(view::errorText(unexpected, "3.5, "), "Unexpected “;”");
+    const Error whole = *evaluated("nCr(1.5, 2)").error;
+    EXPECT_TRUE(view::errorText(whole, "nCr(1.5, 2)").startsWith("nCr(1,5; 2)")) << view::errorText(whole, "nCr(1.5, 2)").toStdString();
+    settings::setDecimalComma(false);
+    EXPECT_EQ(view::errorText(unexpected, "3.5, "), "Unexpected “,”");
+}

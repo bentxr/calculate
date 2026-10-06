@@ -244,7 +244,7 @@ FractionParts withDecimalComma(FractionParts p) {
 
 QString withDecimalComma(const QString& expression) {
     QString s = expression;
-    s.replace(QStringLiteral(", "), QStringLiteral("; "));
+    s.replace(',', ';');  // in the engine's text a comma only ever separates arguments
     return s.replace('.', ',');
 }
 
@@ -254,7 +254,8 @@ bool incomplete(const Error& error) {
 
 QString errorText(const Error& e, const QString& expression) {
     const QByteArray bytes = expression.toUtf8();
-    const QString part = QString::fromUtf8(bytes.mid(static_cast<int>(e.begin), static_cast<int>(e.end - e.begin)));
+    QString part = QString::fromUtf8(bytes.mid(static_cast<int>(e.begin), static_cast<int>(e.end - e.begin)));
+    if (settings::decimalComma()) part = withDecimalComma(part);  // quoted as the screen shows it
     const QString name = part.section('(', 0, 0).trimmed();
     switch (e.code) {
     case ErrorCode::InvalidCharacter: return QCoreApplication::translate("view", "Unexpected character “%1”").arg(part);

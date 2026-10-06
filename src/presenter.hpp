@@ -47,7 +47,7 @@ QString errorText(const calculate_core::Error& error, const QString& expression)
 bool incomplete(const calculate_core::Error& error);
 
 // The decimal comma, for display (the engine always writes a point): a value's digits, a fraction's decimal, or an
-// expression (`.` → `,` and the argument separator `, ` → `; `).
+// expression or a part of one (`.` → `,`, and the argument separator `,` → `;`).
 ValueParts withDecimalComma(ValueParts parts);
 FractionParts withDecimalComma(FractionParts parts);
 QString withDecimalComma(const QString& expression);
