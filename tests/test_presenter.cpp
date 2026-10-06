@@ -169,3 +169,11 @@ TEST(Presenter, AJumpWithinTheErrorIsExplained) {
               "mod(0.7 + 0.1, 0.8) jumps within the error of its arguments, so the result could be off by a whole step. "
               "If you proceed anyway, the error report will not include that error.");
 }
+
+TEST(Presenter, AnEdgeWithinTheErrorIsExplained) {
+    const Result r = evaluated("sqrt(0.1+0.2-0.3)");
+    ASSERT_TRUE(r.error);
+    EXPECT_EQ(view::errorText(*r.error, "sqrt(0.1+0.2-0.3)"),
+              "The error of the argument of sqrt(0.1+0.2-0.3) reaches a point where it is not defined or not smooth, "
+              "so no bound can be given. If you proceed anyway, the error report will not include that.");
+}

@@ -225,6 +225,7 @@ QString errorText(const Error& e, const QString& expression) {
         return QCoreApplication::translate("view", "%1 needs an exactly known whole number, but its argument carries an error. "
                   "If you proceed anyway, the error report will not include that error.").arg(part);
     case ErrorCode::ArgumentNearJump: return QCoreApplication::translate("view", "%1 jumps within the error of its arguments, so the result could be off by a whole step. If you proceed anyway, the error report will not include that error.").arg(part);
+    case ErrorCode::ArgumentNearEdge: return QCoreApplication::translate("view", "The error of the argument of %1 reaches a point where it is not defined or not smooth, so no bound can be given. If you proceed anyway, the error report will not include that.").arg(part);
     case ErrorCode::Cancelled: return QCoreApplication::translate("view", "Cancelled");
     }
     return {};

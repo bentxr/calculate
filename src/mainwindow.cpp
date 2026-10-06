@@ -43,7 +43,8 @@ namespace {
 
 // Errors that "Proceed anyway" can accept, leaving the bound incomplete.
 bool canProceed(ErrorCode code) {
-    return code == ErrorCode::UncertainDiscreteArgument || code == ErrorCode::ArgumentNearJump;
+    return code == ErrorCode::UncertainDiscreteArgument || code == ErrorCode::ArgumentNearJump
+           || code == ErrorCode::ArgumentNearEdge;
 }
 
 // The statistics values box: only numbers and their separators get in, typed or pasted.

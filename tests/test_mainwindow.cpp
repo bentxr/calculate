@@ -819,3 +819,9 @@ TEST(MainWindow, AJumpWithinTheErrorOffersToProceed) {
     EXPECT_TRUE(answered(window));
     EXPECT_EQ(detail(window, "incomplete"), "an uncertain argument was accepted");
 }
+
+TEST(MainWindow, AnEdgeWithinTheErrorOffersToProceed) {
+    MainWindow window;
+    run(window, "1/(0.1+0.2-0.3)");
+    EXPECT_TRUE(child<QPushButton>(window, "proceed")->isVisibleTo(&window));
+}
