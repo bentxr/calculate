@@ -161,3 +161,11 @@ TEST(Presenter, EveryStatisticSaysHowItIsComputed) {
 TEST(Presenter, TheBoundIsExplainedAsProven) {
     EXPECT_EQ(view::explanation("bound"), "A proven upper limit on how far the shown value can be from the exact result.");
 }
+
+TEST(Presenter, AJumpWithinTheErrorIsExplained) {
+    const Result r = evaluated("mod(0.7 + 0.1, 0.8)");
+    ASSERT_TRUE(r.error);
+    EXPECT_EQ(view::errorText(*r.error, "mod(0.7 + 0.1, 0.8)"),
+              "mod(0.7 + 0.1, 0.8) jumps within the error of its arguments, so the result could be off by a whole step. "
+              "If you proceed anyway, the error report will not include that error.");
+}

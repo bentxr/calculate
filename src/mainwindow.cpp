@@ -41,6 +41,11 @@ using namespace calculate_core;
 
 namespace {
 
+// Errors that "Proceed anyway" can accept, leaving the bound incomplete.
+bool canProceed(ErrorCode code) {
+    return code == ErrorCode::UncertainDiscreteArgument || code == ErrorCode::ArgumentNearJump;
+}
+
 // The statistics values box: only numbers and their separators get in, typed or pasted.
 class ValuesEdit : public QPlainTextEdit {
 public:
@@ -600,7 +605,7 @@ void MainWindow::showResult(const QString& expression, const Result& result) {
 
 // Shows the last result on the screen and in the card, in the current language.
 void MainWindow::present() {
-    proceed_->setVisible(last_.error && last_.error->code == ErrorCode::UncertainDiscreteArgument);
+    proceed_->setVisible(last_.error && canProceed(last_.error->code));
     card_->setRows(view::details(last_, types_[static_cast<std::size_t>(last_.type)]));
     detailsButton_->setEnabled(!last_.error);
     message_->setText(last_.error ? view::errorText(*last_.error, lastExpression_) : QString());

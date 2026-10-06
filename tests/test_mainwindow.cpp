@@ -808,3 +808,14 @@ TEST(MainWindow, TheHistoryBringsBackTheTwoDimensionalInput) {
     ASSERT_EQ(lcd(window)->entry().root().size(), 1u);
     EXPECT_EQ(lcd(window)->entry().root()[0].kind, Template::Fraction);  // a fraction again, not text
 }
+
+TEST(MainWindow, AJumpWithinTheErrorOffersToProceed) {
+    MainWindow window;
+    auto* proceed = child<QPushButton>(window, "proceed");
+    run(window, "mod(0.7+0.1, 0.8)");
+    EXPECT_TRUE(proceed->isVisibleTo(&window));
+    forget(window);
+    QTest::mouseClick(proceed, Qt::LeftButton);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(detail(window, "incomplete"), "an uncertain argument was accepted");
+}
