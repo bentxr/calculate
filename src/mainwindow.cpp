@@ -254,11 +254,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     previewLimit_.setInterval(previewLimit);
     connect(&previewLimit_, &QTimer::timeout, this, [this] {
         dropPreviews();
-        previewShown_ = false;
-        lcd_->setProvisional(false);
-        lcd_->clearResult();
-        message_->setText(tr("Too long to work out while typing: press = to calculate it"));
-        message_->setForegroundRole(QPalette::PlaceholderText);
+        showNoPreview(tr("Too long to work out while typing: press = to calculate it"));
     });
     connect(lcd_, &Lcd::inputChanged, this, [this] {
         if (settings::liveCalculation()) liveTimer_.start();
@@ -674,10 +670,7 @@ void MainWindow::requestPreview() {
     const QString text = lcd_->input().trimmed();
     dropPreviews();  // also when the input is now empty: an answer still on its way would show on a blank screen
     if (text.isEmpty()) {
-        previewShown_ = false;
-        lcd_->setProvisional(false);
-        lcd_->clearResult();
-        message_->clear();
+        showNoPreview();
         return;
     }
     emit previewRequested(previewSerial_, text, options());
@@ -699,6 +692,16 @@ void MainWindow::dropPreviews() {
     worker_->previewGeneration() = ++previewSerial_;
     worker_->previewCancelFlag() = true;
     previewLimit_.stop();
+}
+
+// Nothing to show while typing: the result, the strip (but for the notice) and Details are blank.
+void MainWindow::showNoPreview(const QString& notice) {
+    previewShown_ = false;
+    lcd_->setProvisional(false);
+    lcd_->clearResult();
+    detailsButton_->setEnabled(false);
+    message_->setText(notice);
+    message_->setForegroundRole(QPalette::PlaceholderText);
 }
 
 // Shows the result being typed, or else the last one, on the screen and in the card, in the current language.

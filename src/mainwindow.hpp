@@ -63,6 +63,7 @@ private:
     void requestPreview();
     void showPreview(int generation, const QString& expression, const calculate_core::Result& result);
     void dropPreviews();  // previews asked for so far are skipped, or cancelled if running
+    void showNoPreview(const QString& notice = {});
     void apply(const Face& face);
     void replay(int index);
     bool exactType() const;

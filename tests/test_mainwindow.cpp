@@ -1023,3 +1023,21 @@ TEST(MainWindow, TheFaultyPartOfTheInputIsMarked) {
     run(window, "1+1");
     EXPECT_EQ(lcd(window)->markedText(), "");
 }
+
+TEST(MainWindow, DetailsGoesOffWhenThePreviewGoes) {
+    MainWindow window;
+    auto* details = child<QToolButton>(window, "detailsButton");
+    QTest::keyClicks(lcd(window), "1+2");
+    ASSERT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "3"; }, 10000));
+    EXPECT_TRUE(details->isEnabled());
+    lcd(window)->clear();  // an empty input: nothing to describe
+    EXPECT_TRUE(QTest::qWaitFor([&] { return !details->isEnabled(); }, 10000));
+
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
+    QTest::keyClicks(lcd(window), "2");
+    ASSERT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "2"; }, 10000));
+    EXPECT_TRUE(details->isEnabled());
+    QTest::keyClicks(lcd(window), "00000!");  // too long while typing: dropped
+    ASSERT_TRUE(QTest::qWaitFor([&] { return message(window)->text().startsWith("Too long"); }, 10000));
+    EXPECT_FALSE(details->isEnabled());
+}
