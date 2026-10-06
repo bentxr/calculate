@@ -31,6 +31,7 @@
 #include <QRegularExpression>
 #include <QScreen>
 #include <QScrollArea>
+#include <QScrollBar>
 #include <QStackedWidget>
 #include <QStyleOptionComboBox>
 #include <QToolButton>
@@ -329,6 +330,12 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
         QMenu* menu = lcd_->editMenu();
         menu->popup(placed(menu->sizeHint(), globalGeometry(editButton_), popupBounds(editButton_)).topLeft());
     });
+    // The names that complete a typed one: a list over the keys, not a window, so the keyboard stays with the screen.
+    completions_ = new QListWidget(centralWidget());
+    completions_->setObjectName("completions");
+    completions_->setFocusPolicy(Qt::NoFocus);
+    completions_->hide();
+    connect(lcd_, &Lcd::nameTyped, this, &MainWindow::showCompletions);
     connect(lcd_, &Lcd::pastedFirstLine, this, [this](int lines) { message_->setText(tr("Pasted the first of %1 lines").arg(lines)); });
     connect(lcd_, &Lcd::pasteRefused, this,
             [this] { message_->setText(tr("The browser did not allow reading the clipboard: paste with Ctrl+V")); });
@@ -792,6 +799,26 @@ void MainWindow::popUpHistoryMenu(QPoint position) {
     history_->setCurrentItem(item);
     const QRect at(history_->viewport()->mapToGlobal(position), QSize(1, 1));
     historyMenu_->popup(placed(historyMenu_->sizeHint(), at, popupBounds(history_)).topLeft());
+}
+
+void MainWindow::showCompletions(const QString& name) {
+    const QStringList names = typing::completions(name);
+    if (name.size() < 2 || names.isEmpty() || names == QStringList{name}) {
+        completions_->hide();
+        return;
+    }
+    completions_->clear();
+    completions_->addItems(names);
+    completions_->setCurrentRow(0);
+    const int frame = 2 * completions_->frameWidth();
+    const QSize size(completions_->sizeHintForColumn(0) + frame + completions_->verticalScrollBar()->sizeHint().width(),
+                     static_cast<int>(qMin(names.size(), completionRows)) * completions_->sizeHintForRow(0) + frame);
+    QWidget* central = centralWidget();
+    const QRect caret = lcd_->caretRectAt(lcd_->entry().position()).toAlignedRect();
+    const QRect anchor(lcd_->mapTo(central, caret.topLeft()), caret.size());
+    completions_->setGeometry(placed(size, anchor, central->rect()));
+    completions_->raise();
+    completions_->show();
 }
 
 void MainWindow::popUpCopyMenu() {

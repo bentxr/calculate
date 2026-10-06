@@ -1148,3 +1148,31 @@ TEST(MainWindow, CopyAsIsOffWithNothingToCopy) {
     run(window, "1/0");
     EXPECT_FALSE(copyAs->menuAction()->isEnabled());
 }
+
+TEST(MainWindow, CompletionsDropDownUnderTheName) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    auto* list = child<QListWidget>(window, "completions");
+    QTest::keyClicks(lcd(window), "a");
+    EXPECT_FALSE(list->isVisible());  // from the second letter
+    QTest::keyClicks(lcd(window), "s");
+    ASSERT_TRUE(list->isVisible());
+    EXPECT_EQ(list->currentItem()->text(), "asin");
+    EXPECT_GE(list->mapTo(&window, QPoint(0, 0)).y(),
+              lcd(window)->mapTo(&window, lcd(window)->caretRectAt(lcd(window)->entry().position()).bottomLeft().toPoint()).y());
+    EXPECT_TRUE(window.rect().contains(QRect(list->mapTo(&window, QPoint(0, 0)), list->size())));  // inside the window
+    QTest::keyClicks(lcd(window), "x");  // nothing starts with asx
+    EXPECT_FALSE(list->isVisible());
+}
+
+TEST(MainWindow, MovingTheCursorClosesTheCompletions) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    auto* list = child<QListWidget>(window, "completions");
+    QTest::keyClicks(lcd(window), "as");
+    ASSERT_TRUE(list->isVisible());
+    QTest::keyClick(lcd(window), Qt::Key_Left);
+    EXPECT_FALSE(list->isVisible());
+}

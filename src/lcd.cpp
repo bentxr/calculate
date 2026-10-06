@@ -146,6 +146,7 @@ void Lcd::insertTemplate(Template kind, const QString& fill) {
 
 bool Lcd::up() {
     fresh_ = false;
+    emit nameTyped({});
     const bool moved = entry_.up();
     update();
     return moved;
@@ -153,6 +154,7 @@ bool Lcd::up() {
 
 bool Lcd::down() {
     fresh_ = false;
+    emit nameTyped({});
     const bool moved = entry_.down();
     update();
     return moved;
@@ -165,12 +167,14 @@ void Lcd::backspace() {
 
 void Lcd::left() {
     fresh_ = false;
+    emit nameTyped({});
     entry_.left();
     update();
 }
 
 void Lcd::right() {
     fresh_ = false;
+    emit nameTyped({});
     entry_.right();
     update();
 }
@@ -197,6 +201,7 @@ void Lcd::setSystemKeyboard(bool on) {
 
 void Lcd::selectAll() {
     fresh_ = false;
+    emit nameTyped({});
     entry_.selectAll();
     update();
 }
@@ -394,6 +399,7 @@ void Lcd::edit(const std::function<void()>& change, bool byUser) {
         QAccessible::updateAccessibility(&event);
     }
     if (byUser) emit inputChanged();
+    emit nameTyped(byUser ? typing::nameBeingTyped(entry_) : QString());
 }
 
 void Lcd::startEditing(bool needsLeftOperand) {
@@ -408,6 +414,7 @@ void Lcd::undo() {
     if (!undo_.undo(entry_)) return;
     marked_ = Entry();
     changed();
+    emit nameTyped({});
     emit inputChanged();
 }
 
@@ -416,6 +423,7 @@ void Lcd::redo() {
     if (!undo_.redo(entry_)) return;
     marked_ = Entry();
     changed();
+    emit nameTyped({});
     emit inputChanged();
 }
 
@@ -512,6 +520,7 @@ void Lcd::keyPressEvent(QKeyEvent* event) {
     case Qt::Key_Home:
     case Qt::Key_End: {
         fresh_ = false;
+        emit nameTyped({});
         finishName();
         const bool select = event->modifiers() & Qt::ShiftModifier;  // Shift with a movement selects
         const int key = event->key();
@@ -610,6 +619,7 @@ void Lcd::mousePressEvent(QMouseEvent* event) {
         return;
     }
     fresh_ = false;
+    emit nameTyped({});
     const Position at = positionAt(event->position());
     if (event->modifiers() & Qt::ShiftModifier) {
         dragFrom_ = entry_.hasSelection() ? Position{entry_.path(), entry_.anchor()} : entry_.position();

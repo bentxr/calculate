@@ -90,6 +90,8 @@ public slots:
 signals:
     void evaluateRequested();
     void inputChanged();  // edited by the user, undo and redo included (not by setInput or setEntry)
+    // After each edit or movement: the name being typed at the cursor, or "" when none is (or the cursor moved).
+    void nameTyped(const QString& name);
     void historyRequested(int step);  // +1 for an older entry (▲, Page Up), −1 for a newer one (▼, Page Down)
     void copyRequested();
     void copyMenuRequested();  // Ctrl+Shift+C: every form of the result
