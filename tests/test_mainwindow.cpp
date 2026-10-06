@@ -984,3 +984,34 @@ TEST(MainWindow, ATemplateWithAnEmptyBoxShowsNoError) {
     lcd(window)->insert("4");
     EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "0.25"; }, 10000));
 }
+
+TEST(MainWindow, ChangingTheTypeRecalculatesWhatIsBeingTyped) {
+    MainWindow window;
+    QTest::keyClicks(lcd(window), "1/3");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText().startsWith("0.33"); }, 10000));
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "1/3 = 0.(3)"; }, 10000));
+    EXPECT_TRUE(lcd(window)->provisional());
+    EXPECT_EQ(child<QListWidget>(window, "history")->count(), 0);
+}
+
+TEST(MainWindow, AReplayedEntryIsPreviewed) {
+    MainWindow window;
+    run(window, "2+2");
+    run(window, "5");
+    lcd(window)->clear();
+    QTest::keyClick(lcd(window), Qt::Key_Up);
+    QTest::keyClick(lcd(window), Qt::Key_Up);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "4" && lcd(window)->provisional(); }, 10000));
+}
+
+TEST(MainWindow, AnEntryReplayedAfterAPauseIsPreviewed) {
+    MainWindow window;
+    run(window, "2+2");
+    run(window, "5");
+    lcd(window)->clear();
+    QTest::qWait(800);  // the clearing's own preview is long done
+    QTest::keyClick(lcd(window), Qt::Key_Up);
+    QTest::keyClick(lcd(window), Qt::Key_Up);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->outputText() == "4" && lcd(window)->provisional(); }, 10000));
+}

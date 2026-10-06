@@ -286,9 +286,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
         lcd_->setEntry(historyEntries_[static_cast<std::size_t>(history_->row(item))]);
         historyPanel_->hide();
     });
+    // A new type or angle: what is being typed is worked out again, else the last result.
     auto reevaluate = [this] {
         updateKeys();
-        if (!lastExpression_.isEmpty() && !last_.error) request(lastExpression_, false);
+        if (settings::liveCalculation() && (previewShown_ || lcd_->input().trimmed() != lastExpression_)) requestPreview();
+        else if (!lastExpression_.isEmpty() && !last_.error) request(lastExpression_, false);
     };
     connect(type_, &QComboBox::currentIndexChanged, this, reevaluate);
     connect(angle_, &QComboBox::currentIndexChanged, this, reevaluate);
@@ -745,6 +747,7 @@ void MainWindow::replay(int index) {
         historyIndex_ = -1;
         keepsUnfinished_ = false;
         lcd_->setEntry(unfinished_);
+        if (settings::liveCalculation()) liveTimer_.start();
         return;
     }
     if (index < 0 || index >= history_->count()) return;
@@ -754,6 +757,7 @@ void MainWindow::replay(int index) {
     }
     historyIndex_ = index;
     lcd_->setEntry(historyEntries_[static_cast<std::size_t>(index)]);
+    if (settings::liveCalculation()) liveTimer_.start();
 }
 
 bool MainWindow::exactType() const { return type_->currentType() == NumberType::Exact; }
