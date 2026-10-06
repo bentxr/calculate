@@ -457,6 +457,8 @@ void MainWindow::retranslate() {
     busy_->setText(tr("Computing…"));
     cancel_->setText(tr("Cancel"));
     historyToggle_->setToolTip(tr("History"));
+    // The symbol buttons (☰ ⚙ ▾) are spoken by their tooltips.
+    for (QToolButton* button : {panelToggle_, settingsButton_, historyToggle_}) button->setAccessibleName(button->toolTip());
     statisticsLabel_->setText(tr("Values (one per line, or separated by commas):"));
     statisticsKeysToggle_->setToolTip(tr("Show or hide the keypad"));
     languageSection_->setText(tr("Language"));

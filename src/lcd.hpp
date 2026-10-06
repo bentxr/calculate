@@ -114,6 +114,7 @@ private:
     void changed();  // lays the result out again and repaints
     void buildEditMenu();
     void startEditing(bool needsLeftOperand);  // the first edit after a result
+    void announceResult();  // to screen readers
     void retranslate();
     // Every change of the input goes through here, so that it can be undone (when it changed anything).
     void edit(const std::function<void()>& change);

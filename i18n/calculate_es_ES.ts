@@ -25,37 +25,42 @@
 <context>
     <name>Lcd</name>
     <message>
-        <location filename="../src/lcd.cpp" line="86"/>
+        <location filename="../src/lcd.cpp" line="53"/>
+        <source>Calculator screen</source>
+        <translation>Pantalla de la calculadora</translation>
+    </message>
+    <message>
+        <location filename="../src/lcd.cpp" line="119"/>
         <source>Undo</source>
         <translation>Deshacer</translation>
     </message>
     <message>
-        <location filename="../src/lcd.cpp" line="87"/>
+        <location filename="../src/lcd.cpp" line="120"/>
         <source>Redo</source>
         <translation>Rehacer</translation>
     </message>
     <message>
-        <location filename="../src/lcd.cpp" line="88"/>
+        <location filename="../src/lcd.cpp" line="121"/>
         <source>Cut</source>
         <translation>Cortar</translation>
     </message>
     <message>
-        <location filename="../src/lcd.cpp" line="89"/>
+        <location filename="../src/lcd.cpp" line="122"/>
         <source>Copy</source>
         <translation>Copiar</translation>
     </message>
     <message>
-        <location filename="../src/lcd.cpp" line="90"/>
+        <location filename="../src/lcd.cpp" line="123"/>
         <source>Paste</source>
         <translation>Pegar</translation>
     </message>
     <message>
-        <location filename="../src/lcd.cpp" line="91"/>
+        <location filename="../src/lcd.cpp" line="124"/>
         <source>Select all</source>
         <translation>Seleccionar todo</translation>
     </message>
     <message>
-        <location filename="../src/lcd.cpp" line="248"/>
+        <location filename="../src/lcd.cpp" line="304"/>
         <source>M = %1</source>
         <translation>M = %1</translation>
     </message>
@@ -158,43 +163,43 @@
         <translation>La memoria necesita un resultado anterior</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="460"/>
+        <location filename="../src/mainwindow.cpp" line="462"/>
         <source>Values (one per line, or separated by commas):</source>
         <translation>Valores (uno por línea, o separados por comas):</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="461"/>
+        <location filename="../src/mainwindow.cpp" line="463"/>
         <source>Show or hide the keypad</source>
         <translation>Mostrar u ocultar el teclado numérico</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="462"/>
+        <location filename="../src/mainwindow.cpp" line="464"/>
         <source>Language</source>
         <translation>Idioma</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="463"/>
+        <location filename="../src/mainwindow.cpp" line="465"/>
         <source>Theme</source>
         <translation>Tema</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="464"/>
-        <location filename="../src/mainwindow.cpp" line="467"/>
+        <location filename="../src/mainwindow.cpp" line="466"/>
+        <location filename="../src/mainwindow.cpp" line="469"/>
         <source>System</source>
         <translation>Sistema</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="468"/>
+        <location filename="../src/mainwindow.cpp" line="470"/>
         <source>Light</source>
         <translation>Claro</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="469"/>
+        <location filename="../src/mainwindow.cpp" line="471"/>
         <source>Dark</source>
         <translation>Oscuro</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="680"/>
+        <location filename="../src/mainwindow.cpp" line="695"/>
         <source>Exact arithmetic cannot represent %1: its result is irrational. Switch to a floating type to compute it.</source>
         <translation>La aritmética exacta no puede representar %1: su resultado es irracional. Cambia a un tipo de coma flotante para calcularlo.</translation>
     </message>

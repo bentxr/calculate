@@ -2,6 +2,7 @@
 
 #include "printers.hpp"
 
+#include <QAccessible>
 #include <QClipboard>
 #include <QGuiApplication>
 #include <QInputMethodEvent>
@@ -248,4 +249,16 @@ TEST(Lcd, TheContextMenuEdits) {
     EXPECT_EQ(lcd.selectedText(), "12");
     lcd.findChild<QAction*>("edit:undo")->trigger();
     EXPECT_EQ(lcd.input(), "1");
+}
+
+TEST(Lcd, ScreenReadersGetTheInputAndTheResult) {
+    Lcd lcd;
+    lcd.setInput("1+2");
+    lcd.showValue({"3", "", ""});
+    QAccessibleInterface* a = QAccessible::queryAccessibleInterface(&lcd);
+    ASSERT_NE(a, nullptr);
+    EXPECT_EQ(a->role(), QAccessible::EditableText);
+    EXPECT_EQ(a->text(QAccessible::Name), "Calculator screen");
+    EXPECT_EQ(a->text(QAccessible::Value), "1+2");
+    EXPECT_EQ(a->text(QAccessible::Description), "3");
 }

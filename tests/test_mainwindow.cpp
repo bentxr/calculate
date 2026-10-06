@@ -897,3 +897,9 @@ TEST(MainWindow, PageUpAndDownBrowseTheHistoryAndKeepTheUnfinishedInput) {
     QTest::keyClick(lcd(window), Qt::Key_PageDown);  // past the newest: back to what was being typed
     EXPECT_EQ(lcd(window)->input(), "9−");
 }
+
+TEST(MainWindow, SymbolButtonsHaveSpokenNames) {
+    MainWindow window;
+    for (const char* name : {"panelToggle", "settingsButton", "historyToggle"})
+        EXPECT_FALSE(child<QToolButton>(window, name)->accessibleName().isEmpty()) << name;
+}

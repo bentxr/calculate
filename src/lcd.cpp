@@ -5,6 +5,8 @@
 #include "webclipboard.hpp"
 #endif
 
+#include <QAccessible>
+#include <QAccessibleWidget>
 #include <QClipboard>
 #include <QContextMenuEvent>
 #include <QFontDatabase>
@@ -40,6 +42,27 @@ bool needsLeftOperand(const QString& piece) {
 
 bool needsLeftOperand(QChar typed) { return QStringLiteral("+-*/^!%²³×÷−").contains(typed); }
 
+// What a screen reader hears: the input as the screen's value, the result as its description.
+class LcdAccessible : public QAccessibleWidget {
+public:
+    explicit LcdAccessible(Lcd* lcd) : QAccessibleWidget(lcd, QAccessible::EditableText) {}
+
+    QString text(QAccessible::Text t) const override {
+        const auto* lcd = static_cast<const Lcd*>(widget());
+        switch (t) {
+        case QAccessible::Name: return Lcd::tr("Calculator screen");
+        case QAccessible::Value: return lcd->input();
+        case QAccessible::Description: return lcd->outputText();
+        default: return QAccessibleWidget::text(t);
+        }
+    }
+};
+
+QAccessibleInterface* lcdAccessible(const QString& className, QObject* object) {
+    if (className == QLatin1String("Lcd")) return new LcdAccessible(static_cast<Lcd*>(object));
+    return nullptr;
+}
+
 QFont scaled(const QFont& base, qreal factor) {
     QFont f(Lcd::fontFamily());
     f.setPixelSize(qRound(QFontInfo(base).pixelSize() * factor));
@@ -49,6 +72,8 @@ QFont scaled(const QFont& base, qreal factor) {
 }  // namespace
 
 Lcd::Lcd(QWidget* parent) : QWidget(parent) {
+    static const bool accessible = (QAccessible::installFactory(lcdAccessible), true);
+    Q_UNUSED(accessible)
     setFocusPolicy(Qt::StrongFocus);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);  // never shorter than sizeHint()
 #ifdef Q_OS_WASM
@@ -233,12 +258,20 @@ void Lcd::showValue(const view::ValueParts& parts) {
     shown_ = Shown::Value;
     value_ = parts;
     changed();
+    announceResult();
 }
 
 void Lcd::showExact(const view::FractionParts& parts) {
     shown_ = Shown::Exact;
     exact_ = parts;
     changed();
+    announceResult();
+}
+
+void Lcd::announceResult() {
+    if (!QAccessible::isActive()) return;
+    QAccessibleEvent event(this, QAccessible::DescriptionChanged);
+    QAccessible::updateAccessibility(&event);
 }
 
 void Lcd::clearResult() {
@@ -328,6 +361,10 @@ void Lcd::edit(const std::function<void()>& change) {
     if (entry_ == before) return;
     undo_.record(before);
     changed();
+    if (QAccessible::isActive()) {
+        QAccessibleValueChangeEvent event(this, input());
+        QAccessible::updateAccessibility(&event);
+    }
 }
 
 void Lcd::startEditing(bool needsLeftOperand) {
