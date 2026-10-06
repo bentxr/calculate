@@ -19,6 +19,11 @@ Theme& currentTheme() {
     return theme;
 }
 
+bool& currentLiveCalculation() {
+    static bool on = true;
+    return on;
+}
+
 bool systemIsDark() { return QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark; }
 
 }  // namespace
@@ -45,6 +50,10 @@ void setLanguage(Language language) {
 }
 
 Theme theme() { return currentTheme(); }
+
+bool liveCalculation() { return currentLiveCalculation(); }
+
+void setLiveCalculation(bool on) { currentLiveCalculation() = on; }
 
 void setTheme(Theme theme) {
     static const bool connected = [] {

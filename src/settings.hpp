@@ -15,6 +15,9 @@ void setLanguage(Language language);
 // Applies our light or dark palette; System follows the desktop's colour scheme, also when it changes.
 void setTheme(Theme theme);
 Theme theme();  // the one applied last
+// Whether the result is worked out while the expression is typed (on at every start).
+bool liveCalculation();
+void setLiveCalculation(bool on);
 
 // The theme at start: the system's on the desktop. In the browser, Dark: what browsers report of the
 // system's scheme does not reach the app reliably.

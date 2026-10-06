@@ -83,6 +83,7 @@ private:
     QMenu* settings_ = nullptr;
     QAction* languageSection_ = nullptr;  // the headings over each setting's values
     QAction* themeSection_ = nullptr;
+    QAction* inputSection_ = nullptr;
     QPushButton* equals_ = nullptr;
     QLabel* statisticsLabel_ = nullptr;
     bool hasResult_ = false;  // whether last_ holds a result to present

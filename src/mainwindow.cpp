@@ -411,7 +411,7 @@ void MainWindow::showEvent(QShowEvent* event) {
 }
 
 // ⚙: a small menu that opens from the button, with the values of the language and of the theme listed
-// in place. A choice applies at once and is forgotten at exit.
+// in place, then whether to calculate while typing. A choice applies at once and is forgotten at exit.
 void MainWindow::buildSettings() {
     settings_ = new QMenu(this);
     settings_->setObjectName("settings");
@@ -434,6 +434,12 @@ void MainWindow::buildSettings() {
                [](int i) { settings::setLanguage(static_cast<settings::Language>(i)); });
     addSetting(themeSection_, {"theme:system", "theme:light", "theme:dark"}, static_cast<int>(settings::theme()),
                [](int i) { settings::setTheme(static_cast<settings::Theme>(i)); });
+    inputSection_ = settings_->addSection(QString());
+    QAction* live = settings_->addAction(QString());
+    live->setObjectName("live");
+    live->setCheckable(true);
+    live->setChecked(settings::liveCalculation());
+    connect(live, &QAction::toggled, this, [](bool on) { settings::setLiveCalculation(on); });
 }
 
 // Every text of the window in the current language: run once when it is built, and again on every
@@ -469,6 +475,8 @@ void MainWindow::retranslate() {
     findChild<QAction*>("theme:system")->setText(tr("System"));
     findChild<QAction*>("theme:light")->setText(tr("Light"));
     findChild<QAction*>("theme:dark")->setText(tr("Dark"));
+    inputSection_->setText(tr("Input"));
+    findChild<QAction*>("live")->setText(tr("Calculate as you type"));
 
     QList<Key> keys = cursorPad();
     for (const QList<Key>& row : keypad()) keys += row;

@@ -903,3 +903,15 @@ TEST(MainWindow, SymbolButtonsHaveSpokenNames) {
     for (const char* name : {"panelToggle", "settingsButton", "historyToggle"})
         EXPECT_FALSE(child<QToolButton>(window, name)->accessibleName().isEmpty()) << name;
 }
+
+TEST(MainWindow, TheSettingsOfferCalculatingAsYouType) {
+    MainWindow window;
+    QAction* live = setting(window, "live");
+    ASSERT_NE(live, nullptr);
+    EXPECT_TRUE(live->isCheckable());
+    EXPECT_TRUE(live->isChecked());  // on by default
+    live->trigger();
+    EXPECT_FALSE(settings::liveCalculation());
+    live->trigger();
+    EXPECT_TRUE(settings::liveCalculation());
+}
