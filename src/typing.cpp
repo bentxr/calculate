@@ -75,8 +75,17 @@ void replaceName(Entry& e, int start, const QString& piece) {
     e.insert(piece);
 }
 
+// The piece a sum or a product shows ("Σ(" or "Π("), from its name or any of its symbols; "" for anything else. On
+// the calculator only the symbol appears.
+QString rangePiece(const QString& name) {
+    if (name == "sum" || name == QStringLiteral("Σ") || name == QStringLiteral("∑")) return QStringLiteral("Σ(");
+    if (name == "product" || name == QStringLiteral("Π") || name == QStringLiteral("∏")) return QStringLiteral("Π(");
+    return {};
+}
+
 // A call piece such as "nCr(" or "mcd(" whose function takes more than one argument.
 bool takesSeveral(const QString& piece) {
+    if (piece == QStringLiteral("Σ(") || piece == QStringLiteral("Π(")) return true;
     for (const calculate_core::FunctionDescription& f : calculate_core::functions()) {
         if (f.maxArgs >= 0 && f.maxArgs <= 1) continue;
         if (settings::inEveryLanguage("keypad", QString::fromStdString(f.name) + "(").contains(piece)) return true;
@@ -191,7 +200,7 @@ bool textIs(const Row& row, int i, const QString& text) {
 Row slice(const Row& row, int from, int to) { return Row(row.begin() + from, row.begin() + to); }
 
 // The template whose engine spelling ends with the ")" just typed, read back: ((N)/(D)), (10^(X)),
-// root(A, B) and log(A, B) (the engine takes the radicand and the argument first).
+// root(A, B) and log(A, B) (the engine takes the radicand and the argument first), Σ(f, from, to) and Π(…).
 void restore(Entry& e) {
     const Row& row = e.currentRow();
     const int end = e.cursor();  // just after the ")"
@@ -207,21 +216,27 @@ void restore(Entry& e) {
     } else if (end - o == 5 && textIs(row, o, "(") && textIs(row, o + 1, "1") && textIs(row, o + 2, "0") &&
                row[static_cast<std::size_t>(o + 3)].kind == Template::Power) {
         made = Item{Template::Pow10, {}, row[static_cast<std::size_t>(o + 3)].boxes};
-    } else if (textIs(row, o, "root(") || textIs(row, o, "log(")) {
-        int separator = -1;
+    } else if (textIs(row, o, "root(") || textIs(row, o, "log(") || textIs(row, o, QStringLiteral("Σ(")) || textIs(row, o, QStringLiteral("Π("))) {
+        std::vector<int> separators;  // the call's own commas
         int depth = 0;
         for (int i = o + 1; i < end - 1; ++i) {
             const Item& item = row[static_cast<std::size_t>(i)];
             if (opener(item)) ++depth;
             else if (closer(item)) --depth;
-            else if (depth == 0 && textIs(row, i, ", ")) {
-                if (separator >= 0) return;  // three arguments: not a template
-                separator = i;
-            }
+            else if (depth == 0 && textIs(row, i, ", ")) separators.push_back(i);
         }
-        if (separator < 0) return;
-        const Template kind = textIs(row, o, "root(") ? Template::Root : Template::LogBase;
-        made = Item{kind, {}, {slice(row, separator + 1, end - 1), slice(row, o + 1, separator)}};
+        const bool range = textIs(row, o, QStringLiteral("Σ(")) || textIs(row, o, QStringLiteral("Π("));
+        if (range) {  // three arguments: f, from, to; a named variable (four) stays linear
+            if (separators.size() != 2) return;
+            const int a = separators[0], b = separators[1];
+            made = Item{textIs(row, o, QStringLiteral("Σ(")) ? Template::Sum : Template::Product, {},
+                        {slice(row, a + 1, b), slice(row, b + 1, end - 1), slice(row, o + 1, a)}};
+        } else {
+            if (separators.size() != 1) return;  // three arguments: not a template
+            const int separator = separators[0];
+            const Template kind = textIs(row, o, "root(") ? Template::Root : Template::LogBase;
+            made = Item{kind, {}, {slice(row, separator + 1, end - 1), slice(row, o + 1, separator)}};
+        }
     } else {
         return;
     }
@@ -347,7 +362,13 @@ bool typeCharacter(Entry& e, QChar c) {
         int start = 0;
         const QString name = nameBefore(e, &start);
         const Template kind = callTemplate(name);
-        if (name.isEmpty()) {
+        if (before && name.isEmpty() && !rangePiece(before->text).isEmpty()) {  // a symbol: Σ ∑ Π ∏
+            const QString piece = rangePiece(before->text);
+            e.backspace();
+            e.insert(piece);
+        } else if (!rangePiece(name).isEmpty()) {
+            replaceName(e, start, rangePiece(name));
+        } else if (name.isEmpty()) {
             e.insert("(");
         } else if (kind != Template::Text) {
             removeName(e, start);
