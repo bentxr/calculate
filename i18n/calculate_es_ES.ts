@@ -277,12 +277,12 @@
     <message>
         <location filename="../src/mainwindow.cpp" line="1199"/>
         <source>mod keeps the dividend&apos;s sign</source>
-        <translation type="unfinished"></translation>
+        <translation>mod conserva el signo del dividendo</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1200"/>
         <source>mod keeps the divisor&apos;s sign</source>
-        <translation type="unfinished"></translation>
+        <translation>mod conserva el signo del divisor</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1201"/>
