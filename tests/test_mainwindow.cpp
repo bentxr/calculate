@@ -1482,3 +1482,15 @@ TEST(MainWindow, TheStatisticsSectionTypesAStatistic) {
     EXPECT_TRUE(answered(window));
     EXPECT_EQ(lcd(window)->outputText(), "2");
 }
+
+TEST(MainWindow, EveryKeyLabelFitsItsKey) {
+    MainWindow window;
+    window.resize(1200, 800);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    const int smallest = qRound(0.6 * QFontInfo(window.font()).pixelSize());
+    for (QPushButton* key : window.findChildren<QPushButton*>(QRegularExpression("^(key|direct|common):"))) {
+        const bool fits = QFontMetrics(key->font()).horizontalAdvance(key->text()) <= key->width() - 10;
+        EXPECT_TRUE(fits || QFontInfo(key->font()).pixelSize() <= smallest) << key->objectName().toStdString();
+    }
+}

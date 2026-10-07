@@ -516,9 +516,9 @@ void MainWindow::sizeKeys() {
     QWidget* area = keys_->widget();
     QWidget* pad = findChild<QWidget*>("keypad");
     QWidget* direct = findChild<QWidget*>("directKeys");
-    QList<Key> all;
+    QList<Key> all = memoryKeys();  // the keys always in view decide the size; longer legends shrink (fittedFont)
     for (const QList<Key>& row : keypad()) all += row;
-    all += everyDirectKey();
+    for (const QString& id : defaultCommon()) all << directKey(id);
     int labels = 0;  // the widest label in any language, so no key is too narrow for its name
     for (const Key& key : all)
         for (const QString& label : settings::inEveryLanguage("keypad", key.face.label))
@@ -546,6 +546,8 @@ void MainWindow::sizeKeys() {
     for (const Key& key : everyDirectKey()) findChild<QPushButton*>("direct:" + key.id)->setFixedSize(size);
     for (const QString& id : defaultCommon()) findChild<QPushButton*>("common:" + id)->setFixedSize(size);
     findChild<QWidget*>("cursorPad")->setFixedWidth(2 * size.width() + keySpacing);
+    for (QPushButton* key : findChildren<QPushButton*>(QRegularExpression(QStringLiteral("^(key|direct|common):"))))
+        key->setFont(fittedFont(font(), key->text(), key->width() - 10));
     for (QWidget* w : {pad, direct}) {
         w->layout()->activate();
         w->adjustSize();

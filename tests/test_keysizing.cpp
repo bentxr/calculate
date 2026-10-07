@@ -1,5 +1,7 @@
 #include "keysizing.hpp"
 
+#include <QFontMetrics>
+
 #include <gtest/gtest.h>
 
 // A 1920 × 1200 screen; the window needs 200 px across and 400 px down for everything but the keys;
@@ -19,4 +21,26 @@ TEST(KeySizing, AShortScreenLimitsTheHeight) {
 TEST(KeySizing, NeverSmallerThanTheLabelsNeed) {
     EXPECT_EQ(keySize(QSize(800, 600), QSize(200, 400), QSize(6, 9), 6, QSize(40, 24)), QSize(40, 24));
     EXPECT_EQ(keySize(QSize(0, 0), QSize(200, 400), QSize(6, 9), 6, QSize(40, 24)), QSize(40, 24));
+}
+
+TEST(KeySizing, ALabelThatFitsKeepsItsFont) {
+    QFont font;
+    font.setPixelSize(20);
+    EXPECT_EQ(fittedFont(font, "sin", 200), font);
+}
+
+TEST(KeySizing, ALongLabelGetsASmallerFontThatFits) {
+    QFont font;
+    font.setPixelSize(20);
+    const int width = QFontMetrics(font).horizontalAdvance("floatError") * 3 / 4;
+    const QFont fitted = fittedFont(font, "floatError", width);
+    EXPECT_LT(fitted.pixelSize(), 20);
+    EXPECT_GE(fitted.pixelSize(), 12);
+    EXPECT_LE(QFontMetrics(fitted).horizontalAdvance("floatError"), width);
+}
+
+TEST(KeySizing, NeverSmallerThanTheSmallestSize) {
+    QFont font;
+    font.setPixelSize(20);
+    EXPECT_EQ(fittedFont(font, "floatError", 5).pixelSize(), 12);  // 0.6 × 20
 }
