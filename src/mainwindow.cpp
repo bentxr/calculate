@@ -499,7 +499,7 @@ QWidget* MainWindow::buildDirectKeys() {
     auto* keyboard = new QWidget;
     keyboard->setObjectName("directKeys");
     auto* layout = new QVBoxLayout(keyboard);
-    const auto title = [keyboard](const char* name) {
+    const auto title = [](const char* name) {
         auto* label = new QLabel;
         label->setObjectName(QString::fromLatin1(name));
         label->setForegroundRole(QPalette::PlaceholderText);
