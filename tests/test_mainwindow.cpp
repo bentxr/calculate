@@ -1921,3 +1921,14 @@ TEST(MainWindow, TheLogKeySaysWhichLogarithm) {
     EXPECT_EQ(child<QPushButton>(window, "direct:log")->toolTip(), "logarithm (natural)");
     setting(window, "log:10")->trigger();
 }
+
+TEST(MainWindow, TheConventionsSitApartInTheirOwnMenu) {
+    MainWindow window;
+    const QList<QAction*> top = child<QMenu>(window, "settings")->actions();
+    const int index = top.indexOf(child<QMenu>(window, "conventions")->menuAction());
+    ASSERT_GT(index, 0);
+    EXPECT_TRUE(top[index - 1]->isSeparator());  // not read as one more decimal separator
+    int separators = 0;
+    for (QAction* action : child<QMenu>(window, "conventions")->actions()) separators += action->isSeparator();
+    EXPECT_EQ(separators, 2);  // log | mod | %
+}

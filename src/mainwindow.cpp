@@ -1032,6 +1032,7 @@ void MainWindow::buildSettings() {
                });
     // What log, mod and % mean. Earlier results keep theirs (the engine stores them spelled out); what is being
     // typed is worked out again.
+    settings_->addSeparator();
     conventions_ = settings_->addMenu(QString());
     conventions_->setObjectName("conventions");
     const auto changeConvention = [this](auto change) {
@@ -1044,8 +1045,10 @@ void MainWindow::buildSettings() {
     using calculate_core::Conventions;
     addGroup({"log:10", "log:e"}, static_cast<int>(settings::conventions().log),
              [changeConvention](int i) { changeConvention([i](Conventions& c) { c.log = static_cast<Conventions::Log>(i); }); }, conventions_);
+    conventions_->addSeparator();
     addGroup({"mod:truncated", "mod:floored"}, static_cast<int>(settings::conventions().mod),
              [changeConvention](int i) { changeConvention([i](Conventions& c) { c.mod = static_cast<Conventions::Mod>(i); }); }, conventions_);
+    conventions_->addSeparator();
     addGroup({"percent:divide", "percent:ofvalue"}, static_cast<int>(settings::conventions().percent),
              [changeConvention](int i) { changeConvention([i](Conventions& c) { c.percent = static_cast<Conventions::Percent>(i); }); }, conventions_);
     inputSection_ = settings_->addSection(QString());
