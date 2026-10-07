@@ -128,7 +128,7 @@ TEST(Keypad, EveryOtherKeyHasAHomeSection) {
     EXPECT_EQ(sectionLabels("trigonometry"), QStringList({"asin", "acos", "atan"}));
     EXPECT_EQ(sectionLabels("powers"), QStringList({"x³", "∛", "ⁿ√", "10ˣ", "eˣ", "log"}));
     EXPECT_EQ(sectionLabels("constants"), QStringList({"π", "e"}));
-    EXPECT_EQ(labels(memoryKeys()), QStringList({"MS", "M", "M−", "MC"}));
+    EXPECT_EQ(labels(memoryKeys()), QStringList({"MS", "M", "M−", "MC", "↶", "↷"}));
 }
 
 TEST(Keypad, CommonStartsWithTheKeysUsedMost) {
@@ -206,4 +206,11 @@ TEST(Keypad, TheLettersSectionHasTheAlphabet) {
     EXPECT_EQ(directKey("shift").face.action, KeyAction::Shift);
     EXPECT_EQ(directKey("space").face.insert, " ");
     EXPECT_EQ(find("open").face.action, KeyAction::Type);  // ( follows the typing rules: it can end a name
+}
+
+TEST(Keypad, UndoAndRedoAreKeys) {
+    const QStringList memory = labels(memoryKeys());
+    EXPECT_EQ(memory.mid(memory.size() - 2), QStringList({"↶", "↷"}));
+    EXPECT_EQ(directKey("undo").face.action, KeyAction::Undo);
+    EXPECT_EQ(directKey("redo").face.action, KeyAction::Redo);
 }

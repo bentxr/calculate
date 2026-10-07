@@ -8,7 +8,8 @@
 
 enum class KeyAction { Insert, Template, Clear, Backspace, Evaluate, MemoryAdd, MemorySubtract, MemoryClear, MemoryStore, Left, Right, Up, Down,
                        Type,    // the inserted text goes through the typing rules, character by character
-                       Shift };  // the next letter is a capital
+                       Shift,  // the next letter is a capital
+                       Undo, Redo };
 
 // What a key does.
 struct Face {

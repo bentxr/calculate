@@ -1630,3 +1630,12 @@ TEST(MainWindow, LetterKeysTypeNamesThatBecomePieces) {
     QTest::mouseClick(child<QPushButton>(window, "key:open"), Qt::LeftButton);  // no name before it: a plain (
     EXPECT_EQ(lcd(window)->input(), "(");
 }
+
+TEST(MainWindow, UndoAndRedoWithKeys) {
+    MainWindow window;
+    for (const char* name : {"key:1", "key:plus", "key:2"}) QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    QTest::mouseClick(child<QPushButton>(window, "direct:undo"), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "1+");
+    QTest::mouseClick(child<QPushButton>(window, "direct:redo"), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "1+2");
+}

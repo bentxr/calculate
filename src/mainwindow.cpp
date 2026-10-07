@@ -1254,6 +1254,8 @@ void MainWindow::apply(const Face& f) {
         shifted_ = !shifted_;
         relabelLetters();
         break;
+    case KeyAction::Undo: lcd_->undo(); break;
+    case KeyAction::Redo: lcd_->redo(); break;
     case KeyAction::Template: lcd_->insertTemplate(f.shape, f.insert); break;
     case KeyAction::Clear: lcd_->clear(); break;
     case KeyAction::Backspace: lcd_->backspace(); break;

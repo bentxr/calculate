@@ -58,6 +58,8 @@ const QList<Key>& memoryKeys() {
         {"memory", put("M", "M")},
         {"memorySubtract", act("M−", KeyAction::MemorySubtract)},
         {"memoryClear", act("MC", KeyAction::MemoryClear)},
+        {"undo", act("↶", KeyAction::Undo)},
+        {"redo", act("↷", KeyAction::Redo)},
     };
     return keys;
 }
