@@ -4,6 +4,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
+#include <algorithm>
+
 namespace settingsfile {
 
 namespace {
@@ -20,7 +22,7 @@ QByteArray write(const QMap<QString, QString>& current, const QMap<QString, QStr
     return QJsonDocument(file).toJson(QJsonDocument::Indented);
 }
 
-Read read(const QByteArray& file, const QMap<QString, QStringList>& allowed) {
+Read read(const QByteArray& file, const QMap<QString, QStringList>& allowed, const QSet<QString>& lists) {
     Read r;
     const QJsonDocument document = QJsonDocument::fromJson(file);
     const QJsonObject root = document.object();
@@ -37,12 +39,20 @@ Read read(const QByteArray& file, const QMap<QString, QStringList>& allowed) {
     const QJsonObject settings = root.value("settings").toObject();
     for (auto it = settings.constBegin(); it != settings.constEnd(); ++it) {
         const QString value = it.value().toString();
-        if (!allowed.contains(it.key()))
+        if (!allowed.contains(it.key())) {
             r.problems << QCoreApplication::translate("settingsfile", "unknown setting “%1”").arg(it.key());
-        else if (!allowed.value(it.key()).contains(value))
+        } else if (lists.contains(it.key())) {
+            const QStringList words = value.split(' ', Qt::SkipEmptyParts);
+            const bool known = std::all_of(words.begin(), words.end(), [&](const QString& w) { return allowed.value(it.key()).contains(w); });
+            if (known && QSet<QString>(words.begin(), words.end()).size() == words.size())
+                r.values.insert(it.key(), value);
+            else
+                r.problems << QCoreApplication::translate("settingsfile", "“%1” is not a list of values of “%2”").arg(value, it.key());
+        } else if (!allowed.value(it.key()).contains(value)) {
             r.problems << QCoreApplication::translate("settingsfile", "“%1” is not a value of “%2”").arg(value, it.key());
-        else
+        } else {
             r.values.insert(it.key(), value);
+        }
     }
     return r;
 }

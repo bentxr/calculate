@@ -17,17 +17,23 @@ public:
     // The newest preview asked for, and the flag that stops a running one; set from the window's thread.
     std::atomic<int>& previewGeneration() { return previewGeneration_; }
     std::atomic<bool>& previewCancelFlag() { return previewCancel_; }
+    // The same for the answers of a tool (the percentages), asked for several at a time under one generation.
+    std::atomic<int>& answerGeneration() { return answerGeneration_; }
+    std::atomic<bool>& answerCancelFlag() { return answerCancel_; }
 
 public slots:
     void evaluate(const QString& expression, const calculate_core::Options& options);
     void preview(int generation, const QString& expression, const calculate_core::Options& options);
+    void answer(int generation, const QString& key, const QString& expression, const calculate_core::Options& options);
     void memoryAdd();
     void memorySubtract();
+    void memoryStore();
     void memoryClear();
 
 signals:
     void evaluated(const QString& expression, const calculate_core::Result& result);
     void previewed(int generation, const QString& expression, const calculate_core::Result& result);
+    void answered(int generation, const QString& key, const calculate_core::Result& result);
     void memoryChanged(const QString& memory);  // empty when cleared
     void memoryFailed();                        // M+ or M- without a previous result
 
@@ -36,4 +42,6 @@ private:
     std::atomic<bool> cancel_{false};
     std::atomic<int> previewGeneration_{0};
     std::atomic<bool> previewCancel_{false};
+    std::atomic<int> answerGeneration_{0};
+    std::atomic<bool> answerCancel_{false};
 };

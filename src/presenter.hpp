@@ -52,6 +52,10 @@ ValueParts withDecimalComma(ValueParts parts);
 FractionParts withDecimalComma(FractionParts parts);
 QString withDecimalComma(const QString& expression);
 
+// A result on one line of plain text, as the screen shows it: "1.000|2×10^−7", "−1/3 = −0.(3)".
+QString oneLine(const ValueParts& parts);
+QString oneLine(const FractionParts& parts);
+
 enum class CopyForm { Value, Trusted, ValueAndBound, Details };
 // The result as plain text for the clipboard: ASCII signs ("-", "e30"), no bar; empty when the form has
 // nothing to give (an error, or no trusted digit).
@@ -59,5 +63,14 @@ QString copyText(const calculate_core::Result& result, CopyForm form, const calc
 QString statisticsExpression(const QString& function, const QString& values);
 // How the engine computes a statistic, in one line; empty for anything else.
 QString algorithm(const QString& function);
+
+struct PercentageRow {
+    QString key;         // stable id: change, changeBack, secondOfFirst, firstOfSecond, plus, minus, of
+    QString title;       // translated: "Change from 1 to 2 (%)"
+    QString expression;  // what the engine evaluates
+};
+// The seven percentage questions about two values (as typed, with the screen's signs), in the order of the tool;
+// empty when either value is empty.
+QList<PercentageRow> percentageRows(const QString& first, const QString& second);
 
 }  // namespace view

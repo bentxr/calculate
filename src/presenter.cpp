@@ -311,4 +311,34 @@ QString algorithm(const QString& function) {
     return {};
 }
 
+QString oneLine(const ValueParts& parts) {
+    QString s = parts.trusted;
+    if (!parts.noise.isEmpty()) s += "|" + parts.noise;
+    if (!parts.exponent.isEmpty()) s += "×10^" + parts.exponent;
+    return s;
+}
+
+QString oneLine(const FractionParts& parts) {
+    if (parts.denominator == "1") return parts.sign + parts.numerator;
+    QString s = parts.sign + parts.numerator + "/" + parts.denominator;
+    if (!parts.decimal.isEmpty()) s += " = " + parts.sign + parts.decimal;
+    if (!parts.recurring.isEmpty()) s += "(" + parts.recurring + ")";
+    return s;
+}
+
+// Written out in full, never with %, so the answers don't depend on how % is read.
+QList<PercentageRow> percentageRows(const QString& first, const QString& second) {
+    if (first.isEmpty() || second.isEmpty()) return {};
+    const QString a = "(" + first + ")", b = "(" + second + ")";
+    return {
+        {"change", QCoreApplication::translate("view", "Change from 1 to 2 (%)"), "(" + b + "−" + a + ")÷" + a + "×100"},
+        {"changeBack", QCoreApplication::translate("view", "Change from 2 to 1 (%)"), "(" + a + "−" + b + ")÷" + b + "×100"},
+        {"secondOfFirst", QCoreApplication::translate("view", "2 as a percentage of 1"), b + "÷" + a + "×100"},
+        {"firstOfSecond", QCoreApplication::translate("view", "1 as a percentage of 2"), a + "÷" + b + "×100"},
+        {"plus", QCoreApplication::translate("view", "1 plus 2 %"), a + "+" + a + "×" + b + "÷100"},
+        {"minus", QCoreApplication::translate("view", "1 minus 2 %"), a + "−" + a + "×" + b + "÷100"},
+        {"of", QCoreApplication::translate("view", "2 % of 1"), a + "×" + b + "÷100"},
+    };
+}
+
 }  // namespace view

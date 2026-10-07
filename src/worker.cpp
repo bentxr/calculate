@@ -17,6 +17,15 @@ void Worker::preview(int generation, const QString& expression, const calculate_
     emit previewed(generation, expression, session_.preview(expression.toStdString(), o));
 }
 
+// As preview(): a stale request is skipped here or cancelled while it runs.
+void Worker::answer(int generation, const QString& key, const QString& expression, const calculate_core::Options& options) {
+    answerCancel_ = false;
+    if (generation != answerGeneration_) return;
+    calculate_core::Options o = options;
+    o.cancel = &answerCancel_;
+    emit answered(generation, key, session_.preview(expression.toStdString(), o));
+}
+
 void Worker::memoryAdd() {
     if (session_.memoryAdd()) emit memoryChanged(QString::fromStdString(session_.memory()));
     else emit memoryFailed();
@@ -24,6 +33,11 @@ void Worker::memoryAdd() {
 
 void Worker::memorySubtract() {
     if (session_.memorySubtract()) emit memoryChanged(QString::fromStdString(session_.memory()));
+    else emit memoryFailed();
+}
+
+void Worker::memoryStore() {
+    if (session_.memoryStore()) emit memoryChanged(QString::fromStdString(session_.memory()));
     else emit memoryFailed();
 }
 

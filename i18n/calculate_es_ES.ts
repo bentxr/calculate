@@ -60,7 +60,7 @@
         <translation>Seleccionar todo</translation>
     </message>
     <message>
-        <location filename="../src/lcd.cpp" line="345"/>
+        <location filename="../src/lcd.cpp" line="341"/>
         <source>M = %1</source>
         <translation>M = %1</translation>
     </message>
@@ -68,248 +68,311 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../src/mainwindow.cpp" line="618"/>
+        <location filename="../src/mainwindow.cpp" line="1094"/>
         <source>calculate</source>
         <translation>calculate</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="619"/>
+        <location filename="../src/mainwindow.cpp" line="1095"/>
         <source>Show or hide the panel</source>
         <translation>Mostrar u ocultar el panel</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="621"/>
+        <location filename="../src/mainwindow.cpp" line="1097"/>
         <source>Calculator</source>
         <translation>Calculadora</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="621"/>
+        <location filename="../src/mainwindow.cpp" line="1097"/>
         <source>Statistics</source>
         <translation>Estadística</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="620"/>
+        <location filename="../src/mainwindow.cpp" line="1096"/>
         <source>Settings</source>
         <translation>Ajustes</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="316"/>
+        <location filename="../src/mainwindow.cpp" line="405"/>
         <source>Too long to work out while typing: press = to calculate it</source>
         <translation>Demasiado largo para calcularlo al escribir: pulsa = para calcularlo</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="349"/>
+        <location filename="../src/mainwindow.cpp" line="438"/>
         <source>Pasted the first of %1 lines</source>
         <translation>Se ha pegado la primera de %1 líneas</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="351"/>
+        <location filename="../src/mainwindow.cpp" line="440"/>
         <source>The browser did not allow reading the clipboard: paste with Ctrl+V</source>
         <translation>El navegador no ha permitido leer el portapapeles: pega con Ctrl+V</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="559"/>
+        <location filename="../src/mainwindow.cpp" line="567"/>
+        <source>Common holds at most %1 keys</source>
+        <translation>Habituales admite como mucho %1 teclas</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="677"/>
+        <source>Click a key to add it to Common, or a key of Common to remove it</source>
+        <translation>Pulsa una tecla para añadirla a Habituales, o una de Habituales para quitarla</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="1028"/>
         <source>Some settings were not imported: %1</source>
         <translation>No se importaron algunos ajustes: %1</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="623"/>
+        <location filename="../src/mainwindow.cpp" line="1077"/>
+        <source>“%1” cannot be the common keys</source>
+        <translation>“%1” no puede ser las teclas habituales</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="1097"/>
+        <source>Percentages</source>
+        <translation>Porcentajes</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="1100"/>
+        <location filename="../src/mainwindow.cpp" line="1101"/>
+        <source>More</source>
+        <translation>Más</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="1102"/>
+        <source>Search every function and constant…</source>
+        <translation>Buscar entre todas las funciones y constantes…</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="1103"/>
+        <source>Search</source>
+        <translation>Buscar</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="1105"/>
+        <source>Back to the keypad</source>
+        <translation>Volver al teclado</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="1106"/>
         <source>RAD</source>
         <translation>RAD</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="623"/>
+        <location filename="../src/mainwindow.cpp" line="1106"/>
         <source>DEG</source>
         <translation>DEG</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="623"/>
+        <location filename="../src/mainwindow.cpp" line="1106"/>
         <source>GRAD</source>
         <translation>GRAD</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="626"/>
+        <location filename="../src/mainwindow.cpp" line="1109"/>
         <source>=</source>
         <translation>=</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="627"/>
+        <location filename="../src/mainwindow.cpp" line="1110"/>
         <source>Details</source>
         <translation>Detalles</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="628"/>
+        <location filename="../src/mainwindow.cpp" line="1111"/>
         <source>Copy</source>
         <translation>Copiar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="630"/>
+        <location filename="../src/mainwindow.cpp" line="1113"/>
         <source>Copy as</source>
         <translation>Copiar como</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="631"/>
+        <location filename="../src/mainwindow.cpp" line="1114"/>
         <source>Value</source>
         <translation>Valor</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="632"/>
+        <location filename="../src/mainwindow.cpp" line="1115"/>
         <source>Trusted digits</source>
         <translation>Dígitos fiables</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="633"/>
+        <location filename="../src/mainwindow.cpp" line="1116"/>
         <source>Value ± bound</source>
         <translation>Valor ± cota</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="634"/>
+        <location filename="../src/mainwindow.cpp" line="1117"/>
         <source>Details as text</source>
         <translation>Detalles como texto</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="635"/>
+        <location filename="../src/mainwindow.cpp" line="1118"/>
         <source>Expression</source>
         <translation>Expresión</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="636"/>
+        <location filename="../src/mainwindow.cpp" line="1119"/>
         <source>Copy expression</source>
         <translation>Copiar expresión</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="637"/>
+        <location filename="../src/mainwindow.cpp" line="1120"/>
         <source>Copy value</source>
         <translation>Copiar valor</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="638"/>
+        <location filename="../src/mainwindow.cpp" line="1121"/>
         <source>Copy value ± bound</source>
         <translation>Copiar valor ± cota</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="639"/>
+        <location filename="../src/mainwindow.cpp" line="1122"/>
+        <location filename="../src/mainwindow.cpp" line="1175"/>
         <source>Edit</source>
         <translation>Editar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="641"/>
+        <location filename="../src/mainwindow.cpp" line="1124"/>
         <source>Keyboard</source>
         <translation>Teclado</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="643"/>
+        <location filename="../src/mainwindow.cpp" line="1126"/>
         <source>Proceed anyway</source>
         <translation>Continuar de todos modos</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="644"/>
+        <location filename="../src/mainwindow.cpp" line="1127"/>
         <source>Computing…</source>
         <translation>Calculando…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="645"/>
+        <location filename="../src/mainwindow.cpp" line="1128"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="646"/>
+        <location filename="../src/mainwindow.cpp" line="1129"/>
         <source>History</source>
         <translation>Historial</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="299"/>
+        <location filename="../src/mainwindow.cpp" line="1739"/>
+        <source>Hold for: %1</source>
+        <translation>Mantén pulsado para: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="388"/>
         <source>The memory needs a previous result</source>
         <translation>La memoria necesita un resultado anterior</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="649"/>
+        <location filename="../src/mainwindow.cpp" line="1132"/>
         <source>Values (one per line, or separated by commas):</source>
         <translation>Valores (uno por línea, o separados por comas):</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="650"/>
+        <location filename="../src/mainwindow.cpp" line="1133"/>
+        <location filename="../src/mainwindow.cpp" line="1134"/>
         <source>Show or hide the keypad</source>
         <translation>Mostrar u ocultar el teclado numérico</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="651"/>
+        <location filename="../src/mainwindow.cpp" line="1138"/>
         <source>Language</source>
         <translation>Idioma</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="652"/>
+        <location filename="../src/mainwindow.cpp" line="1139"/>
         <source>Theme</source>
         <translation>Tema</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="653"/>
-        <location filename="../src/mainwindow.cpp" line="656"/>
+        <location filename="../src/mainwindow.cpp" line="1140"/>
+        <location filename="../src/mainwindow.cpp" line="1143"/>
         <source>System</source>
         <translation>Sistema</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="657"/>
+        <location filename="../src/mainwindow.cpp" line="1144"/>
         <source>Light</source>
         <translation>Claro</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="658"/>
+        <location filename="../src/mainwindow.cpp" line="1145"/>
         <source>Dark</source>
         <translation>Oscuro</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="659"/>
+        <location filename="../src/mainwindow.cpp" line="1146"/>
         <source>Decimal separator</source>
         <translation>Separador decimal</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="660"/>
+        <location filename="../src/mainwindow.cpp" line="1147"/>
         <source>As the language</source>
         <translation>Según el idioma</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="661"/>
+        <location filename="../src/mainwindow.cpp" line="1148"/>
         <source>Point</source>
         <translation>Punto</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="662"/>
+        <location filename="../src/mainwindow.cpp" line="1149"/>
         <source>Comma</source>
         <translation>Coma</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="663"/>
+        <location filename="../src/mainwindow.cpp" line="1150"/>
         <source>Input</source>
         <translation>Entrada</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="664"/>
+        <location filename="../src/mainwindow.cpp" line="1151"/>
         <source>Calculate as you type</source>
         <translation>Calcular al escribir</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="665"/>
+        <location filename="../src/mainwindow.cpp" line="1152"/>
         <source>Settings file</source>
         <translation>Archivo de ajustes</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="666"/>
+        <location filename="../src/mainwindow.cpp" line="1153"/>
         <source>Export settings…</source>
         <translation>Exportar ajustes…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="667"/>
+        <location filename="../src/mainwindow.cpp" line="1154"/>
         <source>Import settings…</source>
         <translation>Importar ajustes…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="896"/>
+        <location filename="../src/mainwindow.cpp" line="1163"/>
+        <source>Common</source>
+        <translation>Habituales</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="1164"/>
+        <source>Memory and editing</source>
+        <translation>Memoria y edición</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="1176"/>
+        <source>Reset</source>
+        <translation>Restablecer</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="1551"/>
         <source>No digit is trusted</source>
         <translation>Ningún dígito es fiable</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1034"/>
+        <location filename="../src/mainwindow.cpp" line="1715"/>
         <source>Exact arithmetic cannot represent %1: its result is irrational. Switch to a floating type to compute it.</source>
         <translation>La aritmética exacta no puede representar %1: su resultado es irracional. Cambia a un tipo de coma flotante para calcularlo.</translation>
     </message>
@@ -317,153 +380,386 @@
 <context>
     <name>keypad</name>
     <message>
-        <location filename="../src/keypad.cpp" line="28"/>
+        <location filename="../src/keypad.cpp" line="35"/>
         <source>sin</source>
         <translation>sen</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="28"/>
+        <location filename="../src/keypad.cpp" line="35"/>
         <source>sin(</source>
         <translation>sen(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="56"/>
+        <location filename="../src/keypad.cpp" line="106"/>
         <source>asin</source>
         <translation>arcsen</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="56"/>
+        <location filename="../src/keypad.cpp" line="106"/>
         <source>asin(</source>
         <translation>arcsen(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="57"/>
+        <location filename="../src/keypad.cpp" line="107"/>
         <source>acos</source>
         <translation>arccos</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="57"/>
+        <location filename="../src/keypad.cpp" line="107"/>
         <source>acos(</source>
         <translation>arccos(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="58"/>
+        <location filename="../src/keypad.cpp" line="108"/>
         <source>atan</source>
         <translation>arctan</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="58"/>
+        <location filename="../src/keypad.cpp" line="108"/>
         <source>atan(</source>
         <translation>arctan(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="72"/>
+        <location filename="../src/keypad.cpp" line="95"/>
         <source>gcd</source>
         <translation>mcd</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="72"/>
+        <location filename="../src/keypad.cpp" line="95"/>
         <source>gcd(</source>
         <translation>mcd(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="73"/>
+        <location filename="../src/keypad.cpp" line="96"/>
         <source>lcm</source>
         <translation>mcm</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="73"/>
+        <location filename="../src/keypad.cpp" line="96"/>
         <source>lcm(</source>
         <translation>mcm(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="60"/>
+        <location filename="../src/keypad.cpp" line="99"/>
         <source>sinh</source>
         <translation>senh</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="60"/>
+        <location filename="../src/keypad.cpp" line="99"/>
         <source>sinh(</source>
         <translation>senh(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="63"/>
+        <location filename="../src/keypad.cpp" line="102"/>
         <source>asinh</source>
         <translation>arcsenh</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="63"/>
+        <location filename="../src/keypad.cpp" line="102"/>
         <source>asinh(</source>
         <translation>arcsenh(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="64"/>
+        <location filename="../src/keypad.cpp" line="103"/>
         <source>acosh</source>
         <translation>arccosh</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="64"/>
+        <location filename="../src/keypad.cpp" line="103"/>
         <source>acosh(</source>
         <translation>arccosh(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="65"/>
+        <location filename="../src/keypad.cpp" line="104"/>
         <source>atanh</source>
         <translation>arctanh</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="65"/>
+        <location filename="../src/keypad.cpp" line="104"/>
         <source>atanh(</source>
         <translation>arctanh(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="55"/>
+        <location filename="../src/keypad.cpp" line="105"/>
         <source>Trigonometry</source>
         <translation>Trigonometría</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="59"/>
+        <location filename="../src/keypad.cpp" line="109"/>
+        <source>Powers, roots and logs</source>
+        <translation>Potencias, raíces y logaritmos</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="112"/>
+        <source>Constants</source>
+        <translation>Constantes</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="113"/>
+        <source>Statistics</source>
+        <translation>Estadística</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="114"/>
+        <source>Letters</source>
+        <translation>Letras</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="160"/>
+        <source>Main keys</source>
+        <translation>Teclas principales</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="98"/>
         <source>Hyperbolic</source>
         <translation>Hiperbólicas</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="66"/>
-        <source>Powers and roots</source>
-        <translation>Potencias y raíces</translation>
-    </message>
-    <message>
-        <location filename="../src/keypad.cpp" line="69"/>
+        <location filename="../src/keypad.cpp" line="91"/>
         <source>Numbers</source>
         <translation>Números</translation>
-    </message>
-    <message>
-        <location filename="../src/keypad.cpp" line="75"/>
-        <source>Constants and memory</source>
-        <translation>Constantes y memoria</translation>
     </message>
 </context>
 <context>
     <name>settingsfile</name>
     <message>
-        <location filename="../src/settingsfile.cpp" line="28"/>
-        <location filename="../src/settingsfile.cpp" line="34"/>
+        <location filename="../src/settingsfile.cpp" line="30"/>
+        <location filename="../src/settingsfile.cpp" line="36"/>
         <source>This is not a settings file of this app</source>
         <translation>Esto no es un archivo de ajustes de esta aplicación</translation>
     </message>
     <message>
-        <location filename="../src/settingsfile.cpp" line="33"/>
+        <location filename="../src/settingsfile.cpp" line="35"/>
         <source>The file was written by a newer version</source>
         <translation>El archivo lo escribió una versión más reciente</translation>
     </message>
     <message>
-        <location filename="../src/settingsfile.cpp" line="41"/>
+        <location filename="../src/settingsfile.cpp" line="43"/>
         <source>unknown setting “%1”</source>
         <translation>ajuste desconocido «%1»</translation>
     </message>
     <message>
-        <location filename="../src/settingsfile.cpp" line="43"/>
+        <location filename="../src/settingsfile.cpp" line="50"/>
+        <source>“%1” is not a list of values of “%2”</source>
+        <translation>“%1” no es una lista de valores de “%2”</translation>
+    </message>
+    <message>
+        <location filename="../src/settingsfile.cpp" line="52"/>
         <source>“%1” is not a value of “%2”</source>
         <translation>«%1» no es un valor de «%2»</translation>
+    </message>
+</context>
+<context>
+    <name>spoken</name>
+    <message>
+        <location filename="../src/keypad.cpp" line="206"/>
+        <source>fraction</source>
+        <translation>fracción</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="207"/>
+        <source>square root</source>
+        <translation>raíz cuadrada</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="208"/>
+        <source>square</source>
+        <translation>cuadrado</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="209"/>
+        <source>power</source>
+        <translation>potencia</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="210"/>
+        <source>negative</source>
+        <translation>negativo</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="211"/>
+        <source>reciprocal</source>
+        <translation>inverso</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="212"/>
+        <source>logarithm in a base</source>
+        <translation>logaritmo en una base</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="213"/>
+        <source>times ten to the power</source>
+        <translation>por diez elevado a</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="214"/>
+        <source>up</source>
+        <translation>arriba</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="215"/>
+        <source>left</source>
+        <translation>izquierda</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="216"/>
+        <source>right</source>
+        <translation>derecha</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="217"/>
+        <source>down</source>
+        <translation>abajo</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="218"/>
+        <source>delete</source>
+        <translation>borrar</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="219"/>
+        <source>clear all</source>
+        <translation>borrar todo</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="220"/>
+        <source>equals</source>
+        <translation>igual</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="221"/>
+        <source>plus</source>
+        <translation>más</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="222"/>
+        <source>minus</source>
+        <translation>menos</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="223"/>
+        <source>times</source>
+        <translation>por</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="224"/>
+        <source>divided by</source>
+        <translation>entre</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="225"/>
+        <source>point</source>
+        <translation>punto</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="226"/>
+        <source>open parenthesis</source>
+        <translation>abrir paréntesis</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="227"/>
+        <source>close parenthesis</source>
+        <translation>cerrar paréntesis</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="228"/>
+        <source>cube</source>
+        <translation>cubo</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="229"/>
+        <source>cube root</source>
+        <translation>raíz cúbica</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="230"/>
+        <source>root</source>
+        <translation>raíz</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="231"/>
+        <source>ten to the power</source>
+        <translation>diez elevado a</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="232"/>
+        <source>e to the power</source>
+        <translation>e elevado a</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="233"/>
+        <source>factorial</source>
+        <translation>factorial</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="234"/>
+        <source>percent</source>
+        <translation>por ciento</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="235"/>
+        <source>percentages</source>
+        <translation>porcentajes</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="236"/>
+        <source>separator</source>
+        <translation>separador</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="237"/>
+        <source>pi</source>
+        <translation>pi</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="238"/>
+        <source>memory plus</source>
+        <translation>memoria más</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="239"/>
+        <source>memory minus</source>
+        <translation>memoria menos</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="240"/>
+        <source>memory store</source>
+        <translation>guardar en memoria</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="241"/>
+        <source>memory</source>
+        <translation>memoria</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="242"/>
+        <source>memory clear</source>
+        <translation>borrar memoria</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="243"/>
+        <source>undo</source>
+        <translation>deshacer</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="244"/>
+        <source>redo</source>
+        <translation>rehacer</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="245"/>
+        <source>shift</source>
+        <translation>mayúscula</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="246"/>
+        <source>space</source>
+        <translation>espacio</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="247"/>
+        <source>underscore</source>
+        <translation>guion bajo</translation>
     </message>
 </context>
 <context>
@@ -858,6 +1154,41 @@
         <location filename="../src/presenter.cpp" line="310"/>
         <source>The square root of the population variance (two passes, divided by n).</source>
         <translation>La raíz cuadrada de la varianza poblacional (dos pasadas, dividida entre n).</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="334"/>
+        <source>Change from 1 to 2 (%)</source>
+        <translation>Variación de 1 a 2 (%)</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="335"/>
+        <source>Change from 2 to 1 (%)</source>
+        <translation>Variación de 2 a 1 (%)</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="336"/>
+        <source>2 as a percentage of 1</source>
+        <translation>2 como porcentaje de 1</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="337"/>
+        <source>1 as a percentage of 2</source>
+        <translation>1 como porcentaje de 2</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="338"/>
+        <source>1 plus 2 %</source>
+        <translation>1 más el 2 %</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="339"/>
+        <source>1 minus 2 %</source>
+        <translation>1 menos el 2 %</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="340"/>
+        <source>2 % of 1</source>
+        <translation>el 2 % de 1</translation>
     </message>
 </context>
 </TS>

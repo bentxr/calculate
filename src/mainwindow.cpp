@@ -2,6 +2,8 @@
 
 #include "detailscard.hpp"
 #include "formulatip.hpp"
+#include "icons.hpp"
+#include "keybutton.hpp"
 #include "keypad.hpp"
 #include "keysizing.hpp"
 #include "lcd.hpp"
@@ -25,15 +27,18 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QKeyEvent>
+#include <QLineEdit>
 #include <QListWidget>
 #include <QMenu>
 #include <QMimeData>
+#include <QPainter>
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QRegularExpression>
 #include <QScreen>
 #include <QScrollArea>
 #include <QScrollBar>
+#include <QScroller>
 #include <QStackedWidget>
 #include <QStyleOptionComboBox>
 #include <QToolButton>
@@ -77,36 +82,68 @@ private:
     }
 };
 
+// A value that may be longer than its place: cut short with "…" instead of widening the page; the whole text is its
+// tooltip.
+class ShortenedLabel : public QLabel {
+public:
+    using QLabel::QLabel;
+    void setAnswer(const QString& text) {
+        setText(text);
+        setToolTip(text);
+    }
+    QSize minimumSizeHint() const override { return {fontMetrics().horizontalAdvance(QStringLiteral("0…")), QLabel::minimumSizeHint().height()}; }
+    QSize sizeHint() const override { return minimumSizeHint(); }
+
+protected:
+    void paintEvent(QPaintEvent*) override {
+        QPainter painter(this);
+        painter.setPen(palette().color(foregroundRole()));
+        painter.drawText(rect(), Qt::AlignLeft | Qt::AlignVCenter, fontMetrics().elidedText(text(), Qt::ElideRight, width()));
+    }
+};
+
 }  // namespace
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberTypes()) {
+    common_ = defaultCommon();
     auto* central = new QWidget(this);
     auto* outer = new QHBoxLayout(central);
 
-    // The left panel: ☰ collapses it to a thin rail; ⚙ (settings) stays at its bottom either way.
-    auto* rail = new QWidget(central);
-    rail->setObjectName("rail");
-    auto* railLayout = new QVBoxLayout(rail);
-    railLayout->setContentsMargins(0, 0, 0, 0);
-    panelToggle_ = new QToolButton(rail);
+    // The left panel: ☰ collapses it to a thin rail; the gear (settings) stays at its bottom either way.
+    rail_ = new QWidget(central);
+    rail_->setObjectName("rail");
+    railLayout_ = new QVBoxLayout(rail_);
+    railLayout_->setContentsMargins(0, 0, 0, 0);
+    panelToggle_ = new QToolButton(rail_);
     panelToggle_->setObjectName("panelToggle");
     panelToggle_->setText(QStringLiteral("☰"));
     panelToggle_->setCheckable(true);
     panelToggle_->setAutoRaise(true);
-    modes_ = new QListWidget(rail);
+    modes_ = new QListWidget(rail_);
     modes_->setObjectName("modes");
-    modes_->addItems({QString(), QString()});  // Calculator, Statistics (see retranslate)
+    modes_->addItems({QString(), QString(), QString()});  // Calculator, Statistics, Percentages (see retranslate)
     modes_->setFixedWidth(140);
-    settingsButton_ = new QToolButton(rail);
+    settingsButton_ = new QToolButton(rail_);
     settingsButton_->setObjectName("settingsButton");
-    settingsButton_->setText(QStringLiteral("⚙"));
     settingsButton_->setAutoRaise(true);
-    railLayout->addWidget(panelToggle_, 0, Qt::AlignLeft);
-    railLayout->addWidget(modes_, 1);
-    railLayout->addStretch();  // keeps ⚙ at the bottom while the list is hidden
-    railLayout->addWidget(settingsButton_, 0, Qt::AlignLeft);
-    outer->addWidget(rail);
+    railLayout_->addWidget(panelToggle_, 0, Qt::AlignLeft);
+    railLayout_->addWidget(modes_, 1);
+    railLayout_->addStretch();  // keeps the gear at the bottom while the list is hidden
+    railLayout_->addWidget(settingsButton_, 0, Qt::AlignLeft);
+    outer->addWidget(rail_);
     connect(panelToggle_, &QToolButton::toggled, modes_, [this](bool collapsed) { modes_->setVisible(!collapsed); });
+    // On a phone the rail is hidden and ☰ lists the modes in a small menu instead.
+    modesMenu_ = new QMenu(this);
+    modesMenu_->setObjectName("modesMenu");
+    for (int i = 0; i < modes_->count(); ++i) {
+        QAction* mode = modesMenu_->addAction(QString());  // the texts: see retranslate
+        mode->setObjectName(QStringLiteral("mode:%1").arg(i));
+        connect(mode, &QAction::triggered, this, [this, i] { modes_->setCurrentRow(i); });
+    }
+    connect(panelToggle_, &QToolButton::clicked, this, [this] {
+        if (narrow_)
+            modesMenu_->popup(placed(modesMenu_->sizeHint(), globalGeometry(panelToggle_), popupBounds(panelToggle_)).topLeft());
+    });
     buildSettings();
     connect(settingsButton_, &QToolButton::clicked, this, [this] {
         settings_->popup(placed(settings_->sizeHint(), globalGeometry(settingsButton_), popupBounds(settingsButton_)).topLeft());
@@ -116,11 +153,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     outer->addLayout(main, 1);
 
     // The screen, and beside it the angle unit, the number type and = stacked to its height.
-    auto* screenRow = new QHBoxLayout;
+    screenRow_ = new QHBoxLayout;
     lcd_ = new Lcd(central);
     lcd_->setObjectName("lcd");
-    screenRow->addWidget(lcd_, 1);
-    auto* column = new QVBoxLayout;
+    screenRow_->addWidget(lcd_, 1);
+    side_ = new QVBoxLayout;
     angle_ = new QComboBox(central);
     angle_->setObjectName("angle");
     angle_->setSizeAdjustPolicy(QComboBox::AdjustToContents);  // its texts change with the language
@@ -132,10 +169,10 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     equals_->setObjectName("equals");
     for (QWidget* w : {static_cast<QWidget*>(angle_), static_cast<QWidget*>(type_), static_cast<QWidget*>(equals_)}) {
         w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);  // as wide as the widest: see retranslate
-        column->addWidget(w);
+        side_->addWidget(w);
     }
-    screenRow->addLayout(column);
-    main->addLayout(screenRow);
+    screenRow_->addLayout(side_);
+    main->addLayout(screenRow_);
 
     // Under the screen, a strip of fixed height for messages (errors, cautions), so that showing one
     // never moves anything; Proceed anyway sits at its end when it applies.
@@ -227,6 +264,13 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     historyToggle_->setAutoRaise(true);
     historyToggle_->setEnabled(false);
     lcd_->addToBar(historyToggle_, true);
+    // A key's other faces (a long press or a right click; see showMore).
+    moreKeys_ = new QFrame(this, Qt::Popup);
+    moreKeys_->setObjectName("moreKeys");
+    moreKeys_->setFrameShape(QFrame::StyledPanel);
+    auto* moreLayout = new QHBoxLayout(moreKeys_);
+    moreLayout->setContentsMargins(keySpacing, keySpacing, keySpacing, keySpacing);
+    moreLayout->setSpacing(keySpacing);
     historyPanel_ = new QFrame(this, Qt::Popup);
     historyPanel_->setObjectName("historyPanel");
     historyPanel_->setFrameShape(QFrame::StyledPanel);
@@ -262,17 +306,75 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
 
     pages_ = new QStackedWidget(central);
     pages_->setObjectName("pages");
-    // The keys keep one size (see sizeKeys): centred in a bigger window, scrolled in a smaller one.
+    // The keys keep one size (see sizeKeys): centred in a bigger window, scrolled in a smaller one. The left column
+    // scrolls on its own when its open sections make it taller than the window, so the main pad never moves.
     keys_ = new QScrollArea(pages_);
     keys_->setObjectName("keys");
     keys_->setFrameShape(QFrame::NoFrame);
-    keys_->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
+    keys_->setWidgetResizable(true);
     auto* keysArea = new QWidget;
-    auto* keysLayout = new QHBoxLayout(keysArea);
-    keysLayout->setContentsMargins(0, 0, 0, 0);
-    keysLayout->setSpacing(keypadGap);
-    keysLayout->addWidget(buildDirectKeys(), 0, Qt::AlignTop);
-    keysLayout->addWidget(buildKeypad(), 0, Qt::AlignTop);
+    keyboards_ = new QHBoxLayout(keysArea);
+    keyboards_->setContentsMargins(0, 0, 0, 0);
+    keyboards_->setSpacing(keypadGap);
+    directScroll_ = new QScrollArea(keysArea);
+    directScroll_->setObjectName("directScroll");
+    directScroll_->setFrameShape(QFrame::NoFrame);
+    directScroll_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    directScroll_->setWidgetResizable(true);
+    directScroll_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+    directScroll_->setWidget(buildDirectKeys());
+    QScroller::grabGesture(directScroll_->viewport(), QScroller::TouchGesture);  // a finger scrolls it (the phone's drawer)
+    keyboards_->addStretch();
+    keyboards_->addWidget(directScroll_);
+    keyboards_->addWidget(buildKeypad(), 0, Qt::AlignTop);
+    keyboards_->addStretch();
+    // On a phone the rest of the column waits in a drawer over the main pad, opened from Common's last place.
+    drawer_ = new QFrame(central);
+    drawer_->setObjectName("drawer");
+    drawer_->setFrameShape(QFrame::StyledPanel);
+    drawer_->setAutoFillBackground(true);
+    drawer_->hide();
+    auto* drawerLayout = new QVBoxLayout(drawer_);
+    drawerLayout->setContentsMargins(0, keySpacing, 0, keySpacing);  // the column's own margins are enough
+    drawerClose_ = new QPushButton(drawer_);
+    drawerClose_->setObjectName("drawerClose");
+    drawerClose_->setFocusPolicy(Qt::NoFocus);
+    drawerLayout->addWidget(drawerClose_);
+    drawerToggle_ = new QPushButton(central);
+    drawerToggle_->setObjectName("drawerToggle");
+    drawerToggle_->setCheckable(true);
+    drawerToggle_->setFocusPolicy(Qt::NoFocus);
+    drawerToggle_->setMinimumWidth(32);
+    drawerToggle_->hide();
+    connect(drawerToggle_, &QPushButton::toggled, this, [this](bool open) {
+        if (!open) {
+            drawer_->hide();
+            return;
+        }
+        QWidget* central = centralWidget();
+        const int top = commonBlock_->mapTo(central, QPoint(0, commonBlock_->height())).y() + keySpacing;
+        drawer_->setGeometry(0, top, central->width(), central->height() - top);
+        drawer_->raise();
+        drawer_->show();
+    });
+    connect(drawerClose_, &QPushButton::clicked, this, [this] { drawerToggle_->setChecked(false); });
+    // What the search box finds: a list over the keys, not a window, so the keyboard stays with the box. An empty box
+    // lists everything, so finding needs no keyboard; a finger scrolls it.
+    searchList_ = new QListWidget(central);
+    searchList_->setObjectName("searchList");
+    searchList_->setFocusPolicy(Qt::NoFocus);
+    searchList_->hide();
+    QScroller::grabGesture(searchList_->viewport(), QScroller::TouchGesture);
+    connect(search_, &QLineEdit::textEdited, this, &MainWindow::filterSearch);
+    connect(keyboardButton_, &QToolButton::toggled, search_, [this](bool on) { search_->setAttribute(Qt::WA_InputMethodEnabled, on); });
+    connect(searchList_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) {
+        const QVariant index = item->data(Qt::UserRole);
+        if (!index.isValid()) return;  // a heading
+        const Face face = searchEntries().value(index.toInt()).face;
+        search_->clear();
+        searchList_->hide();
+        apply(face);
+    });
     keys_->setWidget(keysArea);
     pages_->addWidget(keys_);
     auto* statistics = new QScrollArea(pages_);  // so neither page sets a minimum width for the window
@@ -280,6 +382,12 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     statistics->setWidgetResizable(true);
     statistics->setWidget(buildStatistics());
     pages_->addWidget(statistics);
+    auto* percentages = new QScrollArea(pages_);
+    percentages->setObjectName("percentagesScroll");
+    percentages->setFrameShape(QFrame::NoFrame);
+    percentages->setWidgetResizable(true);
+    percentages->setWidget(buildPercentages());
+    pages_->addWidget(percentages);
     main->addWidget(pages_, 1);
     setCentralWidget(central);
     modes_->setCurrentRow(0);
@@ -291,10 +399,13 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(this, &MainWindow::evaluationRequested, worker_, &Worker::evaluate);
     connect(this, &MainWindow::memoryAddRequested, worker_, &Worker::memoryAdd);
     connect(this, &MainWindow::memorySubtractRequested, worker_, &Worker::memorySubtract);
+    connect(this, &MainWindow::memoryStoreRequested, worker_, &Worker::memoryStore);
     connect(this, &MainWindow::memoryClearRequested, worker_, &Worker::memoryClear);
     connect(this, &MainWindow::previewRequested, worker_, &Worker::preview);
     connect(worker_, &Worker::evaluated, this, &MainWindow::showResult);
     connect(worker_, &Worker::previewed, this, &MainWindow::showPreview);
+    connect(this, &MainWindow::answerRequested, worker_, &Worker::answer);
+    connect(worker_, &Worker::answered, this, &MainWindow::showPercentage);
     connect(worker_, &Worker::memoryChanged, lcd_, &Lcd::setMemory);
     connect(worker_, &Worker::memoryFailed, this, [this] { message_->setText(tr("The memory needs a previous result")); });
     thread_.start();
@@ -363,6 +474,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
         updateKeys();
         if (settings::liveCalculation() && (previewShown_ || lcd_->input().trimmed() != lastExpression_)) requestPreview();
         else if (!lastExpression_.isEmpty() && !last_.error) request(lastExpression_, false);
+        requestPercentages();
     };
     connect(type_, &QComboBox::currentIndexChanged, this, reevaluate);
     connect(angle_, &QComboBox::currentIndexChanged, this, reevaluate);
@@ -373,6 +485,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
                        static_cast<QWidget*>(detailsButton_), static_cast<QWidget*>(editButton_), static_cast<QWidget*>(keyboardButton_),
                        static_cast<QWidget*>(proceed_), static_cast<QWidget*>(cancel_), static_cast<QWidget*>(historyToggle_)})
         w->setFocusPolicy(Qt::NoFocus);
+    drawIcons();
     defaults_ = settingValues();
     lcd_->setFocus();
 }
@@ -420,49 +533,231 @@ QWidget* MainWindow::buildKeypad() {
 }
 
 QPushButton* MainWindow::buildKey(const Key& key, const QString& prefix) {
-    auto* button = new QPushButton;
+    auto* button = new KeyButton;
     button->setObjectName(prefix + key.id);
     button->setMinimumWidth(32);          // below the style's default, so every column can be equally wide
     button->setFocusPolicy(Qt::NoFocus);  // the keyboard always stays with the screen
-    connect(button, &QPushButton::clicked, this, [this, key] { apply(key.face); });
+    connect(button, &QPushButton::clicked, this, [this, key, prefix] {
+        if (!(editingCommon_ && editCommon(key, prefix))) apply(key.face);
+    });
+    for (const auto& [id, others] : alternates())
+        if (prefix == QLatin1String("key:") && id == key.id) {
+            button->setHasMore(true);
+            connect(button, &KeyButton::moreRequested, this, [this, button, others = others] { showMore(button, others); });
+        }
     return button;
 }
 
-// The direct keys, a titled grid of six columns per topic.
+// A key's other faces in a small popup next to it; choosing one types it and closes the popup.
+void MainWindow::showMore(QWidget* key, const QStringList& others) {
+    for (QPushButton* old : moreKeys_->findChildren<QPushButton*>()) {
+        old->setObjectName({});
+        old->hide();
+        old->deleteLater();
+    }
+    const QString id = key->objectName().section(':', 1);
+    for (int i = 0; i < others.size(); ++i) {
+        const Face face = directKey(others[i]).face;
+        auto* button = new QPushButton(legend(face, settings::decimalComma()), moreKeys_);
+        button->setObjectName(QStringLiteral("more:%1:%2").arg(id).arg(i));
+        button->setFocusPolicy(Qt::NoFocus);
+        button->setMinimumSize(key->size());
+        moreKeys_->layout()->addWidget(button);
+        connect(button, &QPushButton::clicked, this, [this, face] {
+            moreKeys_->hide();
+            apply(face);
+        });
+    }
+    moreKeys_->adjustSize();
+    moreKeys_->setGeometry(placed(moreKeys_->sizeHint(), globalGeometry(key), popupBounds(key)));
+    moreKeys_->show();
+}
+
+// While Common is being edited, a click on one of its keys removes it, and a click on a section key adds it (at the
+// end, while there is room); nothing is typed. Returns false for the keys that still type (Memory and editing).
+bool MainWindow::editCommon(const Key& key, const QString& prefix) {
+    if (prefix == QLatin1String("common:")) {
+        QStringList ids = common_;
+        ids.removeOne(key.id);
+        setCommon(ids);
+        return true;
+    }
+    const bool memory = std::any_of(memoryKeys().begin(), memoryKeys().end(), [&](const Key& k) { return k.id == key.id; });
+    if (memory) return false;
+    if (common_.contains(key.id)) return true;
+    if (common_.size() >= commonLimit) {
+        message_->setText(tr("Common holds at most %1 keys").arg(commonLimit));
+        return true;
+    }
+    setCommon(common_ + QStringList{key.id});
+    return true;
+}
+
+// Rebuilds Common's keys for `ids` (each a section key's id), sized, labelled and enabled like the others.
+void MainWindow::setCommon(const QStringList& ids) {
+    common_ = ids;
+    QWidget* grid = findChild<QWidget*>("common");
+    for (QPushButton* old : grid->findChildren<QPushButton*>(QRegularExpression(QStringLiteral("^common:")))) {
+        grid->layout()->removeWidget(old);
+        old->hide();
+        old->setObjectName({});  // gone at once for findChild; deleted later (it may be the button being clicked)
+        old->deleteLater();
+    }
+    for (const QString& id : common_) {
+        const Key key = directKey(id);
+        QPushButton* button = buildKey(key, "common:");
+        button->setParent(grid);
+        button->setText(legend(key.face, settings::decimalComma()));
+        button->setAccessibleName(spokenName(key));
+        if (keySize_.isValid()) {
+            button->setFixedSize(keySize_);
+            button->setFont(fittedFont(font(), button->text(), keySize_.width() - 10));
+        }
+    }
+    placeCommon();
+    updateKeys();
+}
+
+// Common's keys in rows of six; on a phone the twelfth place opens the drawer instead.
+void MainWindow::placeCommon() {
+    auto* layout = static_cast<QGridLayout*>(findChild<QWidget*>("common")->layout());
+    for (int i = 0; i < common_.size(); ++i) {
+        QPushButton* button = findChild<QPushButton*>("common:" + common_[i]);
+        layout->addWidget(button, i / 6, i % 6);
+        button->setVisible(!narrow_ || i < commonLimit - 1);
+    }
+    if (narrow_) {
+        layout->addWidget(drawerToggle_, 1, 5);
+        drawerToggle_->show();
+    } else {
+        layout->removeWidget(drawerToggle_);
+        drawerToggle_->hide();
+    }
+}
+
+// A grid of keys in six columns; shorter rows line up on the left, in the same columns.
+QWidget* MainWindow::keyGrid(const QString& name, const QList<Key>& keys, const QString& prefix) {
+    auto* grid = new QWidget;
+    grid->setObjectName(name);
+    auto* layout = new QGridLayout(grid);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(keySpacing);
+    for (int i = 0; i < keys.size(); ++i) layout->addWidget(buildKey(keys[i], prefix), i / 6, i % 6);
+    layout->setColumnStretch(6, 1);
+    return grid;
+}
+
+// The left column: Common and Memory and editing, always shown, then a header and the keys of every section.
 QWidget* MainWindow::buildDirectKeys() {
     auto* keyboard = new QWidget;
     keyboard->setObjectName("directKeys");
     auto* layout = new QVBoxLayout(keyboard);
-    for (int g = 0; g < directKeys().size(); ++g) {
-        const KeyGroup& group = directKeys()[g];
-        auto* title = new QLabel(keyboard);
-        title->setObjectName("group:" + QString::number(g));
-        title->setForegroundRole(QPalette::PlaceholderText);
-        layout->addWidget(title);
-        auto* grid = new QGridLayout;
-        grid->setSpacing(keySpacing);
-        for (int i = 0; i < group.keys.size(); ++i) {
-            const Key& key = group.keys[i];
-            grid->addWidget(buildKey(key, "direct:"), i / 6, i % 6);
-        }
-        grid->setColumnStretch(6, 1);  // shorter rows line up on the left, in the same columns
-        layout->addLayout(grid);
+    const auto title = [](const char* name) {
+        auto* label = new QLabel;
+        label->setObjectName(QString::fromLatin1(name));
+        label->setForegroundRole(QPalette::PlaceholderText);
+        return label;
+    };
+    QList<Key> common;
+    for (const QString& id : common_) common << directKey(id);
+    // The search box finds any function or constant; it takes the keyboard only when clicked.
+    search_ = new QLineEdit(keyboard);
+    search_->setObjectName("search");
+    search_->setClearButtonEnabled(true);
+    search_->setFocusPolicy(Qt::ClickFocus);
+    search_->setAttribute(Qt::WA_InputMethodEnabled, lcd_->testAttribute(Qt::WA_InputMethodEnabled));
+    search_->addAction(QIcon(), QLineEdit::LeadingPosition)->setObjectName("searchIcon");  // drawn: see drawIcons
+    search_->installEventFilter(this);
+    layout->addWidget(search_);
+    // Common and its title move together: on a phone they sit above the main pad.
+    commonBlock_ = new QWidget(keyboard);
+    commonBlock_->setObjectName("commonBlock");
+    auto* block = new QVBoxLayout(commonBlock_);
+    block->setContentsMargins(0, 0, 0, 0);
+    // Its title row: Edit lets the user change which keys Common holds; Reset (while editing) brings back the default.
+    commonHeader_ = new QWidget(commonBlock_);
+    commonHeader_->setObjectName("commonHeader");
+    auto* header = new QHBoxLayout(commonHeader_);
+    header->setContentsMargins(0, 0, 0, 0);
+    header->addWidget(title("commonTitle"));
+    header->addStretch();
+    editCommon_ = new QToolButton(commonHeader_);
+    editCommon_->setObjectName("editCommon");
+    editCommon_->setCheckable(true);
+    editCommon_->setAutoRaise(true);
+    editCommon_->setFocusPolicy(Qt::NoFocus);
+    resetCommon_ = new QToolButton(commonHeader_);
+    resetCommon_->setObjectName("resetCommon");
+    resetCommon_->setAutoRaise(true);
+    resetCommon_->setFocusPolicy(Qt::NoFocus);
+    resetCommon_->hide();
+    header->addWidget(resetCommon_);
+    header->addWidget(editCommon_);
+    connect(editCommon_, &QToolButton::toggled, this, [this](bool on) {
+        editingCommon_ = on;
+        resetCommon_->setVisible(on);
+        message_->setText(on ? tr("Click a key to add it to Common, or a key of Common to remove it") : QString());
+    });
+    connect(resetCommon_, &QToolButton::clicked, this, [this] { setCommon(defaultCommon()); });
+    block->addWidget(commonHeader_);
+    block->addWidget(keyGrid("common", common, "common:"));
+    layout->addWidget(commonBlock_);
+    layout->addWidget(title("memoryTitle"));
+    layout->addWidget(keyGrid("memoryKeys", memoryKeys(), "direct:"));
+    auto* rule = new QFrame(keyboard);
+    rule->setObjectName("sectionsRule");
+    rule->setFrameShape(QFrame::HLine);
+    rule->setFrameShadow(QFrame::Sunken);
+    layout->addWidget(rule);
+    // A section opens in place: its header (a caret and the title, then a dimmed preview of its keys while closed)
+    // shows or hides its keys. Every section starts closed, and stays as left for the session.
+    for (const KeySection& section : keySections()) {
+        auto* row = new QHBoxLayout;
+        row->setContentsMargins(0, 0, 0, 0);
+        auto* header = new QToolButton(keyboard);
+        header->setObjectName("section:" + section.id);
+        header->setAutoRaise(true);
+        header->setFocusPolicy(Qt::NoFocus);
+        header->setCheckable(true);
+        header->setArrowType(Qt::RightArrow);
+        header->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        QFont bold = header->font();
+        bold.setBold(true);
+        header->setFont(bold);
+        auto* preview = new QLabel(keyboard);
+        preview->setObjectName("preview:" + section.id);
+        preview->setForegroundRole(QPalette::PlaceholderText);
+        row->addWidget(header);
+        row->addWidget(preview);
+        row->addStretch();
+        layout->addLayout(row);
+        QWidget* keys = keyGrid("sectionKeys:" + section.id, section.keys, "direct:");
+        keys->setVisible(false);
+        layout->addWidget(keys);
+        connect(header, &QToolButton::toggled, this, [header, preview, keys](bool open) {
+            keys->setVisible(open);
+            preview->setVisible(!open);
+            header->setArrowType(open ? Qt::DownArrow : Qt::RightArrow);
+        });
     }
     layout->addStretch();
     return keyboard;
 }
 
-// Gives every key the size keySize() derives from the window's screen; called when the window is
-// first shown and whenever it moves to another screen. What the window reserves for everything but
+// Lays the keys out for a screen of this size: side by side on a landscape screen, in the phone arrangement on a
+// portrait one; then gives every key the size derived from the screen. Called when the window is first shown,
+// whenever it moves to another screen, and after a change of language. What the window reserves for everything but
 // the keys is measured from its own layouts, so it holds for any style, font and language.
-void MainWindow::sizeKeys() {
-    if (!screen()) return;
+void MainWindow::layOutKeys(QSize screen) {
+    designScreen_ = screen;
+    narrow_ = keysLayout(screen) == KeysLayout::Narrow;
+    arrange();
     QWidget* area = keys_->widget();
     QWidget* pad = findChild<QWidget*>("keypad");
     QWidget* direct = findChild<QWidget*>("directKeys");
-    QList<Key> all;
+    QList<Key> all = memoryKeys();  // the keys always in view decide the size; longer legends shrink (fittedFont)
     for (const QList<Key>& row : keypad()) all += row;
-    for (const KeyGroup& group : directKeys()) all += group.keys;
+    for (const QString& id : defaultCommon()) all << directKey(id);
     int labels = 0;  // the widest label in any language, so no key is too narrow for its name
     for (const Key& key : all)
         for (const QString& label : settings::inEveryLanguage("keypad", key.face.label))
@@ -473,26 +768,220 @@ void MainWindow::sizeKeys() {
     const QMargins inner = pad->layout()->contentsMargins();
     const QMargins left = direct->layout()->contentsMargins();
     const int scrollBar = style()->pixelMetric(QStyle::PM_ScrollBarExtent);
-    const int rows = 7;
-    const QSize reserved(outer.left() + outer.right() + centralWidget()->layout()->spacing() + modes_->width()
-                             + inner.left() + inner.right() + left.left() + left.right() + area->layout()->spacing()
-                             + 2 * keys_->frameWidth() + scrollBar,
-                         outer.top() + outer.bottom() + lcd_->minimumSizeHint().height() + 2 * keySpacing
-                             + inner.top() + inner.bottom() + keypadGap
-                             + style()->pixelMetric(QStyle::PM_TitleBarHeight));
-    const QSize size = keySize(screen()->availableGeometry().size(), reserved, QSize(12, rows), keySpacing, minimum);
+    QSize size;
+    if (narrow_) {
+        // The phone's keys share the screen's width, and stay large enough for a finger. Six keys fit both under the
+        // screen (beside the main pad's margins) and in the drawer (beside the column's margins and its scroll bar).
+        const int besidePad = outer.left() + outer.right() + inner.left() + inner.right() + 2 * keys_->frameWidth();
+        const int inDrawer = 2 * drawer_->frameWidth() + left.left() + left.right() + scrollBar;
+        const int reservedWidth = qMax(besidePad, inDrawer);
+        size = phoneKeySize(screen, reservedWidth, 6, keySpacing,
+                            QSize(2 * fontMetrics().height(), qMax(touchTarget, minimum.height())));
+    } else {
+        const int rows = 7;
+        const QSize reserved(outer.left() + outer.right() + centralWidget()->layout()->spacing() + modes_->width()
+                                 + inner.left() + inner.right() + left.left() + left.right() + area->layout()->spacing()
+                                 + 2 * keys_->frameWidth() + 2 * scrollBar,  // the window's bar and the column's
+                             outer.top() + outer.bottom() + lcd_->minimumSizeHint().height() + 2 * keySpacing
+                                 + inner.top() + inner.bottom() + keypadGap
+                                 + style()->pixelMetric(QStyle::PM_TitleBarHeight));
+        size = keySize(screen, reserved, QSize(12, rows), keySpacing, minimum);
+    }
     const QSize numberSize((6 * size.width() + keySpacing) / 5, size.height());  // five span six
 
     for (const QList<Key>& row : keypad())
         for (const Key& key : row) {
             findChild<QPushButton*>("key:" + key.id)->setFixedSize(row.size() == 5 ? numberSize : size);
         }
-    for (const KeyGroup& group : directKeys())
-        for (const Key& key : group.keys) findChild<QPushButton*>("direct:" + key.id)->setFixedSize(size);
+    for (const Key& key : everyDirectKey()) findChild<QPushButton*>("direct:" + key.id)->setFixedSize(size);
+    keySize_ = size;
+    for (const QString& id : common_) findChild<QPushButton*>("common:" + id)->setFixedSize(size);
+    drawerToggle_->setFixedSize(size);
     findChild<QWidget*>("cursorPad")->setFixedWidth(2 * size.width() + keySpacing);
-    for (QWidget* w : {pad, direct, area}) {
+    for (QPushButton* key : findChildren<QPushButton*>(QRegularExpression(QStringLiteral("^(key|direct|common):"))))
+        key->setFont(fittedFont(font(), key->text(), key->width() - 10));
+    drawerToggle_->setFont(fittedFont(font(), drawerToggle_->text(), size.width() - 10));
+    updatePreviews();  // before the column is measured: a preview in full could widen it
+    for (QWidget* w : {pad, direct}) {
         w->layout()->activate();
         w->adjustSize();
+    }
+    if (narrow_) {  // the column fills the drawer
+        directScroll_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        directScroll_->setMinimumSize(0, 0);
+        directScroll_->setMaximumWidth(QWIDGETSIZE_MAX);
+    } else {
+        // Room for the column's scroll bar is kept, so the bar appearing moves nothing.
+        directScroll_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+        directScroll_->setFixedWidth(direct->sizeHint().width() + scrollBar);
+        directScroll_->setMinimumHeight(pad->sizeHint().height());
+    }
+    area->layout()->activate();
+}
+
+// Moves the widgets into the arrangement layOutKeys chose. Wide: the rail, the screen with angle, type and = beside
+// it, and the column beside the main pad. Narrow (a phone): no rail; the screen at the full width with ☰, angle,
+// type, = and the gear in a row under it; Common (its last place opening the drawer) above the main pad, at the
+// bottom; the rest of the column in the drawer.
+void MainWindow::arrange() {
+    // Only a change of arrangement moves anything: relayouts at every call (a language change lays the keys out again)
+    // would leave the window briefly unsettled.
+    if (arranged_ == static_cast<int>(narrow_)) return;
+    arranged_ = static_cast<int>(narrow_);
+    QWidget* pad = findChild<QWidget*>("keypad");
+    auto* column = static_cast<QVBoxLayout*>(findChild<QWidget*>("directKeys")->layout());
+    auto* drawerLayout = static_cast<QVBoxLayout*>(drawer_->layout());
+    const QList<QWidget*> side{angle_, type_, equals_};
+    while (QLayoutItem* item = keyboards_->takeAt(0)) delete item;  // the widgets stay; the stretches go
+    if (narrow_) {
+        rail_->hide();
+        panelToggle_->setChecked(false);
+        panelToggle_->setCheckable(false);
+        if (side_->indexOf(panelToggle_) < 0) {
+            railLayout_->removeWidget(panelToggle_);
+            railLayout_->removeWidget(settingsButton_);
+            side_->insertWidget(0, panelToggle_);
+            side_->addWidget(settingsButton_);
+        }
+        screenRow_->setDirection(QBoxLayout::TopToBottom);
+        side_->setDirection(QBoxLayout::LeftToRight);
+        for (QWidget* w : side) {
+            w->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+            w->setMinimumWidth(0);
+            w->setMaximumWidth(QWIDGETSIZE_MAX);
+        }
+        for (QWidget* w : side + QList<QWidget*>{panelToggle_, settingsButton_}) w->setFixedHeight(touchTarget);
+        column->removeWidget(commonBlock_);
+        keyboards_->setDirection(QBoxLayout::TopToBottom);
+        keyboards_->addStretch();
+        keyboards_->addWidget(commonBlock_, 0, Qt::AlignHCenter);
+        keyboards_->addWidget(pad, 0, Qt::AlignHCenter);
+        if (drawerLayout->indexOf(directScroll_) < 0) drawerLayout->insertWidget(0, directScroll_);
+        if (drawerLayout->indexOf(commonHeader_) < 0) drawerLayout->insertWidget(0, commonHeader_);  // Edit, in the drawer
+        const QMargins column = findChild<QWidget*>("directKeys")->layout()->contentsMargins();
+        commonHeader_->layout()->setContentsMargins(column.left(), 0, column.right(), 0);  // in line with the column
+    } else {
+        drawerToggle_->setChecked(false);
+        rail_->show();
+        panelToggle_->setCheckable(true);
+        modes_->show();
+        if (railLayout_->indexOf(panelToggle_) < 0) {
+            side_->removeWidget(panelToggle_);
+            side_->removeWidget(settingsButton_);
+            railLayout_->insertWidget(0, panelToggle_, 0, Qt::AlignLeft);
+            railLayout_->addWidget(settingsButton_, 0, Qt::AlignLeft);
+        }
+        for (QWidget* w : QList<QWidget*>{panelToggle_, settingsButton_}) {
+            w->setMinimumHeight(0);
+            w->setMaximumHeight(QWIDGETSIZE_MAX);
+        }
+        screenRow_->setDirection(QBoxLayout::LeftToRight);
+        side_->setDirection(QBoxLayout::TopToBottom);
+        for (QWidget* w : side) {
+            w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);  // as wide as the widest: see retranslate
+            w->setMinimumHeight(0);
+            w->setMaximumHeight(QWIDGETSIZE_MAX);
+            if (sideWidth_ > 0) w->setFixedWidth(sideWidth_);
+        }
+        if (drawerLayout->indexOf(commonHeader_) >= 0) {
+            drawerLayout->removeWidget(commonHeader_);
+            static_cast<QVBoxLayout*>(commonBlock_->layout())->insertWidget(0, commonHeader_);
+            commonHeader_->layout()->setContentsMargins(0, 0, 0, 0);
+        }
+        if (column->indexOf(commonBlock_) < 0) column->insertWidget(1, commonBlock_);  // under the search box
+        drawerLayout->removeWidget(directScroll_);
+        keyboards_->setDirection(QBoxLayout::LeftToRight);
+        keyboards_->addStretch();
+        keyboards_->addWidget(directScroll_);
+        keyboards_->addWidget(pad, 0, Qt::AlignTop);
+        keyboards_->addStretch();
+    }
+    placeCommon();
+}
+
+void MainWindow::relabelLetters() {
+    for (char c = 'a'; c <= 'z'; ++c) {
+        const QString letter(QChar::fromLatin1(c));
+        findChild<QPushButton*>("direct:letter" + letter.toUpper())->setText(shifted_ ? letter.toUpper() : letter);
+    }
+}
+
+// The search list: every entry under its heading, in the language in use.
+void MainWindow::fillSearch() {
+    searchList_->clear();
+    const QList<SearchEntry> entries = searchEntries();
+    QString group;
+    for (int i = 0; i < entries.size(); ++i) {
+        const SearchEntry& e = entries[i];
+        if (i == 0 || e.group != group) {
+            group = e.group;
+            auto* heading = new QListWidgetItem(translated(group), searchList_);
+            heading->setFlags(Qt::ItemIsEnabled);
+            QFont bold = heading->font();
+            bold.setBold(true);
+            heading->setFont(bold);
+        }
+        auto* item = new QListWidgetItem(legend(e.face, settings::decimalComma()) + (e.title.isEmpty() ? QString() : QStringLiteral("  —  ") + e.title),
+                                         searchList_);
+        item->setData(Qt::UserRole, i);
+    }
+    if (searchList_->isVisible()) filterSearch(search_->text());
+}
+
+// Hides the entries the text doesn't match, and the headings left without entries.
+void MainWindow::filterSearch(const QString& text) {
+    const QList<SearchEntry> entries = searchEntries();
+    QListWidgetItem* heading = nullptr;
+    bool any = false;
+    for (int row = 0; row < searchList_->count(); ++row) {
+        QListWidgetItem* item = searchList_->item(row);
+        const QVariant index = item->data(Qt::UserRole);
+        if (!index.isValid()) {
+            if (heading) heading->setHidden(!any);
+            heading = item;
+            any = false;
+            continue;
+        }
+        const bool match = searchMatches(entries.value(index.toInt()), text);
+        item->setHidden(!match);
+        any = any || match;
+    }
+    if (heading) heading->setHidden(!any);
+    if (search_->hasFocus()) showSearch();
+}
+
+// Opens the list under the box: as wide as it, as tall as the rows it shows (twelve at most, never past the window's
+// bottom), and hidden while nothing matches.
+void MainWindow::showSearch() {
+    int shown = 0;
+    for (int row = 0; row < searchList_->count(); ++row) shown += searchList_->item(row)->isHidden() ? 0 : 1;
+    if (shown == 0) {
+        searchList_->hide();
+        return;
+    }
+    QWidget* central = centralWidget();
+    const QPoint top = search_->mapTo(central, QPoint(0, search_->height() + 2));
+    const int rows = qMin(shown, 12) * qMax(1, searchList_->sizeHintForRow(0)) + 2 * searchList_->frameWidth();
+    searchList_->setGeometry(top.x(), top.y(), search_->width(), qMax(0, qMin(rows, central->height() - top.y() - 2)));
+    searchList_->raise();
+    searchList_->show();
+}
+
+// While a section is closed, its header shows its keys' legends, as many as fit beside the title.
+void MainWindow::updatePreviews() {
+    const QWidget* common = findChild<QWidget*>("common");
+    for (const KeySection& section : keySections()) {
+        QStringList legends;
+        for (const Key& key : section.keys) legends << legend(key.face, settings::decimalComma());
+        auto* preview = findChild<QLabel*>("preview:" + section.id);
+        const QString text = legends.join(QStringLiteral("  "));
+        if (!keysSized_) {
+            preview->setText(text);
+            continue;
+        }
+        const auto* header = findChild<QToolButton*>("section:" + section.id);
+        const int room = common->sizeHint().width() - header->sizeHint().width() - keySpacing;
+        preview->setText(preview->fontMetrics().elidedText(text, Qt::ElideRight, qMax(0, room)));
     }
 }
 
@@ -500,11 +989,12 @@ void MainWindow::showEvent(QShowEvent* event) {
     QMainWindow::showEvent(event);
     if (keysSized_) return;
     keysSized_ = true;
-    sizeKeys();
-    connect(windowHandle(), &QWindow::screenChanged, this, &MainWindow::sizeKeys);
+    layOutKeys(screen()->availableGeometry().size());
+    connect(windowHandle(), &QWindow::screenChanged, this,
+            [this](QScreen* screen) { layOutKeys(screen->availableGeometry().size()); });
 }
 
-// ⚙: a small menu that opens from the button, with the values of the language and of the theme listed
+// The gear: a small menu that opens from the button, with the values of the language and of the theme listed
 // in place, then whether to calculate while typing. A choice applies at once and is forgotten at exit.
 void MainWindow::buildSettings() {
     settings_ = new QMenu(this);
@@ -534,6 +1024,7 @@ void MainWindow::buildSettings() {
                    if (hasResult_ || previewShown_) present();
                    relabelHistory();
                    lcd_->update();
+                   retranslate();  // the separator keys' legends, and the percentages again
                });
     inputSection_ = settings_->addSection(QString());
     QAction* live = settings_->addAction(QString());
@@ -579,6 +1070,8 @@ QMap<QString, QStringList> MainWindow::settingKeys() const {
     }
     keys["type"] = typeIds;
     keys["angle"] = angleIds;
+    for (const KeySection& section : keySections())
+        for (const Key& key : section.keys) keys["common"] << key.id;  // a list of them (see importSettings)
     return keys;
 }
 
@@ -591,15 +1084,20 @@ QMap<QString, QString> MainWindow::settingValues() const {
     }
     values["type"] = typeIds.value(static_cast<int>(type_->currentType()));
     values["angle"] = angleIds.value(angle_->currentIndex());
+    values["common"] = common_.join(' ');
     return values;
 }
 
 QByteArray MainWindow::exportSettings() const { return settingsfile::write(settingValues(), defaults_); }
 
 QStringList MainWindow::importSettings(const QByteArray& file) {
-    const settingsfile::Read r = settingsfile::read(file, settingKeys());
+    settingsfile::Read r = settingsfile::read(file, settingKeys(), {QStringLiteral("common")});
     for (auto it = r.values.cbegin(); it != r.values.cend(); ++it) {
-        if (it.key() == "type") {
+        if (it.key() == "common") {
+            const QStringList ids = it.value().split(' ', Qt::SkipEmptyParts);
+            if (canBeCommon(ids)) setCommon(ids);
+            else r.problems << tr("“%1” cannot be the common keys").arg(it.value());
+        } else if (it.key() == "type") {
             type_->setCurrentType(static_cast<NumberType>(typeIds.indexOf(it.value())));
         } else if (it.key() == "angle") {
             angle_->setCurrentIndex(static_cast<int>(angleIds.indexOf(it.value())));
@@ -618,8 +1116,15 @@ void MainWindow::retranslate() {
     setWindowTitle(tr("calculate"));
     panelToggle_->setToolTip(tr("Show or hide the panel"));
     settingsButton_->setToolTip(tr("Settings"));
-    const QStringList modes{tr("Calculator"), tr("Statistics")};
+    const QStringList modes{tr("Calculator"), tr("Statistics"), tr("Percentages")};
     for (int i = 0; i < modes.size(); ++i) modes_->item(i)->setText(modes[i]);
+    for (int i = 0; i < modes_->count(); ++i) findChild<QAction*>(QStringLiteral("mode:%1").arg(i))->setText(modes_->item(i)->text());
+    drawerToggle_->setText(tr("More") + QStringLiteral(" ▾"));
+    drawerToggle_->setAccessibleName(tr("More"));
+    search_->setPlaceholderText(tr("Search every function and constant…"));
+    search_->setAccessibleName(tr("Search"));
+    fillSearch();
+    drawerClose_->setText(QStringLiteral("▾  ") + tr("Back to the keypad"));
     const QStringList angles{tr("RAD"), tr("DEG"), tr("GRAD")};
     for (int i = 0; i < angles.size(); ++i) angle_->setItemText(i, angles[i]);
     type_->retranslate();
@@ -644,10 +1149,15 @@ void MainWindow::retranslate() {
     busy_->setText(tr("Computing…"));
     cancel_->setText(tr("Cancel"));
     historyToggle_->setToolTip(tr("History"));
-    // The symbol buttons (☰ ⚙ ▾) are spoken by their tooltips.
+    // The symbol buttons (☰, the gear, ▾) are spoken by their tooltips.
     for (QToolButton* button : {panelToggle_, settingsButton_, historyToggle_}) button->setAccessibleName(button->toolTip());
     statisticsLabel_->setText(tr("Values (one per line, or separated by commas):"));
     statisticsKeysToggle_->setToolTip(tr("Show or hide the keypad"));
+    percentKeysToggle_->setToolTip(tr("Show or hide the keypad"));
+    findChild<QPushButton*>("percentKey:point")->setText(settings::decimalComma() ? QStringLiteral(",") : QStringLiteral("."));
+    for (const view::PercentageRow& row : view::percentageRows(QStringLiteral("1"), QStringLiteral("2")))
+        findChild<QLabel*>("percentTitle:" + row.key)->setText(row.title);
+    requestPercentages();  // error texts are in the language too
     languageSection_->setText(tr("Language"));
     themeSection_->setText(tr("Theme"));
     findChild<QAction*>("language:system")->setText(tr("System"));
@@ -668,10 +1178,29 @@ void MainWindow::retranslate() {
 
     QList<Key> keys = cursorPad();
     for (const QList<Key>& row : keypad()) keys += row;
-    for (const Key& key : keys) findChild<QPushButton*>("key:" + key.id)->setText(translated(key.face.label));
-    for (int g = 0; g < directKeys().size(); ++g) {
-        findChild<QLabel*>("group:" + QString::number(g))->setText(translated(directKeys()[g].title));
-        for (const Key& key : directKeys()[g].keys) findChild<QPushButton*>("direct:" + key.id)->setText(translated(key.face.label));
+    for (const Key& key : keys) {
+        auto* button = findChild<QPushButton*>("key:" + key.id);
+        button->setText(legend(key.face, settings::decimalComma()));
+        button->setAccessibleName(spokenName(key));
+    }
+    findChild<QLabel*>("commonTitle")->setText(tr("Common"));
+    findChild<QLabel*>("memoryTitle")->setText(tr("Memory and editing"));
+    for (const KeySection& section : keySections()) {
+        auto* header = findChild<QToolButton*>("section:" + section.id);
+        header->setText(translated(section.title));
+        header->setAccessibleName(header->text());
+    }
+    for (const Key& key : everyDirectKey()) {
+        auto* button = findChild<QPushButton*>("direct:" + key.id);
+        button->setText(legend(key.face, settings::decimalComma()));
+        button->setAccessibleName(spokenName(key));
+    }
+    editCommon_->setText(tr("Edit"));
+    resetCommon_->setText(tr("Reset"));
+    for (const QString& id : common_) {
+        auto* button = findChild<QPushButton*>("common:" + id);
+        button->setText(legend(directKey(id).face, settings::decimalComma()));
+        button->setAccessibleName(spokenName(directKey(id)));
     }
 
     // angle, type and = share one width, wide enough for their texts in every language
@@ -685,17 +1214,42 @@ void MainWindow::retranslate() {
     QStyleOptionComboBox option;
     option.initFrom(type_);
     const int width = style()->sizeFromContents(QStyle::CT_ComboBox, &option, QSize(text, fontMetrics().height()), type_).width();
-    for (QWidget* w : {static_cast<QWidget*>(angle_), static_cast<QWidget*>(type_), static_cast<QWidget*>(equals_)})
-        w->setFixedWidth(width);
+    sideWidth_ = width;
+    if (!narrow_)
+        for (QWidget* w : {static_cast<QWidget*>(angle_), static_cast<QWidget*>(type_), static_cast<QWidget*>(equals_)})
+            w->setFixedWidth(width);
 
     if (hasResult_ || previewShown_) present();
     relabelHistory();  // the decimal separator may follow the language
     updateKeys();
-    if (keysSized_) sizeKeys();  // labels changed width
+    updatePreviews();
+    if (keysSized_) layOutKeys(designScreen_);  // labels changed width
+}
+
+// The icons are drawn in the text colour of the theme in use, so they are redrawn when it changes.
+void MainWindow::drawIcons() {
+    const QColor ink = palette().color(QPalette::ButtonText);
+    settingsButton_->setIcon(icons::drawn(icons::Kind::Settings, ink, fontMetrics().height()));
+    search_->findChild<QAction*>("searchIcon")->setIcon(
+        icons::drawn(icons::Kind::Search, palette().color(QPalette::PlaceholderText), fontMetrics().height()));
+    statisticsKeysToggle_->setIcon(icons::drawn(icons::Kind::Keyboard, ink, fontMetrics().height()));
+    percentKeysToggle_->setIcon(icons::drawn(icons::Kind::Keyboard, ink, fontMetrics().height()));
 }
 
 // Hovering a statistics button shows how that statistic is computed.
 bool MainWindow::eventFilter(QObject* watched, QEvent* event) {
+    if ((watched == percentFirst_ || watched == percentSecond_) && event->type() == QEvent::FocusIn)
+        percentTarget_ = static_cast<QLineEdit*>(watched);
+    if (watched == search_) {
+        if (event->type() == QEvent::FocusIn) filterSearch(search_->text());
+        if (event->type() == QEvent::FocusOut) searchList_->hide();
+        if (event->type() == QEvent::KeyPress && static_cast<QKeyEvent*>(event)->key() == Qt::Key_Escape) {
+            search_->clear();
+            searchList_->hide();
+            lcd_->setFocus();
+            return true;
+        }
+    }
     const QString statistic = watched->property("statistic").toString();
     if (!statistic.isEmpty() && event->type() == QEvent::ToolTip) {
         formulaTip_->showFor(statistic, static_cast<QHelpEvent*>(event)->globalPos());
@@ -707,6 +1261,7 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event) {
 
 void MainWindow::changeEvent(QEvent* event) {
     if (event->type() == QEvent::LanguageChange) retranslate();
+    if (event->type() == QEvent::PaletteChange && settingsButton_) drawIcons();
     QMainWindow::changeEvent(event);
 }
 
@@ -717,7 +1272,6 @@ QWidget* MainWindow::buildStatistics() {
     statisticsLabel_ = new QLabel(page);
     statisticsKeysToggle_ = new QToolButton(page);
     statisticsKeysToggle_->setObjectName("statisticsKeysToggle");
-    statisticsKeysToggle_->setText(QStringLiteral("⌨"));
     statisticsKeysToggle_->setCheckable(true);
     statisticsKeysToggle_->setChecked(true);
     statisticsKeysToggle_->setAutoRaise(true);
@@ -734,11 +1288,11 @@ QWidget* MainWindow::buildStatistics() {
     // without a keyboard.
     auto* side = new QVBoxLayout;
     auto* functions = new QGridLayout;
-    const char* names[] = {"mean", "median", "var", "stdev", "varp", "stdevp"};
-    for (int i = 0; i < int(std::size(names)); ++i) {
-        const QString f = QString::fromLatin1(names[i]);
-        auto* b = new QPushButton(f, page);
-        b->setObjectName(QStringLiteral("stat:") + f);
+    for (int i = 0; i < statisticsKeys().size(); ++i) {
+        const Key& key = statisticsKeys()[i];
+        const QString f = key.face.function;
+        auto* b = new QPushButton(key.face.label, page);
+        b->setObjectName("stat:" + key.id);
         b->setFocusPolicy(Qt::NoFocus);
         b->setProperty("statistic", f);
         b->installEventFilter(this);  // hovering shows the formula (see eventFilter)
@@ -781,6 +1335,137 @@ QWidget* MainWindow::buildStatistics() {
     connect(statisticsKeysToggle_, &QToolButton::toggled, keys, &QWidget::setVisible);
     layout->addLayout(entry, 1);
     return page;
+}
+
+// Two values and the percentage questions about them, each answered with its bound.
+QWidget* MainWindow::buildPercentages() {
+    auto* page = new QWidget;
+    auto* layout = new QVBoxLayout(page);
+    auto* entry = new QGridLayout;
+    // Only what a number is made of, typed or pasted (as in the statistics box).
+    auto numeric = [this](QLineEdit* edit) {
+        connect(edit, &QLineEdit::textChanged, edit, [edit](const QString& text) {
+            QString kept = text;
+            kept.remove(QRegularExpression(QStringLiteral("[^0-9.,eE-]")));
+            if (kept != text) edit->setText(kept);
+        });
+        connect(edit, &QLineEdit::textChanged, this, [this] { percentTimer_.start(); });
+        edit->installEventFilter(this);  // a box that takes the focus becomes the keypad's (see eventFilter)
+    };
+    percentFirst_ = new QLineEdit(page);
+    percentFirst_->setObjectName("percentFirst");
+    percentSecond_ = new QLineEdit(page);
+    percentSecond_->setObjectName("percentSecond");
+    percentTarget_ = percentFirst_;
+    percentKeysToggle_ = new QToolButton(page);
+    percentKeysToggle_->setObjectName("percentKeysToggle");
+    percentKeysToggle_->setCheckable(true);
+    percentKeysToggle_->setChecked(true);
+    percentKeysToggle_->setAutoRaise(true);
+    percentKeysToggle_->setFocusPolicy(Qt::NoFocus);
+    entry->addWidget(new QLabel(QStringLiteral("1"), page), 0, 0);
+    entry->addWidget(percentFirst_, 0, 1);
+    entry->addWidget(percentKeysToggle_, 0, 2);
+    entry->addWidget(new QLabel(QStringLiteral("2"), page), 1, 0);
+    entry->addWidget(percentSecond_, 1, 1);
+    numeric(percentFirst_);
+    numeric(percentSecond_);
+    layout->addLayout(entry);
+
+    // A small numeric keypad, so a phone needs no system keyboard; it types into the box being edited.
+    auto* keys = new QWidget(page);
+    keys->setObjectName("percentKeys");
+    auto* grid = new QGridLayout(keys);
+    grid->setContentsMargins(0, 0, 0, 0);
+    const struct {
+        const char* id;
+        const char* label;
+        const char* insert;  // empty: delete the character before the cursor
+    } pad[] = {{"7", "7", "7"}, {"8", "8", "8"}, {"9", "9", "9"}, {"backspace", "⌫", ""},
+               {"4", "4", "4"}, {"5", "5", "5"}, {"6", "6", "6"}, {"next", "⏎", "\n"},
+               {"1", "1", "1"}, {"2", "2", "2"}, {"3", "3", "3"}, {"minus", "−", "-"},
+               {"0", "0", "0"}, {"point", ".", "."}};
+    for (int i = 0; i < int(std::size(pad)); ++i) {
+        auto* button = new QPushButton(QString::fromUtf8(pad[i].label), keys);
+        button->setObjectName(QStringLiteral("percentKey:") + pad[i].id);
+        button->setFocusPolicy(Qt::NoFocus);
+        const QString insert = QString::fromUtf8(pad[i].insert);
+        connect(button, &QPushButton::clicked, this, [this, insert] {
+            // The keypad keeps its own target: a browser may not give the page the keyboard focus.
+            QLineEdit* edit = percentTarget_;
+            if (insert == "\n") {
+                percentTarget_ = edit == percentFirst_ ? percentSecond_ : percentFirst_;
+                percentTarget_->setFocus();
+            } else if (insert.isEmpty()) edit->backspace();
+            else edit->insert(settings::decimalComma() && insert == "." ? QStringLiteral(",") : insert);
+        });
+        grid->addWidget(button, i / 4, i % 4);
+    }
+    connect(percentKeysToggle_, &QToolButton::toggled, keys, &QWidget::setVisible);
+    layout->addWidget(keys, 0, Qt::AlignLeft);
+
+    auto* answers = new QGridLayout;
+    const QList<view::PercentageRow> rows = view::percentageRows(QStringLiteral("1"), QStringLiteral("2"));
+    for (int i = 0; i < rows.size(); ++i) {
+        auto* title = new QLabel(page);  // see retranslate
+        title->setObjectName("percentTitle:" + rows[i].key);
+        auto* value = new ShortenedLabel(page);
+        value->setObjectName("percent:" + rows[i].key);
+        value->setTextInteractionFlags(Qt::TextSelectableByMouse);
+        auto* bound = new QLabel(page);
+        bound->setObjectName("percentBound:" + rows[i].key);
+        bound->setForegroundRole(QPalette::PlaceholderText);
+        bound->setWordWrap(true);
+        answers->addWidget(title, i, 0);
+        answers->addWidget(value, i, 1);
+        answers->addWidget(bound, i, 2);
+    }
+    answers->setColumnStretch(1, 1);
+    layout->addLayout(answers);
+    layout->addStretch();
+    percentTimer_.setSingleShot(true);
+    percentTimer_.setInterval(liveDelay);
+    connect(&percentTimer_, &QTimer::timeout, this, [this] {
+        // Answers still on their way are skipped or cancelled, as for the screen's live result.
+        worker_->answerGeneration() = ++percentSerial_;
+        worker_->answerCancelFlag() = true;
+        QString first = percentFirst_->text(), second = percentSecond_->text();
+        if (settings::decimalComma()) {  // the engine reads a point
+            first.replace(',', '.');
+            second.replace(',', '.');
+        }
+        const QList<view::PercentageRow> rows = view::percentageRows(first, second);
+        for (const view::PercentageRow& row : view::percentageRows(QStringLiteral("1"), QStringLiteral("2"))) {
+            static_cast<ShortenedLabel*>(findChild<QLabel*>("percent:" + row.key))->setAnswer({});
+            findChild<QLabel*>("percentBound:" + row.key)->clear();
+        }
+        for (const view::PercentageRow& row : rows) emit answerRequested(percentSerial_, row.key, row.expression, options());
+    });
+    return page;
+}
+
+void MainWindow::requestPercentages() {
+    if (percentFirst_) percentTimer_.start();
+}
+
+void MainWindow::showPercentage(int generation, const QString& key, const Result& result) {
+    if (generation != percentSerial_) return;
+    auto* value = static_cast<ShortenedLabel*>(findChild<QLabel*>("percent:" + key));
+    auto* bound = findChild<QLabel*>("percentBound:" + key);
+    if (result.error) {
+        value->setAnswer({});
+        bound->setText(view::errorText(*result.error, QString::fromStdString(result.expression)));
+        return;
+    }
+    const bool comma = settings::decimalComma();
+    if (result.exact) {
+        value->setAnswer(view::oneLine(comma ? view::withDecimalComma(view::fractionParts(result)) : view::fractionParts(result)));
+        bound->setText(QStringLiteral("± 0"));
+        return;
+    }
+    value->setAnswer(view::oneLine(comma ? view::withDecimalComma(view::valueParts(result)) : view::valueParts(result)));
+    const QString text = QStringLiteral("± ") + QString::fromStdString(result.bound);
+    bound->setText(comma ? view::withDecimalComma(text) : text);
 }
 
 Options MainWindow::options() const {
@@ -987,14 +1672,28 @@ void MainWindow::present() {
 }
 
 void MainWindow::apply(const Face& f) {
+    // A key pressed in the phone's drawer brings back the pad; the letters keep it open, to type a whole name.
+    if (f.action != KeyAction::Type && f.action != KeyAction::Shift) drawerToggle_->setChecked(false);
     switch (f.action) {
     case KeyAction::Insert: lcd_->insert(translated(f.insert)); break;
+    case KeyAction::Type:
+        lcd_->typeText(shifted_ ? f.insert.toUpper() : f.insert);
+        shifted_ = false;
+        relabelLetters();
+        break;
+    case KeyAction::Shift:
+        shifted_ = !shifted_;
+        relabelLetters();
+        break;
+    case KeyAction::Undo: lcd_->undo(); break;
+    case KeyAction::Redo: lcd_->redo(); break;
     case KeyAction::Template: lcd_->insertTemplate(f.shape, f.insert); break;
     case KeyAction::Clear: lcd_->clear(); break;
     case KeyAction::Backspace: lcd_->backspace(); break;
     case KeyAction::Evaluate: evaluate(); break;
     case KeyAction::MemoryAdd: emit memoryAddRequested(); break;
     case KeyAction::MemorySubtract: emit memorySubtractRequested(); break;
+    case KeyAction::MemoryStore: emit memoryStoreRequested(); break;
     case KeyAction::MemoryClear: emit memoryClearRequested(); break;
     case KeyAction::Left: lcd_->left(); break;
     case KeyAction::Right: lcd_->right(); break;
@@ -1003,6 +1702,19 @@ void MainWindow::apply(const Face& f) {
         break;
     case KeyAction::Down:
         if (!lcd_->down()) replay(historyIndex_ - 1);
+        break;
+    case KeyAction::Tool:
+        if (f.opens == "percentages") {
+            modes_->setCurrentRow(2);
+            // The last result as the first value, in the copy form that reads back exactly.
+            if (hasResult_ && !last_.error) {
+                const QString value = view::copyText(last_, view::CopyForm::Value, types_[static_cast<std::size_t>(last_.type)]);
+                percentFirst_->setText(settings::decimalComma() ? view::withDecimalComma(value) : value);
+            }
+            percentTarget_ = percentFirst_;
+            percentFirst_->setFocus();
+            return;
+        }
         break;
     }
     lcd_->setFocus();
@@ -1041,12 +1753,20 @@ void MainWindow::updateKeys() {
     QList<QPair<QString, Key>> keys;
     for (const QList<Key>& row : keypad())
         for (const Key& key : row) keys.append({"key:", key});
-    for (const KeyGroup& group : directKeys())
-        for (const Key& key : group.keys) keys.append({"direct:", key});
+    for (const Key& key : everyDirectKey()) keys.append({"direct:", key});
+    for (const QString& id : common_) keys.append({"common:", directKey(id)});
     for (const auto& [prefix, key] : keys) {
         auto* button = findChild<QPushButton*>(prefix + key.id);
         const bool on = available(key.face, exact);
         button->setEnabled(on);
         button->setToolTip(on ? QString() : exactRefusal(key.face.label));
+    }
+    // A key with more faces says which, and how to reach them.
+    for (const auto& [id, others] : alternates()) {
+        auto* button = findChild<QPushButton*>("key:" + id);
+        if (!button->isEnabled()) continue;
+        QStringList legends;
+        for (const QString& other : others) legends << legend(directKey(other).face, settings::decimalComma());
+        button->setToolTip(tr("Hold for: %1").arg(legends.join(QStringLiteral(", "))));
     }
 }
