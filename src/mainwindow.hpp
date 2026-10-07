@@ -52,6 +52,7 @@ signals:
     void evaluationRequested(const QString& expression, const calculate_core::Options& options);
     void memoryAddRequested();
     void memorySubtractRequested();
+    void memoryStoreRequested();
     void memoryClearRequested();
     void previewRequested(int generation, const QString& expression, const calculate_core::Options& options);
 

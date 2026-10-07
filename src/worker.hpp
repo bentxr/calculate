@@ -23,6 +23,7 @@ public slots:
     void preview(int generation, const QString& expression, const calculate_core::Options& options);
     void memoryAdd();
     void memorySubtract();
+    void memoryStore();
     void memoryClear();
 
 signals:

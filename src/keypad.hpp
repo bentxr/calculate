@@ -6,7 +6,7 @@
 #include <QString>
 #include <QStringList>
 
-enum class KeyAction { Insert, Template, Clear, Backspace, Evaluate, MemoryAdd, MemorySubtract, MemoryClear, Left, Right, Up, Down };
+enum class KeyAction { Insert, Template, Clear, Backspace, Evaluate, MemoryAdd, MemorySubtract, MemoryClear, MemoryStore, Left, Right, Up, Down };
 
 // What a key does.
 struct Face {

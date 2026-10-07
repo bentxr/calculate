@@ -1494,3 +1494,18 @@ TEST(MainWindow, EveryKeyLabelFitsItsKey) {
         EXPECT_TRUE(fits || QFontInfo(key->font()).pixelSize() <= smallest) << key->objectName().toStdString();
     }
 }
+
+TEST(MainWindow, MemoryStoreReplacesTheMemoryAndTheScreenShowsM) {
+    MainWindow window;
+    QTest::mouseClick(child<QPushButton>(window, "direct:memoryStore"), Qt::LeftButton);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return message(window)->text() == "The memory needs a previous result"; }, 10000));
+    run(window, "5");
+    QTest::mouseClick(child<QPushButton>(window, "key:memoryAdd"), Qt::LeftButton);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->memory() == "5"; }, 10000));
+    run(window, "7");
+    QTest::mouseClick(child<QPushButton>(window, "direct:memoryStore"), Qt::LeftButton);
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->memory() == "7"; }, 10000)) << lcd(window)->memory().toStdString();
+    EXPECT_EQ(lcd(window)->statusText(), "M");  // the indicator, as on the calculator
+    EXPECT_EQ(lcd(window)->toolTip(), "M = 7");
+    EXPECT_EQ(child<QPushButton>(window, "direct:memoryStore")->text(), "MS");
+}

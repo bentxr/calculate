@@ -301,6 +301,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(this, &MainWindow::evaluationRequested, worker_, &Worker::evaluate);
     connect(this, &MainWindow::memoryAddRequested, worker_, &Worker::memoryAdd);
     connect(this, &MainWindow::memorySubtractRequested, worker_, &Worker::memorySubtract);
+    connect(this, &MainWindow::memoryStoreRequested, worker_, &Worker::memoryStore);
     connect(this, &MainWindow::memoryClearRequested, worker_, &Worker::memoryClear);
     connect(this, &MainWindow::previewRequested, worker_, &Worker::preview);
     connect(worker_, &Worker::evaluated, this, &MainWindow::showResult);
@@ -1087,6 +1088,7 @@ void MainWindow::apply(const Face& f) {
     case KeyAction::Evaluate: evaluate(); break;
     case KeyAction::MemoryAdd: emit memoryAddRequested(); break;
     case KeyAction::MemorySubtract: emit memorySubtractRequested(); break;
+    case KeyAction::MemoryStore: emit memoryStoreRequested(); break;
     case KeyAction::MemoryClear: emit memoryClearRequested(); break;
     case KeyAction::Left: lcd_->left(); break;
     case KeyAction::Right: lcd_->right(); break;

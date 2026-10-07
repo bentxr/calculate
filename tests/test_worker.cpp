@@ -111,3 +111,17 @@ TEST(Worker, APreviewStartsWithItsCancelFlagDown) {
     ASSERT_EQ(previewed.count(), 1);
     EXPECT_FALSE(previewed.at(0).at(2).value<Result>().error);
 }
+
+TEST(Worker, MemoryStore) {
+    Worker worker;
+    QSignalSpy changed(&worker, &Worker::memoryChanged);
+    QSignalSpy failed(&worker, &Worker::memoryFailed);
+    worker.memoryStore();
+    EXPECT_EQ(failed.count(), 1);
+    worker.evaluate("5", Options{});
+    worker.memoryAdd();
+    worker.evaluate("7", Options{});
+    worker.memoryStore();
+    ASSERT_EQ(changed.count(), 2);
+    EXPECT_EQ(changed.at(1).at(0).toString(), "7");
+}

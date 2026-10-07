@@ -27,6 +27,11 @@ void Worker::memorySubtract() {
     else emit memoryFailed();
 }
 
+void Worker::memoryStore() {
+    if (session_.memoryStore()) emit memoryChanged(QString::fromStdString(session_.memory()));
+    else emit memoryFailed();
+}
+
 void Worker::memoryClear() {
     session_.memoryClear();
     emit memoryChanged({});

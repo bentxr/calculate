@@ -52,6 +52,7 @@ const QList<Key>& cursorPad() {
 
 const QList<Key>& memoryKeys() {
     static const QList<Key> keys{
+        {"memoryStore", act("MS", KeyAction::MemoryStore)},
         {"memory", put("M", "M")},
         {"memorySubtract", act("M−", KeyAction::MemorySubtract)},
         {"memoryClear", act("MC", KeyAction::MemoryClear)},

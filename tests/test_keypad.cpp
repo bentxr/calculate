@@ -88,7 +88,7 @@ TEST(Keypad, EveryFunctionHasAKey) {
     for (Template shape : {Template::Fraction, Template::Sqrt, Template::Cbrt, Template::Root, Template::Power, Template::Exp,
                            Template::Pow10, Template::LogBase, Template::Abs})
         EXPECT_TRUE(std::any_of(faces.begin(), faces.end(), [&](const Face& f) { return f.shape == shape; }));
-    for (KeyAction action : {KeyAction::MemoryAdd, KeyAction::MemorySubtract, KeyAction::MemoryClear})
+    for (KeyAction action : {KeyAction::MemoryAdd, KeyAction::MemorySubtract, KeyAction::MemoryClear, KeyAction::MemoryStore})
         EXPECT_TRUE(std::any_of(faces.begin(), faces.end(), [&](const Face& f) { return f.action == action; }));
 }
 
@@ -128,7 +128,7 @@ TEST(Keypad, EveryOtherKeyHasAHomeSection) {
     EXPECT_EQ(sectionLabels("trigonometry"), QStringList({"asin", "acos", "atan"}));
     EXPECT_EQ(sectionLabels("powers"), QStringList({"x³", "∛", "ⁿ√", "10ˣ", "eˣ", "log"}));
     EXPECT_EQ(sectionLabels("constants"), QStringList({"π", "e"}));
-    EXPECT_EQ(labels(memoryKeys()), QStringList({"M", "M−", "MC"}));
+    EXPECT_EQ(labels(memoryKeys()), QStringList({"MS", "M", "M−", "MC"}));
 }
 
 TEST(Keypad, CommonStartsWithTheKeysUsedMost) {
