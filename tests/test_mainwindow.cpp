@@ -1844,3 +1844,22 @@ TEST(MainWindow, ThePercentagesKeyKeepsALargeResultWhole) {
     QTest::mouseClick(child<QPushButton>(window, "direct:percentages"), Qt::LeftButton);
     EXPECT_EQ(child<QLineEdit>(window, "percentFirst")->text(), "1.000000000000000019884624838656e30");  // the exponent survives the filter
 }
+
+TEST(MainWindow, OnAPhoneThePercentagesFitTheWidth) {
+    MainWindow window;
+    window.resize(390, 844);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    window.layOutKeys(QSize(390, 844));
+    child<QListWidget>(window, "modes")->setCurrentRow(2);
+    child<QLineEdit>(window, "percentFirst")->setText("80");
+    child<QLineEdit>(window, "percentSecond")->setText("0.1");
+    QLabel* of = child<QLabel>(window, "percent:of");
+    ASSERT_TRUE(QTest::qWaitFor([&] { return of->text().size() > 40; }, 10000));  // a long answer, noise and all
+    QTest::qWait(50);
+    auto* page = child<QScrollArea>(window, "percentagesScroll");
+    EXPECT_FALSE(page->horizontalScrollBar()->isVisible());  // nothing scrolls sideways…
+    QLabel* bound = child<QLabel>(window, "percentBound:of");
+    EXPECT_LE(bound->mapTo(&window, QPoint(bound->width(), 0)).x(), window.width());  // …and every bound is in view
+    EXPECT_EQ(of->toolTip(), of->text());  // the whole answer, where it is cut short
+}

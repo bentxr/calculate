@@ -31,6 +31,7 @@
 #include <QListWidget>
 #include <QMenu>
 #include <QMimeData>
+#include <QPainter>
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QRegularExpression>
@@ -78,6 +79,26 @@ protected:
 private:
     static bool onlyNumbers(const QString& text) {
         return std::all_of(text.begin(), text.end(), [](QChar c) { return c.isDigit() || QStringLiteral(".,;- ").contains(c); });
+    }
+};
+
+// A value that may be longer than its place: cut short with "…" instead of widening the page; the whole text is its
+// tooltip.
+class ShortenedLabel : public QLabel {
+public:
+    using QLabel::QLabel;
+    void setAnswer(const QString& text) {
+        setText(text);
+        setToolTip(text);
+    }
+    QSize minimumSizeHint() const override { return {fontMetrics().horizontalAdvance(QStringLiteral("0…")), QLabel::minimumSizeHint().height()}; }
+    QSize sizeHint() const override { return minimumSizeHint(); }
+
+protected:
+    void paintEvent(QPaintEvent*) override {
+        QPainter painter(this);
+        painter.setPen(palette().color(foregroundRole()));
+        painter.drawText(rect(), Qt::AlignLeft | Qt::AlignVCenter, fontMetrics().elidedText(text(), Qt::ElideRight, width()));
     }
 };
 
@@ -362,6 +383,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     statistics->setWidget(buildStatistics());
     pages_->addWidget(statistics);
     auto* percentages = new QScrollArea(pages_);
+    percentages->setObjectName("percentagesScroll");
     percentages->setFrameShape(QFrame::NoFrame);
     percentages->setWidgetResizable(true);
     percentages->setWidget(buildPercentages());
@@ -1379,7 +1401,7 @@ QWidget* MainWindow::buildPercentages() {
     for (int i = 0; i < rows.size(); ++i) {
         auto* title = new QLabel(page);  // see retranslate
         title->setObjectName("percentTitle:" + rows[i].key);
-        auto* value = new QLabel(page);
+        auto* value = new ShortenedLabel(page);
         value->setObjectName("percent:" + rows[i].key);
         value->setTextInteractionFlags(Qt::TextSelectableByMouse);
         auto* bound = new QLabel(page);
@@ -1390,7 +1412,7 @@ QWidget* MainWindow::buildPercentages() {
         answers->addWidget(value, i, 1);
         answers->addWidget(bound, i, 2);
     }
-    answers->setColumnStretch(2, 1);
+    answers->setColumnStretch(1, 1);
     layout->addLayout(answers);
     layout->addStretch();
     percentTimer_.setSingleShot(true);
@@ -1406,7 +1428,7 @@ QWidget* MainWindow::buildPercentages() {
         }
         const QList<view::PercentageRow> rows = view::percentageRows(first, second);
         for (const view::PercentageRow& row : view::percentageRows(QStringLiteral("1"), QStringLiteral("2"))) {
-            findChild<QLabel*>("percent:" + row.key)->clear();
+            static_cast<ShortenedLabel*>(findChild<QLabel*>("percent:" + row.key))->setAnswer({});
             findChild<QLabel*>("percentBound:" + row.key)->clear();
         }
         for (const view::PercentageRow& row : rows) emit answerRequested(percentSerial_, row.key, row.expression, options());
@@ -1420,20 +1442,20 @@ void MainWindow::requestPercentages() {
 
 void MainWindow::showPercentage(int generation, const QString& key, const Result& result) {
     if (generation != percentSerial_) return;
-    auto* value = findChild<QLabel*>("percent:" + key);
+    auto* value = static_cast<ShortenedLabel*>(findChild<QLabel*>("percent:" + key));
     auto* bound = findChild<QLabel*>("percentBound:" + key);
     if (result.error) {
-        value->clear();
+        value->setAnswer({});
         bound->setText(view::errorText(*result.error, QString::fromStdString(result.expression)));
         return;
     }
     const bool comma = settings::decimalComma();
     if (result.exact) {
-        value->setText(view::oneLine(comma ? view::withDecimalComma(view::fractionParts(result)) : view::fractionParts(result)));
+        value->setAnswer(view::oneLine(comma ? view::withDecimalComma(view::fractionParts(result)) : view::fractionParts(result)));
         bound->setText(QStringLiteral("± 0"));
         return;
     }
-    value->setText(view::oneLine(comma ? view::withDecimalComma(view::valueParts(result)) : view::valueParts(result)));
+    value->setAnswer(view::oneLine(comma ? view::withDecimalComma(view::valueParts(result)) : view::valueParts(result)));
     const QString text = QStringLiteral("± ") + QString::fromStdString(result.bound);
     bound->setText(comma ? view::withDecimalComma(text) : text);
 }
