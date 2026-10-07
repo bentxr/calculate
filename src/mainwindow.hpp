@@ -75,6 +75,7 @@ private:
     void showPercentage(int generation, const QString& key, const calculate_core::Result& result);
     void buildSettings();
     QMap<QString, QString> settingValues() const;
+    QList<QAction*> settingActions() const;  // the settings menu's and its submenu's
     void retranslate();
     void drawIcons();
     void present();
@@ -164,6 +165,7 @@ private:
     QAction* languageSection_ = nullptr;  // the headings over each setting's values
     QAction* themeSection_ = nullptr;
     QAction* decimalSection_ = nullptr;
+    QMenu* conventions_ = nullptr;  // a submenu, so the settings menu stays short enough to open above the gear
     QAction* inputSection_ = nullptr;
     QAction* fileSection_ = nullptr;
     QMap<QString, QString> defaults_;  // settingValues() as the window started

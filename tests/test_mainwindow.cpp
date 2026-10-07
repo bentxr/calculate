@@ -1899,3 +1899,25 @@ TEST(MainWindow, RemainderKeysTypeTheirFunctions) {
     EXPECT_TRUE(answered(window));
     EXPECT_EQ(lcd(window)->outputText(), "2");
 }
+
+TEST(MainWindow, TheConventionsAreSettings) {
+    MainWindow window;
+    for (const char* name : {"log:10", "log:e", "mod:truncated", "mod:floored", "percent:divide", "percent:ofvalue"})
+        EXPECT_NE(setting(window, name), nullptr) << name;
+    EXPECT_TRUE(setting(window, "log:10")->isChecked());
+    setting(window, "log:e")->trigger();
+    run(window, "log(1)");
+    EXPECT_EQ(lcd(window)->outputText(), "0");
+    run(window, "log(100)");
+    EXPECT_TRUE(lcd(window)->outputText().startsWith("4.60517")) << lcd(window)->outputText().toStdString();
+    EXPECT_TRUE(window.exportSettings().contains("\"log\": \"e\""));  // Plan 5's file gets it for free
+    setting(window, "log:10")->trigger();
+}
+
+TEST(MainWindow, TheLogKeySaysWhichLogarithm) {
+    MainWindow window;
+    EXPECT_EQ(child<QPushButton>(window, "direct:log")->toolTip(), "logarithm (base 10)");
+    setting(window, "log:e")->trigger();
+    EXPECT_EQ(child<QPushButton>(window, "direct:log")->toolTip(), "logarithm (natural)");
+    setting(window, "log:10")->trigger();
+}

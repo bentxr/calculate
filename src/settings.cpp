@@ -34,6 +34,11 @@ bool& currentLiveCalculation() {
     return on;
 }
 
+calculate_core::Conventions& currentConventions() {
+    static calculate_core::Conventions conventions;
+    return conventions;
+}
+
 bool systemIsDark() { return QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark; }
 
 }  // namespace
@@ -80,6 +85,10 @@ Theme theme() { return currentTheme(); }
 bool liveCalculation() { return currentLiveCalculation(); }
 
 void setLiveCalculation(bool on) { currentLiveCalculation() = on; }
+
+calculate_core::Conventions conventions() { return currentConventions(); }
+
+void setConventions(const calculate_core::Conventions& conventions) { currentConventions() = conventions; }
 
 void setTheme(Theme theme) {
     static const bool connected = [] {

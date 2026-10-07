@@ -999,13 +999,13 @@ void MainWindow::showEvent(QShowEvent* event) {
 void MainWindow::buildSettings() {
     settings_ = new QMenu(this);
     settings_->setObjectName("settings");
-    // One heading, then one checkable action per value, in the order of the setting's enum.
-    const auto addSetting = [this](QAction*& section, std::initializer_list<const char*> values, int checked, auto apply) {
-        section = settings_->addSection(QString());
-        auto* group = new QActionGroup(settings_);
+    // One checkable action per value, in the order of the setting's enum; addSetting puts a heading first.
+    const auto addGroup = [this](std::initializer_list<const char*> values, int checked, auto apply, QMenu* menu = nullptr) {
+        if (!menu) menu = settings_;
+        auto* group = new QActionGroup(menu);
         int i = 0;
         for (const char* value : values) {
-            QAction* action = settings_->addAction(QString());  // the texts: see retranslate
+            QAction* action = menu->addAction(QString());  // the texts: see retranslate
             action->setObjectName(QString::fromLatin1(value));
             action->setCheckable(true);
             action->setChecked(i == checked);
@@ -1013,6 +1013,10 @@ void MainWindow::buildSettings() {
             connect(action, &QAction::triggered, this, [apply, i] { apply(i); });
             ++i;
         }
+    };
+    const auto addSetting = [this, addGroup](QAction*& section, std::initializer_list<const char*> values, int checked, auto apply) {
+        section = settings_->addSection(QString());
+        addGroup(values, checked, apply);
     };
     addSetting(languageSection_, {"language:system", "language:en", "language:es"}, 0,
                [](int i) { settings::setLanguage(static_cast<settings::Language>(i)); });
@@ -1026,6 +1030,24 @@ void MainWindow::buildSettings() {
                    lcd_->update();
                    retranslate();  // the separator keys' legends, and the percentages again
                });
+    // What log, mod and % mean. Earlier results keep theirs (the engine stores them spelled out); what is being
+    // typed is worked out again.
+    conventions_ = settings_->addMenu(QString());
+    conventions_->setObjectName("conventions");
+    const auto changeConvention = [this](auto change) {
+        calculate_core::Conventions c = settings::conventions();
+        change(c);
+        settings::setConventions(c);
+        updateKeys();  // the log key's tooltip
+        if (settings::liveCalculation() && (previewShown_ || lcd_->input().trimmed() != lastExpression_)) requestPreview();
+    };
+    using calculate_core::Conventions;
+    addGroup({"log:10", "log:e"}, static_cast<int>(settings::conventions().log),
+             [changeConvention](int i) { changeConvention([i](Conventions& c) { c.log = static_cast<Conventions::Log>(i); }); }, conventions_);
+    addGroup({"mod:truncated", "mod:floored"}, static_cast<int>(settings::conventions().mod),
+             [changeConvention](int i) { changeConvention([i](Conventions& c) { c.mod = static_cast<Conventions::Mod>(i); }); }, conventions_);
+    addGroup({"percent:divide", "percent:ofvalue"}, static_cast<int>(settings::conventions().percent),
+             [changeConvention](int i) { changeConvention([i](Conventions& c) { c.percent = static_cast<Conventions::Percent>(i); }); }, conventions_);
     inputSection_ = settings_->addSection(QString());
     QAction* live = settings_->addAction(QString());
     live->setObjectName("live");
@@ -1061,9 +1083,11 @@ const QStringList angleIds{"rad", "deg", "grad"};
 
 }  // namespace
 
+QList<QAction*> MainWindow::settingActions() const { return settings_->actions() + conventions_->actions(); }
+
 QMap<QString, QStringList> MainWindow::settingKeys() const {
     QMap<QString, QStringList> keys;
-    for (QAction* action : settings_->actions()) {
+    for (QAction* action : settingActions()) {
         if (!action->isCheckable()) continue;
         if (action->actionGroup()) keys[action->objectName().section(':', 0, 0)] << action->objectName().section(':', 1);
         else keys[action->objectName()] = QStringList{"true", "false"};
@@ -1077,7 +1101,7 @@ QMap<QString, QStringList> MainWindow::settingKeys() const {
 
 QMap<QString, QString> MainWindow::settingValues() const {
     QMap<QString, QString> values;
-    for (QAction* action : settings_->actions()) {
+    for (QAction* action : settingActions()) {
         if (!action->isCheckable()) continue;
         if (!action->actionGroup()) values[action->objectName()] = action->isChecked() ? "true" : "false";
         else if (action->isChecked()) values[action->objectName().section(':', 0, 0)] = action->objectName().section(':', 1);
@@ -1169,6 +1193,13 @@ void MainWindow::retranslate() {
     decimalSection_->setText(tr("Decimal separator"));
     findChild<QAction*>("decimal:language")->setText(tr("As the language"));
     findChild<QAction*>("decimal:point")->setText(tr("Point"));
+    conventions_->setTitle(tr("Conventions"));
+    findChild<QAction*>("log:10")->setText(tr("log is base 10"));
+    findChild<QAction*>("log:e")->setText(tr("log is natural"));
+    findChild<QAction*>("mod:truncated")->setText(tr("mod keeps the dividend's sign"));
+    findChild<QAction*>("mod:floored")->setText(tr("mod keeps the divisor's sign"));
+    findChild<QAction*>("percent:divide")->setText(tr("% divides by 100"));
+    findChild<QAction*>("percent:ofvalue")->setText(tr("x + p% adds p% of x"));
     findChild<QAction*>("decimal:comma")->setText(tr("Comma"));
     inputSection_->setText(tr("Input"));
     findChild<QAction*>("live")->setText(tr("Calculate as you type"));
@@ -1472,6 +1503,7 @@ Options MainWindow::options() const {
     Options o;
     o.type = type_->currentType();
     o.angle = static_cast<AngleUnit>(angle_->currentIndex());
+    o.conventions = settings::conventions();
     return o;
 }
 
@@ -1769,4 +1801,8 @@ void MainWindow::updateKeys() {
         for (const QString& other : others) legends << legend(directKey(other).face, settings::decimalComma());
         button->setToolTip(tr("Hold for: %1").arg(legends.join(QStringLiteral(", "))));
     }
+    const bool natural = settings::conventions().log == calculate_core::Conventions::Log::Natural;
+    for (const char* name : {"direct:log", "common:log"})
+        if (auto* button = findChild<QPushButton*>(name); button && button->isEnabled())
+            button->setToolTip(natural ? tr("logarithm (natural)") : tr("logarithm (base 10)"));
 }
