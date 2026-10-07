@@ -16,6 +16,7 @@ class QBoxLayout;
 class QComboBox;
 class QFrame;
 class QLabel;
+class QLineEdit;
 class QListWidget;
 class QMenu;
 class QPlainTextEdit;
@@ -98,6 +99,9 @@ private:
     void arrange();
     void updatePreviews();
     void relabelLetters();  // small or capital, as ⇧ says
+    void fillSearch();
+    void filterSearch(const QString& text);
+    void showSearch();
 
     static constexpr int keySpacing = 6;
     static constexpr int keypadGap = 12;  // between the function keys and the number keys
@@ -129,6 +133,8 @@ private:
     QBoxLayout* keyboards_ = nullptr;  // the column and the main pad
     QWidget* commonBlock_ = nullptr;  // Common's title and keys
     QFrame* drawer_ = nullptr;
+    QLineEdit* search_ = nullptr;  // finds any function or constant
+    QListWidget* searchList_ = nullptr;
     QPushButton* drawerToggle_ = nullptr;
     QPushButton* drawerClose_ = nullptr;
     bool narrow_ = false;  // the phone arrangement

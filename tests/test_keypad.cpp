@@ -214,3 +214,39 @@ TEST(Keypad, UndoAndRedoAreKeys) {
     EXPECT_EQ(directKey("undo").face.action, KeyAction::Undo);
     EXPECT_EQ(directKey("redo").face.action, KeyAction::Redo);
 }
+
+TEST(Keypad, TheSearchListsEveryKeyUnderItsSection) {
+    QStringList groups;
+    QSet<QString> functions;
+    for (const SearchEntry& e : searchEntries()) {
+        if (groups.isEmpty() || groups.last() != e.group) groups << e.group;
+        functions.insert(e.face.function);
+    }
+    QStringList titles;
+    int keys = 0;
+    for (const KeySection& s : keySections())
+        if (s.id != "letters") {  // letters are typing, not something to find
+            titles << s.title;
+            keys += s.keys.size();
+        }
+    EXPECT_EQ(groups, titles + QStringList({"Main keys"}));  // by section, in order, then the main pad's functions
+    EXPECT_GE(searchEntries().size(), keys);
+    for (const calculate_core::FunctionDescription& f : calculate_core::functions())
+        EXPECT_TRUE(functions.contains(QString::fromStdString(f.name))) << f.name;  // every function can be found
+    EXPECT_TRUE(extraSearchEntries().isEmpty());  // until Plan 3 adds the constants without keys
+}
+
+TEST(Keypad, SearchMatchesNamesWhatTheyTypeAndHeadings) {
+    SearchEntry asinh;
+    for (const SearchEntry& e : searchEntries())
+        if (e.face.function == "asinh") asinh = e;
+    ASSERT_EQ(asinh.group, "Hyperbolic");
+    EXPECT_TRUE(searchMatches(asinh, ""));        // an empty box lists everything
+    EXPECT_TRUE(searchMatches(asinh, "ASIN"));    // the legend, ignoring case
+    EXPECT_TRUE(searchMatches(asinh, "inh("));    // what it types
+    EXPECT_TRUE(searchMatches(asinh, "hyperb"));  // its heading
+    EXPECT_FALSE(searchMatches(asinh, "gcd"));
+    const SearchEntry pi{"Constants", Face{"π", "π", "pi"}, "the ratio of a circle's circumference to its diameter"};
+    EXPECT_TRUE(searchMatches(pi, "circle"));  // its description
+    EXPECT_TRUE(searchMatches(pi, "PI"));      // its function
+}

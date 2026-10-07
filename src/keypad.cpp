@@ -136,6 +136,32 @@ Key directKey(const QString& id) {
     return Key{};
 }
 
+QList<SearchEntry> searchEntries() {
+    QList<SearchEntry> entries;
+    for (const KeySection& section : keySections())
+        if (section.id != QLatin1String("letters"))  // letters are typing, not something to find
+            for (const Key& key : section.keys) entries.append({section.title, key.face, {}});
+    for (const QList<Key>& row : keypad())
+        for (const Key& key : row)
+            if (!key.face.function.isEmpty()) entries.append({QT_TRANSLATE_NOOP("keypad", "Main keys"), key.face, {}});
+    return entries + extraSearchEntries();
+}
+
+const QList<SearchEntry>& extraSearchEntries() {
+    static const QList<SearchEntry> entries;
+    return entries;
+}
+
+bool searchMatches(const SearchEntry& entry, const QString& text) {
+    const QString wanted = text.trimmed().toLower();
+    if (wanted.isEmpty()) return true;
+    const Face& f = entry.face;
+    for (const QString& s : {f.label, translated(f.label), f.insert, translated(f.insert), f.function, entry.title,
+                             entry.group, translated(entry.group)})
+        if (s.toLower().contains(wanted)) return true;
+    return false;
+}
+
 bool available(const Face& face, bool exact) {
     if (!exact || face.function.isEmpty()) return true;
     for (const calculate_core::FunctionDescription& f : calculate_core::functions())

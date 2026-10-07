@@ -26,6 +26,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QKeyEvent>
+#include <QLineEdit>
 #include <QListWidget>
 #include <QMenu>
 #include <QMimeData>
@@ -35,6 +36,7 @@
 #include <QScreen>
 #include <QScrollArea>
 #include <QScrollBar>
+#include <QScroller>
 #include <QStackedWidget>
 #include <QStyleOptionComboBox>
 #include <QToolButton>
@@ -325,6 +327,23 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
         drawer_->show();
     });
     connect(drawerClose_, &QPushButton::clicked, this, [this] { drawerToggle_->setChecked(false); });
+    // What the search box finds: a list over the keys, not a window, so the keyboard stays with the box. An empty box
+    // lists everything, so finding needs no keyboard; a finger scrolls it.
+    searchList_ = new QListWidget(central);
+    searchList_->setObjectName("searchList");
+    searchList_->setFocusPolicy(Qt::NoFocus);
+    searchList_->hide();
+    QScroller::grabGesture(searchList_->viewport(), QScroller::TouchGesture);
+    connect(search_, &QLineEdit::textEdited, this, &MainWindow::filterSearch);
+    connect(keyboardButton_, &QToolButton::toggled, search_, [this](bool on) { search_->setAttribute(Qt::WA_InputMethodEnabled, on); });
+    connect(searchList_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) {
+        const QVariant index = item->data(Qt::UserRole);
+        if (!index.isValid()) return;  // a heading
+        const Face face = searchEntries().value(index.toInt()).face;
+        search_->clear();
+        searchList_->hide();
+        apply(face);
+    });
     keys_->setWidget(keysArea);
     pages_->addWidget(keys_);
     auto* statistics = new QScrollArea(pages_);  // so neither page sets a minimum width for the window
@@ -507,6 +526,15 @@ QWidget* MainWindow::buildDirectKeys() {
     };
     QList<Key> common;
     for (const QString& id : defaultCommon()) common << directKey(id);
+    // The search box finds any function or constant; it takes the keyboard only when clicked.
+    search_ = new QLineEdit(keyboard);
+    search_->setObjectName("search");
+    search_->setClearButtonEnabled(true);
+    search_->setFocusPolicy(Qt::ClickFocus);
+    search_->setAttribute(Qt::WA_InputMethodEnabled, lcd_->testAttribute(Qt::WA_InputMethodEnabled));
+    search_->addAction(QIcon(), QLineEdit::LeadingPosition)->setObjectName("searchIcon");  // drawn: see drawIcons
+    search_->installEventFilter(this);
+    layout->addWidget(search_);
     // Common and its title move together: on a phone they sit above the main pad.
     commonBlock_ = new QWidget(keyboard);
     commonBlock_->setObjectName("commonBlock");
@@ -698,7 +726,7 @@ void MainWindow::arrange() {
             if (sideWidth_ > 0) w->setFixedWidth(sideWidth_);
         }
         findChild<QLabel*>("commonTitle")->show();
-        if (column->indexOf(commonBlock_) < 0) column->insertWidget(0, commonBlock_);
+        if (column->indexOf(commonBlock_) < 0) column->insertWidget(1, commonBlock_);  // under the search box
         drawerLayout->removeWidget(directScroll_);
         keyboards_->setDirection(QBoxLayout::LeftToRight);
         keyboards_->addStretch();
@@ -713,6 +741,67 @@ void MainWindow::relabelLetters() {
         const QString letter(QChar::fromLatin1(c));
         findChild<QPushButton*>("direct:letter" + letter.toUpper())->setText(shifted_ ? letter.toUpper() : letter);
     }
+}
+
+// The search list: every entry under its heading, in the language in use.
+void MainWindow::fillSearch() {
+    searchList_->clear();
+    const QList<SearchEntry> entries = searchEntries();
+    QString group;
+    for (int i = 0; i < entries.size(); ++i) {
+        const SearchEntry& e = entries[i];
+        if (i == 0 || e.group != group) {
+            group = e.group;
+            auto* heading = new QListWidgetItem(translated(group), searchList_);
+            heading->setFlags(Qt::ItemIsEnabled);
+            QFont bold = heading->font();
+            bold.setBold(true);
+            heading->setFont(bold);
+        }
+        auto* item = new QListWidgetItem(translated(e.face.label) + (e.title.isEmpty() ? QString() : QStringLiteral("  —  ") + e.title),
+                                         searchList_);
+        item->setData(Qt::UserRole, i);
+    }
+    if (searchList_->isVisible()) filterSearch(search_->text());
+}
+
+// Hides the entries the text doesn't match, and the headings left without entries.
+void MainWindow::filterSearch(const QString& text) {
+    const QList<SearchEntry> entries = searchEntries();
+    QListWidgetItem* heading = nullptr;
+    bool any = false;
+    for (int row = 0; row < searchList_->count(); ++row) {
+        QListWidgetItem* item = searchList_->item(row);
+        const QVariant index = item->data(Qt::UserRole);
+        if (!index.isValid()) {
+            if (heading) heading->setHidden(!any);
+            heading = item;
+            any = false;
+            continue;
+        }
+        const bool match = searchMatches(entries.value(index.toInt()), text);
+        item->setHidden(!match);
+        any = any || match;
+    }
+    if (heading) heading->setHidden(!any);
+    if (search_->hasFocus()) showSearch();
+}
+
+// Opens the list under the box: as wide as it, as tall as the rows it shows (twelve at most, never past the window's
+// bottom), and hidden while nothing matches.
+void MainWindow::showSearch() {
+    int shown = 0;
+    for (int row = 0; row < searchList_->count(); ++row) shown += searchList_->item(row)->isHidden() ? 0 : 1;
+    if (shown == 0) {
+        searchList_->hide();
+        return;
+    }
+    QWidget* central = centralWidget();
+    const QPoint top = search_->mapTo(central, QPoint(0, search_->height() + 2));
+    const int rows = qMin(shown, 12) * qMax(1, searchList_->sizeHintForRow(0)) + 2 * searchList_->frameWidth();
+    searchList_->setGeometry(top.x(), top.y(), search_->width(), qMax(0, qMin(rows, central->height() - top.y() - 2)));
+    searchList_->raise();
+    searchList_->show();
 }
 
 // While a section is closed, its header shows its keys' legends, as many as fit beside the title.
@@ -860,6 +949,9 @@ void MainWindow::retranslate() {
     for (int i = 0; i < modes.size(); ++i) modes_->item(i)->setText(modes[i]);
     for (int i = 0; i < modes_->count(); ++i) findChild<QAction*>(QStringLiteral("mode:%1").arg(i))->setText(modes_->item(i)->text());
     drawerToggle_->setText(tr("More") + QStringLiteral(" ▾"));
+    search_->setPlaceholderText(tr("Search every function and constant…"));
+    search_->setAccessibleName(tr("Search"));
+    fillSearch();
     drawerClose_->setText(QStringLiteral("▾  ") + tr("Back to the keypad"));
     const QStringList angles{tr("RAD"), tr("DEG"), tr("GRAD")};
     for (int i = 0; i < angles.size(); ++i) angle_->setItemText(i, angles[i]);
@@ -945,11 +1037,23 @@ void MainWindow::retranslate() {
 void MainWindow::drawIcons() {
     const QColor ink = palette().color(QPalette::ButtonText);
     settingsButton_->setIcon(icons::drawn(icons::Kind::Settings, ink, fontMetrics().height()));
+    search_->findChild<QAction*>("searchIcon")->setIcon(
+        icons::drawn(icons::Kind::Search, palette().color(QPalette::PlaceholderText), fontMetrics().height()));
     statisticsKeysToggle_->setIcon(icons::drawn(icons::Kind::Keyboard, ink, fontMetrics().height()));
 }
 
 // Hovering a statistics button shows how that statistic is computed.
 bool MainWindow::eventFilter(QObject* watched, QEvent* event) {
+    if (watched == search_) {
+        if (event->type() == QEvent::FocusIn) filterSearch(search_->text());
+        if (event->type() == QEvent::FocusOut) searchList_->hide();
+        if (event->type() == QEvent::KeyPress && static_cast<QKeyEvent*>(event)->key() == Qt::Key_Escape) {
+            search_->clear();
+            searchList_->hide();
+            lcd_->setFocus();
+            return true;
+        }
+    }
     const QString statistic = watched->property("statistic").toString();
     if (!statistic.isEmpty() && event->type() == QEvent::ToolTip) {
         formulaTip_->showFor(statistic, static_cast<QHelpEvent*>(event)->globalPos());

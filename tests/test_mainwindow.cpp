@@ -1639,3 +1639,41 @@ TEST(MainWindow, UndoAndRedoWithKeys) {
     QTest::mouseClick(child<QPushButton>(window, "direct:redo"), Qt::LeftButton);
     EXPECT_EQ(lcd(window)->input(), "1+2");
 }
+
+TEST(MainWindow, TheSearchBoxFindsAKeyAndTypesIt) {
+    MainWindow window;
+    window.resize(1200, 800);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    auto* box = child<QLineEdit>(window, "search");
+    auto* list = child<QListWidget>(window, "searchList");
+    const auto entries = [&] {  // the entries shown, without the headings
+        QList<QListWidgetItem*> rows;
+        for (int i = 0; i < list->count(); ++i)
+            if (!list->item(i)->isHidden() && list->item(i)->data(Qt::UserRole).isValid()) rows << list->item(i);
+        return rows;
+    };
+    EXPECT_FALSE(list->isVisible());
+    EXPECT_FALSE(box->placeholderText().isEmpty());
+    auto* icon = box->findChild<QAction*>("searchIcon");
+    ASSERT_NE(icon, nullptr);
+    EXPECT_FALSE(icon->icon().isNull());  // a drawn magnifier, no emoji
+    EXPECT_LT(box->mapTo(&window, QPoint(0, 0)).y(), child<QWidget>(window, "common")->mapTo(&window, QPoint(0, 0)).y());
+    QTest::mouseClick(box, Qt::LeftButton);
+    ASSERT_TRUE(list->isVisible());  // an empty box lists everything: finding needs no keyboard
+    EXPECT_EQ(entries().size(), searchEntries().size());
+    EXPECT_TRUE(QRect(QPoint(0, 0), window.size()).contains(QRect(list->mapTo(&window, QPoint(0, 0)), list->size())));
+    QTest::keyClicks(box, "acosh");
+    ASSERT_EQ(entries().size(), 1);
+    EXPECT_EQ(entries().first()->text(), "acosh");
+    QTest::mouseClick(list->viewport(), Qt::LeftButton, {}, list->visualItemRect(entries().first()).center());
+    EXPECT_EQ(lcd(window)->input(), "acosh(");
+    EXPECT_FALSE(list->isVisible());
+    EXPECT_TRUE(box->text().isEmpty());
+    EXPECT_EQ(window.focusWidget(), lcd(window));  // back to the screen
+    QTest::mouseClick(box, Qt::LeftButton);
+    QTest::keyClicks(box, "x");
+    QTest::keyClick(box, Qt::Key_Escape);
+    EXPECT_FALSE(list->isVisible());
+    EXPECT_TRUE(box->text().isEmpty());
+}
