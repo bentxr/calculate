@@ -302,3 +302,19 @@ TEST(Presenter, ANoteHasNoDetails) {
     EXPECT_TRUE(view::details(note, typeInfo(NumberType::Double)).isEmpty());
     EXPECT_EQ(view::valueParts(note).trusted, "");
 }
+
+TEST(Presenter, AConversionIsShownAndTheValueKept) {
+    const Result r = evaluated("0.1 to fraction");
+    EXPECT_EQ(view::conversionText(r), "3602879701896397/36028797018963968");
+    const QList<view::DetailRow> rows = view::details(r, typeInfo(NumberType::Double));
+    ASSERT_GE(rows.size(), 2);
+    EXPECT_EQ(rows[0].key, "value");
+    EXPECT_EQ(rows[0].value, "0.1000000000000000|055511151231257827021181583404541015625");
+    EXPECT_EQ(rows[1].key, "conversion");
+    EXPECT_EQ(rows[1].value, "fraction");
+    EXPECT_EQ(view::details(evaluated("0.1"), typeInfo(NumberType::Double))[0].key, "bound");  // unchanged without to
+    EXPECT_TRUE(view::conversionText(evaluated("0.1")).isEmpty());
+    EXPECT_FALSE(view::explanation("value").isEmpty());
+    EXPECT_FALSE(view::explanation("conversion").isEmpty());
+    EXPECT_EQ(view::errorText(*evaluated("1 to nothing").error, "1 to nothing"), "Unknown conversion “nothing”");
+}

@@ -299,3 +299,11 @@ TEST(Lcd, WithADecimalCommaACopiedSelectionReadsBack) {
     EXPECT_EQ(lcd.input(), "nCr(1.5, 2)");
     settings::setDecimalComma(false);
 }
+
+TEST(Lcd, AConversionIsShownAsText) {
+    Lcd lcd;
+    lcd.showText("3602879701896397/36028797018963968");
+    EXPECT_EQ(lcd.outputText(), "3602879701896397/36028797018963968");
+    lcd.clearResult();
+    EXPECT_EQ(lcd.outputText(), "");
+}

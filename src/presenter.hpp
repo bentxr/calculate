@@ -56,6 +56,9 @@ QString withDecimalComma(const QString& expression);
 QString oneLine(const ValueParts& parts);
 QString oneLine(const FractionParts& parts);
 
+QString conversionText(const calculate_core::Result& result);  // "" when there is none
+QString valueText(const calculate_core::Result& result);       // the value on one line, as the screen shows it
+
 enum class CopyForm { Value, Trusted, ValueAndBound, Details };
 // The result as plain text for the clipboard: ASCII signs ("-", "e30"), no bar; empty when the form has
 // nothing to give (an error, or no trusted digit).

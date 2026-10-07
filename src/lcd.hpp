@@ -60,6 +60,7 @@ public:
 
     void showValue(const view::ValueParts& parts);
     void showExact(const view::FractionParts& parts);
+    void showText(const QString& text);  // a result converted with "to": plain text
     void clearResult();  // the input stays
     QString outputText() const;  // the result on one line of plain text
     // A result worked out while the expression is still being typed: drawn smaller until = confirms it.
@@ -118,7 +119,7 @@ protected:
     bool focusNextPrevChild(bool next) override;  // false: Tab stays in the screen
 
 private:
-    enum class Shown { Nothing, Value, Exact };
+    enum class Shown { Nothing, Value, Exact, Text };
 
     bool dark() const;
     QFont statusFont() const;
@@ -144,6 +145,7 @@ private:
     bool completing_ = false;
     bool provisional_ = false;
     Entry marked_;  // a copy of the input whose selection is the marked part; none when nothing is marked
+    QString text_;  // Shown::Text: a conversion
     Shown shown_ = Shown::Nothing;
     view::ValueParts value_;
     view::FractionParts exact_;

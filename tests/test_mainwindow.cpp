@@ -1961,3 +1961,12 @@ TEST(MainWindow, ACommentCanBeEnteredWithKeysAlone) {
     EXPECT_TRUE(answered(window));
     EXPECT_EQ(child<QListWidget>(window, "history")->item(0)->text(), "1+1 = 2   # two");
 }
+
+TEST(MainWindow, AConversionTakesTheScreenAndTheCardKeepsTheValue) {
+    MainWindow window;
+    run(window, "0.1 to fraction");
+    EXPECT_EQ(lcd(window)->outputText(), "3602879701896397/36028797018963968");
+    EXPECT_EQ(detail(window, "value"), "0.1000000000000000|055511151231257827021181583404541015625");
+    EXPECT_EQ(detail(window, "conversion"), "fraction");
+    EXPECT_EQ(child<QListWidget>(window, "history")->item(0)->text(), "0.1 to fraction = 3602879701896397/36028797018…");
+}

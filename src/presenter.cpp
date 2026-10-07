@@ -136,15 +136,33 @@ QString verdict(const QString& conditionNumber) {
     return QCoreApplication::translate("view", "ill-conditioned: no algorithm can do better in this type");
 }
 
+QString conversionText(const Result& r) {
+    if (!r.conversion) return {};
+    const QString text = fromStd(r.conversion->text);
+    return settings::decimalComma() ? withDecimalComma(text) : text;
+}
+
+QString valueText(const Result& r) {
+    const bool comma = settings::decimalComma();
+    if (r.exact) return oneLine(comma ? withDecimalComma(fractionParts(r)) : fractionParts(r));
+    return oneLine(comma ? withDecimalComma(valueParts(r)) : valueParts(r));
+}
+
 QList<DetailRow> details(const Result& r, const TypeInfo& t) {
     if (r.error || r.commentOnly) return {};  // a note has no value
+    // A conversion takes the screen: the value as computed leads the card, then the form it is shown in.
+    QList<DetailRow> converted;
+    if (r.conversion)
+        converted = {{"value", QCoreApplication::translate("view", "Value"), valueText(r)},
+                     {"conversion", QCoreApplication::translate("view", "Shown as"), fromStd(r.conversion->target)}};
     const QString expression = settings::decimalComma() ? withDecimalComma(fromStd(r.expression)) : fromStd(r.expression);
     const DetailRow evaluated{"evaluated", QCoreApplication::translate("view", "Evaluated"), expression};
     if (r.exact)
-        return {{"exact", QCoreApplication::translate("view", "Error"), QCoreApplication::translate("view", "exact · no rounding error")},
-                {"type", QCoreApplication::translate("view", "Number type"),
-                 QCoreApplication::translate("view", "%1, exact fractions").arg(fromStd(t.cppName))},
-                evaluated};
+        return converted
+               + QList<DetailRow>{{"exact", QCoreApplication::translate("view", "Error"), QCoreApplication::translate("view", "exact · no rounding error")},
+                                  {"type", QCoreApplication::translate("view", "Number type"),
+                                   QCoreApplication::translate("view", "%1, exact fractions").arg(fromStd(t.cppName))},
+                                  evaluated};
     QString measured = r.measuredAvailable ? number(r.measured) : QCoreApplication::translate("view", "unavailable");
     if (r.measuredAvailable && !r.measurementReliable) measured += QStringLiteral(" (") + QCoreApplication::translate("view", "unreliable") + QStringLiteral(")");
     QList<DetailRow> rows{
@@ -164,10 +182,14 @@ QList<DetailRow> details(const Result& r, const TypeInfo& t) {
         rows.append({"incomplete", QCoreApplication::translate("view", "Incomplete"),
                      QCoreApplication::translate("view", "an uncertain argument was accepted")});
     rows.append(evaluated);
-    return rows;
+    return converted + rows;
 }
 
 QString explanation(const QString& key) {
+    if (key == "value")
+        return QCoreApplication::translate("view", "The result as computed in this number type; the screen shows it converted.");
+    if (key == "conversion")
+        return QCoreApplication::translate("view", "The form you asked for with “to”: the same value, written another way.");
     if (key == "bound")
         return QCoreApplication::translate("view", "A proven upper limit on how far the shown value can be from the exact result.");
     if (key == "measured")
@@ -284,6 +306,7 @@ QString errorText(const Error& e, const QString& expression) {
     case ErrorCode::ArgumentNearJump: return QCoreApplication::translate("view", "%1 jumps within the error of its arguments, so the result could be off by a whole step. If you proceed anyway, the error report will not include that error.").arg(part);
     case ErrorCode::ArgumentNearEdge: return QCoreApplication::translate("view", "The error of the argument of %1 reaches a point where it is not defined or not smooth, so no bound can be given. If you proceed anyway, the error report will not include that.").arg(part);
     case ErrorCode::Cancelled: return QCoreApplication::translate("view", "Cancelled");
+    case ErrorCode::UnknownTarget: return QCoreApplication::translate("view", "Unknown conversion “%1”").arg(part);
     }
     return {};
 }

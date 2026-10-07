@@ -1710,6 +1710,7 @@ void MainWindow::present() {
         lcd_->clearMarked();
     }
     if (valueless) lcd_->clearResult();
+    else if (shown.conversion) lcd_->showText(view::conversionText(shown));
     else if (shown.exact) lcd_->showExact(settings::decimalComma() ? view::withDecimalComma(view::fractionParts(shown)) : view::fractionParts(shown));
     else lcd_->showValue(settings::decimalComma() ? view::withDecimalComma(view::valueParts(shown)) : view::valueParts(shown));
 }

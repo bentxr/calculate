@@ -291,6 +291,13 @@ void Lcd::showExact(const view::FractionParts& parts) {
     announceResult();
 }
 
+void Lcd::showText(const QString& text) {
+    shown_ = Shown::Text;
+    text_ = text;
+    changed();
+    announceResult();
+}
+
 void Lcd::setProvisional(bool provisional) {
     if (provisional == provisional_) return;
     provisional_ = provisional;
@@ -332,6 +339,7 @@ QString Lcd::outputText() const {
     case Shown::Nothing: return {};
     case Shown::Value: return view::oneLine(value_);
     case Shown::Exact: return view::oneLine(exact_);
+    case Shown::Text: return text_;
     }
     return {};
 }
@@ -444,6 +452,7 @@ void Lcd::changed() {
         case Shown::Nothing: return typeset::Box{};
         case Shown::Value: return typeset::value(value_, outputFont(), width);
         case Shown::Exact: return typeset::exact(exact_, outputFont(), width);
+        case Shown::Text: return typeset::paragraph({{text_, typeset::Role::Plain}}, outputFont(), width);
         }
         return typeset::Box{};
     };
