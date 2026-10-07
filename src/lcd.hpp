@@ -27,6 +27,7 @@ public:
     const Entry& entry() const { return entry_; }
     void setEntry(const Entry& entry);  // brings back an earlier input, templates and all
     void insert(const QString& piece);
+    void typeText(const QString& text);  // as the keyboard types it, one character after another (one undo step)
     // Opens a template; `fill`, if any, is typed into its box and the cursor leaves it (x², x⁻¹).
     void insertTemplate(Template kind, const QString& fill = {});
     bool up();    // inside a fraction, to its numerator; false elsewhere (the history's turn)

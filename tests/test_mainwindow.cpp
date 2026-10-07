@@ -1611,3 +1611,22 @@ TEST(MainWindow, OnAPhoneTheMenuButtonListsTheModes) {
     EXPECT_EQ(child<QListWidget>(window, "modes")->currentRow(), 1);
     EXPECT_EQ(child<QStackedWidget>(window, "pages")->currentIndex(), 1);
 }
+
+TEST(MainWindow, LetterKeysTypeNamesThatBecomePieces) {
+    MainWindow window;
+    openSection(window, "letters");
+    for (const char* name : {"direct:letterS", "direct:letterI", "direct:letterN", "key:open"})
+        QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    ASSERT_EQ(lcd(window)->entry().root().size(), 1u);  // s, i, n and ( became the one piece sin(
+    EXPECT_EQ(lcd(window)->input(), "sin(");
+    QTest::mouseClick(child<QPushButton>(window, "direct:shift"), Qt::LeftButton);
+    EXPECT_EQ(child<QPushButton>(window, "direct:letterA")->text(), "A");  // the legends follow the shift
+    QTest::mouseClick(child<QPushButton>(window, "direct:letterA"), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "sin(A");
+    EXPECT_EQ(child<QPushButton>(window, "direct:letterA")->text(), "a");  // one capital, then small again
+    QTest::mouseClick(child<QPushButton>(window, "direct:space"), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "sin(A ");
+    QTest::mouseClick(child<QPushButton>(window, "key:clear"), Qt::LeftButton);
+    QTest::mouseClick(child<QPushButton>(window, "key:open"), Qt::LeftButton);  // no name before it: a plain (
+    EXPECT_EQ(lcd(window)->input(), "(");
+}

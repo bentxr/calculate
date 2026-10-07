@@ -97,6 +97,7 @@ private:
     QString exactRefusal(const QString& label) const;  // why Exact greys out a key
     void arrange();
     void updatePreviews();
+    void relabelLetters();  // small or capital, as ⇧ says
 
     static constexpr int keySpacing = 6;
     static constexpr int keypadGap = 12;  // between the function keys and the number keys
@@ -131,6 +132,7 @@ private:
     QPushButton* drawerToggle_ = nullptr;
     QPushButton* drawerClose_ = nullptr;
     bool narrow_ = false;  // the phone arrangement
+    bool shifted_ = false;  // ⇧ was pressed: the next letter is a capital
     QSize designScreen_;   // the screen the keys were laid out for
     QToolButton* panelToggle_ = nullptr;
     QToolButton* settingsButton_ = nullptr;

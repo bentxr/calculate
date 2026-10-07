@@ -10,6 +10,8 @@ Face put(const QString& label, const QString& insert, const QString& function = 
     return {label, insert, function, KeyAction::Insert};
 }
 Face act(const QString& label, KeyAction action) { return {label, {}, {}, action}; }
+// A key whose text is typed as the keyboard types it (so letters before a ( become a function's piece).
+Face type(const QString& label, const QString& text) { return {label, text, {}, KeyAction::Type}; }
 // A key that opens a template; `fill` is typed into its box at once, and the cursor leaves it (x², x⁻¹).
 Face shape(const QString& label, Template kind, const QString& function = {}, const QString& fill = {}) {
     return {label, fill, function, KeyAction::Template, kind};
@@ -21,7 +23,7 @@ Key digit(const QString& d) { return {d, put(d, d)}; }
 // Names that Spanish calculators spell differently are marked for translation; the engine accepts both.
 const QList<QList<Key>>& keypad() {
     static const QList<QList<Key>> rows{
-        {{"open", put("(", "(")}, {"close", put(")", ")")}, {"fraction", shape("□/□", Template::Fraction)},
+        {{"open", type("(", "(")}, {"close", put(")", ")")}, {"fraction", shape("□/□", Template::Fraction)},
          {"sqrt", shape("√□", Template::Sqrt, "sqrt")}},
         {{"square", shape("x²", Template::Power, {}, "2")}, {"power", shape("x^□", Template::Power)}, {"negative", put("(−)", "-")},
          {"reciprocal", shape("x⁻¹", Template::Power, {}, "−1")}},
@@ -60,6 +62,23 @@ const QList<Key>& memoryKeys() {
     return keys;
 }
 
+namespace {
+
+// a to z, then ⇧, _ and the space: names, comments and anything else typed without a keyboard.
+QList<Key> letterKeys() {
+    QList<Key> keys;
+    for (char c = 'a'; c <= 'z'; ++c) {
+        const QString letter(QChar::fromLatin1(c));
+        keys.append({"letter" + letter.toUpper(), type(letter, letter)});
+    }
+    keys.append({"shift", act("⇧", KeyAction::Shift)});
+    keys.append({"underscore", type("_", "_")});
+    keys.append({"space", type("␣", " ")});
+    return keys;
+}
+
+}  // namespace
+
 const QList<KeySection>& keySections() {
     static const QList<KeySection> sections{
         {"numbers", QT_TRANSLATE_NOOP("keypad", "Numbers"),
@@ -84,6 +103,7 @@ const QList<KeySection>& keySections() {
           {"power10", shape("10ˣ", Template::Pow10)}, {"exp", shape("eˣ", Template::Exp, "exp")}, {"log", put("log", "log(", "log")}}},
         {"constants", QT_TRANSLATE_NOOP("keypad", "Constants"), {{"pi", put("π", "π", "pi")}, {"e", put("e", "e", "e")}}},
         {"statistics", QT_TRANSLATE_NOOP("keypad", "Statistics"), statisticsKeys()},
+        {"letters", QT_TRANSLATE_NOOP("keypad", "Letters"), letterKeys()},
     };
     return sections;
 }

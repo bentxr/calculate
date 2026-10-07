@@ -137,6 +137,13 @@ void Lcd::insert(const QString& piece) {
     });
 }
 
+void Lcd::typeText(const QString& text) {
+    edit([&] {
+        if (!text.isEmpty()) startEditing(needsLeftOperand(text[0]));
+        for (const QChar c : text) typing::typeCharacter(entry_, c);
+    });
+}
+
 void Lcd::insertTemplate(Template kind, const QString& fill) {
     edit([&] {
         startEditing(kind == Template::Power);

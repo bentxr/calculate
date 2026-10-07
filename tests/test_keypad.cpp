@@ -121,8 +121,8 @@ TEST(Keypad, EveryOtherKeyHasAHomeSection) {
         ids << s.id;
         titles << s.title;
     }
-    EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "constants", "statistics"}));
-    EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Constants", "Statistics"}));
+    EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "constants", "statistics", "letters"}));
+    EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Constants", "Statistics", "Letters"}));
     EXPECT_EQ(sectionLabels("numbers"), QStringList({"x!", "abs", "%", "mod", "nPr", "nCr", "gcd", "lcm", ","}));
     EXPECT_EQ(sectionLabels("hyperbolic"), QStringList({"sinh", "cosh", "tanh", "asinh", "acosh", "atanh"}));
     EXPECT_EQ(sectionLabels("trigonometry"), QStringList({"asin", "acos", "atan"}));
@@ -193,4 +193,17 @@ TEST(Keypad, AStatisticsSectionTypesTheStatisticsIntoExpressions) {
     EXPECT_EQ(section("statistics").title, "Statistics");
     EXPECT_EQ(sectionLabels("statistics"), QStringList({"mean", "median", "var", "stdev", "varp", "stdevp"}));
     EXPECT_EQ(directKey("stdevp").face.insert, "stdevp(");
+}
+
+TEST(Keypad, TheLettersSectionHasTheAlphabet) {
+    EXPECT_EQ(keySections().last().id, "letters");
+    EXPECT_EQ(section("letters").title, "Letters");
+    QStringList alphabet;
+    for (char c = 'a'; c <= 'z'; ++c) alphabet << QString(QChar(c));
+    EXPECT_EQ(sectionLabels("letters"), alphabet + QStringList({"⇧", "_", "␣"}));
+    EXPECT_EQ(directKey("letterA").face.action, KeyAction::Type);
+    EXPECT_EQ(directKey("letterA").face.insert, "a");
+    EXPECT_EQ(directKey("shift").face.action, KeyAction::Shift);
+    EXPECT_EQ(directKey("space").face.insert, " ");
+    EXPECT_EQ(find("open").face.action, KeyAction::Type);  // ( follows the typing rules: it can end a name
 }

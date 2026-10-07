@@ -708,6 +708,13 @@ void MainWindow::arrange() {
     }
 }
 
+void MainWindow::relabelLetters() {
+    for (char c = 'a'; c <= 'z'; ++c) {
+        const QString letter(QChar::fromLatin1(c));
+        findChild<QPushButton*>("direct:letter" + letter.toUpper())->setText(shifted_ ? letter.toUpper() : letter);
+    }
+}
+
 // While a section is closed, its header shows its keys' legends, as many as fit beside the title.
 void MainWindow::updatePreviews() {
     const QWidget* common = findChild<QWidget*>("common");
@@ -1234,9 +1241,19 @@ void MainWindow::present() {
 }
 
 void MainWindow::apply(const Face& f) {
-    drawerToggle_->setChecked(false);  // a key pressed in the phone's drawer brings back the pad
+    // A key pressed in the phone's drawer brings back the pad; the letters keep it open, to type a whole name.
+    if (f.action != KeyAction::Type && f.action != KeyAction::Shift) drawerToggle_->setChecked(false);
     switch (f.action) {
     case KeyAction::Insert: lcd_->insert(translated(f.insert)); break;
+    case KeyAction::Type:
+        lcd_->typeText(shifted_ ? f.insert.toUpper() : f.insert);
+        shifted_ = false;
+        relabelLetters();
+        break;
+    case KeyAction::Shift:
+        shifted_ = !shifted_;
+        relabelLetters();
+        break;
     case KeyAction::Template: lcd_->insertTemplate(f.shape, f.insert); break;
     case KeyAction::Clear: lcd_->clear(); break;
     case KeyAction::Backspace: lcd_->backspace(); break;
