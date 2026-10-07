@@ -65,5 +65,9 @@ bool searchMatches(const SearchEntry& entry, const QString& text);
 // Whether the face works in the Exact type when `exact` (Exact refuses irrational functions).
 bool available(const Face& face, bool exact);
 
+// The key's name for screen readers, in the user's language: words for symbol legends (x⁻¹ "reciprocal"); any
+// other legend speaks as itself.
+QString spokenName(const Key& key);
+
 // A label or inserted text in the user's language (Spanish calculators print sen, Arcsen, MCD…).
 QString translated(const QString& text);

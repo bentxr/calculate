@@ -1677,3 +1677,16 @@ TEST(MainWindow, TheSearchBoxFindsAKeyAndTypesIt) {
     EXPECT_FALSE(list->isVisible());
     EXPECT_TRUE(box->text().isEmpty());
 }
+
+TEST(MainWindow, KeysHaveNamesForScreenReaders) {
+    MainWindow window;
+    for (QPushButton* key : window.findChildren<QPushButton*>(QRegularExpression("^(key|direct|common):")))
+        EXPECT_FALSE(key->accessibleName().isEmpty()) << key->objectName().toStdString();
+    EXPECT_EQ(child<QPushButton>(window, "key:reciprocal")->accessibleName(), "reciprocal");  // words, not symbols
+    EXPECT_EQ(child<QPushButton>(window, "direct:undo")->accessibleName(), "undo");
+    EXPECT_EQ(child<QPushButton>(window, "direct:space")->accessibleName(), "space");
+    EXPECT_EQ(child<QPushButton>(window, "common:cbrt")->accessibleName(), "cube root");
+    EXPECT_EQ(child<QToolButton>(window, "section:statistics")->accessibleName(), "Statistics");
+    EXPECT_EQ(child<QLineEdit>(window, "search")->accessibleName(), "Search");
+    EXPECT_EQ(child<QPushButton>(window, "drawerToggle")->accessibleName(), "More");
+}

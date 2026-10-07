@@ -3,6 +3,7 @@
 #include <calculate-core/calculate-core.hpp>
 
 #include <QCoreApplication>
+#include <QHash>
 
 namespace {
 
@@ -171,4 +172,52 @@ bool available(const Face& face, bool exact) {
 
 QString translated(const QString& text) {
     return QCoreApplication::translate("keypad", text.toUtf8().constData());
+}
+
+QString spokenName(const Key& key) {
+    static const QHash<QString, const char*> words{
+        {"□/□", QT_TRANSLATE_NOOP("spoken", "fraction")},
+        {"√□", QT_TRANSLATE_NOOP("spoken", "square root")},
+        {"x²", QT_TRANSLATE_NOOP("spoken", "square")},
+        {"x^□", QT_TRANSLATE_NOOP("spoken", "power")},
+        {"(−)", QT_TRANSLATE_NOOP("spoken", "negative")},
+        {"x⁻¹", QT_TRANSLATE_NOOP("spoken", "reciprocal")},
+        {"log□□", QT_TRANSLATE_NOOP("spoken", "logarithm in a base")},
+        {"×10ˣ", QT_TRANSLATE_NOOP("spoken", "times ten to the power")},
+        {"▲", QT_TRANSLATE_NOOP("spoken", "up")},
+        {"◄", QT_TRANSLATE_NOOP("spoken", "left")},
+        {"►", QT_TRANSLATE_NOOP("spoken", "right")},
+        {"▼", QT_TRANSLATE_NOOP("spoken", "down")},
+        {"DEL", QT_TRANSLATE_NOOP("spoken", "delete")},
+        {"AC", QT_TRANSLATE_NOOP("spoken", "clear all")},
+        {"=", QT_TRANSLATE_NOOP("spoken", "equals")},
+        {"+", QT_TRANSLATE_NOOP("spoken", "plus")},
+        {"−", QT_TRANSLATE_NOOP("spoken", "minus")},
+        {"×", QT_TRANSLATE_NOOP("spoken", "times")},
+        {"÷", QT_TRANSLATE_NOOP("spoken", "divided by")},
+        {".", QT_TRANSLATE_NOOP("spoken", "point")},
+        {"(", QT_TRANSLATE_NOOP("spoken", "open parenthesis")},
+        {")", QT_TRANSLATE_NOOP("spoken", "close parenthesis")},
+        {"x³", QT_TRANSLATE_NOOP("spoken", "cube")},
+        {"∛", QT_TRANSLATE_NOOP("spoken", "cube root")},
+        {"ⁿ√", QT_TRANSLATE_NOOP("spoken", "root")},
+        {"10ˣ", QT_TRANSLATE_NOOP("spoken", "ten to the power")},
+        {"eˣ", QT_TRANSLATE_NOOP("spoken", "e to the power")},
+        {"x!", QT_TRANSLATE_NOOP("spoken", "factorial")},
+        {"%", QT_TRANSLATE_NOOP("spoken", "percent")},
+        {",", QT_TRANSLATE_NOOP("spoken", "separator")},
+        {"π", QT_TRANSLATE_NOOP("spoken", "pi")},
+        {"M+", QT_TRANSLATE_NOOP("spoken", "memory plus")},
+        {"M−", QT_TRANSLATE_NOOP("spoken", "memory minus")},
+        {"MS", QT_TRANSLATE_NOOP("spoken", "memory store")},
+        {"M", QT_TRANSLATE_NOOP("spoken", "memory")},
+        {"MC", QT_TRANSLATE_NOOP("spoken", "memory clear")},
+        {"↶", QT_TRANSLATE_NOOP("spoken", "undo")},
+        {"↷", QT_TRANSLATE_NOOP("spoken", "redo")},
+        {"⇧", QT_TRANSLATE_NOOP("spoken", "shift")},
+        {"␣", QT_TRANSLATE_NOOP("spoken", "space")},
+        {"_", QT_TRANSLATE_NOOP("spoken", "underscore")},
+    };
+    const auto word = words.constFind(key.face.label);
+    return word == words.constEnd() ? translated(key.face.label) : QCoreApplication::translate("spoken", *word);
 }

@@ -949,6 +949,7 @@ void MainWindow::retranslate() {
     for (int i = 0; i < modes.size(); ++i) modes_->item(i)->setText(modes[i]);
     for (int i = 0; i < modes_->count(); ++i) findChild<QAction*>(QStringLiteral("mode:%1").arg(i))->setText(modes_->item(i)->text());
     drawerToggle_->setText(tr("More") + QStringLiteral(" ▾"));
+    drawerToggle_->setAccessibleName(tr("More"));
     search_->setPlaceholderText(tr("Search every function and constant…"));
     search_->setAccessibleName(tr("Search"));
     fillSearch();
@@ -1001,14 +1002,28 @@ void MainWindow::retranslate() {
 
     QList<Key> keys = cursorPad();
     for (const QList<Key>& row : keypad()) keys += row;
-    for (const Key& key : keys) findChild<QPushButton*>("key:" + key.id)->setText(translated(key.face.label));
+    for (const Key& key : keys) {
+        auto* button = findChild<QPushButton*>("key:" + key.id);
+        button->setText(translated(key.face.label));
+        button->setAccessibleName(spokenName(key));
+    }
     findChild<QLabel*>("commonTitle")->setText(tr("Common"));
     findChild<QLabel*>("memoryTitle")->setText(tr("Memory and editing"));
-    for (const KeySection& section : keySections())
-        findChild<QToolButton*>("section:" + section.id)->setText(translated(section.title));
-    for (const Key& key : everyDirectKey()) findChild<QPushButton*>("direct:" + key.id)->setText(translated(key.face.label));
-    for (const QString& id : defaultCommon())
-        findChild<QPushButton*>("common:" + id)->setText(translated(directKey(id).face.label));
+    for (const KeySection& section : keySections()) {
+        auto* header = findChild<QToolButton*>("section:" + section.id);
+        header->setText(translated(section.title));
+        header->setAccessibleName(header->text());
+    }
+    for (const Key& key : everyDirectKey()) {
+        auto* button = findChild<QPushButton*>("direct:" + key.id);
+        button->setText(translated(key.face.label));
+        button->setAccessibleName(spokenName(key));
+    }
+    for (const QString& id : defaultCommon()) {
+        auto* button = findChild<QPushButton*>("common:" + id);
+        button->setText(translated(directKey(id).face.label));
+        button->setAccessibleName(spokenName(directKey(id)));
+    }
 
     // angle, type and = share one width, wide enough for their texts in every language
     int text = 0;
