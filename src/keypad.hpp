@@ -9,7 +9,8 @@
 enum class KeyAction { Insert, Template, Clear, Backspace, Evaluate, MemoryAdd, MemorySubtract, MemoryClear, MemoryStore, Left, Right, Up, Down,
                        Type,    // the inserted text goes through the typing rules, character by character
                        Shift,  // the next letter is a capital
-                       Undo, Redo };
+                       Undo, Redo,
+                       Tool };  // opens one of the rail's tools
 
 // What a key does.
 struct Face {
@@ -18,6 +19,7 @@ struct Face {
     QString function;  // the engine function it stands for, if any (for Exact availability)
     KeyAction action = KeyAction::Insert;
     Template shape = Template::Text;  // Template only
+    QString opens;  // Tool: the tool it opens
 };
 
 struct Key {

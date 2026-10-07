@@ -1827,3 +1827,20 @@ TEST(MainWindow, ThePercentagesModeAnswersWithTheirBounds) {
     child<QLineEdit>(window, "percentSecond")->setText("abc");  // the statistics box's filter keeps it numeric
     EXPECT_EQ(child<QLineEdit>(window, "percentSecond")->text(), "");
 }
+
+TEST(MainWindow, ThePercentagesKeyStartsFromTheLastResult) {
+    MainWindow window;
+    run(window, "40*2");
+    openSection(window, "numbers");
+    QTest::mouseClick(child<QPushButton>(window, "direct:percentages"), Qt::LeftButton);
+    EXPECT_EQ(child<QListWidget>(window, "modes")->currentRow(), 2);
+    EXPECT_EQ(child<QLineEdit>(window, "percentFirst")->text(), "80");
+}
+
+TEST(MainWindow, ThePercentagesKeyKeepsALargeResultWhole) {
+    MainWindow window;
+    run(window, "10^30");
+    openSection(window, "numbers");
+    QTest::mouseClick(child<QPushButton>(window, "direct:percentages"), Qt::LeftButton);
+    EXPECT_EQ(child<QLineEdit>(window, "percentFirst")->text(), "1.000000000000000019884624838656e30");  // the exponent survives the filter
+}

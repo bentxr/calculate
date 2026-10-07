@@ -1321,7 +1321,7 @@ QWidget* MainWindow::buildPercentages() {
     auto numeric = [this](QLineEdit* edit) {
         connect(edit, &QLineEdit::textChanged, edit, [edit](const QString& text) {
             QString kept = text;
-            kept.remove(QRegularExpression(QStringLiteral("[^0-9.,-]")));
+            kept.remove(QRegularExpression(QStringLiteral("[^0-9.,eE-]")));
             if (kept != text) edit->setText(kept);
         });
         connect(edit, &QLineEdit::textChanged, this, [this] { percentTimer_.start(); });
@@ -1672,6 +1672,18 @@ void MainWindow::apply(const Face& f) {
         break;
     case KeyAction::Down:
         if (!lcd_->down()) replay(historyIndex_ - 1);
+        break;
+    case KeyAction::Tool:
+        if (f.opens == "percentages") {
+            modes_->setCurrentRow(2);
+            // The last result as the first value, in the copy form that reads back exactly.
+            if (hasResult_ && !last_.error) {
+                const QString value = view::copyText(last_, view::CopyForm::Value, types_[static_cast<std::size_t>(last_.type)]);
+                percentFirst_->setText(settings::decimalComma() ? view::withDecimalComma(value) : value);
+            }
+            percentFirst_->setFocus();
+            return;
+        }
         break;
     }
     lcd_->setFocus();

@@ -123,7 +123,7 @@ TEST(Keypad, EveryOtherKeyHasAHomeSection) {
     }
     EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "constants", "statistics", "letters"}));
     EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Constants", "Statistics", "Letters"}));
-    EXPECT_EQ(sectionLabels("numbers"), QStringList({"x!", "abs", "%", "mod", "nPr", "nCr", "gcd", "lcm", ","}));
+    EXPECT_EQ(sectionLabels("numbers"), QStringList({"x!", "abs", "%", "%…", "mod", "nPr", "nCr", "gcd", "lcm", ","}));
     EXPECT_EQ(sectionLabels("hyperbolic"), QStringList({"sinh", "cosh", "tanh", "asinh", "acosh", "atanh"}));
     EXPECT_EQ(sectionLabels("trigonometry"), QStringList({"asin", "acos", "atan"}));
     EXPECT_EQ(sectionLabels("powers"), QStringList({"x³", "∛", "ⁿ√", "10ˣ", "eˣ", "log"}));
@@ -292,4 +292,11 @@ TEST(Keypad, AlternatesAreKeysOfTheLeftKeyboard) {
         EXPECT_FALSE(find(id).id.isEmpty()) << id.toStdString();
         for (const QString& other : others) EXPECT_FALSE(find(other).id.isEmpty()) << other.toStdString();
     }
+}
+
+TEST(Keypad, APercentagesKeyOpensTheTool) {
+    EXPECT_EQ(directKey("percentages").face.action, KeyAction::Tool);
+    EXPECT_EQ(directKey("percentages").face.opens, "percentages");
+    const QStringList numbers = sectionLabels("numbers");
+    EXPECT_EQ(numbers.indexOf("%…"), numbers.indexOf("%") + 1);  // next to %
 }

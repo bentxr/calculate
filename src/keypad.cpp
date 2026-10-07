@@ -11,15 +11,16 @@
 namespace {
 
 Face put(const QString& label, const QString& insert, const QString& function = {}) {
-    return {label, insert, function, KeyAction::Insert};
+    return {label, insert, function, KeyAction::Insert, Template::Text, {}};
 }
-Face act(const QString& label, KeyAction action) { return {label, {}, {}, action}; }
+Face act(const QString& label, KeyAction action) { return {label, {}, {}, action, Template::Text, {}}; }
 // A key whose text is typed as the keyboard types it (so letters before a ( become a function's piece).
-Face type(const QString& label, const QString& text) { return {label, text, {}, KeyAction::Type}; }
+Face type(const QString& label, const QString& text) { return {label, text, {}, KeyAction::Type, Template::Text, {}}; }
 // A key that opens a template; `fill` is typed into its box at once, and the cursor leaves it (x², x⁻¹).
 Face shape(const QString& label, Template kind, const QString& function = {}, const QString& fill = {}) {
-    return {label, fill, function, KeyAction::Template, kind};
+    return {label, fill, function, KeyAction::Template, kind, {}};
 }
+Face tool(const QString& label, const QString& opens) { return {label, {}, {}, KeyAction::Tool, Template::Text, opens}; }
 Key digit(const QString& d) { return {d, put(d, d)}; }
 
 }  // namespace
@@ -89,6 +90,7 @@ const QList<KeySection>& keySections() {
     static const QList<KeySection> sections{
         {"numbers", QT_TRANSLATE_NOOP("keypad", "Numbers"),
          {{"factorial", put("x!", "!")}, {"abs", shape("abs", Template::Abs, "abs")}, {"percent", put("%", "%")},
+          {"percentages", tool("%…", "percentages")},
           {"mod", put("mod", "mod(", "mod")}, {"npr", put("nPr", "nPr(", "nPr")}, {"ncr", put("nCr", "nCr(", "nCr")},
           {"gcd", put(QT_TRANSLATE_NOOP("keypad", "gcd"), QT_TRANSLATE_NOOP("keypad", "gcd("), "gcd")},
           {"lcm", put(QT_TRANSLATE_NOOP("keypad", "lcm"), QT_TRANSLATE_NOOP("keypad", "lcm("), "lcm")},
@@ -230,6 +232,7 @@ QString spokenName(const Key& key) {
         {"eˣ", QT_TRANSLATE_NOOP("spoken", "e to the power")},
         {"x!", QT_TRANSLATE_NOOP("spoken", "factorial")},
         {"%", QT_TRANSLATE_NOOP("spoken", "percent")},
+        {"%…", QT_TRANSLATE_NOOP("spoken", "percentages")},
         {",", QT_TRANSLATE_NOOP("spoken", "separator")},
         {"π", QT_TRANSLATE_NOOP("spoken", "pi")},
         {"M+", QT_TRANSLATE_NOOP("spoken", "memory plus")},
