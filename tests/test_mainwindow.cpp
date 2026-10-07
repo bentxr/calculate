@@ -1809,3 +1809,21 @@ TEST(MainWindow, ARightClickOffersTheKeysOtherFaces) {
     EXPECT_EQ(lcd(window)->input(), "asin(");
     EXPECT_FALSE(popup->isVisible());
 }
+
+TEST(MainWindow, ThePercentagesModeAnswersWithTheirBounds) {
+    MainWindow window;
+    auto* modes = child<QListWidget>(window, "modes");
+    ASSERT_EQ(modes->count(), 3);
+    modes->setCurrentRow(2);
+    child<QLineEdit>(window, "percentFirst")->setText("80");
+    child<QLineEdit>(window, "percentSecond")->setText("10");
+    QLabel* plus = child<QLabel>(window, "percent:plus");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return plus->text() == "88"; }, 10000)) << plus->text().toStdString();
+    EXPECT_EQ(child<QLabel>(window, "percentBound:plus")->text(), "± 0");  // every answer shows its bound
+    child<QLineEdit>(window, "percentSecond")->setText("0.1");
+    QLabel* of = child<QLabel>(window, "percentBound:of");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return of->text().startsWith("± ") && of->text() != "± 0"; }, 10000))
+        << of->text().toStdString();  // 0.1 is not exact in binary: the bound says so
+    child<QLineEdit>(window, "percentSecond")->setText("abc");  // the statistics box's filter keeps it numeric
+    EXPECT_EQ(child<QLineEdit>(window, "percentSecond")->text(), "");
+}

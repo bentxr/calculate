@@ -62,6 +62,7 @@ signals:
     void memoryStoreRequested();
     void memoryClearRequested();
     void previewRequested(int generation, const QString& expression, const calculate_core::Options& options);
+    void answerRequested(int generation, const QString& key, const QString& expression, const calculate_core::Options& options);
 
 private:
     QWidget* buildKeypad();
@@ -69,6 +70,9 @@ private:
     QWidget* keyGrid(const QString& name, const QList<Key>& keys, const QString& prefix);
     QPushButton* buildKey(const Key& key, const QString& prefix);  // prefix: "key:" or "direct:"
     QWidget* buildStatistics();
+    QWidget* buildPercentages();
+    void requestPercentages();  // every answer again, a moment after the last change
+    void showPercentage(int generation, const QString& key, const calculate_core::Result& result);
     void buildSettings();
     QMap<QString, QString> settingValues() const;
     void retranslate();
@@ -190,6 +194,11 @@ private:
     QListWidget* history_ = nullptr;
     QPlainTextEdit* statisticsValues_ = nullptr;
     QToolButton* statisticsKeysToggle_ = nullptr;
+    QLineEdit* percentFirst_ = nullptr;
+    QLineEdit* percentSecond_ = nullptr;
+    QToolButton* percentKeysToggle_ = nullptr;
+    QTimer percentTimer_;
+    int percentSerial_ = 0;
     std::vector<Entry> historyEntries_;  // as typed, one per history row
     std::vector<calculate_core::Result> historyResults_;  // the same rows' results
     QMenu* historyMenu_ = nullptr;

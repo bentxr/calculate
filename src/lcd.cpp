@@ -330,19 +330,8 @@ void Lcd::clearResult() {
 QString Lcd::outputText() const {
     switch (shown_) {
     case Shown::Nothing: return {};
-    case Shown::Value: {
-        QString s = value_.trusted;
-        if (!value_.noise.isEmpty()) s += "|" + value_.noise;
-        if (!value_.exponent.isEmpty()) s += "×10^" + value_.exponent;
-        return s;
-    }
-    case Shown::Exact: {
-        if (exact_.denominator == "1") return exact_.sign + exact_.numerator;
-        QString s = exact_.sign + exact_.numerator + "/" + exact_.denominator;
-        if (!exact_.decimal.isEmpty()) s += " = " + exact_.sign + exact_.decimal;
-        if (!exact_.recurring.isEmpty()) s += "(" + exact_.recurring + ")";
-        return s;
-    }
+    case Shown::Value: return view::oneLine(value_);
+    case Shown::Exact: return view::oneLine(exact_);
     }
     return {};
 }

@@ -52,6 +52,10 @@ ValueParts withDecimalComma(ValueParts parts);
 FractionParts withDecimalComma(FractionParts parts);
 QString withDecimalComma(const QString& expression);
 
+// A result on one line of plain text, as the screen shows it: "1.000|2×10^−7", "−1/3 = −0.(3)".
+QString oneLine(const ValueParts& parts);
+QString oneLine(const FractionParts& parts);
+
 enum class CopyForm { Value, Trusted, ValueAndBound, Details };
 // The result as plain text for the clipboard: ASCII signs ("-", "e30"), no bar; empty when the form has
 // nothing to give (an error, or no trusted digit).

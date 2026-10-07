@@ -100,7 +100,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     panelToggle_->setAutoRaise(true);
     modes_ = new QListWidget(rail_);
     modes_->setObjectName("modes");
-    modes_->addItems({QString(), QString()});  // Calculator, Statistics (see retranslate)
+    modes_->addItems({QString(), QString(), QString()});  // Calculator, Statistics, Percentages (see retranslate)
     modes_->setFixedWidth(140);
     settingsButton_ = new QToolButton(rail_);
     settingsButton_->setObjectName("settingsButton");
@@ -361,6 +361,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     statistics->setWidgetResizable(true);
     statistics->setWidget(buildStatistics());
     pages_->addWidget(statistics);
+    auto* percentages = new QScrollArea(pages_);
+    percentages->setFrameShape(QFrame::NoFrame);
+    percentages->setWidgetResizable(true);
+    percentages->setWidget(buildPercentages());
+    pages_->addWidget(percentages);
     main->addWidget(pages_, 1);
     setCentralWidget(central);
     modes_->setCurrentRow(0);
@@ -377,6 +382,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(this, &MainWindow::previewRequested, worker_, &Worker::preview);
     connect(worker_, &Worker::evaluated, this, &MainWindow::showResult);
     connect(worker_, &Worker::previewed, this, &MainWindow::showPreview);
+    connect(this, &MainWindow::answerRequested, worker_, &Worker::answer);
+    connect(worker_, &Worker::answered, this, &MainWindow::showPercentage);
     connect(worker_, &Worker::memoryChanged, lcd_, &Lcd::setMemory);
     connect(worker_, &Worker::memoryFailed, this, [this] { message_->setText(tr("The memory needs a previous result")); });
     thread_.start();
@@ -445,6 +452,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
         updateKeys();
         if (settings::liveCalculation() && (previewShown_ || lcd_->input().trimmed() != lastExpression_)) requestPreview();
         else if (!lastExpression_.isEmpty() && !last_.error) request(lastExpression_, false);
+        requestPercentages();
     };
     connect(type_, &QComboBox::currentIndexChanged, this, reevaluate);
     connect(angle_, &QComboBox::currentIndexChanged, this, reevaluate);
@@ -994,6 +1002,7 @@ void MainWindow::buildSettings() {
                    if (hasResult_ || previewShown_) present();
                    relabelHistory();
                    lcd_->update();
+                   requestPercentages();
                });
     inputSection_ = settings_->addSection(QString());
     QAction* live = settings_->addAction(QString());
@@ -1085,7 +1094,7 @@ void MainWindow::retranslate() {
     setWindowTitle(tr("calculate"));
     panelToggle_->setToolTip(tr("Show or hide the panel"));
     settingsButton_->setToolTip(tr("Settings"));
-    const QStringList modes{tr("Calculator"), tr("Statistics")};
+    const QStringList modes{tr("Calculator"), tr("Statistics"), tr("Percentages")};
     for (int i = 0; i < modes.size(); ++i) modes_->item(i)->setText(modes[i]);
     for (int i = 0; i < modes_->count(); ++i) findChild<QAction*>(QStringLiteral("mode:%1").arg(i))->setText(modes_->item(i)->text());
     drawerToggle_->setText(tr("More") + QStringLiteral(" ▾"));
@@ -1122,6 +1131,10 @@ void MainWindow::retranslate() {
     for (QToolButton* button : {panelToggle_, settingsButton_, historyToggle_}) button->setAccessibleName(button->toolTip());
     statisticsLabel_->setText(tr("Values (one per line, or separated by commas):"));
     statisticsKeysToggle_->setToolTip(tr("Show or hide the keypad"));
+    percentKeysToggle_->setToolTip(tr("Show or hide the keypad"));
+    for (const view::PercentageRow& row : view::percentageRows(QStringLiteral("1"), QStringLiteral("2")))
+        findChild<QLabel*>("percentTitle:" + row.key)->setText(row.title);
+    requestPercentages();  // error texts are in the language too
     languageSection_->setText(tr("Language"));
     themeSection_->setText(tr("Theme"));
     findChild<QAction*>("language:system")->setText(tr("System"));
@@ -1197,6 +1210,7 @@ void MainWindow::drawIcons() {
     search_->findChild<QAction*>("searchIcon")->setIcon(
         icons::drawn(icons::Kind::Search, palette().color(QPalette::PlaceholderText), fontMetrics().height()));
     statisticsKeysToggle_->setIcon(icons::drawn(icons::Kind::Keyboard, ink, fontMetrics().height()));
+    percentKeysToggle_->setIcon(icons::drawn(icons::Kind::Keyboard, ink, fontMetrics().height()));
 }
 
 // Hovering a statistics button shows how that statistic is computed.
@@ -1296,6 +1310,132 @@ QWidget* MainWindow::buildStatistics() {
     connect(statisticsKeysToggle_, &QToolButton::toggled, keys, &QWidget::setVisible);
     layout->addLayout(entry, 1);
     return page;
+}
+
+// Two values and the percentage questions about them, each answered with its bound.
+QWidget* MainWindow::buildPercentages() {
+    auto* page = new QWidget;
+    auto* layout = new QVBoxLayout(page);
+    auto* entry = new QGridLayout;
+    // Only what a number is made of, typed or pasted (as in the statistics box).
+    auto numeric = [this](QLineEdit* edit) {
+        connect(edit, &QLineEdit::textChanged, edit, [edit](const QString& text) {
+            QString kept = text;
+            kept.remove(QRegularExpression(QStringLiteral("[^0-9.,-]")));
+            if (kept != text) edit->setText(kept);
+        });
+        connect(edit, &QLineEdit::textChanged, this, [this] { percentTimer_.start(); });
+    };
+    percentFirst_ = new QLineEdit(page);
+    percentFirst_->setObjectName("percentFirst");
+    percentSecond_ = new QLineEdit(page);
+    percentSecond_->setObjectName("percentSecond");
+    percentKeysToggle_ = new QToolButton(page);
+    percentKeysToggle_->setObjectName("percentKeysToggle");
+    percentKeysToggle_->setCheckable(true);
+    percentKeysToggle_->setChecked(true);
+    percentKeysToggle_->setAutoRaise(true);
+    percentKeysToggle_->setFocusPolicy(Qt::NoFocus);
+    entry->addWidget(new QLabel(QStringLiteral("1"), page), 0, 0);
+    entry->addWidget(percentFirst_, 0, 1);
+    entry->addWidget(percentKeysToggle_, 0, 2);
+    entry->addWidget(new QLabel(QStringLiteral("2"), page), 1, 0);
+    entry->addWidget(percentSecond_, 1, 1);
+    numeric(percentFirst_);
+    numeric(percentSecond_);
+    layout->addLayout(entry);
+
+    // A small numeric keypad, so a phone needs no system keyboard; it types into the box being edited.
+    auto* keys = new QWidget(page);
+    keys->setObjectName("percentKeys");
+    auto* grid = new QGridLayout(keys);
+    grid->setContentsMargins(0, 0, 0, 0);
+    const struct {
+        const char* id;
+        const char* label;
+        const char* insert;  // empty: delete the character before the cursor
+    } pad[] = {{"7", "7", "7"}, {"8", "8", "8"}, {"9", "9", "9"}, {"backspace", "⌫", ""},
+               {"4", "4", "4"}, {"5", "5", "5"}, {"6", "6", "6"}, {"next", "⏎", "\n"},
+               {"1", "1", "1"}, {"2", "2", "2"}, {"3", "3", "3"}, {"minus", "−", "-"},
+               {"0", "0", "0"}, {"point", ".", "."}};
+    for (int i = 0; i < int(std::size(pad)); ++i) {
+        auto* button = new QPushButton(QString::fromUtf8(pad[i].label), keys);
+        button->setObjectName(QStringLiteral("percentKey:") + pad[i].id);
+        button->setFocusPolicy(Qt::NoFocus);
+        const QString insert = QString::fromUtf8(pad[i].insert);
+        connect(button, &QPushButton::clicked, this, [this, insert] {
+            QLineEdit* edit = percentSecond_->hasFocus() ? percentSecond_ : percentFirst_;
+            if (insert == "\n") (edit == percentFirst_ ? percentSecond_ : percentFirst_)->setFocus();
+            else if (insert.isEmpty()) edit->backspace();
+            else edit->insert(settings::decimalComma() && insert == "." ? QStringLiteral(",") : insert);
+        });
+        grid->addWidget(button, i / 4, i % 4);
+    }
+    connect(percentKeysToggle_, &QToolButton::toggled, keys, &QWidget::setVisible);
+    layout->addWidget(keys, 0, Qt::AlignLeft);
+
+    auto* answers = new QGridLayout;
+    const QList<view::PercentageRow> rows = view::percentageRows(QStringLiteral("1"), QStringLiteral("2"));
+    for (int i = 0; i < rows.size(); ++i) {
+        auto* title = new QLabel(page);  // see retranslate
+        title->setObjectName("percentTitle:" + rows[i].key);
+        auto* value = new QLabel(page);
+        value->setObjectName("percent:" + rows[i].key);
+        value->setTextInteractionFlags(Qt::TextSelectableByMouse);
+        auto* bound = new QLabel(page);
+        bound->setObjectName("percentBound:" + rows[i].key);
+        bound->setForegroundRole(QPalette::PlaceholderText);
+        bound->setWordWrap(true);
+        answers->addWidget(title, i, 0);
+        answers->addWidget(value, i, 1);
+        answers->addWidget(bound, i, 2);
+    }
+    answers->setColumnStretch(2, 1);
+    layout->addLayout(answers);
+    layout->addStretch();
+    percentTimer_.setSingleShot(true);
+    percentTimer_.setInterval(liveDelay);
+    connect(&percentTimer_, &QTimer::timeout, this, [this] {
+        // Answers still on their way are skipped or cancelled, as for the screen's live result.
+        worker_->answerGeneration() = ++percentSerial_;
+        worker_->answerCancelFlag() = true;
+        QString first = percentFirst_->text(), second = percentSecond_->text();
+        if (settings::decimalComma()) {  // the engine reads a point
+            first.replace(',', '.');
+            second.replace(',', '.');
+        }
+        const QList<view::PercentageRow> rows = view::percentageRows(first, second);
+        for (const view::PercentageRow& row : view::percentageRows(QStringLiteral("1"), QStringLiteral("2"))) {
+            findChild<QLabel*>("percent:" + row.key)->clear();
+            findChild<QLabel*>("percentBound:" + row.key)->clear();
+        }
+        for (const view::PercentageRow& row : rows) emit answerRequested(percentSerial_, row.key, row.expression, options());
+    });
+    return page;
+}
+
+void MainWindow::requestPercentages() {
+    if (percentFirst_) percentTimer_.start();
+}
+
+void MainWindow::showPercentage(int generation, const QString& key, const Result& result) {
+    if (generation != percentSerial_) return;
+    auto* value = findChild<QLabel*>("percent:" + key);
+    auto* bound = findChild<QLabel*>("percentBound:" + key);
+    if (result.error) {
+        value->clear();
+        bound->setText(view::errorText(*result.error, QString::fromStdString(result.expression)));
+        return;
+    }
+    const bool comma = settings::decimalComma();
+    if (result.exact) {
+        value->setText(view::oneLine(comma ? view::withDecimalComma(view::fractionParts(result)) : view::fractionParts(result)));
+        bound->setText(QStringLiteral("± 0"));
+        return;
+    }
+    value->setText(view::oneLine(comma ? view::withDecimalComma(view::valueParts(result)) : view::valueParts(result)));
+    const QString text = QStringLiteral("± ") + QString::fromStdString(result.bound);
+    bound->setText(comma ? view::withDecimalComma(text) : text);
 }
 
 Options MainWindow::options() const {
