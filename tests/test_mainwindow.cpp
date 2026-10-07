@@ -1932,3 +1932,18 @@ TEST(MainWindow, TheConventionsSitApartInTheirOwnMenu) {
     for (QAction* action : child<QMenu>(window, "conventions")->actions()) separators += action->isSeparator();
     EXPECT_EQ(separators, 2);  // log | mod | %
 }
+
+TEST(MainWindow, TheHistoryKeepsComments) {
+    MainWindow window;
+    run(window, "1+1 # two");
+    auto* list = child<QListWidget>(window, "history");
+    EXPECT_EQ(list->item(0)->text(), "1+1 = 2   # two");
+    forget(window);
+    lcd(window)->clear();
+    lcd(window)->setInput("# a note");
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    ASSERT_TRUE(QTest::qWaitFor([&] { return list->count() == 2; }, 10000));
+    EXPECT_EQ(list->item(0)->text(), "# a note");
+    EXPECT_EQ(lcd(window)->outputText(), "");
+    EXPECT_FALSE(child<QToolButton>(window, "detailsButton")->isEnabled());
+}

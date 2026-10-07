@@ -296,3 +296,9 @@ TEST(Presenter, ThePercentageQuestionsAreExpressions) {
     EXPECT_EQ(values, QStringList({"25/1", "-20/1", "125/1", "80/1", "160/1", "0/1", "80/1"}));
     EXPECT_TRUE(view::percentageRows(QStringLiteral(""), QStringLiteral("100")).isEmpty());  // a value is missing
 }
+
+TEST(Presenter, ANoteHasNoDetails) {
+    const Result note = evaluated("# a note");
+    EXPECT_TRUE(view::details(note, typeInfo(NumberType::Double)).isEmpty());
+    EXPECT_EQ(view::valueParts(note).trusted, "");
+}

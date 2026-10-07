@@ -111,7 +111,7 @@ QString typeDetail(const TypeInfo& t) {
 }
 
 ValueParts valueParts(const Result& r) {
-    if (r.error || r.exact) return {};
+    if (r.error || r.exact || r.commentOnly) return {};
     return split(r.value, r.trustedDigits);
 }
 
@@ -137,7 +137,7 @@ QString verdict(const QString& conditionNumber) {
 }
 
 QList<DetailRow> details(const Result& r, const TypeInfo& t) {
-    if (r.error) return {};
+    if (r.error || r.commentOnly) return {};  // a note has no value
     const QString expression = settings::decimalComma() ? withDecimalComma(fromStd(r.expression)) : fromStd(r.expression);
     const DetailRow evaluated{"evaluated", QCoreApplication::translate("view", "Evaluated"), expression};
     if (r.exact)

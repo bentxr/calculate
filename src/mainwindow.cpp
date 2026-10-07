@@ -1625,10 +1625,17 @@ void MainWindow::popUpHistoryMenu(QPoint position) {
 }
 
 // "expression = value", the value cut short: the list only points back to the calculation.
+// `#` can only start a comment, so the text before the first one is the expression: "1+1 = 2   # two". A note (only a
+// comment) is shown as typed.
 QString MainWindow::historyLabel(const QString& expression, const QString& value) const {
+    const QString typed = expression.section('#', 0, 0).trimmed();
+    if (typed.isEmpty()) return expression.trimmed();
     QString shown = shownExpression(value);
     if (shown.size() > 28) shown = shown.left(28) + QStringLiteral("…");
-    return shownExpression(expression) + QStringLiteral(" = ") + shown;
+    QString label = shownExpression(typed) + QStringLiteral(" = ") + shown;
+    const QString comment = expression.section('#', 1).trimmed();
+    if (!comment.isEmpty()) label += QStringLiteral("   # ") + comment;
+    return label;
 }
 
 void MainWindow::relabelHistory() {
@@ -1688,8 +1695,9 @@ void MainWindow::present() {
                             && (view::incomplete(*shown.error) || lcd_->entry().hasEmptyBox() || namePending(*shown.error, expression));
     proceed_->setVisible(!previewShown_ && shown.error && canProceed(shown.error->code));  // it acts on the last request
     card_->setRows(view::details(shown, types_[static_cast<std::size_t>(shown.type)]));
-    detailsButton_->setEnabled(!shown.error);
-    enableCopy(shown.error ? nullptr : &shown);
+    const bool valueless = shown.error || shown.commentOnly;  // an error, or a note
+    detailsButton_->setEnabled(!valueless);
+    enableCopy(valueless ? nullptr : &shown);
     message_->setText(shown.error && !unfinished ? view::errorText(*shown.error, expression) : QString());
     message_->setForegroundRole(previewShown_ ? QPalette::PlaceholderText : QPalette::WindowText);
     lcd_->setProvisional(previewShown_);
@@ -1701,7 +1709,7 @@ void MainWindow::present() {
     } else {
         lcd_->clearMarked();
     }
-    if (shown.error) lcd_->clearResult();
+    if (valueless) lcd_->clearResult();
     else if (shown.exact) lcd_->showExact(settings::decimalComma() ? view::withDecimalComma(view::fractionParts(shown)) : view::fractionParts(shown));
     else lcd_->showValue(settings::decimalComma() ? view::withDecimalComma(view::valueParts(shown)) : view::valueParts(shown));
 }
