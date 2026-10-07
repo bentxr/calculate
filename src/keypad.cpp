@@ -187,6 +187,12 @@ QString translated(const QString& text) {
     return QCoreApplication::translate("keypad", text.toUtf8().constData());
 }
 
+QString legend(const Face& face, bool decimalComma) {
+    if (decimalComma && face.label == ".") return QStringLiteral(",");
+    if (decimalComma && face.label == ",") return QStringLiteral(";");
+    return translated(face.label);
+}
+
 const QList<QPair<QString, QStringList>>& alternates() {
     static const QList<QPair<QString, QStringList>> list{
         {"sin", {"asin", "sinh", "asinh"}},

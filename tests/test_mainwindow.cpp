@@ -1875,3 +1875,15 @@ TEST(MainWindow, ThePercentagesKeypadMovesToTheSecondValue) {
     QTest::mouseClick(child<QPushButton>(window, "percentKey:backspace"), Qt::LeftButton);
     EXPECT_EQ(child<QLineEdit>(window, "percentFirst")->text(), "");
 }
+
+TEST(MainWindow, TheKeysShowTheSeparatorsInUse) {
+    MainWindow window;
+    setting(window, "decimal:comma")->trigger();
+    EXPECT_EQ(child<QPushButton>(window, "key:point")->text(), ",");
+    EXPECT_EQ(child<QPushButton>(window, "direct:comma")->text(), ";");
+    EXPECT_EQ(child<QPushButton>(window, "percentKey:point")->text(), ",");
+    setting(window, "decimal:language")->trigger();  // English: the point again
+    EXPECT_EQ(child<QPushButton>(window, "key:point")->text(), ".");
+    EXPECT_EQ(child<QPushButton>(window, "direct:comma")->text(), ",");
+    EXPECT_EQ(child<QPushButton>(window, "percentKey:point")->text(), ".");
+}

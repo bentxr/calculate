@@ -300,3 +300,16 @@ TEST(Keypad, APercentagesKeyOpensTheTool) {
     const QStringList numbers = sectionLabels("numbers");
     EXPECT_EQ(numbers.indexOf("%…"), numbers.indexOf("%") + 1);  // next to %
 }
+
+TEST(Keypad, TheSeparatorKeysFollowTheDecimalComma) {
+    Face point;
+    for (const QList<Key>& row : keypad())
+        for (const Key& key : row)
+            if (key.id == "point") point = key.face;
+    ASSERT_EQ(point.label, ".");
+    EXPECT_EQ(legend(point, false), ".");
+    EXPECT_EQ(legend(point, true), ",");                     // the decimal separator
+    EXPECT_EQ(legend(directKey("comma").face, false), ",");
+    EXPECT_EQ(legend(directKey("comma").face, true), ";");   // the argument separator
+    EXPECT_EQ(legend(directKey("sinh").face, true), translated("sinh"));
+}

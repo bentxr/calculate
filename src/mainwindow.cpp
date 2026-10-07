@@ -558,7 +558,7 @@ void MainWindow::showMore(QWidget* key, const QStringList& others) {
     const QString id = key->objectName().section(':', 1);
     for (int i = 0; i < others.size(); ++i) {
         const Face face = directKey(others[i]).face;
-        auto* button = new QPushButton(translated(face.label), moreKeys_);
+        auto* button = new QPushButton(legend(face, settings::decimalComma()), moreKeys_);
         button->setObjectName(QStringLiteral("more:%1:%2").arg(id).arg(i));
         button->setFocusPolicy(Qt::NoFocus);
         button->setMinimumSize(key->size());
@@ -607,7 +607,7 @@ void MainWindow::setCommon(const QStringList& ids) {
         const Key key = directKey(id);
         QPushButton* button = buildKey(key, "common:");
         button->setParent(grid);
-        button->setText(translated(key.face.label));
+        button->setText(legend(key.face, settings::decimalComma()));
         button->setAccessibleName(spokenName(key));
         if (keySize_.isValid()) {
             button->setFixedSize(keySize_);
@@ -921,7 +921,7 @@ void MainWindow::fillSearch() {
             bold.setBold(true);
             heading->setFont(bold);
         }
-        auto* item = new QListWidgetItem(translated(e.face.label) + (e.title.isEmpty() ? QString() : QStringLiteral("  —  ") + e.title),
+        auto* item = new QListWidgetItem(legend(e.face, settings::decimalComma()) + (e.title.isEmpty() ? QString() : QStringLiteral("  —  ") + e.title),
                                          searchList_);
         item->setData(Qt::UserRole, i);
     }
@@ -972,7 +972,7 @@ void MainWindow::updatePreviews() {
     const QWidget* common = findChild<QWidget*>("common");
     for (const KeySection& section : keySections()) {
         QStringList legends;
-        for (const Key& key : section.keys) legends << translated(key.face.label);
+        for (const Key& key : section.keys) legends << legend(key.face, settings::decimalComma());
         auto* preview = findChild<QLabel*>("preview:" + section.id);
         const QString text = legends.join(QStringLiteral("  "));
         if (!keysSized_) {
@@ -1024,7 +1024,7 @@ void MainWindow::buildSettings() {
                    if (hasResult_ || previewShown_) present();
                    relabelHistory();
                    lcd_->update();
-                   requestPercentages();
+                   retranslate();  // the separator keys' legends, and the percentages again
                });
     inputSection_ = settings_->addSection(QString());
     QAction* live = settings_->addAction(QString());
@@ -1154,6 +1154,7 @@ void MainWindow::retranslate() {
     statisticsLabel_->setText(tr("Values (one per line, or separated by commas):"));
     statisticsKeysToggle_->setToolTip(tr("Show or hide the keypad"));
     percentKeysToggle_->setToolTip(tr("Show or hide the keypad"));
+    findChild<QPushButton*>("percentKey:point")->setText(settings::decimalComma() ? QStringLiteral(",") : QStringLiteral("."));
     for (const view::PercentageRow& row : view::percentageRows(QStringLiteral("1"), QStringLiteral("2")))
         findChild<QLabel*>("percentTitle:" + row.key)->setText(row.title);
     requestPercentages();  // error texts are in the language too
@@ -1179,7 +1180,7 @@ void MainWindow::retranslate() {
     for (const QList<Key>& row : keypad()) keys += row;
     for (const Key& key : keys) {
         auto* button = findChild<QPushButton*>("key:" + key.id);
-        button->setText(translated(key.face.label));
+        button->setText(legend(key.face, settings::decimalComma()));
         button->setAccessibleName(spokenName(key));
     }
     findChild<QLabel*>("commonTitle")->setText(tr("Common"));
@@ -1191,14 +1192,14 @@ void MainWindow::retranslate() {
     }
     for (const Key& key : everyDirectKey()) {
         auto* button = findChild<QPushButton*>("direct:" + key.id);
-        button->setText(translated(key.face.label));
+        button->setText(legend(key.face, settings::decimalComma()));
         button->setAccessibleName(spokenName(key));
     }
     editCommon_->setText(tr("Edit"));
     resetCommon_->setText(tr("Reset"));
     for (const QString& id : common_) {
         auto* button = findChild<QPushButton*>("common:" + id);
-        button->setText(translated(directKey(id).face.label));
+        button->setText(legend(directKey(id).face, settings::decimalComma()));
         button->setAccessibleName(spokenName(directKey(id)));
     }
 
@@ -1765,7 +1766,7 @@ void MainWindow::updateKeys() {
         auto* button = findChild<QPushButton*>("key:" + id);
         if (!button->isEnabled()) continue;
         QStringList legends;
-        for (const QString& other : others) legends << translated(directKey(other).face.label);
+        for (const QString& other : others) legends << legend(directKey(other).face, settings::decimalComma());
         button->setToolTip(tr("Hold for: %1").arg(legends.join(QStringLiteral(", "))));
     }
 }

@@ -82,3 +82,5 @@ QString spokenName(const Key& key);
 
 // A label or inserted text in the user's language (Spanish calculators print sen, Arcsen, MCD…).
 QString translated(const QString& text);
+// A key's legend as shown: translated, and with the decimal comma the point key shows "," and the separator ";".
+QString legend(const Face& face, bool decimalComma);
