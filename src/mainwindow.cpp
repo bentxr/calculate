@@ -429,25 +429,50 @@ QPushButton* MainWindow::buildKey(const Key& key, const QString& prefix) {
     return button;
 }
 
-// The direct keys, a titled grid of six columns per topic.
+// A grid of keys in six columns; shorter rows line up on the left, in the same columns.
+QWidget* MainWindow::keyGrid(const QString& name, const QList<Key>& keys, const QString& prefix) {
+    auto* grid = new QWidget;
+    grid->setObjectName(name);
+    auto* layout = new QGridLayout(grid);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(keySpacing);
+    for (int i = 0; i < keys.size(); ++i) layout->addWidget(buildKey(keys[i], prefix), i / 6, i % 6);
+    layout->setColumnStretch(6, 1);
+    return grid;
+}
+
+// The left column: Common and Memory and editing, always shown, then a header and the keys of every section.
 QWidget* MainWindow::buildDirectKeys() {
     auto* keyboard = new QWidget;
     keyboard->setObjectName("directKeys");
     auto* layout = new QVBoxLayout(keyboard);
-    for (int g = 0; g < directKeys().size(); ++g) {
-        const KeyGroup& group = directKeys()[g];
-        auto* title = new QLabel(keyboard);
-        title->setObjectName("group:" + QString::number(g));
-        title->setForegroundRole(QPalette::PlaceholderText);
-        layout->addWidget(title);
-        auto* grid = new QGridLayout;
-        grid->setSpacing(keySpacing);
-        for (int i = 0; i < group.keys.size(); ++i) {
-            const Key& key = group.keys[i];
-            grid->addWidget(buildKey(key, "direct:"), i / 6, i % 6);
-        }
-        grid->setColumnStretch(6, 1);  // shorter rows line up on the left, in the same columns
-        layout->addLayout(grid);
+    const auto title = [keyboard](const char* name) {
+        auto* label = new QLabel(keyboard);
+        label->setObjectName(QString::fromLatin1(name));
+        label->setForegroundRole(QPalette::PlaceholderText);
+        return label;
+    };
+    QList<Key> common;
+    for (const QString& id : defaultCommon()) common << directKey(id);
+    layout->addWidget(title("commonTitle"));
+    layout->addWidget(keyGrid("common", common, "common:"));
+    layout->addWidget(title("memoryTitle"));
+    layout->addWidget(keyGrid("memoryKeys", memoryKeys(), "direct:"));
+    auto* rule = new QFrame(keyboard);
+    rule->setObjectName("sectionsRule");
+    rule->setFrameShape(QFrame::HLine);
+    rule->setFrameShadow(QFrame::Sunken);
+    layout->addWidget(rule);
+    for (const KeySection& section : keySections()) {
+        auto* header = new QToolButton(keyboard);
+        header->setObjectName("section:" + section.id);
+        header->setAutoRaise(true);
+        header->setFocusPolicy(Qt::NoFocus);
+        QFont bold = header->font();
+        bold.setBold(true);
+        header->setFont(bold);
+        layout->addWidget(header);
+        layout->addWidget(keyGrid("sectionKeys:" + section.id, section.keys, "direct:"));
     }
     layout->addStretch();
     return keyboard;
@@ -463,7 +488,7 @@ void MainWindow::sizeKeys() {
     QWidget* direct = findChild<QWidget*>("directKeys");
     QList<Key> all;
     for (const QList<Key>& row : keypad()) all += row;
-    for (const KeyGroup& group : directKeys()) all += group.keys;
+    all += everyDirectKey();
     int labels = 0;  // the widest label in any language, so no key is too narrow for its name
     for (const Key& key : all)
         for (const QString& label : settings::inEveryLanguage("keypad", key.face.label))
@@ -488,8 +513,8 @@ void MainWindow::sizeKeys() {
         for (const Key& key : row) {
             findChild<QPushButton*>("key:" + key.id)->setFixedSize(row.size() == 5 ? numberSize : size);
         }
-    for (const KeyGroup& group : directKeys())
-        for (const Key& key : group.keys) findChild<QPushButton*>("direct:" + key.id)->setFixedSize(size);
+    for (const Key& key : everyDirectKey()) findChild<QPushButton*>("direct:" + key.id)->setFixedSize(size);
+    for (const QString& id : defaultCommon()) findChild<QPushButton*>("common:" + id)->setFixedSize(size);
     findChild<QWidget*>("cursorPad")->setFixedWidth(2 * size.width() + keySpacing);
     for (QWidget* w : {pad, direct, area}) {
         w->layout()->activate();
@@ -670,10 +695,13 @@ void MainWindow::retranslate() {
     QList<Key> keys = cursorPad();
     for (const QList<Key>& row : keypad()) keys += row;
     for (const Key& key : keys) findChild<QPushButton*>("key:" + key.id)->setText(translated(key.face.label));
-    for (int g = 0; g < directKeys().size(); ++g) {
-        findChild<QLabel*>("group:" + QString::number(g))->setText(translated(directKeys()[g].title));
-        for (const Key& key : directKeys()[g].keys) findChild<QPushButton*>("direct:" + key.id)->setText(translated(key.face.label));
-    }
+    findChild<QLabel*>("commonTitle")->setText(tr("Common"));
+    findChild<QLabel*>("memoryTitle")->setText(tr("Memory and editing"));
+    for (const KeySection& section : keySections())
+        findChild<QToolButton*>("section:" + section.id)->setText(translated(section.title));
+    for (const Key& key : everyDirectKey()) findChild<QPushButton*>("direct:" + key.id)->setText(translated(key.face.label));
+    for (const QString& id : defaultCommon())
+        findChild<QPushButton*>("common:" + id)->setText(translated(directKey(id).face.label));
 
     // angle, type and = share one width, wide enough for their texts in every language
     int text = 0;
@@ -1049,8 +1077,8 @@ void MainWindow::updateKeys() {
     QList<QPair<QString, Key>> keys;
     for (const QList<Key>& row : keypad())
         for (const Key& key : row) keys.append({"key:", key});
-    for (const KeyGroup& group : directKeys())
-        for (const Key& key : group.keys) keys.append({"direct:", key});
+    for (const Key& key : everyDirectKey()) keys.append({"direct:", key});
+    for (const QString& id : defaultCommon()) keys.append({"common:", directKey(id)});
     for (const auto& [prefix, key] : keys) {
         auto* button = findChild<QPushButton*>(prefix + key.id);
         const bool on = available(key.face, exact);

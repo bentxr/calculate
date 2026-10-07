@@ -58,6 +58,7 @@ signals:
 private:
     QWidget* buildKeypad();
     QWidget* buildDirectKeys();
+    QWidget* keyGrid(const QString& name, const QList<Key>& keys, const QString& prefix);
     QPushButton* buildKey(const Key& key, const QString& prefix);  // prefix: "key:" or "direct:"
     QWidget* buildStatistics();
     void buildSettings();

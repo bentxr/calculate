@@ -2,6 +2,7 @@
 
 #include "detailscard.hpp"
 #include "formulatip.hpp"
+#include "keypad.hpp"
 #include "lcd.hpp"
 #include "presenter.hpp"
 #include "settings.hpp"
@@ -1368,4 +1369,43 @@ TEST(MainWindow, IconsFollowTheTheme) {
         EXPECT_EQ(ink(gear->icon()).rgb(), window.palette().color(QPalette::ButtonText).rgb()) << theme;
     }
     setting(window, "theme:system")->trigger();
+}
+
+TEST(MainWindow, TheLeftColumnShowsCommonMemoryAndTheSections) {
+    MainWindow window;
+    window.resize(1200, 800);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    const auto top = [&](const QString& name) {
+        QWidget* w = window.findChild<QWidget*>(name);
+        EXPECT_NE(w, nullptr) << name.toStdString();
+        return w ? w->mapTo(&window, QPoint(0, 0)).y() : 0;
+    };
+    auto* common = child<QWidget>(window, "common");
+    for (const QString& id : defaultCommon())
+        EXPECT_NE(common->findChild<QPushButton*>("common:" + id), nullptr) << id.toStdString();
+    EXPECT_LT(top("common"), top("memoryKeys"));  // Common first, then Memory and editing
+    for (const Key& key : memoryKeys())
+        EXPECT_NE(child<QWidget>(window, "memoryKeys")->findChild<QPushButton*>("direct:" + key.id), nullptr);
+    int last = top("memoryKeys");
+    for (const KeySection& s : keySections()) {
+        const QString header = "section:" + s.id;
+        EXPECT_EQ(child<QToolButton>(window, header.toUtf8().constData())->text(), translated(s.title));
+        EXPECT_GT(top(header), last) << s.id.toStdString();  // in the table's order, under Memory and editing
+        last = top(header);
+        auto* keys = child<QWidget>(window, ("sectionKeys:" + s.id).toUtf8().constData());
+        for (const Key& key : s.keys) EXPECT_NE(keys->findChild<QPushButton*>("direct:" + key.id), nullptr) << key.id.toStdString();
+    }
+    EXPECT_EQ(child<QPushButton>(window, "common:asin")->size(), child<QPushButton>(window, "key:sin")->size());
+}
+
+TEST(MainWindow, ACommonKeyDoesWhatItsSectionKeyDoes) {
+    MainWindow window;
+    QTest::mouseClick(child<QPushButton>(window, "common:asin"), Qt::LeftButton);
+    QTest::mouseClick(child<QPushButton>(window, "common:pi"), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "asin(π");
+    EXPECT_EQ(child<QPushButton>(window, "common:asin")->text(), child<QPushButton>(window, "direct:asin")->text());
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
+    EXPECT_FALSE(child<QPushButton>(window, "common:pi")->isEnabled());  // Exact greys it out like its twin
+    EXPECT_FALSE(child<QPushButton>(window, "common:pi")->toolTip().isEmpty());
 }

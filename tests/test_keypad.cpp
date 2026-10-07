@@ -20,7 +20,7 @@ QStringList labels(const QList<Key>& keys) {
 QList<Key> everyKey() {
     QList<Key> all = cursorPad();
     for (const QList<Key>& row : keypad()) all += row;
-    for (const KeyGroup& group : directKeys()) all += group.keys;
+    all += everyDirectKey();
     return all;
 }
 
@@ -100,14 +100,70 @@ TEST(Keypad, AvailabilityFollowsTheEngine) {
     EXPECT_TRUE(available(find("factorial").face, true));
 }
 
-TEST(Keypad, DirectKeysGroupTheOtherFunctions) {
-    QStringList titles, all;
-    for (const KeyGroup& group : directKeys()) {
-        titles << group.title;
-        all << labels(group.keys);
+namespace {
+
+const KeySection& section(const QString& id) {
+    static const KeySection none{};
+    for (const KeySection& s : keySections())
+        if (s.id == id) return s;
+    return none;
+}
+
+QStringList sectionLabels(const QString& id) { return labels(section(id).keys); }
+
+}  // namespace
+
+TEST(Keypad, EveryOtherKeyHasAHomeSection) {
+    QStringList ids, titles;
+    for (const KeySection& s : keySections()) {
+        ids << s.id;
+        titles << s.title;
     }
-    EXPECT_EQ(titles, QStringList({"Trigonometry", "Hyperbolic", "Powers and roots", "Numbers", "Constants and memory"}));
-    EXPECT_EQ(all, QStringList({"asin", "acos", "atan", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh", "x³", "∛", "ⁿ√",
-                                "10ˣ", "eˣ", "log", "x!", "abs", "%", "mod", "nPr", "nCr", "gcd", "lcm", ",", "π", "e",
-                                "M−", "M", "MC"}));
+    EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "constants"}));
+    EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Constants"}));
+    EXPECT_EQ(sectionLabels("numbers"), QStringList({"x!", "abs", "%", "mod", "nPr", "nCr", "gcd", "lcm", ","}));
+    EXPECT_EQ(sectionLabels("hyperbolic"), QStringList({"sinh", "cosh", "tanh", "asinh", "acosh", "atanh"}));
+    EXPECT_EQ(sectionLabels("trigonometry"), QStringList({"asin", "acos", "atan"}));
+    EXPECT_EQ(sectionLabels("powers"), QStringList({"x³", "∛", "ⁿ√", "10ˣ", "eˣ", "log"}));
+    EXPECT_EQ(sectionLabels("constants"), QStringList({"π", "e"}));
+    EXPECT_EQ(labels(memoryKeys()), QStringList({"M", "M−", "MC"}));
+}
+
+TEST(Keypad, CommonStartsWithTheKeysUsedMost) {
+    EXPECT_EQ(defaultCommon(),
+              QStringList({"asin", "acos", "atan", "pi", "e", "factorial", "power10", "exp", "cube", "cbrt", "root", "abs"}));
+    for (const QString& id : defaultCommon()) {
+        bool home = false;
+        for (const KeySection& s : keySections())
+            for (const Key& key : s.keys) home = home || key.id == id;
+        EXPECT_TRUE(home) << id.toStdString();  // taken out of Common, a key stays reachable
+    }
+    EXPECT_EQ(directKey("factorial").face.insert, "!");
+    EXPECT_EQ(directKey("memoryClear").face.action, KeyAction::MemoryClear);
+    EXPECT_TRUE(directKey("nothing").id.isEmpty());
+}
+
+TEST(Keypad, EverySectionHasAnIdATitleAndKeys) {
+    QSet<QString> ids;
+    QList<Key> inOrder = memoryKeys();
+    for (const KeySection& s : keySections()) {
+        EXPECT_FALSE(s.id.isEmpty());
+        EXPECT_FALSE(ids.contains(s.id)) << s.id.toStdString();
+        ids.insert(s.id);
+        EXPECT_FALSE(s.title.isEmpty()) << s.id.toStdString();
+        EXPECT_FALSE(s.keys.isEmpty()) << s.id.toStdString();  // a section appears with its first key
+        inOrder += s.keys;
+    }
+    EXPECT_EQ(labels(everyDirectKey()), labels(inOrder));  // Memory and editing, then section by section
+}
+
+TEST(Keypad, SectionsKeepTheirOrder) {
+    const QStringList order{"numbers", "hyperbolic", "trigonometry", "powers", "rounding", "constants", "statistics",
+                            "showAs", "programming", "special", "variables", "letters"};
+    int last = -1;
+    for (const KeySection& s : keySections()) {
+        const int at = order.indexOf(s.id);
+        EXPECT_GT(at, last) << s.id.toStdString();  // a known section, after the one before it
+        last = at;
+    }
 }

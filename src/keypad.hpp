@@ -4,6 +4,7 @@
 
 #include <QList>
 #include <QString>
+#include <QStringList>
 
 enum class KeyAction { Insert, Template, Clear, Backspace, Evaluate, MemoryAdd, MemorySubtract, MemoryClear, Left, Right, Up, Down };
 
@@ -28,12 +29,18 @@ const QList<QList<Key>>& keypad();
 // The cursor pad: up, left, right, down.
 const QList<Key>& cursorPad();
 
-// The left keyboard: every other function, on a key of its own, grouped by topic.
-struct KeyGroup {
+// The left column. Always shown: Common, the keys used most (each the twin of a section key; the user may change
+// them), and Memory and editing. Then titled sections that open in place, each the home of its keys.
+struct KeySection {
+    QString id;     // "section:<id>" is its header, "sectionKeys:<id>" its keys
     QString title;  // English source text; see translated()
     QList<Key> keys;
 };
-const QList<KeyGroup>& directKeys();
+const QList<KeySection>& keySections();
+const QList<Key>& memoryKeys();
+const QStringList& defaultCommon();  // the ids of Common's keys at start, in order
+QList<Key> everyDirectKey();          // Memory and editing, then every section's keys, in order
+Key directKey(const QString& id);     // the key of the column with this id; an empty Key when there is none
 
 // Whether the face works in the Exact type when `exact` (Exact refuses irrational functions).
 bool available(const Face& face, bool exact);

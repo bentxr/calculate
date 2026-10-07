@@ -50,33 +50,57 @@ const QList<Key>& cursorPad() {
     return keys;
 }
 
-const QList<KeyGroup>& directKeys() {
-    static const QList<KeyGroup> groups{
-        {QT_TRANSLATE_NOOP("keypad", "Trigonometry"),
-         {{"asin", put(QT_TRANSLATE_NOOP("keypad", "asin"), QT_TRANSLATE_NOOP("keypad", "asin("), "asin")},
-          {"acos", put(QT_TRANSLATE_NOOP("keypad", "acos"), QT_TRANSLATE_NOOP("keypad", "acos("), "acos")},
-          {"atan", put(QT_TRANSLATE_NOOP("keypad", "atan"), QT_TRANSLATE_NOOP("keypad", "atan("), "atan")}}},
-        {QT_TRANSLATE_NOOP("keypad", "Hyperbolic"),
+const QList<Key>& memoryKeys() {
+    static const QList<Key> keys{
+        {"memory", put("M", "M")},
+        {"memorySubtract", act("M−", KeyAction::MemorySubtract)},
+        {"memoryClear", act("MC", KeyAction::MemoryClear)},
+    };
+    return keys;
+}
+
+const QList<KeySection>& keySections() {
+    static const QList<KeySection> sections{
+        {"numbers", QT_TRANSLATE_NOOP("keypad", "Numbers"),
+         {{"factorial", put("x!", "!")}, {"abs", shape("abs", Template::Abs, "abs")}, {"percent", put("%", "%")},
+          {"mod", put("mod", "mod(", "mod")}, {"npr", put("nPr", "nPr(", "nPr")}, {"ncr", put("nCr", "nCr(", "nCr")},
+          {"gcd", put(QT_TRANSLATE_NOOP("keypad", "gcd"), QT_TRANSLATE_NOOP("keypad", "gcd("), "gcd")},
+          {"lcm", put(QT_TRANSLATE_NOOP("keypad", "lcm"), QT_TRANSLATE_NOOP("keypad", "lcm("), "lcm")},
+          {"comma", put(",", ", ")}}},
+        {"hyperbolic", QT_TRANSLATE_NOOP("keypad", "Hyperbolic"),
          {{"sinh", put(QT_TRANSLATE_NOOP("keypad", "sinh"), QT_TRANSLATE_NOOP("keypad", "sinh("), "sinh")},
           {"cosh", put("cosh", "cosh(", "cosh")},
           {"tanh", put("tanh", "tanh(", "tanh")},
           {"asinh", put(QT_TRANSLATE_NOOP("keypad", "asinh"), QT_TRANSLATE_NOOP("keypad", "asinh("), "asinh")},
           {"acosh", put(QT_TRANSLATE_NOOP("keypad", "acosh"), QT_TRANSLATE_NOOP("keypad", "acosh("), "acosh")},
           {"atanh", put(QT_TRANSLATE_NOOP("keypad", "atanh"), QT_TRANSLATE_NOOP("keypad", "atanh("), "atanh")}}},
-        {QT_TRANSLATE_NOOP("keypad", "Powers and roots"),
+        {"trigonometry", QT_TRANSLATE_NOOP("keypad", "Trigonometry"),
+         {{"asin", put(QT_TRANSLATE_NOOP("keypad", "asin"), QT_TRANSLATE_NOOP("keypad", "asin("), "asin")},
+          {"acos", put(QT_TRANSLATE_NOOP("keypad", "acos"), QT_TRANSLATE_NOOP("keypad", "acos("), "acos")},
+          {"atan", put(QT_TRANSLATE_NOOP("keypad", "atan"), QT_TRANSLATE_NOOP("keypad", "atan("), "atan")}}},
+        {"powers", QT_TRANSLATE_NOOP("keypad", "Powers, roots and logs"),
          {{"cube", shape("x³", Template::Power, {}, "3")}, {"cbrt", shape("∛", Template::Cbrt, "cbrt")}, {"root", shape("ⁿ√", Template::Root, "root")},
           {"power10", shape("10ˣ", Template::Pow10)}, {"exp", shape("eˣ", Template::Exp, "exp")}, {"log", put("log", "log(", "log")}}},
-        {QT_TRANSLATE_NOOP("keypad", "Numbers"),
-         {{"factorial", put("x!", "!")}, {"abs", shape("abs", Template::Abs, "abs")}, {"percent", put("%", "%")},
-          {"mod", put("mod", "mod(", "mod")}, {"npr", put("nPr", "nPr(", "nPr")}, {"ncr", put("nCr", "nCr(", "nCr")},
-          {"gcd", put(QT_TRANSLATE_NOOP("keypad", "gcd"), QT_TRANSLATE_NOOP("keypad", "gcd("), "gcd")},
-          {"lcm", put(QT_TRANSLATE_NOOP("keypad", "lcm"), QT_TRANSLATE_NOOP("keypad", "lcm("), "lcm")},
-          {"comma", put(",", ", ")}}},
-        {QT_TRANSLATE_NOOP("keypad", "Constants and memory"),
-         {{"pi", put("π", "π", "pi")}, {"e", put("e", "e", "e")}, {"memorySubtract", act("M−", KeyAction::MemorySubtract)},
-          {"memory", put("M", "M")}, {"memoryClear", act("MC", KeyAction::MemoryClear)}}},
+        {"constants", QT_TRANSLATE_NOOP("keypad", "Constants"), {{"pi", put("π", "π", "pi")}, {"e", put("e", "e", "e")}}},
     };
-    return groups;
+    return sections;
+}
+
+const QStringList& defaultCommon() {
+    static const QStringList ids{"asin", "acos", "atan", "pi", "e", "factorial", "power10", "exp", "cube", "cbrt", "root", "abs"};
+    return ids;
+}
+
+QList<Key> everyDirectKey() {
+    QList<Key> all = memoryKeys();
+    for (const KeySection& section : keySections()) all += section.keys;
+    return all;
+}
+
+Key directKey(const QString& id) {
+    for (const Key& key : everyDirectKey())
+        if (key.id == id) return key;
+    return Key{};
 }
 
 bool available(const Face& face, bool exact) {
