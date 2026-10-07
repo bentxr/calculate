@@ -1887,3 +1887,15 @@ TEST(MainWindow, TheKeysShowTheSeparatorsInUse) {
     EXPECT_EQ(child<QPushButton>(window, "direct:comma")->text(), ",");
     EXPECT_EQ(child<QPushButton>(window, "percentKey:point")->text(), ".");
 }
+
+TEST(MainWindow, RemainderKeysTypeTheirFunctions) {
+    MainWindow window;
+    openSection(window, "numbers");
+    for (const char* name : {"direct:floormod", "key:negative", "key:7", "direct:comma", "key:3", "key:close"})
+        QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "floormod(-7, 3)");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "2");
+}
