@@ -250,3 +250,24 @@ TEST(Keypad, SearchMatchesNamesWhatTheyTypeAndHeadings) {
     EXPECT_TRUE(searchMatches(pi, "circle"));  // its description
     EXPECT_TRUE(searchMatches(pi, "PI"));      // its function
 }
+
+// Every piece of the language that is not a function name can be entered with keys alone.
+TEST(Keypad, EverySyntaxElementHasAKey) {
+    QSet<QString> entered;  // what some key puts in the input, directly or through the typing rules
+    for (const Key& key : everyKey())
+        if (key.face.action == KeyAction::Insert || key.face.action == KeyAction::Type) entered.insert(key.face.insert);
+    QStringList syntax{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "e", "+", "−", "×", "÷", "(", ")",
+                       ", ", "!", "%", "-", "π", "Ans", "M", "_", " "};
+    for (char c = 'a'; c <= 'z'; ++c) syntax << QString(QChar(c));  // capitals through ⇧
+    for (const QString& piece : syntax) EXPECT_TRUE(entered.contains(piece)) << piece.toStdString();
+    QSet<Template> shapes;
+    for (const Key& key : everyKey()) shapes.insert(key.face.shape);
+    for (Template t : {Template::Fraction, Template::Sqrt, Template::Cbrt, Template::Root, Template::Power, Template::Exp,
+                       Template::Pow10, Template::LogBase, Template::Abs})
+        EXPECT_TRUE(shapes.contains(t)) << static_cast<int>(t);
+    QSet<KeyAction> actions;
+    for (const Key& key : everyKey()) actions.insert(key.face.action);
+    for (KeyAction a : {KeyAction::Clear, KeyAction::Backspace, KeyAction::Evaluate, KeyAction::Left, KeyAction::Right,
+                        KeyAction::Up, KeyAction::Down, KeyAction::Undo, KeyAction::Redo, KeyAction::Shift})
+        EXPECT_TRUE(actions.contains(a)) << static_cast<int>(a);
+}
