@@ -275,3 +275,24 @@ TEST(Presenter, WithADecimalCommaErrorsQuoteTheInputAsShown) {
     settings::setDecimalComma(false);
     EXPECT_EQ(view::errorText(unexpected, "3.5, "), "Unexpected “,”");
 }
+
+TEST(Presenter, ThePercentageQuestionsAreExpressions) {
+    const QList<view::PercentageRow> rows = view::percentageRows(QStringLiteral("80"), QStringLiteral("100"));
+    QStringList keys, expressions;
+    for (const view::PercentageRow& row : rows) {
+        keys << row.key;
+        expressions << row.expression;
+        EXPECT_FALSE(row.title.isEmpty()) << row.key.toStdString();
+    }
+    EXPECT_EQ(keys, QStringList({"change", "changeBack", "secondOfFirst", "firstOfSecond", "plus", "minus", "of"}));
+    EXPECT_EQ(expressions, QStringList({"((100)−(80))÷(80)×100", "((80)−(100))÷(100)×100", "(100)÷(80)×100",
+                                        "(80)÷(100)×100", "(80)+(80)×(100)÷100", "(80)−(80)×(100)÷100", "(80)×(100)÷100"}));
+    QStringList values;
+    for (const view::PercentageRow& row : rows) {
+        const Result r = evaluated(row.expression.toUtf8().constData(), NumberType::Exact);
+        ASSERT_FALSE(r.error) << row.key.toStdString();
+        values << QString::fromStdString((r.exact->negative ? "-" : "") + r.exact->numerator + "/" + r.exact->denominator);
+    }
+    EXPECT_EQ(values, QStringList({"25/1", "-20/1", "125/1", "80/1", "160/1", "0/1", "80/1"}));
+    EXPECT_TRUE(view::percentageRows(QStringLiteral(""), QStringLiteral("100")).isEmpty());  // a value is missing
+}

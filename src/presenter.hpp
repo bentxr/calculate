@@ -60,4 +60,13 @@ QString statisticsExpression(const QString& function, const QString& values);
 // How the engine computes a statistic, in one line; empty for anything else.
 QString algorithm(const QString& function);
 
+struct PercentageRow {
+    QString key;         // stable id: change, changeBack, secondOfFirst, firstOfSecond, plus, minus, of
+    QString title;       // translated: "Change from 1 to 2 (%)"
+    QString expression;  // what the engine evaluates
+};
+// The seven percentage questions about two values (as typed, with the screen's signs), in the order of the tool;
+// empty when either value is empty.
+QList<PercentageRow> percentageRows(const QString& first, const QString& second);
+
 }  // namespace view
