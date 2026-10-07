@@ -45,6 +45,8 @@ public:
     // Lays the keys out for a screen of this size (the window's own; tests pass a simulated one).
     void layOutKeys(QSize screen);
 
+    QStringList common() const { return common_; }  // the ids of Common's keys, in order
+
 public slots:
     void evaluate();
 
@@ -97,6 +99,9 @@ private:
     void updateKeys();
     QString exactRefusal(const QString& label) const;  // why Exact greys out a key
     void arrange();
+    bool editCommon(const Key& key, const QString& prefix);
+    void setCommon(const QStringList& ids);
+    void placeCommon();
     void updatePreviews();
     void relabelLetters();  // small or capital, as ⇧ says
     void fillSearch();
@@ -132,6 +137,12 @@ private:
     int sideWidth_ = 0;  // the side's shared width (see retranslate)
     QBoxLayout* keyboards_ = nullptr;  // the column and the main pad
     QWidget* commonBlock_ = nullptr;  // Common's title and keys
+    QWidget* commonHeader_ = nullptr;  // Common's title, Edit and Reset
+    QToolButton* editCommon_ = nullptr;
+    QToolButton* resetCommon_ = nullptr;
+    QStringList common_;  // the ids of Common's keys (the user may change them)
+    bool editingCommon_ = false;
+    QSize keySize_;  // the function keys' size, as layOutKeys last gave it
     QFrame* drawer_ = nullptr;
     QLineEdit* search_ = nullptr;  // finds any function or constant
     QListWidget* searchList_ = nullptr;

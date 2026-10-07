@@ -83,6 +83,7 @@ private:
 }  // namespace
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberTypes()) {
+    common_ = defaultCommon();
     auto* central = new QWidget(this);
     auto* outer = new QHBoxLayout(central);
 
@@ -498,8 +499,72 @@ QPushButton* MainWindow::buildKey(const Key& key, const QString& prefix) {
     button->setObjectName(prefix + key.id);
     button->setMinimumWidth(32);          // below the style's default, so every column can be equally wide
     button->setFocusPolicy(Qt::NoFocus);  // the keyboard always stays with the screen
-    connect(button, &QPushButton::clicked, this, [this, key] { apply(key.face); });
+    connect(button, &QPushButton::clicked, this, [this, key, prefix] {
+        if (!(editingCommon_ && editCommon(key, prefix))) apply(key.face);
+    });
     return button;
+}
+
+// While Common is being edited, a click on one of its keys removes it, and a click on a section key adds it (at the
+// end, while there is room); nothing is typed. Returns false for the keys that still type (Memory and editing).
+bool MainWindow::editCommon(const Key& key, const QString& prefix) {
+    if (prefix == QLatin1String("common:")) {
+        QStringList ids = common_;
+        ids.removeOne(key.id);
+        setCommon(ids);
+        return true;
+    }
+    const bool memory = std::any_of(memoryKeys().begin(), memoryKeys().end(), [&](const Key& k) { return k.id == key.id; });
+    if (memory) return false;
+    if (common_.contains(key.id)) return true;
+    if (common_.size() >= commonLimit) {
+        message_->setText(tr("Common holds at most %1 keys").arg(commonLimit));
+        return true;
+    }
+    setCommon(common_ + QStringList{key.id});
+    return true;
+}
+
+// Rebuilds Common's keys for `ids` (each a section key's id), sized, labelled and enabled like the others.
+void MainWindow::setCommon(const QStringList& ids) {
+    common_ = ids;
+    QWidget* grid = findChild<QWidget*>("common");
+    for (QPushButton* old : grid->findChildren<QPushButton*>(QRegularExpression(QStringLiteral("^common:")))) {
+        grid->layout()->removeWidget(old);
+        old->hide();
+        old->setObjectName({});  // gone at once for findChild; deleted later (it may be the button being clicked)
+        old->deleteLater();
+    }
+    for (const QString& id : common_) {
+        const Key key = directKey(id);
+        QPushButton* button = buildKey(key, "common:");
+        button->setParent(grid);
+        button->setText(translated(key.face.label));
+        button->setAccessibleName(spokenName(key));
+        if (keySize_.isValid()) {
+            button->setFixedSize(keySize_);
+            button->setFont(fittedFont(font(), button->text(), keySize_.width() - 10));
+        }
+    }
+    placeCommon();
+    updateKeys();
+}
+
+// Common's keys in rows of six; on a phone the twelfth place opens the drawer instead.
+void MainWindow::placeCommon() {
+    auto* layout = static_cast<QGridLayout*>(findChild<QWidget*>("common")->layout());
+    for (int i = 0; i < common_.size(); ++i) {
+        QPushButton* button = findChild<QPushButton*>("common:" + common_[i]);
+        layout->addWidget(button, i / 6, i % 6);
+        button->setVisible(!narrow_ || i < commonLimit - 1);
+    }
+    if (narrow_) {
+        layout->addWidget(drawerToggle_, 1, 5);
+        drawerToggle_->show();
+    } else {
+        layout->removeWidget(drawerToggle_);
+        drawerToggle_->hide();
+    }
 }
 
 // A grid of keys in six columns; shorter rows line up on the left, in the same columns.
@@ -526,7 +591,7 @@ QWidget* MainWindow::buildDirectKeys() {
         return label;
     };
     QList<Key> common;
-    for (const QString& id : defaultCommon()) common << directKey(id);
+    for (const QString& id : common_) common << directKey(id);
     // The search box finds any function or constant; it takes the keyboard only when clicked.
     search_ = new QLineEdit(keyboard);
     search_->setObjectName("search");
@@ -541,7 +606,32 @@ QWidget* MainWindow::buildDirectKeys() {
     commonBlock_->setObjectName("commonBlock");
     auto* block = new QVBoxLayout(commonBlock_);
     block->setContentsMargins(0, 0, 0, 0);
-    block->addWidget(title("commonTitle"));
+    // Its title row: Edit lets the user change which keys Common holds; Reset (while editing) brings back the default.
+    commonHeader_ = new QWidget(commonBlock_);
+    commonHeader_->setObjectName("commonHeader");
+    auto* header = new QHBoxLayout(commonHeader_);
+    header->setContentsMargins(0, 0, 0, 0);
+    header->addWidget(title("commonTitle"));
+    header->addStretch();
+    editCommon_ = new QToolButton(commonHeader_);
+    editCommon_->setObjectName("editCommon");
+    editCommon_->setCheckable(true);
+    editCommon_->setAutoRaise(true);
+    editCommon_->setFocusPolicy(Qt::NoFocus);
+    resetCommon_ = new QToolButton(commonHeader_);
+    resetCommon_->setObjectName("resetCommon");
+    resetCommon_->setAutoRaise(true);
+    resetCommon_->setFocusPolicy(Qt::NoFocus);
+    resetCommon_->hide();
+    header->addWidget(resetCommon_);
+    header->addWidget(editCommon_);
+    connect(editCommon_, &QToolButton::toggled, this, [this](bool on) {
+        editingCommon_ = on;
+        resetCommon_->setVisible(on);
+        message_->setText(on ? tr("Click a key to add it to Common, or a key of Common to remove it") : QString());
+    });
+    connect(resetCommon_, &QToolButton::clicked, this, [this] { setCommon(defaultCommon()); });
+    block->addWidget(commonHeader_);
     block->addWidget(keyGrid("common", common, "common:"));
     layout->addWidget(commonBlock_);
     layout->addWidget(title("memoryTitle"));
@@ -636,7 +726,8 @@ void MainWindow::layOutKeys(QSize screen) {
             findChild<QPushButton*>("key:" + key.id)->setFixedSize(row.size() == 5 ? numberSize : size);
         }
     for (const Key& key : everyDirectKey()) findChild<QPushButton*>("direct:" + key.id)->setFixedSize(size);
-    for (const QString& id : defaultCommon()) findChild<QPushButton*>("common:" + id)->setFixedSize(size);
+    keySize_ = size;
+    for (const QString& id : common_) findChild<QPushButton*>("common:" + id)->setFixedSize(size);
     drawerToggle_->setFixedSize(size);
     findChild<QWidget*>("cursorPad")->setFixedWidth(2 * size.width() + keySpacing);
     for (QPushButton* key : findChildren<QPushButton*>(QRegularExpression(QStringLiteral("^(key|direct|common):"))))
@@ -667,9 +758,7 @@ void MainWindow::layOutKeys(QSize screen) {
 void MainWindow::arrange() {
     QWidget* pad = findChild<QWidget*>("keypad");
     auto* column = static_cast<QVBoxLayout*>(findChild<QWidget*>("directKeys")->layout());
-    auto* commonGrid = static_cast<QGridLayout*>(findChild<QWidget*>("common")->layout());
     auto* drawerLayout = static_cast<QVBoxLayout*>(drawer_->layout());
-    QPushButton* twelfth = findChild<QPushButton*>("common:" + defaultCommon().value(11));
     const QList<QWidget*> side{angle_, type_, equals_};
     while (QLayoutItem* item = keyboards_->takeAt(0)) delete item;  // the widgets stay; the stretches go
     if (narrow_) {
@@ -690,21 +779,17 @@ void MainWindow::arrange() {
             w->setMaximumWidth(QWIDGETSIZE_MAX);
         }
         for (QWidget* w : side + QList<QWidget*>{panelToggle_, settingsButton_}) w->setFixedHeight(touchTarget);
-        findChild<QLabel*>("commonTitle")->hide();
         column->removeWidget(commonBlock_);
         keyboards_->setDirection(QBoxLayout::TopToBottom);
         keyboards_->addStretch();
         keyboards_->addWidget(commonBlock_, 0, Qt::AlignHCenter);
         keyboards_->addWidget(pad, 0, Qt::AlignHCenter);
         if (drawerLayout->indexOf(directScroll_) < 0) drawerLayout->insertWidget(0, directScroll_);
-        if (twelfth) twelfth->hide();
-        commonGrid->addWidget(drawerToggle_, 1, 5);
-        drawerToggle_->show();
+        if (drawerLayout->indexOf(commonHeader_) < 0) drawerLayout->insertWidget(0, commonHeader_);  // Edit, in the drawer
+        const QMargins column = findChild<QWidget*>("directKeys")->layout()->contentsMargins();
+        commonHeader_->layout()->setContentsMargins(column.left(), 0, column.right(), 0);  // in line with the column
     } else {
         drawerToggle_->setChecked(false);
-        commonGrid->removeWidget(drawerToggle_);
-        drawerToggle_->hide();
-        if (twelfth) twelfth->show();
         rail_->show();
         panelToggle_->setCheckable(true);
         modes_->show();
@@ -726,7 +811,11 @@ void MainWindow::arrange() {
             w->setMaximumHeight(QWIDGETSIZE_MAX);
             if (sideWidth_ > 0) w->setFixedWidth(sideWidth_);
         }
-        findChild<QLabel*>("commonTitle")->show();
+        if (drawerLayout->indexOf(commonHeader_) >= 0) {
+            drawerLayout->removeWidget(commonHeader_);
+            static_cast<QVBoxLayout*>(commonBlock_->layout())->insertWidget(0, commonHeader_);
+            commonHeader_->layout()->setContentsMargins(0, 0, 0, 0);
+        }
         if (column->indexOf(commonBlock_) < 0) column->insertWidget(1, commonBlock_);  // under the search box
         drawerLayout->removeWidget(directScroll_);
         keyboards_->setDirection(QBoxLayout::LeftToRight);
@@ -735,6 +824,7 @@ void MainWindow::arrange() {
         keyboards_->addWidget(pad, 0, Qt::AlignTop);
         keyboards_->addStretch();
     }
+    placeCommon();
 }
 
 void MainWindow::relabelLetters() {
@@ -907,6 +997,8 @@ QMap<QString, QStringList> MainWindow::settingKeys() const {
     }
     keys["type"] = typeIds;
     keys["angle"] = angleIds;
+    for (const KeySection& section : keySections())
+        for (const Key& key : section.keys) keys["common"] << key.id;  // a list of them (see importSettings)
     return keys;
 }
 
@@ -919,15 +1011,20 @@ QMap<QString, QString> MainWindow::settingValues() const {
     }
     values["type"] = typeIds.value(static_cast<int>(type_->currentType()));
     values["angle"] = angleIds.value(angle_->currentIndex());
+    values["common"] = common_.join(' ');
     return values;
 }
 
 QByteArray MainWindow::exportSettings() const { return settingsfile::write(settingValues(), defaults_); }
 
 QStringList MainWindow::importSettings(const QByteArray& file) {
-    const settingsfile::Read r = settingsfile::read(file, settingKeys());
+    settingsfile::Read r = settingsfile::read(file, settingKeys(), {QStringLiteral("common")});
     for (auto it = r.values.cbegin(); it != r.values.cend(); ++it) {
-        if (it.key() == "type") {
+        if (it.key() == "common") {
+            const QStringList ids = it.value().split(' ', Qt::SkipEmptyParts);
+            if (canBeCommon(ids)) setCommon(ids);
+            else r.problems << tr("“%1” cannot be the common keys").arg(it.value());
+        } else if (it.key() == "type") {
             type_->setCurrentType(static_cast<NumberType>(typeIds.indexOf(it.value())));
         } else if (it.key() == "angle") {
             angle_->setCurrentIndex(static_cast<int>(angleIds.indexOf(it.value())));
@@ -1020,7 +1117,9 @@ void MainWindow::retranslate() {
         button->setText(translated(key.face.label));
         button->setAccessibleName(spokenName(key));
     }
-    for (const QString& id : defaultCommon()) {
+    editCommon_->setText(tr("Edit"));
+    resetCommon_->setText(tr("Reset"));
+    for (const QString& id : common_) {
         auto* button = findChild<QPushButton*>("common:" + id);
         button->setText(translated(directKey(id).face.label));
         button->setAccessibleName(spokenName(directKey(id)));
@@ -1430,7 +1529,7 @@ void MainWindow::updateKeys() {
     for (const QList<Key>& row : keypad())
         for (const Key& key : row) keys.append({"key:", key});
     for (const Key& key : everyDirectKey()) keys.append({"direct:", key});
-    for (const QString& id : defaultCommon()) keys.append({"common:", directKey(id)});
+    for (const QString& id : common_) keys.append({"common:", directKey(id)});
     for (const auto& [prefix, key] : keys) {
         auto* button = findChild<QPushButton*>(prefix + key.id);
         const bool on = available(key.face, exact);

@@ -1711,3 +1711,85 @@ TEST(MainWindow, TheColumnAndTheSearchListScrollWithAFinger) {
     EXPECT_TRUE(QScroller::hasScroller(child<QScrollArea>(window, "directScroll")->viewport()));
     EXPECT_TRUE(QScroller::hasScroller(child<QListWidget>(window, "searchList")->viewport()));
 }
+
+TEST(MainWindow, CommonCanBeChangedAndReset) {
+    MainWindow window;
+    window.resize(1200, 800);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    EXPECT_EQ(window.common(), defaultCommon());
+    auto* edit = child<QToolButton>(window, "editCommon");
+    auto* reset = child<QToolButton>(window, "resetCommon");
+    EXPECT_FALSE(reset->isVisible());
+    QTest::mouseClick(edit, Qt::LeftButton);
+    EXPECT_TRUE(edit->isChecked());
+    EXPECT_TRUE(reset->isVisible());
+    EXPECT_FALSE(message(window)->text().isEmpty());  // says what a click does now
+    openSection(window, "hyperbolic");
+    QTest::mouseClick(child<QPushButton>(window, "direct:sinh"), Qt::LeftButton);
+    EXPECT_EQ(message(window)->text(), "Common holds at most 12 keys");  // full
+    QTest::mouseClick(child<QPushButton>(window, "common:abs"), Qt::LeftButton);
+    QStringList expected = defaultCommon();
+    expected.removeOne("abs");
+    EXPECT_EQ(window.common(), expected);
+    QTest::mouseClick(child<QPushButton>(window, "direct:sinh"), Qt::LeftButton);
+    expected << "sinh";
+    EXPECT_EQ(window.common(), expected);
+    EXPECT_EQ(lcd(window)->input(), "");  // editing types nothing
+    QCoreApplication::processEvents();
+    auto* sinh = child<QPushButton>(window, "common:sinh");
+    EXPECT_TRUE(sinh->isVisible());
+    EXPECT_EQ(sinh->size(), child<QPushButton>(window, "key:sin")->size());
+    EXPECT_EQ(sinh->text(), child<QPushButton>(window, "direct:sinh")->text());
+    QTest::mouseClick(edit, Qt::LeftButton);  // done: keys type again
+    EXPECT_FALSE(reset->isVisible());
+    EXPECT_EQ(message(window)->text(), "");
+    QTest::mouseClick(sinh, Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "sinh(");
+    QTest::mouseClick(edit, Qt::LeftButton);
+    QTest::mouseClick(reset, Qt::LeftButton);
+    EXPECT_EQ(window.common(), defaultCommon());
+    QTest::mouseClick(edit, Qt::LeftButton);
+}
+
+TEST(MainWindow, AChangedCommonTravelsInTheSettingsFile) {
+    MainWindow window;
+    EXPECT_TRUE(window.settingKeys().value("common").contains("sinh"));
+    QTest::mouseClick(child<QToolButton>(window, "editCommon"), Qt::LeftButton);
+    QTest::mouseClick(child<QPushButton>(window, "common:abs"), Qt::LeftButton);
+    openSection(window, "hyperbolic");
+    QTest::mouseClick(child<QPushButton>(window, "direct:sinh"), Qt::LeftButton);
+    QTest::mouseClick(child<QToolButton>(window, "editCommon"), Qt::LeftButton);
+    QStringList expected = defaultCommon();
+    expected.removeOne("abs");
+    expected << "sinh";
+    const QByteArray file = window.exportSettings();
+    EXPECT_EQ(QJsonDocument::fromJson(file).object().value("settings").toObject().value("common").toString(), expected.join(' '));
+    MainWindow other;
+    EXPECT_TRUE(other.importSettings(file).isEmpty());
+    EXPECT_EQ(other.common(), expected);
+    EXPECT_NE(other.findChild<QPushButton*>("common:sinh"), nullptr);
+    EXPECT_FALSE(other.importSettings(R"({"version":1,"settings":{"common":"sinh sinh"}})").isEmpty());
+    EXPECT_EQ(other.common(), expected);  // refused: unchanged
+}
+
+TEST(MainWindow, OnAPhoneCommonIsEditedFromTheDrawer) {
+    MainWindow window;
+    window.resize(390, 844);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    window.layOutKeys(QSize(390, 844));
+    QTest::mouseClick(child<QPushButton>(window, "drawerToggle"), Qt::LeftButton);
+    auto* drawer = child<QWidget>(window, "drawer");
+    EXPECT_TRUE(drawer->isAncestorOf(child<QWidget>(window, "editCommon")));
+    QTest::mouseClick(child<QToolButton>(window, "editCommon"), Qt::LeftButton);
+    QTest::mouseClick(child<QPushButton>(window, "common:asin"), Qt::LeftButton);  // the strip above the drawer
+    openSection(window, "numbers");
+    QTest::mouseClick(child<QPushButton>(window, "direct:gcd"), Qt::LeftButton);
+    EXPECT_EQ(window.common().last(), "gcd");
+    EXPECT_FALSE(window.common().contains("asin"));
+    EXPECT_TRUE(drawer->isVisible());  // editing keeps the drawer open
+    QTest::mouseClick(child<QToolButton>(window, "editCommon"), Qt::LeftButton);
+    window.layOutKeys(QSize(1920, 1200));
+    EXPECT_FALSE(drawer->isAncestorOf(child<QWidget>(window, "editCommon")));  // back on Common's title row
+}
