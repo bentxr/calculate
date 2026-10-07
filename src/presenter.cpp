@@ -307,6 +307,7 @@ QString errorText(const Error& e, const QString& expression) {
     case ErrorCode::ArgumentNearEdge: return QCoreApplication::translate("view", "The error of the argument of %1 reaches a point where it is not defined or not smooth, so no bound can be given. If you proceed anyway, the error report will not include that.").arg(part);
     case ErrorCode::Cancelled: return QCoreApplication::translate("view", "Cancelled");
     case ErrorCode::UnknownTarget: return QCoreApplication::translate("view", "Unknown conversion “%1”").arg(part);
+    case ErrorCode::TooManyTerms: return QCoreApplication::translate("view", "%1 has too many terms").arg(part);
     }
     return {};
 }

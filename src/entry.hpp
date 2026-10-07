@@ -6,7 +6,7 @@
 #include <vector>
 
 // The calculator's two-dimensional templates (its MathIO), and plain text.
-enum class Template { Text, Fraction, Sqrt, Cbrt, Root, Power, Exp, Pow10, LogBase, Abs };
+enum class Template { Text, Fraction, Sqrt, Cbrt, Root, Power, Exp, Pow10, LogBase, Abs, Sum, Product };
 
 // How a template's box ends while it is being typed: as a key made it (only ► leaves it), at a typed ")"
 // (opened by typing sqrt( and the like), or where the operand of linear text ends (opened by typing ^ or √).
