@@ -17,6 +17,14 @@ QSize keySize(QSize screen, QSize reserved, QSize grid, int spacing, QSize minim
     return QSize(width, qMax(minimum.height(), qRound(width * aspect)));
 }
 
+KeysLayout keysLayout(QSize screen) { return screen.width() < screen.height() ? KeysLayout::Narrow : KeysLayout::Wide; }
+
+QSize phoneKeySize(QSize screen, int reservedWidth, int columns, int spacing, QSize minimum) {
+    const int share = (screen.width() - reservedWidth - (columns - 1) * spacing) / columns;
+    const int width = qBound(minimum.width(), share, 2 * minimum.width());
+    return QSize(width, qMax(minimum.height(), qRound(width * aspect)));
+}
+
 QFont fittedFont(const QFont& font, const QString& label, int width, qreal smallest) {
     if (QFontMetrics(font).horizontalAdvance(label) <= width) return font;
     const int base = QFontInfo(font).pixelSize();

@@ -44,3 +44,24 @@ TEST(KeySizing, NeverSmallerThanTheSmallestSize) {
     font.setPixelSize(20);
     EXPECT_EQ(fittedFont(font, "floatError", 5).pixelSize(), 12);  // 0.6 × 20
 }
+
+TEST(KeySizing, PortraitScreensGetThePhoneArrangement) {
+    EXPECT_EQ(keysLayout(QSize(390, 844)), KeysLayout::Narrow);   // a phone
+    EXPECT_EQ(keysLayout(QSize(768, 1024)), KeysLayout::Narrow);  // a tablet held upright
+    EXPECT_EQ(keysLayout(QSize(1920, 1200)), KeysLayout::Wide);
+    EXPECT_EQ(keysLayout(QSize(800, 600)), KeysLayout::Wide);
+    EXPECT_EQ(keysLayout(QSize(844, 390)), KeysLayout::Wide);     // a phone on its side
+    EXPECT_EQ(keysLayout(QSize(1000, 1000)), KeysLayout::Wide);
+}
+
+TEST(KeySizing, PhoneKeysShareTheWidthAndStayTouchSized) {
+    EXPECT_EQ(touchTarget, 44);
+    // (390 − 16 − 5 × 6) / 6 = 57; 0.55 × 57 = 31, under the touch target: 44
+    EXPECT_EQ(phoneKeySize(QSize(390, 844), 16, 6, 6, QSize(36, 44)), QSize(57, 44));
+    // never wider than twice the minimum: (1200 − 16 − 30) / 6 = 192 → 72; 0.55 × 72 = 40 → 44
+    EXPECT_EQ(phoneKeySize(QSize(1200, 1920), 16, 6, 6, QSize(36, 44)), QSize(72, 44));
+    // never narrower than the minimum
+    EXPECT_EQ(phoneKeySize(QSize(200, 844), 16, 6, 6, QSize(36, 44)), QSize(36, 44));
+    // a taller minimum wins over the touch target
+    EXPECT_EQ(phoneKeySize(QSize(390, 844), 16, 6, 6, QSize(36, 50)), QSize(57, 50));
+}
