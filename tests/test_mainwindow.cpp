@@ -3,6 +3,7 @@
 #include "detailscard.hpp"
 #include "formulatip.hpp"
 #include "keypad.hpp"
+#include "keysizing.hpp"
 #include "lcd.hpp"
 #include "presenter.hpp"
 #include "settings.hpp"
@@ -1508,4 +1509,105 @@ TEST(MainWindow, MemoryStoreReplacesTheMemoryAndTheScreenShowsM) {
     EXPECT_EQ(lcd(window)->statusText(), "M");  // the indicator, as on the calculator
     EXPECT_EQ(lcd(window)->toolTip(), "M = 7");
     EXPECT_EQ(child<QPushButton>(window, "direct:memoryStore")->text(), "MS");
+}
+
+TEST(MainWindow, OnAPhoneThePadSitsAtTheBottomWithCommonAboveIt) {
+    MainWindow window;
+    window.resize(390, 844);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    window.layOutKeys(QSize(390, 844));  // as on a phone's screen
+    QTest::qWait(50);
+    const auto rect = [&](const char* name) {
+        QWidget* w = child<QWidget>(window, name);
+        return QRect(w->mapTo(&window, QPoint(0, 0)), w->size());
+    };
+    EXPECT_FALSE(child<QWidget>(window, "rail")->isVisible());
+    EXPECT_GE(rect("lcd").width(), window.width() - 40);  // the screen at the full width…
+    for (const char* name : {"detailsButton", "copyButton", "editButton", "historyToggle"}) {
+        auto* button = child<QToolButton>(window, name);
+        EXPECT_TRUE(button->isVisible()) << name;  // … shows its whole bar
+        EXPECT_GE(button->width(), button->sizeHint().width()) << name;
+        EXPECT_TRUE(rect("lcd").contains(rect(name))) << name;
+    }
+    EXPECT_LT(rect("lcd").bottom(), rect("angle").top());  // ☰, angle, type, = and the gear in one row under it
+    for (const char* name : {"type", "equals"}) EXPECT_EQ(rect(name).top(), rect("angle").top()) << name;
+    for (const char* name : {"panelToggle", "settingsButton"}) {
+        const int middle = rect(name).center().y();
+        EXPECT_TRUE(middle >= rect("angle").top() && middle <= rect("angle").bottom()) << name;
+    }
+    EXPECT_LT(rect("panelToggle").right(), rect("angle").left());
+    EXPECT_GT(rect("settingsButton").left(), rect("equals").right());
+    EXPECT_LT(rect("angle").bottom(), rect("common").top());
+    EXPECT_LT(rect("common").bottom(), rect("keypad").top());          // Common above the pad
+    EXPECT_GT(rect("keypad").center().y(), window.height() / 2);      // the pad in the lower half, in thumb reach
+    EXPECT_LE(rect("keypad").bottom(), window.height());
+    auto* keys = child<QScrollArea>(window, "keys");
+    EXPECT_FALSE(keys->horizontalScrollBar()->isVisible());           // nothing scrolls
+    EXPECT_FALSE(keys->verticalScrollBar()->isVisible());
+    for (const char* name : {"key:7", "key:sin", "common:asin"}) EXPECT_GE(child<QWidget>(window, name)->height(), touchTarget) << name;
+    auto* toggle = child<QPushButton>(window, "drawerToggle");
+    EXPECT_TRUE(toggle->isVisible());
+    EXPECT_EQ(toggle->size(), child<QPushButton>(window, "common:asin")->size());
+    EXPECT_FALSE(child<QPushButton>(window, "common:abs")->isVisible());  // its place holds More; abs is in Numbers
+    EXPECT_FALSE(child<QWidget>(window, "drawer")->isVisible());
+    window.layOutKeys(QSize(1920, 1200));  // and back, side by side
+    QTest::qWait(50);
+    EXPECT_TRUE(child<QWidget>(window, "rail")->isVisible());
+    EXPECT_FALSE(toggle->isVisible());
+    EXPECT_TRUE(child<QPushButton>(window, "common:abs")->isVisible());
+    EXPECT_LT(rect("directKeys").right(), rect("keypad").left());
+    EXPECT_LT(rect("lcd").right(), rect("angle").left());
+    EXPECT_LT(rect("common").bottom(), rect("memoryKeys").top());  // Common back at the top of the column
+}
+
+TEST(MainWindow, OnAPhoneMoreOpensADrawerOverThePad) {
+    MainWindow window;
+    window.resize(390, 844);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    window.layOutKeys(QSize(390, 844));
+    QTest::qWait(50);
+    const auto rect = [&](const char* name) {
+        QWidget* w = child<QWidget>(window, name);
+        return QRect(w->mapTo(&window, QPoint(0, 0)), w->size());
+    };
+    auto* toggle = child<QPushButton>(window, "drawerToggle");
+    auto* drawer = child<QWidget>(window, "drawer");
+    QTest::mouseClick(toggle, Qt::LeftButton);
+    QTest::qWait(50);
+    ASSERT_TRUE(drawer->isVisible());
+    EXPECT_TRUE(toggle->isChecked());
+    EXPECT_LE(rect("drawer").top(), rect("keypad").top());  // over the pad…
+    EXPECT_GE(rect("drawer").bottom(), rect("keypad").bottom());
+    EXPECT_GT(rect("drawer").top(), rect("common").bottom());  // … under the screen and Common, which stay in view
+    EXPECT_TRUE(drawer->isAncestorOf(child<QWidget>(window, "memoryKeys")));
+    EXPECT_TRUE(drawer->isAncestorOf(child<QWidget>(window, "section:numbers")));
+    EXPECT_FALSE(drawer->isAncestorOf(child<QWidget>(window, "common")));
+    openSection(window, "hyperbolic");
+    EXPECT_TRUE(drawer->isVisible());  // opening a section keeps the drawer open
+    QTest::mouseClick(child<QPushButton>(window, "direct:sinh"), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "sinh(");
+    EXPECT_FALSE(drawer->isVisible());  // a key types and brings back the pad
+    EXPECT_FALSE(toggle->isChecked());
+    QTest::mouseClick(toggle, Qt::LeftButton);
+    QTest::mouseClick(child<QPushButton>(window, "drawerClose"), Qt::LeftButton);
+    EXPECT_FALSE(drawer->isVisible());
+    EXPECT_FALSE(toggle->isChecked());
+}
+
+TEST(MainWindow, OnAPhoneTheMenuButtonListsTheModes) {
+    MainWindow window;
+    window.resize(390, 844);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    window.layOutKeys(QSize(390, 844));
+    QTest::mouseClick(child<QToolButton>(window, "panelToggle"), Qt::LeftButton);
+    auto* menu = child<QMenu>(window, "modesMenu");
+    ASSERT_TRUE(menu->isVisible());
+    EXPECT_TRUE(window.geometry().contains(menu->geometry()));
+    EXPECT_EQ(child<QAction>(window, "mode:1")->text(), child<QListWidget>(window, "modes")->item(1)->text());
+    child<QAction>(window, "mode:1")->trigger();
+    EXPECT_EQ(child<QListWidget>(window, "modes")->currentRow(), 1);
+    EXPECT_EQ(child<QStackedWidget>(window, "pages")->currentIndex(), 1);
 }

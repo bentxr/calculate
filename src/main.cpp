@@ -1,3 +1,4 @@
+#include "keysizing.hpp"
 #include "mainwindow.hpp"
 #include "settings.hpp"
 
@@ -12,7 +13,8 @@ int main(int argc, char** argv) {
     settings::setTheme(settings::startTheme);
     MainWindow window;
     const QRect screen = window.screen()->availableGeometry();
-    window.resize(screen.width() / 2, screen.height());  // the size the keys are designed for
+    const bool phone = keysLayout(screen.size()) == KeysLayout::Narrow;
+    window.resize(phone ? screen.width() : screen.width() / 2, screen.height());  // the size the keys are designed for
     window.show();
     return app.exec();
 }

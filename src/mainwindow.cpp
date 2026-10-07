@@ -85,28 +85,40 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     auto* outer = new QHBoxLayout(central);
 
     // The left panel: ☰ collapses it to a thin rail; the gear (settings) stays at its bottom either way.
-    auto* rail = new QWidget(central);
-    rail->setObjectName("rail");
-    auto* railLayout = new QVBoxLayout(rail);
-    railLayout->setContentsMargins(0, 0, 0, 0);
-    panelToggle_ = new QToolButton(rail);
+    rail_ = new QWidget(central);
+    rail_->setObjectName("rail");
+    railLayout_ = new QVBoxLayout(rail_);
+    railLayout_->setContentsMargins(0, 0, 0, 0);
+    panelToggle_ = new QToolButton(rail_);
     panelToggle_->setObjectName("panelToggle");
     panelToggle_->setText(QStringLiteral("☰"));
     panelToggle_->setCheckable(true);
     panelToggle_->setAutoRaise(true);
-    modes_ = new QListWidget(rail);
+    modes_ = new QListWidget(rail_);
     modes_->setObjectName("modes");
     modes_->addItems({QString(), QString()});  // Calculator, Statistics (see retranslate)
     modes_->setFixedWidth(140);
-    settingsButton_ = new QToolButton(rail);
+    settingsButton_ = new QToolButton(rail_);
     settingsButton_->setObjectName("settingsButton");
     settingsButton_->setAutoRaise(true);
-    railLayout->addWidget(panelToggle_, 0, Qt::AlignLeft);
-    railLayout->addWidget(modes_, 1);
-    railLayout->addStretch();  // keeps the gear at the bottom while the list is hidden
-    railLayout->addWidget(settingsButton_, 0, Qt::AlignLeft);
-    outer->addWidget(rail);
+    railLayout_->addWidget(panelToggle_, 0, Qt::AlignLeft);
+    railLayout_->addWidget(modes_, 1);
+    railLayout_->addStretch();  // keeps the gear at the bottom while the list is hidden
+    railLayout_->addWidget(settingsButton_, 0, Qt::AlignLeft);
+    outer->addWidget(rail_);
     connect(panelToggle_, &QToolButton::toggled, modes_, [this](bool collapsed) { modes_->setVisible(!collapsed); });
+    // On a phone the rail is hidden and ☰ lists the modes in a small menu instead.
+    modesMenu_ = new QMenu(this);
+    modesMenu_->setObjectName("modesMenu");
+    for (int i = 0; i < modes_->count(); ++i) {
+        QAction* mode = modesMenu_->addAction(QString());  // the texts: see retranslate
+        mode->setObjectName(QStringLiteral("mode:%1").arg(i));
+        connect(mode, &QAction::triggered, this, [this, i] { modes_->setCurrentRow(i); });
+    }
+    connect(panelToggle_, &QToolButton::clicked, this, [this] {
+        if (narrow_)
+            modesMenu_->popup(placed(modesMenu_->sizeHint(), globalGeometry(panelToggle_), popupBounds(panelToggle_)).topLeft());
+    });
     buildSettings();
     connect(settingsButton_, &QToolButton::clicked, this, [this] {
         settings_->popup(placed(settings_->sizeHint(), globalGeometry(settingsButton_), popupBounds(settingsButton_)).topLeft());
@@ -116,11 +128,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     outer->addLayout(main, 1);
 
     // The screen, and beside it the angle unit, the number type and = stacked to its height.
-    auto* screenRow = new QHBoxLayout;
+    screenRow_ = new QHBoxLayout;
     lcd_ = new Lcd(central);
     lcd_->setObjectName("lcd");
-    screenRow->addWidget(lcd_, 1);
-    auto* column = new QVBoxLayout;
+    screenRow_->addWidget(lcd_, 1);
+    side_ = new QVBoxLayout;
     angle_ = new QComboBox(central);
     angle_->setObjectName("angle");
     angle_->setSizeAdjustPolicy(QComboBox::AdjustToContents);  // its texts change with the language
@@ -132,10 +144,10 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     equals_->setObjectName("equals");
     for (QWidget* w : {static_cast<QWidget*>(angle_), static_cast<QWidget*>(type_), static_cast<QWidget*>(equals_)}) {
         w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);  // as wide as the widest: see retranslate
-        column->addWidget(w);
+        side_->addWidget(w);
     }
-    screenRow->addLayout(column);
-    main->addLayout(screenRow);
+    screenRow_->addLayout(side_);
+    main->addLayout(screenRow_);
 
     // Under the screen, a strip of fixed height for messages (errors, cautions), so that showing one
     // never moves anything; Proceed anyway sits at its end when it applies.
@@ -269,9 +281,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     keys_->setFrameShape(QFrame::NoFrame);
     keys_->setWidgetResizable(true);
     auto* keysArea = new QWidget;
-    auto* keysLayout = new QHBoxLayout(keysArea);
-    keysLayout->setContentsMargins(0, 0, 0, 0);
-    keysLayout->setSpacing(keypadGap);
+    keyboards_ = new QHBoxLayout(keysArea);
+    keyboards_->setContentsMargins(0, 0, 0, 0);
+    keyboards_->setSpacing(keypadGap);
     directScroll_ = new QScrollArea(keysArea);
     directScroll_->setObjectName("directScroll");
     directScroll_->setFrameShape(QFrame::NoFrame);
@@ -279,10 +291,40 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     directScroll_->setWidgetResizable(true);
     directScroll_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
     directScroll_->setWidget(buildDirectKeys());
-    keysLayout->addStretch();
-    keysLayout->addWidget(directScroll_);
-    keysLayout->addWidget(buildKeypad(), 0, Qt::AlignTop);
-    keysLayout->addStretch();
+    keyboards_->addStretch();
+    keyboards_->addWidget(directScroll_);
+    keyboards_->addWidget(buildKeypad(), 0, Qt::AlignTop);
+    keyboards_->addStretch();
+    // On a phone the rest of the column waits in a drawer over the main pad, opened from Common's last place.
+    drawer_ = new QFrame(central);
+    drawer_->setObjectName("drawer");
+    drawer_->setFrameShape(QFrame::StyledPanel);
+    drawer_->setAutoFillBackground(true);
+    drawer_->hide();
+    auto* drawerLayout = new QVBoxLayout(drawer_);
+    drawerLayout->setContentsMargins(0, keySpacing, 0, keySpacing);  // the column's own margins are enough
+    drawerClose_ = new QPushButton(drawer_);
+    drawerClose_->setObjectName("drawerClose");
+    drawerClose_->setFocusPolicy(Qt::NoFocus);
+    drawerLayout->addWidget(drawerClose_);
+    drawerToggle_ = new QPushButton(central);
+    drawerToggle_->setObjectName("drawerToggle");
+    drawerToggle_->setCheckable(true);
+    drawerToggle_->setFocusPolicy(Qt::NoFocus);
+    drawerToggle_->setMinimumWidth(32);
+    drawerToggle_->hide();
+    connect(drawerToggle_, &QPushButton::toggled, this, [this](bool open) {
+        if (!open) {
+            drawer_->hide();
+            return;
+        }
+        QWidget* central = centralWidget();
+        const int top = commonBlock_->mapTo(central, QPoint(0, commonBlock_->height())).y() + keySpacing;
+        drawer_->setGeometry(0, top, central->width(), central->height() - top);
+        drawer_->raise();
+        drawer_->show();
+    });
+    connect(drawerClose_, &QPushButton::clicked, this, [this] { drawerToggle_->setChecked(false); });
     keys_->setWidget(keysArea);
     pages_->addWidget(keys_);
     auto* statistics = new QScrollArea(pages_);  // so neither page sets a minimum width for the window
@@ -458,15 +500,21 @@ QWidget* MainWindow::buildDirectKeys() {
     keyboard->setObjectName("directKeys");
     auto* layout = new QVBoxLayout(keyboard);
     const auto title = [keyboard](const char* name) {
-        auto* label = new QLabel(keyboard);
+        auto* label = new QLabel;
         label->setObjectName(QString::fromLatin1(name));
         label->setForegroundRole(QPalette::PlaceholderText);
         return label;
     };
     QList<Key> common;
     for (const QString& id : defaultCommon()) common << directKey(id);
-    layout->addWidget(title("commonTitle"));
-    layout->addWidget(keyGrid("common", common, "common:"));
+    // Common and its title move together: on a phone they sit above the main pad.
+    commonBlock_ = new QWidget(keyboard);
+    commonBlock_->setObjectName("commonBlock");
+    auto* block = new QVBoxLayout(commonBlock_);
+    block->setContentsMargins(0, 0, 0, 0);
+    block->addWidget(title("commonTitle"));
+    block->addWidget(keyGrid("common", common, "common:"));
+    layout->addWidget(commonBlock_);
     layout->addWidget(title("memoryTitle"));
     layout->addWidget(keyGrid("memoryKeys", memoryKeys(), "direct:"));
     auto* rule = new QFrame(keyboard);
@@ -509,11 +557,14 @@ QWidget* MainWindow::buildDirectKeys() {
     return keyboard;
 }
 
-// Gives every key the size keySize() derives from the window's screen; called when the window is
-// first shown and whenever it moves to another screen. What the window reserves for everything but
+// Lays the keys out for a screen of this size: side by side on a landscape screen, in the phone arrangement on a
+// portrait one; then gives every key the size derived from the screen. Called when the window is first shown,
+// whenever it moves to another screen, and after a change of language. What the window reserves for everything but
 // the keys is measured from its own layouts, so it holds for any style, font and language.
-void MainWindow::sizeKeys() {
-    if (!screen()) return;
+void MainWindow::layOutKeys(QSize screen) {
+    designScreen_ = screen;
+    narrow_ = keysLayout(screen) == KeysLayout::Narrow;
+    arrange();
     QWidget* area = keys_->widget();
     QWidget* pad = findChild<QWidget*>("keypad");
     QWidget* direct = findChild<QWidget*>("directKeys");
@@ -530,14 +581,25 @@ void MainWindow::sizeKeys() {
     const QMargins inner = pad->layout()->contentsMargins();
     const QMargins left = direct->layout()->contentsMargins();
     const int scrollBar = style()->pixelMetric(QStyle::PM_ScrollBarExtent);
-    const int rows = 7;
-    const QSize reserved(outer.left() + outer.right() + centralWidget()->layout()->spacing() + modes_->width()
-                             + inner.left() + inner.right() + left.left() + left.right() + area->layout()->spacing()
-                             + 2 * keys_->frameWidth() + 2 * scrollBar,  // the window's bar and the column's
-                         outer.top() + outer.bottom() + lcd_->minimumSizeHint().height() + 2 * keySpacing
-                             + inner.top() + inner.bottom() + keypadGap
-                             + style()->pixelMetric(QStyle::PM_TitleBarHeight));
-    const QSize size = keySize(screen()->availableGeometry().size(), reserved, QSize(12, rows), keySpacing, minimum);
+    QSize size;
+    if (narrow_) {
+        // The phone's keys share the screen's width, and stay large enough for a finger. Six keys fit both under the
+        // screen (beside the main pad's margins) and in the drawer (beside the column's margins and its scroll bar).
+        const int besidePad = outer.left() + outer.right() + inner.left() + inner.right() + 2 * keys_->frameWidth();
+        const int inDrawer = 2 * drawer_->frameWidth() + left.left() + left.right() + scrollBar;
+        const int reservedWidth = qMax(besidePad, inDrawer);
+        size = phoneKeySize(screen, reservedWidth, 6, keySpacing,
+                            QSize(2 * fontMetrics().height(), qMax(touchTarget, minimum.height())));
+    } else {
+        const int rows = 7;
+        const QSize reserved(outer.left() + outer.right() + centralWidget()->layout()->spacing() + modes_->width()
+                                 + inner.left() + inner.right() + left.left() + left.right() + area->layout()->spacing()
+                                 + 2 * keys_->frameWidth() + 2 * scrollBar,  // the window's bar and the column's
+                             outer.top() + outer.bottom() + lcd_->minimumSizeHint().height() + 2 * keySpacing
+                                 + inner.top() + inner.bottom() + keypadGap
+                                 + style()->pixelMetric(QStyle::PM_TitleBarHeight));
+        size = keySize(screen, reserved, QSize(12, rows), keySpacing, minimum);
+    }
     const QSize numberSize((6 * size.width() + keySpacing) / 5, size.height());  // five span six
 
     for (const QList<Key>& row : keypad())
@@ -546,18 +608,104 @@ void MainWindow::sizeKeys() {
         }
     for (const Key& key : everyDirectKey()) findChild<QPushButton*>("direct:" + key.id)->setFixedSize(size);
     for (const QString& id : defaultCommon()) findChild<QPushButton*>("common:" + id)->setFixedSize(size);
+    drawerToggle_->setFixedSize(size);
     findChild<QWidget*>("cursorPad")->setFixedWidth(2 * size.width() + keySpacing);
     for (QPushButton* key : findChildren<QPushButton*>(QRegularExpression(QStringLiteral("^(key|direct|common):"))))
         key->setFont(fittedFont(font(), key->text(), key->width() - 10));
+    drawerToggle_->setFont(fittedFont(font(), drawerToggle_->text(), size.width() - 10));
     for (QWidget* w : {pad, direct}) {
         w->layout()->activate();
         w->adjustSize();
     }
-    // Room for the column's scroll bar is kept, so the bar appearing moves nothing.
-    directScroll_->setFixedWidth(direct->sizeHint().width() + scrollBar);
-    directScroll_->setMinimumHeight(pad->sizeHint().height());
+    if (narrow_) {  // the column fills the drawer
+        directScroll_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        directScroll_->setMinimumSize(0, 0);
+        directScroll_->setMaximumWidth(QWIDGETSIZE_MAX);
+    } else {
+        // Room for the column's scroll bar is kept, so the bar appearing moves nothing.
+        directScroll_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+        directScroll_->setFixedWidth(direct->sizeHint().width() + scrollBar);
+        directScroll_->setMinimumHeight(pad->sizeHint().height());
+    }
     area->layout()->activate();
     updatePreviews();
+}
+
+// Moves the widgets into the arrangement layOutKeys chose. Wide: the rail, the screen with angle, type and = beside
+// it, and the column beside the main pad. Narrow (a phone): no rail; the screen at the full width with ☰, angle,
+// type, = and the gear in a row under it; Common (its last place opening the drawer) above the main pad, at the
+// bottom; the rest of the column in the drawer.
+void MainWindow::arrange() {
+    QWidget* pad = findChild<QWidget*>("keypad");
+    auto* column = static_cast<QVBoxLayout*>(findChild<QWidget*>("directKeys")->layout());
+    auto* commonGrid = static_cast<QGridLayout*>(findChild<QWidget*>("common")->layout());
+    auto* drawerLayout = static_cast<QVBoxLayout*>(drawer_->layout());
+    QPushButton* twelfth = findChild<QPushButton*>("common:" + defaultCommon().value(11));
+    const QList<QWidget*> side{angle_, type_, equals_};
+    while (QLayoutItem* item = keyboards_->takeAt(0)) delete item;  // the widgets stay; the stretches go
+    if (narrow_) {
+        rail_->hide();
+        panelToggle_->setChecked(false);
+        panelToggle_->setCheckable(false);
+        if (side_->indexOf(panelToggle_) < 0) {
+            railLayout_->removeWidget(panelToggle_);
+            railLayout_->removeWidget(settingsButton_);
+            side_->insertWidget(0, panelToggle_);
+            side_->addWidget(settingsButton_);
+        }
+        screenRow_->setDirection(QBoxLayout::TopToBottom);
+        side_->setDirection(QBoxLayout::LeftToRight);
+        for (QWidget* w : side) {
+            w->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+            w->setMinimumWidth(0);
+            w->setMaximumWidth(QWIDGETSIZE_MAX);
+        }
+        for (QWidget* w : side + QList<QWidget*>{panelToggle_, settingsButton_}) w->setFixedHeight(touchTarget);
+        findChild<QLabel*>("commonTitle")->hide();
+        column->removeWidget(commonBlock_);
+        keyboards_->setDirection(QBoxLayout::TopToBottom);
+        keyboards_->addStretch();
+        keyboards_->addWidget(commonBlock_, 0, Qt::AlignHCenter);
+        keyboards_->addWidget(pad, 0, Qt::AlignHCenter);
+        if (drawerLayout->indexOf(directScroll_) < 0) drawerLayout->insertWidget(0, directScroll_);
+        if (twelfth) twelfth->hide();
+        commonGrid->addWidget(drawerToggle_, 1, 5);
+        drawerToggle_->show();
+    } else {
+        drawerToggle_->setChecked(false);
+        commonGrid->removeWidget(drawerToggle_);
+        drawerToggle_->hide();
+        if (twelfth) twelfth->show();
+        rail_->show();
+        panelToggle_->setCheckable(true);
+        modes_->show();
+        if (railLayout_->indexOf(panelToggle_) < 0) {
+            side_->removeWidget(panelToggle_);
+            side_->removeWidget(settingsButton_);
+            railLayout_->insertWidget(0, panelToggle_, 0, Qt::AlignLeft);
+            railLayout_->addWidget(settingsButton_, 0, Qt::AlignLeft);
+        }
+        for (QWidget* w : QList<QWidget*>{panelToggle_, settingsButton_}) {
+            w->setMinimumHeight(0);
+            w->setMaximumHeight(QWIDGETSIZE_MAX);
+        }
+        screenRow_->setDirection(QBoxLayout::LeftToRight);
+        side_->setDirection(QBoxLayout::TopToBottom);
+        for (QWidget* w : side) {
+            w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);  // as wide as the widest: see retranslate
+            w->setMinimumHeight(0);
+            w->setMaximumHeight(QWIDGETSIZE_MAX);
+            if (sideWidth_ > 0) w->setFixedWidth(sideWidth_);
+        }
+        findChild<QLabel*>("commonTitle")->show();
+        if (column->indexOf(commonBlock_) < 0) column->insertWidget(0, commonBlock_);
+        drawerLayout->removeWidget(directScroll_);
+        keyboards_->setDirection(QBoxLayout::LeftToRight);
+        keyboards_->addStretch();
+        keyboards_->addWidget(directScroll_);
+        keyboards_->addWidget(pad, 0, Qt::AlignTop);
+        keyboards_->addStretch();
+    }
 }
 
 // While a section is closed, its header shows its keys' legends, as many as fit beside the title.
@@ -582,8 +730,9 @@ void MainWindow::showEvent(QShowEvent* event) {
     QMainWindow::showEvent(event);
     if (keysSized_) return;
     keysSized_ = true;
-    sizeKeys();
-    connect(windowHandle(), &QWindow::screenChanged, this, &MainWindow::sizeKeys);
+    layOutKeys(screen()->availableGeometry().size());
+    connect(windowHandle(), &QWindow::screenChanged, this,
+            [this](QScreen* screen) { layOutKeys(screen->availableGeometry().size()); });
 }
 
 // The gear: a small menu that opens from the button, with the values of the language and of the theme listed
@@ -702,6 +851,9 @@ void MainWindow::retranslate() {
     settingsButton_->setToolTip(tr("Settings"));
     const QStringList modes{tr("Calculator"), tr("Statistics")};
     for (int i = 0; i < modes.size(); ++i) modes_->item(i)->setText(modes[i]);
+    for (int i = 0; i < modes_->count(); ++i) findChild<QAction*>(QStringLiteral("mode:%1").arg(i))->setText(modes_->item(i)->text());
+    drawerToggle_->setText(tr("More") + QStringLiteral(" ▾"));
+    drawerClose_->setText(QStringLiteral("▾  ") + tr("Back to the keypad"));
     const QStringList angles{tr("RAD"), tr("DEG"), tr("GRAD")};
     for (int i = 0; i < angles.size(); ++i) angle_->setItemText(i, angles[i]);
     type_->retranslate();
@@ -770,14 +922,16 @@ void MainWindow::retranslate() {
     QStyleOptionComboBox option;
     option.initFrom(type_);
     const int width = style()->sizeFromContents(QStyle::CT_ComboBox, &option, QSize(text, fontMetrics().height()), type_).width();
-    for (QWidget* w : {static_cast<QWidget*>(angle_), static_cast<QWidget*>(type_), static_cast<QWidget*>(equals_)})
-        w->setFixedWidth(width);
+    sideWidth_ = width;
+    if (!narrow_)
+        for (QWidget* w : {static_cast<QWidget*>(angle_), static_cast<QWidget*>(type_), static_cast<QWidget*>(equals_)})
+            w->setFixedWidth(width);
 
     if (hasResult_ || previewShown_) present();
     relabelHistory();  // the decimal separator may follow the language
     updateKeys();
     updatePreviews();
-    if (keysSized_) sizeKeys();  // labels changed width
+    if (keysSized_) layOutKeys(designScreen_);  // labels changed width
 }
 
 // The icons are drawn in the text colour of the theme in use, so they are redrawn when it changes.
@@ -1080,6 +1234,7 @@ void MainWindow::present() {
 }
 
 void MainWindow::apply(const Face& f) {
+    drawerToggle_->setChecked(false);  // a key pressed in the phone's drawer brings back the pad
     switch (f.action) {
     case KeyAction::Insert: lcd_->insert(translated(f.insert)); break;
     case KeyAction::Template: lcd_->insertTemplate(f.shape, f.insert); break;

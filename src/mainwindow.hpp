@@ -12,6 +12,7 @@ class DetailsCard;
 class FormulaTip;
 class Lcd;
 class QAction;
+class QBoxLayout;
 class QComboBox;
 class QFrame;
 class QLabel;
@@ -39,6 +40,9 @@ public:
     QMap<QString, QStringList> settingKeys() const;
     QByteArray exportSettings() const;
     QStringList importSettings(const QByteArray& file);
+
+    // Lays the keys out for a screen of this size (the window's own; tests pass a simulated one).
+    void layOutKeys(QSize screen);
 
 public slots:
     void evaluate();
@@ -91,7 +95,7 @@ private:
     bool exactType() const;
     void updateKeys();
     QString exactRefusal(const QString& label) const;  // why Exact greys out a key
-    void sizeKeys();
+    void arrange();
     void updatePreviews();
 
     static constexpr int keySpacing = 6;
@@ -115,6 +119,19 @@ private:
     bool previewShown_ = false;
 
     QListWidget* modes_ = nullptr;
+    QWidget* rail_ = nullptr;
+    QBoxLayout* railLayout_ = nullptr;
+    QMenu* modesMenu_ = nullptr;  // the modes on a phone, from ☰
+    QBoxLayout* screenRow_ = nullptr;  // the screen and the side (angle, type, =)
+    QBoxLayout* side_ = nullptr;
+    int sideWidth_ = 0;  // the side's shared width (see retranslate)
+    QBoxLayout* keyboards_ = nullptr;  // the column and the main pad
+    QWidget* commonBlock_ = nullptr;  // Common's title and keys
+    QFrame* drawer_ = nullptr;
+    QPushButton* drawerToggle_ = nullptr;
+    QPushButton* drawerClose_ = nullptr;
+    bool narrow_ = false;  // the phone arrangement
+    QSize designScreen_;   // the screen the keys were laid out for
     QToolButton* panelToggle_ = nullptr;
     QToolButton* settingsButton_ = nullptr;
     QMenu* settings_ = nullptr;
