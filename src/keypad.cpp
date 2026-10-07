@@ -86,6 +86,15 @@ const QList<KeySection>& keySections() {
     return sections;
 }
 
+const QList<Key>& statisticsKeys() {
+    static const QList<Key> keys{
+        {"mean", put("mean", "mean(", "mean")},   {"median", put("median", "median(", "median")},
+        {"var", put("var", "var(", "var")},       {"stdev", put("stdev", "stdev(", "stdev")},
+        {"varp", put("varp", "varp(", "varp")},   {"stdevp", put("stdevp", "stdevp(", "stdevp")},
+    };
+    return keys;
+}
+
 const QStringList& defaultCommon() {
     static const QStringList ids{"asin", "acos", "atan", "pi", "e", "factorial", "power10", "exp", "cube", "cbrt", "root", "abs"};
     return ids;

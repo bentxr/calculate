@@ -770,11 +770,11 @@ QWidget* MainWindow::buildStatistics() {
     // without a keyboard.
     auto* side = new QVBoxLayout;
     auto* functions = new QGridLayout;
-    const char* names[] = {"mean", "median", "var", "stdev", "varp", "stdevp"};
-    for (int i = 0; i < int(std::size(names)); ++i) {
-        const QString f = QString::fromLatin1(names[i]);
-        auto* b = new QPushButton(f, page);
-        b->setObjectName(QStringLiteral("stat:") + f);
+    for (int i = 0; i < statisticsKeys().size(); ++i) {
+        const Key& key = statisticsKeys()[i];
+        const QString f = key.face.function;
+        auto* b = new QPushButton(key.face.label, page);
+        b->setObjectName("stat:" + key.id);
         b->setFocusPolicy(Qt::NoFocus);
         b->setProperty("statistic", f);
         b->installEventFilter(this);  // hovering shows the formula (see eventFilter)

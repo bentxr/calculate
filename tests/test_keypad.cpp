@@ -2,6 +2,8 @@
 
 #include "printers.hpp"
 
+#include <calculate-core/calculate-core.hpp>
+
 #include <gtest/gtest.h>
 
 #include <QSet>
@@ -166,4 +168,23 @@ TEST(Keypad, SectionsKeepTheirOrder) {
         EXPECT_GT(at, last) << s.id.toStdString();  // a known section, after the one before it
         last = at;
     }
+}
+
+TEST(Keypad, TheStatisticsFunctionsAreKeysToo) {
+    QStringList ids;
+    for (const Key& key : statisticsKeys()) {
+        ids << key.id;
+        EXPECT_EQ(key.face.function, key.id);
+        EXPECT_EQ(key.face.insert, key.id + "(");
+    }
+    EXPECT_EQ(ids, QStringList({"mean", "median", "var", "stdev", "varp", "stdevp"}));
+}
+
+// The rule that keeps the keyboards complete: a function the engine offers and no key reaches fails here.
+TEST(Keypad, EveryEngineFunctionHasAKey) {
+    QSet<QString> onKeys;
+    for (const Key& key : everyKey()) onKeys.insert(key.face.function);
+    for (const Key& key : statisticsKeys()) onKeys.insert(key.face.function);
+    for (const calculate_core::FunctionDescription& f : calculate_core::functions())
+        EXPECT_TRUE(onKeys.contains(QString::fromStdString(f.name))) << f.name;
 }

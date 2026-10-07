@@ -42,6 +42,9 @@ const QStringList& defaultCommon();  // the ids of Common's keys at start, in or
 QList<Key> everyDirectKey();          // Memory and editing, then every section's keys, in order
 Key directKey(const QString& id);     // the key of the column with this id; an empty Key when there is none
 
+// The Statistics mode's functions, in their order on its page; each takes the values as arguments.
+const QList<Key>& statisticsKeys();
+
 // Whether the face works in the Exact type when `exact` (Exact refuses irrational functions).
 bool available(const Face& face, bool exact);
 
