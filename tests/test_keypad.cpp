@@ -121,8 +121,8 @@ TEST(Keypad, EveryOtherKeyHasAHomeSection) {
         ids << s.id;
         titles << s.title;
     }
-    EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "constants", "statistics", "letters"}));
-    EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Constants", "Statistics", "Letters"}));
+    EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "constants", "statistics", "showAs", "letters"}));
+    EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Constants", "Statistics", "Show as", "Letters"}));
     EXPECT_EQ(sectionLabels("numbers"), QStringList({"x!", "abs", "%", "%…", "mod", "rem", "floormod", "nPr", "nCr", "gcd", "lcm", ","}));
     EXPECT_EQ(sectionLabels("hyperbolic"), QStringList({"sinh", "cosh", "tanh", "asinh", "acosh", "atanh"}));
     EXPECT_EQ(sectionLabels("trigonometry"), QStringList({"asin", "acos", "atan"}));
@@ -257,7 +257,7 @@ TEST(Keypad, EverySyntaxElementHasAKey) {
     for (const Key& key : everyKey())
         if (key.face.action == KeyAction::Insert || key.face.action == KeyAction::Type) entered.insert(key.face.insert);
     QStringList syntax{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "e", "+", "−", "×", "÷", "(", ")",
-                       ", ", "!", "%", "-", "π", "Ans", "M", "_", " ", "#"};
+                       ", ", "!", "%", "-", "π", "Ans", "M", "_", " ", "#", "→"};
     for (char c = 'a'; c <= 'z'; ++c) syntax << QString(QChar(c));  // capitals through ⇧
     for (const QString& piece : syntax) EXPECT_TRUE(entered.contains(piece)) << piece.toStdString();
     QSet<Template> shapes;
@@ -323,4 +323,25 @@ TEST(Keypad, ACommentKeyWithTheLetters) {
 
 TEST(Keypad, TheCommentKeyHasASpokenName) {
     EXPECT_EQ(spokenName(directKey("comment")), "comment");  // not the bare sign
+}
+
+TEST(Keypad, TheConversionKeys) {
+    EXPECT_EQ(section("showAs").title, "Show as");
+    EXPECT_EQ(sectionLabels("showAs").first(), "→");
+    EXPECT_EQ(directKey("to").face.insert, "→");
+    EXPECT_EQ(directKey("to:fraction").face.insert, "→fraction");
+}
+
+// Every target of → has a one-tap key; it is generated, so a new target needs no new line.
+TEST(Keypad, EveryConversionTargetHasAKey) {
+    for (const calculate_core::TargetDescription& target : calculate_core::conversionTargets()) {
+        const Key key = directKey("to:" + QString::fromStdString(target.name));
+        EXPECT_FALSE(key.id.isEmpty()) << target.name;
+        EXPECT_TRUE(key.face.insert.startsWith("→")) << target.name;
+    }
+}
+
+TEST(Keypad, ConversionKeysHaveSpokenNames) {
+    EXPECT_EQ(spokenName(directKey("to")), "convert to");
+    EXPECT_EQ(spokenName(directKey("to:fraction")), "convert to fraction");
 }

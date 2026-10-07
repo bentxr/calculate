@@ -1970,3 +1970,16 @@ TEST(MainWindow, AConversionTakesTheScreenAndTheCardKeepsTheValue) {
     EXPECT_EQ(detail(window, "conversion"), "fraction");
     EXPECT_EQ(child<QListWidget>(window, "history")->item(0)->text(), "0.1 to fraction = 3602879701896397/36028797018…");
 }
+
+TEST(MainWindow, ArrowKeysConvertTheResult) {
+    MainWindow window;
+    for (const char* name : {"key:fraction", "key:1", "key:down", "key:4", "key:right"})
+        QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    openSection(window, "showAs");
+    QTest::mouseClick(child<QPushButton>(window, "direct:to:fraction"), Qt::LeftButton);
+    EXPECT_TRUE(lcd(window)->input().endsWith("→fraction")) << lcd(window)->input().toStdString();
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "1/4");
+}

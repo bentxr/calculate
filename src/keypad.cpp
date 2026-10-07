@@ -72,6 +72,30 @@ const QList<Key>& memoryKeys() {
 namespace {
 
 // a to z, then ⇧, _ and the space: names, comments and anything else typed without a keyboard.
+// The targets kept for the Programming section (none yet); every other target is in Show as.
+QStringList programmingTargets() { return {}; }
+
+// A one-tap key per target named, in the engine's order: "→fraction". A target that takes a number after it ("1/n")
+// inserts its fixed part, leaving the number to the keys.
+QList<Key> conversionKeys(const QStringList& names) {
+    QList<Key> keys;
+    for (const calculate_core::TargetDescription& target : calculate_core::conversionTargets()) {
+        const QString name = QString::fromStdString(target.name);
+        if (!names.contains(name)) continue;
+        const QString insert = QStringLiteral("→") + (name.endsWith("/n") ? name.chopped(1) : name);
+        keys.append({"to:" + name, put(QStringLiteral("→") + name, insert)});
+    }
+    return keys;
+}
+
+// Every target not kept for another section.
+QStringList showAsTargets() {
+    QStringList names;
+    for (const calculate_core::TargetDescription& target : calculate_core::conversionTargets())
+        if (!programmingTargets().contains(QString::fromStdString(target.name))) names << QString::fromStdString(target.name);
+    return names;
+}
+
 QList<Key> letterKeys() {
     QList<Key> keys;
     for (char c = 'a'; c <= 'z'; ++c) {
@@ -113,6 +137,7 @@ const QList<KeySection>& keySections() {
           {"power10", shape("10ˣ", Template::Pow10)}, {"exp", shape("eˣ", Template::Exp, "exp")}, {"log", put("log", "log(", "log")}}},
         {"constants", QT_TRANSLATE_NOOP("keypad", "Constants"), {{"pi", put("π", "π", "pi")}, {"e", put("e", "e", "e")}}},
         {"statistics", QT_TRANSLATE_NOOP("keypad", "Statistics"), statisticsKeys()},
+        {"showAs", QT_TRANSLATE_NOOP("keypad", "Show as"), QList<Key>{{"to", put("→", "→")}} + conversionKeys(showAsTargets())},
         {"letters", QT_TRANSLATE_NOOP("keypad", "Letters"), letterKeys()},
     };
     return sections;
@@ -254,7 +279,10 @@ QString spokenName(const Key& key) {
         {"␣", QT_TRANSLATE_NOOP("spoken", "space")},
         {"#", QT_TRANSLATE_NOOP("spoken", "comment")},
         {"_", QT_TRANSLATE_NOOP("spoken", "underscore")},
+        {"→", QT_TRANSLATE_NOOP("spoken", "convert to")},
     };
+    if (key.id.startsWith("to:"))  // a one-tap conversion: "convert to fraction"
+        return QCoreApplication::translate("spoken", "convert to") + QLatin1Char(' ') + key.id.mid(3);
     const auto word = words.constFind(key.face.label);
     return word == words.constEnd() ? translated(key.face.label) : QCoreApplication::translate("spoken", *word);
 }
