@@ -91,6 +91,7 @@ private:
     void updateKeys();
     QString exactRefusal(const QString& label) const;  // why Exact greys out a key
     void sizeKeys();
+    void updatePreviews();
 
     static constexpr int keySpacing = 6;
     static constexpr int keypadGap = 12;  // between the function keys and the number keys
@@ -127,6 +128,7 @@ private:
     bool hasResult_ = false;  // whether last_ holds a result to present
     QStackedWidget* pages_ = nullptr;
     QScrollArea* keys_ = nullptr;
+    QScrollArea* directScroll_ = nullptr;
     bool keysSized_ = false;
     TypeChooser* type_ = nullptr;
     QComboBox* angle_ = nullptr;

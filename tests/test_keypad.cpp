@@ -121,8 +121,8 @@ TEST(Keypad, EveryOtherKeyHasAHomeSection) {
         ids << s.id;
         titles << s.title;
     }
-    EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "constants"}));
-    EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Constants"}));
+    EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "constants", "statistics"}));
+    EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Constants", "Statistics"}));
     EXPECT_EQ(sectionLabels("numbers"), QStringList({"x!", "abs", "%", "mod", "nPr", "nCr", "gcd", "lcm", ","}));
     EXPECT_EQ(sectionLabels("hyperbolic"), QStringList({"sinh", "cosh", "tanh", "asinh", "acosh", "atanh"}));
     EXPECT_EQ(sectionLabels("trigonometry"), QStringList({"asin", "acos", "atan"}));
@@ -187,4 +187,10 @@ TEST(Keypad, EveryEngineFunctionHasAKey) {
     for (const Key& key : statisticsKeys()) onKeys.insert(key.face.function);
     for (const calculate_core::FunctionDescription& f : calculate_core::functions())
         EXPECT_TRUE(onKeys.contains(QString::fromStdString(f.name))) << f.name;
+}
+
+TEST(Keypad, AStatisticsSectionTypesTheStatisticsIntoExpressions) {
+    EXPECT_EQ(section("statistics").title, "Statistics");
+    EXPECT_EQ(sectionLabels("statistics"), QStringList({"mean", "median", "var", "stdev", "varp", "stdevp"}));
+    EXPECT_EQ(directKey("stdevp").face.insert, "stdevp(");
 }

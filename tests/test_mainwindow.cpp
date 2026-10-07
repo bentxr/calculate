@@ -79,6 +79,13 @@ QString detail(MainWindow& window, const QString& key) {
     return label ? label->text() : QString();
 }
 
+// Opens a section of the left column, as a click on its header does (sections start closed).
+void openSection(MainWindow& window, const QString& id) {
+    auto* header = window.findChild<QToolButton*>("section:" + id);
+    ASSERT_NE(header, nullptr) << id.toStdString();
+    if (!header->isChecked()) QTest::mouseClick(header, Qt::LeftButton);
+}
+
 }  // namespace
 
 TEST(MainWindow, TheTypeMenuComesFromTheEngine) {
@@ -163,7 +170,7 @@ TEST(MainWindow, ExactModeGreysOutTranscendentalKeys) {
 TEST(MainWindow, TheKeypadEditsTheExpression) {
     MainWindow window;
     QTest::mouseClick(child<QPushButton>(window, "key:sin"), Qt::LeftButton);
-    QTest::mouseClick(child<QPushButton>(window, "direct:pi"), Qt::LeftButton);
+    QTest::mouseClick(child<QPushButton>(window, "common:pi"), Qt::LeftButton);
     QTest::mouseClick(child<QPushButton>(window, "key:close"), Qt::LeftButton);
     EXPECT_EQ(lcd(window)->input(), "sin(π)");
     QTest::mouseClick(child<QPushButton>(window, "key:delete"), Qt::LeftButton);
@@ -532,9 +539,11 @@ TEST(MainWindow, KeysKeepTheirSizeAndScrollWhenTheWindowIsSmall) {
 
 TEST(MainWindow, DirectKeysInsertTheirFunctions) {
     MainWindow window;
-    QTest::mouseClick(child<QPushButton>(window, "direct:asin"), Qt::LeftButton);
-    QTest::mouseClick(child<QPushButton>(window, "direct:pi"), Qt::LeftButton);
+    QTest::mouseClick(child<QPushButton>(window, "common:asin"), Qt::LeftButton);
+    QTest::mouseClick(child<QPushButton>(window, "common:pi"), Qt::LeftButton);
+    openSection(window, "numbers");
     QTest::mouseClick(child<QPushButton>(window, "direct:comma"), Qt::LeftButton);
+    openSection(window, "hyperbolic");
     QTest::mouseClick(child<QPushButton>(window, "direct:sinh"), Qt::LeftButton);
     EXPECT_EQ(lcd(window)->input(), "asin(π, sinh(");
     child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
@@ -789,7 +798,7 @@ TEST(MainWindow, TemplateKeysBuildTwoDimensionalInput) {
     };
     child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
     click({"key:fraction", "key:1", "key:down", "key:3", "key:right", "key:plus", "key:sqrt", "key:4", "key:right",
-           "direct:cube"});
+           "common:cube"});
     EXPECT_EQ(lcd(window)->input(), "((1)/(3))+√(4)^(3)");
     forget(window);
     QTest::keyClick(lcd(window), Qt::Key_Return);
@@ -1408,4 +1417,68 @@ TEST(MainWindow, ACommonKeyDoesWhatItsSectionKeyDoes) {
     child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
     EXPECT_FALSE(child<QPushButton>(window, "common:pi")->isEnabled());  // Exact greys it out like its twin
     EXPECT_FALSE(child<QPushButton>(window, "common:pi")->toolTip().isEmpty());
+}
+
+TEST(MainWindow, SectionsOpenInPlaceAndMoveNothingAbove) {
+    MainWindow window;
+    window.resize(1200, 800);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    const auto rect = [&](const QString& name) {
+        QWidget* w = window.findChild<QWidget*>(name);
+        EXPECT_NE(w, nullptr) << name.toStdString();
+        return w ? QRect(w->mapTo(&window, QPoint(0, 0)), w->size()) : QRect();
+    };
+    const QRect keypad = rect("keypad"), screen = rect("lcd"), common = rect("common"), memory = rect("memoryKeys");
+    for (const KeySection& s : keySections()) {
+        auto* header = child<QToolButton>(window, ("section:" + s.id).toUtf8().constData());
+        auto* preview = child<QLabel>(window, ("preview:" + s.id).toUtf8().constData());
+        EXPECT_TRUE(header->isCheckable());
+        EXPECT_FALSE(header->isChecked()) << s.id.toStdString();  // closed at start
+        EXPECT_EQ(header->arrowType(), Qt::RightArrow);
+        EXPECT_FALSE(child<QWidget>(window, ("sectionKeys:" + s.id).toUtf8().constData())->isVisible());
+        EXPECT_TRUE(preview->isVisible());
+        EXPECT_TRUE(preview->text().startsWith(translated(s.keys.first().face.label))) << s.id.toStdString();
+    }
+    QTest::mouseClick(child<QToolButton>(window, "section:hyperbolic"), Qt::LeftButton);
+    QTest::mouseClick(child<QToolButton>(window, "section:constants"), Qt::LeftButton);
+    QTest::qWait(50);
+    EXPECT_TRUE(child<QWidget>(window, "sectionKeys:hyperbolic")->isVisible());  // several open at once
+    EXPECT_TRUE(child<QWidget>(window, "sectionKeys:constants")->isVisible());
+    EXPECT_FALSE(child<QWidget>(window, "sectionKeys:numbers")->isVisible());
+    EXPECT_FALSE(child<QLabel>(window, "preview:hyperbolic")->isVisible());
+    EXPECT_EQ(child<QToolButton>(window, "section:hyperbolic")->arrowType(), Qt::DownArrow);
+    EXPECT_EQ(rect("keypad"), keypad);  // opening moves neither the pad, the screen nor what is always shown
+    EXPECT_EQ(rect("lcd"), screen);
+    EXPECT_EQ(rect("common"), common);
+    EXPECT_EQ(rect("memoryKeys"), memory);
+    QTest::mouseClick(child<QToolButton>(window, "section:hyperbolic"), Qt::LeftButton);
+    QTest::qWait(50);
+    EXPECT_FALSE(child<QWidget>(window, "sectionKeys:hyperbolic")->isVisible());
+    EXPECT_TRUE(child<QLabel>(window, "preview:hyperbolic")->isVisible());
+}
+
+TEST(MainWindow, ALongColumnScrollsOnItsOwn) {
+    MainWindow window;
+    window.resize(1200, 560);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    QWidget* pad = child<QWidget>(window, "keypad");
+    const QRect keypad(pad->mapTo(&window, QPoint(0, 0)), pad->size());
+    for (const KeySection& s : keySections()) openSection(window, s.id);
+    QTest::qWait(50);
+    EXPECT_TRUE(child<QScrollArea>(window, "directScroll")->verticalScrollBar()->isVisible());
+    EXPECT_FALSE(child<QScrollArea>(window, "keys")->verticalScrollBar()->isVisible());  // the pad does not scroll away
+    EXPECT_EQ(QRect(pad->mapTo(&window, QPoint(0, 0)), pad->size()), keypad);  // nor moves when the bar appears
+}
+
+TEST(MainWindow, TheStatisticsSectionTypesAStatistic) {
+    MainWindow window;
+    openSection(window, "statistics");
+    for (const char* name : {"direct:mean", "key:2", "key:close"}) QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "mean(2)");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "2");
 }

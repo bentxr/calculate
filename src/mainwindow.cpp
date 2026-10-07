@@ -262,17 +262,27 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
 
     pages_ = new QStackedWidget(central);
     pages_->setObjectName("pages");
-    // The keys keep one size (see sizeKeys): centred in a bigger window, scrolled in a smaller one.
+    // The keys keep one size (see sizeKeys): centred in a bigger window, scrolled in a smaller one. The left column
+    // scrolls on its own when its open sections make it taller than the window, so the main pad never moves.
     keys_ = new QScrollArea(pages_);
     keys_->setObjectName("keys");
     keys_->setFrameShape(QFrame::NoFrame);
-    keys_->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
+    keys_->setWidgetResizable(true);
     auto* keysArea = new QWidget;
     auto* keysLayout = new QHBoxLayout(keysArea);
     keysLayout->setContentsMargins(0, 0, 0, 0);
     keysLayout->setSpacing(keypadGap);
-    keysLayout->addWidget(buildDirectKeys(), 0, Qt::AlignTop);
+    directScroll_ = new QScrollArea(keysArea);
+    directScroll_->setObjectName("directScroll");
+    directScroll_->setFrameShape(QFrame::NoFrame);
+    directScroll_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    directScroll_->setWidgetResizable(true);
+    directScroll_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+    directScroll_->setWidget(buildDirectKeys());
+    keysLayout->addStretch();
+    keysLayout->addWidget(directScroll_);
     keysLayout->addWidget(buildKeypad(), 0, Qt::AlignTop);
+    keysLayout->addStretch();
     keys_->setWidget(keysArea);
     pages_->addWidget(keys_);
     auto* statistics = new QScrollArea(pages_);  // so neither page sets a minimum width for the window
@@ -463,16 +473,36 @@ QWidget* MainWindow::buildDirectKeys() {
     rule->setFrameShape(QFrame::HLine);
     rule->setFrameShadow(QFrame::Sunken);
     layout->addWidget(rule);
+    // A section opens in place: its header (a caret and the title, then a dimmed preview of its keys while closed)
+    // shows or hides its keys. Every section starts closed, and stays as left for the session.
     for (const KeySection& section : keySections()) {
+        auto* row = new QHBoxLayout;
+        row->setContentsMargins(0, 0, 0, 0);
         auto* header = new QToolButton(keyboard);
         header->setObjectName("section:" + section.id);
         header->setAutoRaise(true);
         header->setFocusPolicy(Qt::NoFocus);
+        header->setCheckable(true);
+        header->setArrowType(Qt::RightArrow);
+        header->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
         QFont bold = header->font();
         bold.setBold(true);
         header->setFont(bold);
-        layout->addWidget(header);
-        layout->addWidget(keyGrid("sectionKeys:" + section.id, section.keys, "direct:"));
+        auto* preview = new QLabel(keyboard);
+        preview->setObjectName("preview:" + section.id);
+        preview->setForegroundRole(QPalette::PlaceholderText);
+        row->addWidget(header);
+        row->addWidget(preview);
+        row->addStretch();
+        layout->addLayout(row);
+        QWidget* keys = keyGrid("sectionKeys:" + section.id, section.keys, "direct:");
+        keys->setVisible(false);
+        layout->addWidget(keys);
+        connect(header, &QToolButton::toggled, this, [header, preview, keys](bool open) {
+            keys->setVisible(open);
+            preview->setVisible(!open);
+            header->setArrowType(open ? Qt::DownArrow : Qt::RightArrow);
+        });
     }
     layout->addStretch();
     return keyboard;
@@ -502,7 +532,7 @@ void MainWindow::sizeKeys() {
     const int rows = 7;
     const QSize reserved(outer.left() + outer.right() + centralWidget()->layout()->spacing() + modes_->width()
                              + inner.left() + inner.right() + left.left() + left.right() + area->layout()->spacing()
-                             + 2 * keys_->frameWidth() + scrollBar,
+                             + 2 * keys_->frameWidth() + 2 * scrollBar,  // the window's bar and the column's
                          outer.top() + outer.bottom() + lcd_->minimumSizeHint().height() + 2 * keySpacing
                              + inner.top() + inner.bottom() + keypadGap
                              + style()->pixelMetric(QStyle::PM_TitleBarHeight));
@@ -516,9 +546,32 @@ void MainWindow::sizeKeys() {
     for (const Key& key : everyDirectKey()) findChild<QPushButton*>("direct:" + key.id)->setFixedSize(size);
     for (const QString& id : defaultCommon()) findChild<QPushButton*>("common:" + id)->setFixedSize(size);
     findChild<QWidget*>("cursorPad")->setFixedWidth(2 * size.width() + keySpacing);
-    for (QWidget* w : {pad, direct, area}) {
+    for (QWidget* w : {pad, direct}) {
         w->layout()->activate();
         w->adjustSize();
+    }
+    // Room for the column's scroll bar is kept, so the bar appearing moves nothing.
+    directScroll_->setFixedWidth(direct->sizeHint().width() + scrollBar);
+    directScroll_->setMinimumHeight(pad->sizeHint().height());
+    area->layout()->activate();
+    updatePreviews();
+}
+
+// While a section is closed, its header shows its keys' legends, as many as fit beside the title.
+void MainWindow::updatePreviews() {
+    const QWidget* common = findChild<QWidget*>("common");
+    for (const KeySection& section : keySections()) {
+        QStringList legends;
+        for (const Key& key : section.keys) legends << translated(key.face.label);
+        auto* preview = findChild<QLabel*>("preview:" + section.id);
+        const QString text = legends.join(QStringLiteral("  "));
+        if (!keysSized_) {
+            preview->setText(text);
+            continue;
+        }
+        const auto* header = findChild<QToolButton*>("section:" + section.id);
+        const int room = common->sizeHint().width() - header->sizeHint().width() - keySpacing;
+        preview->setText(preview->fontMetrics().elidedText(text, Qt::ElideRight, qMax(0, room)));
     }
 }
 
@@ -720,6 +773,7 @@ void MainWindow::retranslate() {
     if (hasResult_ || previewShown_) present();
     relabelHistory();  // the decimal separator may follow the language
     updateKeys();
+    updatePreviews();
     if (keysSized_) sizeKeys();  // labels changed width
 }
 
