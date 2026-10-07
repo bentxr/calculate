@@ -252,6 +252,7 @@ QString spokenName(const Key& key) {
         {"↷", QT_TRANSLATE_NOOP("spoken", "redo")},
         {"⇧", QT_TRANSLATE_NOOP("spoken", "shift")},
         {"␣", QT_TRANSLATE_NOOP("spoken", "space")},
+        {"#", QT_TRANSLATE_NOOP("spoken", "comment")},
         {"_", QT_TRANSLATE_NOOP("spoken", "underscore")},
     };
     const auto word = words.constFind(key.face.label);

@@ -320,3 +320,7 @@ TEST(Keypad, ACommentKeyWithTheLetters) {
     EXPECT_EQ(directKey("comment").face.action, KeyAction::Type);
     EXPECT_EQ(directKey("comment").face.insert, "#");
 }
+
+TEST(Keypad, TheCommentKeyHasASpokenName) {
+    EXPECT_EQ(spokenName(directKey("comment")), "comment");  // not the bare sign
+}

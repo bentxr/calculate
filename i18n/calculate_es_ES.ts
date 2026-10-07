@@ -803,6 +803,11 @@
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="255"/>
+        <source>comment</source>
+        <translation>comentario</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="256"/>
         <source>underscore</source>
         <translation>guion bajo</translation>
     </message>
