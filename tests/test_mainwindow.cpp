@@ -15,7 +15,9 @@
 #include <QComboBox>
 #include <QDialog>
 #include <QHelpEvent>
+#include <QImage>
 #include <QLabel>
+#include <QLineEdit>
 #include <QListWidget>
 #include <QMenu>
 #include <QPlainTextEdit>
@@ -568,7 +570,7 @@ TEST(MainWindow, TheLeftPanelCollapsesToARail) {
     EXPECT_LT(rail->width(), wide / 2);
     EXPECT_TRUE(toggle->isVisible());
     EXPECT_TRUE(settings->isVisible());
-    EXPECT_GT(settings->y(), rail->height() / 2);  // ⚙ stays at the bottom
+    EXPECT_GT(settings->y(), rail->height() / 2);  // the gear stays at the bottom
     QTest::mouseClick(toggle, Qt::LeftButton);
     QTest::qWait(50);
     EXPECT_TRUE(modes->isVisible());
@@ -1293,4 +1295,77 @@ TEST(MainWindow, AFreshWindowExportsNoSettings) {
     setting(window, "decimal:comma")->trigger();
     EXPECT_EQ(QJsonDocument::fromJson(window.exportSettings()).object().value("settings").toObject().value("decimal").toString(), "comma");
     setting(window, "decimal:language")->trigger();
+}
+
+namespace {
+
+// Characters with the Unicode Emoji property (emoji-data.txt), less the digits, # and *, which only become emoji
+// with a keycap; and the selector that asks for an emoji picture.
+bool isEmoji(char32_t c) {
+    static const std::pair<char32_t, char32_t> ranges[] = {
+        {0x00A9, 0x00A9}, {0x00AE, 0x00AE}, {0x203C, 0x203C}, {0x2049, 0x2049}, {0x2122, 0x2122}, {0x2139, 0x2139},
+        {0x2194, 0x2199}, {0x21A9, 0x21AA}, {0x231A, 0x231B}, {0x2328, 0x2328}, {0x23CF, 0x23CF}, {0x23E9, 0x23F3},
+        {0x23F8, 0x23FA}, {0x24C2, 0x24C2}, {0x25AA, 0x25AB}, {0x25B6, 0x25B6}, {0x25C0, 0x25C0}, {0x25FB, 0x25FE},
+        {0x2600, 0x2604}, {0x260E, 0x260E}, {0x2611, 0x2611}, {0x2614, 0x2615}, {0x2618, 0x2618}, {0x261D, 0x261D},
+        {0x2620, 0x2620}, {0x2622, 0x2623}, {0x2626, 0x2626}, {0x262A, 0x262A}, {0x262E, 0x262F}, {0x2638, 0x263A},
+        {0x2640, 0x2640}, {0x2642, 0x2642}, {0x2648, 0x2653}, {0x265F, 0x2660}, {0x2663, 0x2663}, {0x2665, 0x2666},
+        {0x2668, 0x2668}, {0x267B, 0x267B}, {0x267E, 0x267F}, {0x2692, 0x2697}, {0x2699, 0x2699}, {0x269B, 0x269C},
+        {0x26A0, 0x26A1}, {0x26A7, 0x26A7}, {0x26AA, 0x26AB}, {0x26B0, 0x26B1}, {0x26BD, 0x26BE}, {0x26C4, 0x26C5},
+        {0x26C8, 0x26C8}, {0x26CE, 0x26CF}, {0x26D1, 0x26D1}, {0x26D3, 0x26D4}, {0x26E9, 0x26EA}, {0x26F0, 0x26F5},
+        {0x26F7, 0x26FA}, {0x26FD, 0x26FD}, {0x2702, 0x2702}, {0x2705, 0x2705}, {0x2708, 0x270D}, {0x270F, 0x270F},
+        {0x2712, 0x2712}, {0x2714, 0x2714}, {0x2716, 0x2716}, {0x271D, 0x271D}, {0x2721, 0x2721}, {0x2728, 0x2728},
+        {0x2733, 0x2734}, {0x2744, 0x2744}, {0x2747, 0x2747}, {0x274C, 0x274C}, {0x274E, 0x274E}, {0x2753, 0x2755},
+        {0x2757, 0x2757}, {0x2763, 0x2764}, {0x2795, 0x2797}, {0x27A1, 0x27A1}, {0x27B0, 0x27B0}, {0x27BF, 0x27BF},
+        {0x2934, 0x2935}, {0x2B05, 0x2B07}, {0x2B1B, 0x2B1C}, {0x2B50, 0x2B50}, {0x2B55, 0x2B55}, {0x3030, 0x3030},
+        {0x303D, 0x303D}, {0x3297, 0x3297}, {0x3299, 0x3299}, {0x1F000, 0x1FAFF}, {0xFE0F, 0xFE0F}};
+    return std::any_of(std::begin(ranges), std::end(ranges), [c](const auto& r) { return c >= r.first && c <= r.second; });
+}
+
+// Every text the window shows: legends, tooltips, labels, menu entries and placeholders.
+QStringList shownTexts(MainWindow& window) {
+    QStringList texts;
+    for (QAbstractButton* b : window.findChildren<QAbstractButton*>()) texts << b->text() << b->toolTip();
+    for (QLabel* l : window.findChildren<QLabel*>()) texts << l->text();
+    for (QAction* a : window.findChildren<QAction*>()) texts << a->text();
+    for (QLineEdit* e : window.findChildren<QLineEdit*>()) texts << e->placeholderText();
+    return texts;
+}
+
+// The colour of the icon's solid pixels.
+QColor ink(const QIcon& icon) {
+    const QImage image = icon.pixmap(QSize(32, 32)).toImage().convertToFormat(QImage::Format_ARGB32);
+    for (int y = 0; y < image.height(); ++y)
+        for (int x = 0; x < image.width(); ++x)
+            if (qAlpha(image.pixel(x, y)) == 255) return QColor(image.pixel(x, y));
+    return {};
+}
+
+}  // namespace
+
+TEST(MainWindow, NoEmojiAnywhere) {
+    MainWindow window;
+    for (const bool spanish : {false, true}) {
+        setting(window, spanish ? "language:es" : "language:en")->trigger();
+        QCoreApplication::processEvents();
+        for (const QString& text : shownTexts(window))
+            for (char32_t c : text.toUcs4()) EXPECT_FALSE(isEmoji(c)) << text.toStdString();
+    }
+    setting(window, "language:system")->trigger();
+    for (const char* name : {"settingsButton", "statisticsKeysToggle"}) {
+        auto* button = child<QToolButton>(window, name);
+        EXPECT_TRUE(button->text().isEmpty()) << name;  // a drawn icon instead
+        EXPECT_FALSE(button->icon().isNull()) << name;
+        EXPECT_FALSE(button->toolTip().isEmpty()) << name;
+    }
+}
+
+TEST(MainWindow, IconsFollowTheTheme) {
+    MainWindow window;
+    auto* gear = child<QToolButton>(window, "settingsButton");
+    for (const char* theme : {"theme:dark", "theme:light"}) {
+        setting(window, theme)->trigger();
+        QCoreApplication::processEvents();
+        EXPECT_EQ(ink(gear->icon()).rgb(), window.palette().color(QPalette::ButtonText).rgb()) << theme;
+    }
+    setting(window, "theme:system")->trigger();
 }

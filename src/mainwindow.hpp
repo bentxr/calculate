@@ -34,7 +34,7 @@ public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow() override;
 
-    // The settings as a file: each key with the values it can take (from the ⚙ menu, plus the type and the angle),
+    // The settings as a file: each key with the values it can take (from the gear's menu, plus the type and the angle),
     // the file of those that differ from the defaults, and reading one back. Import returns what it couldn't use.
     QMap<QString, QStringList> settingKeys() const;
     QByteArray exportSettings() const;
@@ -63,6 +63,7 @@ private:
     void buildSettings();
     QMap<QString, QString> settingValues() const;
     void retranslate();
+    void drawIcons();
     void present();
     calculate_core::Options options() const;
     void request(const QString& expression, bool allowUncertain);

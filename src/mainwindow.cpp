@@ -2,6 +2,7 @@
 
 #include "detailscard.hpp"
 #include "formulatip.hpp"
+#include "icons.hpp"
 #include "keypad.hpp"
 #include "keysizing.hpp"
 #include "lcd.hpp"
@@ -83,7 +84,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     auto* central = new QWidget(this);
     auto* outer = new QHBoxLayout(central);
 
-    // The left panel: ☰ collapses it to a thin rail; ⚙ (settings) stays at its bottom either way.
+    // The left panel: ☰ collapses it to a thin rail; the gear (settings) stays at its bottom either way.
     auto* rail = new QWidget(central);
     rail->setObjectName("rail");
     auto* railLayout = new QVBoxLayout(rail);
@@ -99,11 +100,10 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     modes_->setFixedWidth(140);
     settingsButton_ = new QToolButton(rail);
     settingsButton_->setObjectName("settingsButton");
-    settingsButton_->setText(QStringLiteral("⚙"));
     settingsButton_->setAutoRaise(true);
     railLayout->addWidget(panelToggle_, 0, Qt::AlignLeft);
     railLayout->addWidget(modes_, 1);
-    railLayout->addStretch();  // keeps ⚙ at the bottom while the list is hidden
+    railLayout->addStretch();  // keeps the gear at the bottom while the list is hidden
     railLayout->addWidget(settingsButton_, 0, Qt::AlignLeft);
     outer->addWidget(rail);
     connect(panelToggle_, &QToolButton::toggled, modes_, [this](bool collapsed) { modes_->setVisible(!collapsed); });
@@ -373,6 +373,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
                        static_cast<QWidget*>(detailsButton_), static_cast<QWidget*>(editButton_), static_cast<QWidget*>(keyboardButton_),
                        static_cast<QWidget*>(proceed_), static_cast<QWidget*>(cancel_), static_cast<QWidget*>(historyToggle_)})
         w->setFocusPolicy(Qt::NoFocus);
+    drawIcons();
     defaults_ = settingValues();
     lcd_->setFocus();
 }
@@ -504,7 +505,7 @@ void MainWindow::showEvent(QShowEvent* event) {
     connect(windowHandle(), &QWindow::screenChanged, this, &MainWindow::sizeKeys);
 }
 
-// ⚙: a small menu that opens from the button, with the values of the language and of the theme listed
+// The gear: a small menu that opens from the button, with the values of the language and of the theme listed
 // in place, then whether to calculate while typing. A choice applies at once and is forgotten at exit.
 void MainWindow::buildSettings() {
     settings_ = new QMenu(this);
@@ -644,7 +645,7 @@ void MainWindow::retranslate() {
     busy_->setText(tr("Computing…"));
     cancel_->setText(tr("Cancel"));
     historyToggle_->setToolTip(tr("History"));
-    // The symbol buttons (☰ ⚙ ▾) are spoken by their tooltips.
+    // The symbol buttons (☰, the gear, ▾) are spoken by their tooltips.
     for (QToolButton* button : {panelToggle_, settingsButton_, historyToggle_}) button->setAccessibleName(button->toolTip());
     statisticsLabel_->setText(tr("Values (one per line, or separated by commas):"));
     statisticsKeysToggle_->setToolTip(tr("Show or hide the keypad"));
@@ -694,6 +695,13 @@ void MainWindow::retranslate() {
     if (keysSized_) sizeKeys();  // labels changed width
 }
 
+// The icons are drawn in the text colour of the theme in use, so they are redrawn when it changes.
+void MainWindow::drawIcons() {
+    const QColor ink = palette().color(QPalette::ButtonText);
+    settingsButton_->setIcon(icons::drawn(icons::Kind::Settings, ink, fontMetrics().height()));
+    statisticsKeysToggle_->setIcon(icons::drawn(icons::Kind::Keyboard, ink, fontMetrics().height()));
+}
+
 // Hovering a statistics button shows how that statistic is computed.
 bool MainWindow::eventFilter(QObject* watched, QEvent* event) {
     const QString statistic = watched->property("statistic").toString();
@@ -707,6 +715,7 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event) {
 
 void MainWindow::changeEvent(QEvent* event) {
     if (event->type() == QEvent::LanguageChange) retranslate();
+    if (event->type() == QEvent::PaletteChange && settingsButton_) drawIcons();
     QMainWindow::changeEvent(event);
 }
 
@@ -717,7 +726,6 @@ QWidget* MainWindow::buildStatistics() {
     statisticsLabel_ = new QLabel(page);
     statisticsKeysToggle_ = new QToolButton(page);
     statisticsKeysToggle_->setObjectName("statisticsKeysToggle");
-    statisticsKeysToggle_->setText(QStringLiteral("⌨"));
     statisticsKeysToggle_->setCheckable(true);
     statisticsKeysToggle_->setChecked(true);
     statisticsKeysToggle_->setAutoRaise(true);
