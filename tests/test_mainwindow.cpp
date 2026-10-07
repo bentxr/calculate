@@ -1947,3 +1947,17 @@ TEST(MainWindow, TheHistoryKeepsComments) {
     EXPECT_EQ(lcd(window)->outputText(), "");
     EXPECT_FALSE(child<QToolButton>(window, "detailsButton")->isEnabled());
 }
+
+TEST(MainWindow, ACommentCanBeEnteredWithKeysAlone) {
+    MainWindow window;
+    for (const char* name : {"key:1", "key:plus", "key:1"}) QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    openSection(window, "letters");
+    QTest::mouseClick(child<QPushButton>(window, "direct:comment"), Qt::LeftButton);
+    for (const char* name : {"direct:space", "direct:letterT", "direct:letterW", "direct:letterO"})
+        QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "1+1# two");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(child<QListWidget>(window, "history")->item(0)->text(), "1+1 = 2   # two");
+}

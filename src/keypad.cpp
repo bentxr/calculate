@@ -81,6 +81,7 @@ QList<Key> letterKeys() {
     keys.append({"shift", act("⇧", KeyAction::Shift)});
     keys.append({"underscore", type("_", "_")});
     keys.append({"space", type("␣", " ")});
+    keys.append({"comment", type("#", "#")});  // a comment is typed with the letters
     return keys;
 }
 
