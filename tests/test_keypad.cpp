@@ -271,3 +271,17 @@ TEST(Keypad, EverySyntaxElementHasAKey) {
                         KeyAction::Up, KeyAction::Down, KeyAction::Undo, KeyAction::Redo, KeyAction::Shift})
         EXPECT_TRUE(actions.contains(a)) << static_cast<int>(a);
 }
+
+TEST(Keypad, CommonHoldsSectionKeysOnly) {
+    EXPECT_EQ(commonLimit, 12);
+    EXPECT_TRUE(canBeCommon(defaultCommon()));
+    EXPECT_TRUE(canBeCommon({}));               // the user may empty it
+    EXPECT_TRUE(canBeCommon({"sinh", "gcd"}));
+    EXPECT_FALSE(canBeCommon({"sinh", "sinh"}));  // once each
+    EXPECT_FALSE(canBeCommon({"7"}));             // the main pad is always in view already
+    EXPECT_FALSE(canBeCommon({"memoryClear"}));   // so is Memory and editing
+    EXPECT_FALSE(canBeCommon({"nothing"}));
+    QStringList thirteen = defaultCommon();
+    thirteen << "sinh";
+    EXPECT_FALSE(canBeCommon(thirteen));
+}

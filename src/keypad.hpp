@@ -45,6 +45,11 @@ const QStringList& defaultCommon();  // the ids of Common's keys at start, in or
 QList<Key> everyDirectKey();          // Memory and editing, then every section's keys, in order
 Key directKey(const QString& id);     // the key of the column with this id; an empty Key when there is none
 
+inline constexpr int commonLimit = 12;  // two rows of six
+// Whether `ids` can be Common: keys of the sections (the main pad and Memory and editing are always in view),
+// each once, at most commonLimit of them.
+bool canBeCommon(const QStringList& ids);
+
 // The Statistics mode's functions, in their order on its page; each takes the values as arguments.
 const QList<Key>& statisticsKeys();
 

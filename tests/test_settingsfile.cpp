@@ -2,6 +2,7 @@
 
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QSet>
 
 #include <gtest/gtest.h>
 
@@ -32,4 +33,25 @@ TEST(SettingsFile, ReadingChecksEveryKeyAndValue) {
     EXPECT_FALSE(settingsfile::read(R"({"settings":{}})", allowed).problems.isEmpty());              // no version
     EXPECT_FALSE(settingsfile::read(R"({"version":2,"settings":{}})", allowed).problems.isEmpty());  // a newer file
     EXPECT_TRUE(settingsfile::read(R"({"version":1,"settings":{}})", allowed).problems.isEmpty());
+}
+
+TEST(SettingsFile, AListSettingHoldsAllowedWordsOnceEach) {
+    const QMap<QString, QStringList> allowed{{"common", {"sinh", "gcd", "pi"}}, {"theme", {"light", "dark"}}};
+    const QSet<QString> lists{"common"};
+    settingsfile::Read r = settingsfile::read(R"({"version":1,"settings":{"common":"gcd sinh"}})", allowed, lists);
+    EXPECT_EQ(r.values.value("common"), "gcd sinh");  // in the file's order
+    EXPECT_TRUE(r.problems.isEmpty());
+    r = settingsfile::read(R"({"version":1,"settings":{"common":""}})", allowed, lists);
+    EXPECT_TRUE(r.values.contains("common"));  // an empty list
+    EXPECT_TRUE(r.problems.isEmpty());
+    r = settingsfile::read(R"({"version":1,"settings":{"common":"gcd gcd"}})", allowed, lists);
+    EXPECT_FALSE(r.values.contains("common"));
+    EXPECT_EQ(r.problems.size(), 1);
+    r = settingsfile::read(R"({"version":1,"settings":{"common":"gcd tan"}})", allowed, lists);
+    EXPECT_FALSE(r.values.contains("common"));
+    EXPECT_EQ(r.problems.size(), 1);
+    r = settingsfile::read(R"({"version":1,"settings":{"theme":"light dark"}})", allowed, lists);
+    EXPECT_FALSE(r.values.contains("theme"));  // a plain setting still takes exactly one of its values
+    r = settingsfile::read(R"({"version":1,"settings":{"common":"gcd sinh"}})", allowed);
+    EXPECT_FALSE(r.values.contains("common"));  // not declared a list: one value only
 }

@@ -4,6 +4,9 @@
 
 #include <QCoreApplication>
 #include <QHash>
+#include <QSet>
+
+#include <algorithm>
 
 namespace {
 
@@ -135,6 +138,14 @@ Key directKey(const QString& id) {
     for (const Key& key : everyDirectKey())
         if (key.id == id) return key;
     return Key{};
+}
+
+bool canBeCommon(const QStringList& ids) {
+    if (ids.size() > commonLimit || QSet<QString>(ids.begin(), ids.end()).size() != ids.size()) return false;
+    QSet<QString> sectionKeys;
+    for (const KeySection& section : keySections())
+        for (const Key& key : section.keys) sectionKeys.insert(key.id);
+    return std::all_of(ids.begin(), ids.end(), [&](const QString& id) { return sectionKeys.contains(id); });
 }
 
 QList<SearchEntry> searchEntries() {

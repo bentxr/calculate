@@ -2,6 +2,7 @@
 
 #include <QByteArray>
 #include <QMap>
+#include <QSet>
 #include <QString>
 #include <QStringList>
 
@@ -15,6 +16,8 @@ struct Read {
     QMap<QString, QString> values;  // the keys and values that can be applied
     QStringList problems;           // one line per thing that could not be used, in the current language
 };
-Read read(const QByteArray& file, const QMap<QString, QStringList>& allowed);
+// A key in `lists` holds a space-separated list of its allowed values, each at most once, in any order (an empty value
+// is an empty list).
+Read read(const QByteArray& file, const QMap<QString, QStringList>& allowed, const QSet<QString>& lists = {});
 
 }  // namespace settingsfile
