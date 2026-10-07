@@ -196,6 +196,7 @@ private:
     QToolButton* statisticsKeysToggle_ = nullptr;
     QLineEdit* percentFirst_ = nullptr;
     QLineEdit* percentSecond_ = nullptr;
+    QLineEdit* percentTarget_ = nullptr;  // the box the tool's keypad types into
     QToolButton* percentKeysToggle_ = nullptr;
     QTimer percentTimer_;
     int percentSerial_ = 0;

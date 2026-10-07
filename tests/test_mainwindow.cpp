@@ -1863,3 +1863,15 @@ TEST(MainWindow, OnAPhoneThePercentagesFitTheWidth) {
     EXPECT_LE(bound->mapTo(&window, QPoint(bound->width(), 0)).x(), window.width());  // …and every bound is in view
     EXPECT_EQ(of->toolTip(), of->text());  // the whole answer, where it is cut short
 }
+
+TEST(MainWindow, ThePercentagesKeypadMovesToTheSecondValue) {
+    MainWindow window;  // not shown: no box has the focus, as in a browser that hasn't given the page the keyboard
+    child<QListWidget>(window, "modes")->setCurrentRow(2);
+    for (const char* key : {"8", "next", "1", "point", "5"})
+        QTest::mouseClick(child<QPushButton>(window, QStringLiteral("percentKey:%1").arg(key).toUtf8().constData()), Qt::LeftButton);
+    EXPECT_EQ(child<QLineEdit>(window, "percentFirst")->text(), "8");
+    EXPECT_EQ(child<QLineEdit>(window, "percentSecond")->text(), settings::decimalComma() ? "1,5" : "1.5");
+    QTest::mouseClick(child<QPushButton>(window, "percentKey:next"), Qt::LeftButton);  // and back
+    QTest::mouseClick(child<QPushButton>(window, "percentKey:backspace"), Qt::LeftButton);
+    EXPECT_EQ(child<QLineEdit>(window, "percentFirst")->text(), "");
+}

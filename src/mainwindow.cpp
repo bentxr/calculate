@@ -1237,6 +1237,8 @@ void MainWindow::drawIcons() {
 
 // Hovering a statistics button shows how that statistic is computed.
 bool MainWindow::eventFilter(QObject* watched, QEvent* event) {
+    if ((watched == percentFirst_ || watched == percentSecond_) && event->type() == QEvent::FocusIn)
+        percentTarget_ = static_cast<QLineEdit*>(watched);
     if (watched == search_) {
         if (event->type() == QEvent::FocusIn) filterSearch(search_->text());
         if (event->type() == QEvent::FocusOut) searchList_->hide();
@@ -1347,11 +1349,13 @@ QWidget* MainWindow::buildPercentages() {
             if (kept != text) edit->setText(kept);
         });
         connect(edit, &QLineEdit::textChanged, this, [this] { percentTimer_.start(); });
+        edit->installEventFilter(this);  // a box that takes the focus becomes the keypad's (see eventFilter)
     };
     percentFirst_ = new QLineEdit(page);
     percentFirst_->setObjectName("percentFirst");
     percentSecond_ = new QLineEdit(page);
     percentSecond_->setObjectName("percentSecond");
+    percentTarget_ = percentFirst_;
     percentKeysToggle_ = new QToolButton(page);
     percentKeysToggle_->setObjectName("percentKeysToggle");
     percentKeysToggle_->setCheckable(true);
@@ -1386,9 +1390,12 @@ QWidget* MainWindow::buildPercentages() {
         button->setFocusPolicy(Qt::NoFocus);
         const QString insert = QString::fromUtf8(pad[i].insert);
         connect(button, &QPushButton::clicked, this, [this, insert] {
-            QLineEdit* edit = percentSecond_->hasFocus() ? percentSecond_ : percentFirst_;
-            if (insert == "\n") (edit == percentFirst_ ? percentSecond_ : percentFirst_)->setFocus();
-            else if (insert.isEmpty()) edit->backspace();
+            // The keypad keeps its own target: a browser may not give the page the keyboard focus.
+            QLineEdit* edit = percentTarget_;
+            if (insert == "\n") {
+                percentTarget_ = edit == percentFirst_ ? percentSecond_ : percentFirst_;
+                percentTarget_->setFocus();
+            } else if (insert.isEmpty()) edit->backspace();
             else edit->insert(settings::decimalComma() && insert == "." ? QStringLiteral(",") : insert);
         });
         grid->addWidget(button, i / 4, i % 4);
@@ -1703,6 +1710,7 @@ void MainWindow::apply(const Face& f) {
                 const QString value = view::copyText(last_, view::CopyForm::Value, types_[static_cast<std::size_t>(last_.type)]);
                 percentFirst_->setText(settings::decimalComma() ? view::withDecimalComma(value) : value);
             }
+            percentTarget_ = percentFirst_;
             percentFirst_->setFocus();
             return;
         }
