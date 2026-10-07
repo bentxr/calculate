@@ -2,6 +2,7 @@
 
 #include "detailscard.hpp"
 #include "formulatip.hpp"
+#include "keybutton.hpp"
 #include "keypad.hpp"
 #include "keysizing.hpp"
 #include "lcd.hpp"
@@ -1792,4 +1793,19 @@ TEST(MainWindow, OnAPhoneCommonIsEditedFromTheDrawer) {
     QTest::mouseClick(child<QToolButton>(window, "editCommon"), Qt::LeftButton);
     window.layOutKeys(QSize(1920, 1200));
     EXPECT_FALSE(drawer->isAncestorOf(child<QWidget>(window, "editCommon")));  // back on Common's title row
+}
+
+TEST(MainWindow, ARightClickOffersTheKeysOtherFaces) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    auto* sin = child<KeyButton>(window, "key:sin");
+    ASSERT_TRUE(sin->hasMore());
+    QTest::mouseClick(sin, Qt::RightButton);
+    auto* popup = child<QFrame>(window, "moreKeys");
+    ASSERT_TRUE(popup->isVisible());
+    EXPECT_TRUE(window.geometry().contains(popup->geometry()));
+    QTest::mouseClick(child<QPushButton>(window, "more:sin:0"), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "asin(");
+    EXPECT_FALSE(popup->isVisible());
 }

@@ -70,6 +70,10 @@ bool searchMatches(const SearchEntry& entry, const QString& text);
 // Whether the face works in the Exact type when `exact` (Exact refuses irrational functions).
 bool available(const Face& face, bool exact);
 
+// The keys a key also offers on a long press or a right click: a main pad key's id, then the ids of the column's keys
+// it offers (sin → asin, sinh, asinh). A shortcut only: every one of them has its own key too.
+const QList<QPair<QString, QStringList>>& alternates();
+
 // The key's name for screen readers, in the user's language: words for symbol legends (x⁻¹ "reciprocal"); any
 // other legend speaks as itself.
 QString spokenName(const Key& key);

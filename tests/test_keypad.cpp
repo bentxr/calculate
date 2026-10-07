@@ -285,3 +285,11 @@ TEST(Keypad, CommonHoldsSectionKeysOnly) {
     thirteen << "sinh";
     EXPECT_FALSE(canBeCommon(thirteen));
 }
+
+TEST(Keypad, AlternatesAreKeysOfTheLeftKeyboard) {
+    ASSERT_FALSE(alternates().isEmpty());
+    for (const auto& [id, others] : alternates()) {
+        EXPECT_FALSE(find(id).id.isEmpty()) << id.toStdString();
+        for (const QString& other : others) EXPECT_FALSE(find(other).id.isEmpty()) << other.toStdString();
+    }
+}

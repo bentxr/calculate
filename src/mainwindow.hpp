@@ -102,6 +102,7 @@ private:
     bool editCommon(const Key& key, const QString& prefix);
     void setCommon(const QStringList& ids);
     void placeCommon();
+    void showMore(QWidget* key, const QStringList& others);
     void updatePreviews();
     void relabelLetters();  // small or capital, as ⇧ says
     void fillSearch();
@@ -144,6 +145,7 @@ private:
     bool editingCommon_ = false;
     QSize keySize_;  // the function keys' size, as layOutKeys last gave it
     QFrame* drawer_ = nullptr;
+    QFrame* moreKeys_ = nullptr;  // a key's other faces
     QLineEdit* search_ = nullptr;  // finds any function or constant
     QListWidget* searchList_ = nullptr;
     QPushButton* drawerToggle_ = nullptr;

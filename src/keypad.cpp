@@ -185,6 +185,20 @@ QString translated(const QString& text) {
     return QCoreApplication::translate("keypad", text.toUtf8().constData());
 }
 
+const QList<QPair<QString, QStringList>>& alternates() {
+    static const QList<QPair<QString, QStringList>> list{
+        {"sin", {"asin", "sinh", "asinh"}},
+        {"cos", {"acos", "cosh", "acosh"}},
+        {"tan", {"atan", "tanh", "atanh"}},
+        {"ln", {"log", "exp"}},
+        {"logBase", {"log"}},
+        {"square", {"cube"}},
+        {"sqrt", {"cbrt", "root"}},
+        {"memoryAdd", {"memorySubtract", "memoryStore", "memory", "memoryClear"}},
+    };
+    return list;
+}
+
 QString spokenName(const Key& key) {
     static const QHash<QString, const char*> words{
         {"□/□", QT_TRANSLATE_NOOP("spoken", "fraction")},

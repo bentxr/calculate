@@ -3,6 +3,7 @@
 #include "detailscard.hpp"
 #include "formulatip.hpp"
 #include "icons.hpp"
+#include "keybutton.hpp"
 #include "keypad.hpp"
 #include "keysizing.hpp"
 #include "lcd.hpp"
@@ -242,6 +243,13 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     historyToggle_->setAutoRaise(true);
     historyToggle_->setEnabled(false);
     lcd_->addToBar(historyToggle_, true);
+    // A key's other faces (a long press or a right click; see showMore).
+    moreKeys_ = new QFrame(this, Qt::Popup);
+    moreKeys_->setObjectName("moreKeys");
+    moreKeys_->setFrameShape(QFrame::StyledPanel);
+    auto* moreLayout = new QHBoxLayout(moreKeys_);
+    moreLayout->setContentsMargins(keySpacing, keySpacing, keySpacing, keySpacing);
+    moreLayout->setSpacing(keySpacing);
     historyPanel_ = new QFrame(this, Qt::Popup);
     historyPanel_->setObjectName("historyPanel");
     historyPanel_->setFrameShape(QFrame::StyledPanel);
@@ -495,14 +503,44 @@ QWidget* MainWindow::buildKeypad() {
 }
 
 QPushButton* MainWindow::buildKey(const Key& key, const QString& prefix) {
-    auto* button = new QPushButton;
+    auto* button = new KeyButton;
     button->setObjectName(prefix + key.id);
     button->setMinimumWidth(32);          // below the style's default, so every column can be equally wide
     button->setFocusPolicy(Qt::NoFocus);  // the keyboard always stays with the screen
     connect(button, &QPushButton::clicked, this, [this, key, prefix] {
         if (!(editingCommon_ && editCommon(key, prefix))) apply(key.face);
     });
+    for (const auto& [id, others] : alternates())
+        if (prefix == QLatin1String("key:") && id == key.id) {
+            button->setHasMore(true);
+            connect(button, &KeyButton::moreRequested, this, [this, button, others = others] { showMore(button, others); });
+        }
     return button;
+}
+
+// A key's other faces in a small popup next to it; choosing one types it and closes the popup.
+void MainWindow::showMore(QWidget* key, const QStringList& others) {
+    for (QPushButton* old : moreKeys_->findChildren<QPushButton*>()) {
+        old->setObjectName({});
+        old->hide();
+        old->deleteLater();
+    }
+    const QString id = key->objectName().section(':', 1);
+    for (int i = 0; i < others.size(); ++i) {
+        const Face face = directKey(others[i]).face;
+        auto* button = new QPushButton(translated(face.label), moreKeys_);
+        button->setObjectName(QStringLiteral("more:%1:%2").arg(id).arg(i));
+        button->setFocusPolicy(Qt::NoFocus);
+        button->setMinimumSize(key->size());
+        moreKeys_->layout()->addWidget(button);
+        connect(button, &QPushButton::clicked, this, [this, face] {
+            moreKeys_->hide();
+            apply(face);
+        });
+    }
+    moreKeys_->adjustSize();
+    moreKeys_->setGeometry(placed(moreKeys_->sizeHint(), globalGeometry(key), popupBounds(key)));
+    moreKeys_->show();
 }
 
 // While Common is being edited, a click on one of its keys removes it, and a click on a section key adds it (at the
@@ -1535,5 +1573,13 @@ void MainWindow::updateKeys() {
         const bool on = available(key.face, exact);
         button->setEnabled(on);
         button->setToolTip(on ? QString() : exactRefusal(key.face.label));
+    }
+    // A key with more faces says which, and how to reach them.
+    for (const auto& [id, others] : alternates()) {
+        auto* button = findChild<QPushButton*>("key:" + id);
+        if (!button->isEnabled()) continue;
+        QStringList legends;
+        for (const QString& other : others) legends << translated(directKey(other).face.label);
+        button->setToolTip(tr("Hold for: %1").arg(legends.join(QStringLiteral(", "))));
     }
 }
