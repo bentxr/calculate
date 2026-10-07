@@ -160,11 +160,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     side_ = new QVBoxLayout;
     angle_ = new QComboBox(central);
     angle_->setObjectName("angle");
-    angle_->setSizeAdjustPolicy(QComboBox::AdjustToContents);  // its texts change with the language
+    // No AdjustToContents: angle, type and = get one fixed width for every language (see retranslate), and that policy
+    // resizes a combo to its size hint 20 ms after its texts change, which leaves the side briefly out of its layout.
     angle_->addItems({QString(), QString(), QString()});  // RAD, DEG, GRAD (see retranslate)
     type_ = new TypeChooser(central);
     type_->setObjectName("type");
-    type_->setSizeAdjustPolicy(QComboBox::AdjustToContents);
     equals_ = new QPushButton(central);
     equals_->setObjectName("equals");
     for (QWidget* w : {static_cast<QWidget*>(angle_), static_cast<QWidget*>(type_), static_cast<QWidget*>(equals_)}) {
