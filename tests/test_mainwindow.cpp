@@ -28,6 +28,7 @@
 #include <QRegularExpression>
 #include <QScrollArea>
 #include <QScrollBar>
+#include <QScroller>
 #include <QStackedWidget>
 #include <QTest>
 #include <QToolButton>
@@ -1702,4 +1703,11 @@ TEST(MainWindow, TheColumnIsAsWideAsItsKeys) {
     const int keys = child<QWidget>(window, "common")->sizeHint().width() + margins.left() + margins.right();
     const int bar = window.style()->pixelMetric(QStyle::PM_ScrollBarExtent);
     EXPECT_LE(child<QScrollArea>(window, "directScroll")->width(), keys + bar);  // a long preview is cut, not widening it
+}
+
+TEST(MainWindow, TheColumnAndTheSearchListScrollWithAFinger) {
+    MainWindow window;
+    // On a phone the column is the drawer's content: a finger must scroll it, as it scrolls the search list.
+    EXPECT_TRUE(QScroller::hasScroller(child<QScrollArea>(window, "directScroll")->viewport()));
+    EXPECT_TRUE(QScroller::hasScroller(child<QListWidget>(window, "searchList")->viewport()));
 }

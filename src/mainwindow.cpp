@@ -293,6 +293,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     directScroll_->setWidgetResizable(true);
     directScroll_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
     directScroll_->setWidget(buildDirectKeys());
+    QScroller::grabGesture(directScroll_->viewport(), QScroller::TouchGesture);  // a finger scrolls it (the phone's drawer)
     keyboards_->addStretch();
     keyboards_->addWidget(directScroll_);
     keyboards_->addWidget(buildKeypad(), 0, Qt::AlignTop);
