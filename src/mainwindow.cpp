@@ -794,6 +794,10 @@ void MainWindow::layOutKeys(QSize screen) {
 // type, = and the gear in a row under it; Common (its last place opening the drawer) above the main pad, at the
 // bottom; the rest of the column in the drawer.
 void MainWindow::arrange() {
+    // Only a change of arrangement moves anything: relayouts at every call (a language change lays the keys out again)
+    // would leave the window briefly unsettled.
+    if (arranged_ == static_cast<int>(narrow_)) return;
+    arranged_ = static_cast<int>(narrow_);
     QWidget* pad = findChild<QWidget*>("keypad");
     auto* column = static_cast<QVBoxLayout*>(findChild<QWidget*>("directKeys")->layout());
     auto* drawerLayout = static_cast<QVBoxLayout*>(drawer_->layout());
