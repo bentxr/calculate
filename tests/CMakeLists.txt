@@ -10,6 +10,7 @@ add_executable(calculate-tests
     main.cpp
     test_entry.cpp
     test_icons.cpp
+    test_keybutton.cpp
     test_keypad.cpp
     test_keysizing.cpp
     test_lcd.cpp

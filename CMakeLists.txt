@@ -23,6 +23,7 @@ qt_add_library(calculate-ui STATIC
     src/entry.cpp
     src/formulatip.cpp
     src/icons.cpp
+    src/keybutton.cpp
     src/keypad.cpp
     src/keysizing.cpp
     src/lcd.cpp
