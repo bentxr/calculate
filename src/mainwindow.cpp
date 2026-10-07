@@ -641,6 +641,7 @@ void MainWindow::layOutKeys(QSize screen) {
     for (QPushButton* key : findChildren<QPushButton*>(QRegularExpression(QStringLiteral("^(key|direct|common):"))))
         key->setFont(fittedFont(font(), key->text(), key->width() - 10));
     drawerToggle_->setFont(fittedFont(font(), drawerToggle_->text(), size.width() - 10));
+    updatePreviews();  // before the column is measured: a preview in full could widen it
     for (QWidget* w : {pad, direct}) {
         w->layout()->activate();
         w->adjustSize();
@@ -656,7 +657,6 @@ void MainWindow::layOutKeys(QSize screen) {
         directScroll_->setMinimumHeight(pad->sizeHint().height());
     }
     area->layout()->activate();
-    updatePreviews();
 }
 
 // Moves the widgets into the arrangement layOutKeys chose. Wide: the rail, the screen with angle, type and = beside

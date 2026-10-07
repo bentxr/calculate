@@ -19,6 +19,7 @@
 #include <QHelpEvent>
 #include <QImage>
 #include <QLabel>
+#include <QLayout>
 #include <QLineEdit>
 #include <QListWidget>
 #include <QMenu>
@@ -1689,4 +1690,16 @@ TEST(MainWindow, KeysHaveNamesForScreenReaders) {
     EXPECT_EQ(child<QToolButton>(window, "section:statistics")->accessibleName(), "Statistics");
     EXPECT_EQ(child<QLineEdit>(window, "search")->accessibleName(), "Search");
     EXPECT_EQ(child<QPushButton>(window, "drawerToggle")->accessibleName(), "More");
+}
+
+TEST(MainWindow, TheColumnIsAsWideAsItsKeys) {
+    MainWindow window;
+    window.resize(1200, 800);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    QWidget* column = child<QWidget>(window, "directKeys");
+    const QMargins margins = column->layout()->contentsMargins();
+    const int keys = child<QWidget>(window, "common")->sizeHint().width() + margins.left() + margins.right();
+    const int bar = window.style()->pixelMetric(QStyle::PM_ScrollBarExtent);
+    EXPECT_LE(child<QScrollArea>(window, "directScroll")->width(), keys + bar);  // a long preview is cut, not widening it
 }
