@@ -271,10 +271,10 @@ struct InputLayout {
                                  text(QStringLiteral("("), font), box(1, font), text(QStringLiteral(")"), font)});
         case Template::Abs: return typeset::row({text(QStringLiteral("|"), font), box(0, font), text(QStringLiteral("|"), font)});
         case Template::Sum:
-        case Template::Product:  // linear for now: Σ(body, lower, upper)
-            return typeset::row({text(it.kind == Template::Sum ? QStringLiteral("Σ(") : QStringLiteral("Π("), font), box(2, font),
-                                 text(shown(QStringLiteral(", ")), font), box(0, font), text(shown(QStringLiteral(", ")), font),
-                                 box(1, font), text(QStringLiteral(")"), font)});
+        case Template::Product:
+            return typeset::row({bigOperator(it.kind == Template::Sum ? QStringLiteral("Σ") : QStringLiteral("Π"),
+                                             typeset::row({text(QStringLiteral("x="), small), box(0, small)}), box(1, small), font),
+                                 text(QStringLiteral("("), font), box(2, font), text(QStringLiteral(")"), font)});
         }
         return {};
     }
