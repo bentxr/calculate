@@ -1983,3 +1983,15 @@ TEST(MainWindow, ArrowKeysConvertTheResult) {
     EXPECT_TRUE(answered(window));
     EXPECT_EQ(lcd(window)->outputText(), "1/4");
 }
+
+TEST(MainWindow, SumKeysBuildASum) {
+    MainWindow window;
+    openSection(window, "powers");
+    for (const char* name : {"direct:sum", "key:1", "key:right", "key:4", "key:right", "direct:variable", "key:square"})
+        QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "Σ(x^(2), 1, 4)");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "30");
+}

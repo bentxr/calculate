@@ -134,7 +134,9 @@ const QList<KeySection>& keySections() {
           {"atan", put(QT_TRANSLATE_NOOP("keypad", "atan"), QT_TRANSLATE_NOOP("keypad", "atan("), "atan")}}},
         {"powers", QT_TRANSLATE_NOOP("keypad", "Powers, roots and logs"),
          {{"cube", shape("x³", Template::Power, {}, "3")}, {"cbrt", shape("∛", Template::Cbrt, "cbrt")}, {"root", shape("ⁿ√", Template::Root, "root")},
-          {"power10", shape("10ˣ", Template::Pow10)}, {"exp", shape("eˣ", Template::Exp, "exp")}, {"log", put("log", "log(", "log")}}},
+          {"power10", shape("10ˣ", Template::Pow10)}, {"exp", shape("eˣ", Template::Exp, "exp")}, {"log", put("log", "log(", "log")},
+          {"sum", shape("Σ", Template::Sum, "sum")}, {"product", shape("Π", Template::Product, "product")},
+          {"variable", put("x", "x")}}},
         {"constants", QT_TRANSLATE_NOOP("keypad", "Constants"), {{"pi", put("π", "π", "pi")}, {"e", put("e", "e", "e")}}},
         {"statistics", QT_TRANSLATE_NOOP("keypad", "Statistics"), statisticsKeys()},
         {"showAs", QT_TRANSLATE_NOOP("keypad", "Show as"), QList<Key>{{"to", put("→", "→")}} + conversionKeys(showAsTargets())},
@@ -280,6 +282,8 @@ QString spokenName(const Key& key) {
         {"#", QT_TRANSLATE_NOOP("spoken", "comment")},
         {"_", QT_TRANSLATE_NOOP("spoken", "underscore")},
         {"→", QT_TRANSLATE_NOOP("spoken", "convert to")},
+        {"Σ", QT_TRANSLATE_NOOP("spoken", "sum")},
+        {"Π", QT_TRANSLATE_NOOP("spoken", "product")},
     };
     if (key.id.startsWith("to:"))  // a one-tap conversion: "convert to fraction"
         return QCoreApplication::translate("spoken", "convert to") + QLatin1Char(' ') + key.id.mid(3);

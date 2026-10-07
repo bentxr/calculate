@@ -126,7 +126,7 @@ TEST(Keypad, EveryOtherKeyHasAHomeSection) {
     EXPECT_EQ(sectionLabels("numbers"), QStringList({"x!", "abs", "%", "%…", "mod", "rem", "floormod", "nPr", "nCr", "gcd", "lcm", ","}));
     EXPECT_EQ(sectionLabels("hyperbolic"), QStringList({"sinh", "cosh", "tanh", "asinh", "acosh", "atanh"}));
     EXPECT_EQ(sectionLabels("trigonometry"), QStringList({"asin", "acos", "atan"}));
-    EXPECT_EQ(sectionLabels("powers"), QStringList({"x³", "∛", "ⁿ√", "10ˣ", "eˣ", "log"}));
+    EXPECT_EQ(sectionLabels("powers"), QStringList({"x³", "∛", "ⁿ√", "10ˣ", "eˣ", "log", "Σ", "Π", "x"}));
     EXPECT_EQ(sectionLabels("constants"), QStringList({"π", "e"}));
     EXPECT_EQ(labels(memoryKeys()), QStringList({"MS", "M", "M−", "MC", "↶", "↷"}));
 }
@@ -263,7 +263,7 @@ TEST(Keypad, EverySyntaxElementHasAKey) {
     QSet<Template> shapes;
     for (const Key& key : everyKey()) shapes.insert(key.face.shape);
     for (Template t : {Template::Fraction, Template::Sqrt, Template::Cbrt, Template::Root, Template::Power, Template::Exp,
-                       Template::Pow10, Template::LogBase, Template::Abs})
+                       Template::Pow10, Template::LogBase, Template::Abs, Template::Sum, Template::Product})
         EXPECT_TRUE(shapes.contains(t)) << static_cast<int>(t);
     QSet<KeyAction> actions;
     for (const Key& key : everyKey()) actions.insert(key.face.action);
@@ -344,4 +344,17 @@ TEST(Keypad, EveryConversionTargetHasAKey) {
 TEST(Keypad, ConversionKeysHaveSpokenNames) {
     EXPECT_EQ(spokenName(directKey("to")), "convert to");
     EXPECT_EQ(spokenName(directKey("to:fraction")), "convert to fraction");
+}
+
+TEST(Keypad, SumsAndProductsHaveKeys) {
+    const QStringList powers = sectionLabels("powers");
+    EXPECT_EQ(powers.mid(powers.size() - 3), QStringList({"Σ", "Π", "x"}));
+    EXPECT_EQ(directKey("sum").face.shape, Template::Sum);
+    EXPECT_EQ(directKey("product").face.shape, Template::Product);
+    EXPECT_EQ(directKey("variable").face.insert, "x");
+}
+
+TEST(Keypad, SumAndProductKeysHaveSpokenNames) {
+    EXPECT_EQ(spokenName(directKey("sum")), "sum");  // not the bare sign
+    EXPECT_EQ(spokenName(directKey("product")), "product");
 }

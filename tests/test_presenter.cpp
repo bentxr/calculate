@@ -318,3 +318,9 @@ TEST(Presenter, AConversionIsShownAndTheValueKept) {
     EXPECT_FALSE(view::explanation("conversion").isEmpty());
     EXPECT_EQ(view::errorText(*evaluated("1 to nothing").error, "1 to nothing"), "Unknown conversion “nothing”");
 }
+
+TEST(Presenter, TooManyTermsSaysSo) {
+    const Result r = evaluated("sum(x; 1; 10001)");
+    ASSERT_TRUE(r.error);
+    EXPECT_EQ(view::errorText(*r.error, "sum(x; 1; 10001)"), "sum(x; 1; 10001) has too many terms");
+}
