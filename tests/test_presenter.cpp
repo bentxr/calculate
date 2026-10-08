@@ -522,3 +522,12 @@ TEST(Presenter, AValueTooLongForDecimalsIsShownInBinary) {
     EXPECT_TRUE(p.noise.isEmpty());
     EXPECT_FALSE(view::explanation("binary").isEmpty());
 }
+
+TEST(Presenter, ConversionFieldsBecomeRows) {
+    const QList<view::DetailRow> rows = view::conversionRows(evaluate("0.1 to fp32"));
+    ASSERT_FALSE(rows.isEmpty());
+    EXPECT_EQ(rows[0].key, "field:hex");
+    EXPECT_EQ(rows[0].label, "Hex");
+    EXPECT_EQ(rows[0].value, "0x3DCCCCCD");
+    EXPECT_TRUE(view::conversionRows(evaluate("0.1")).isEmpty());
+}

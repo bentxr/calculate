@@ -265,6 +265,9 @@ QList<DetailRow> details(const Result& r, const TypeInfo& t) {
 }
 
 QString explanation(const QString& key) {
+    if (key == "field:stored")
+        return QCoreApplication::translate("view", "The value the format actually stores for this number, written out exactly.");
+    if (key.startsWith(QStringLiteral("field:"))) return explanation(key.mid(6));  // the stored rows' texts
     if (key == "value")
         return QCoreApplication::translate("view", "The result as computed in this number type; the screen shows it converted.");
     if (key == "conversionNote")
@@ -625,6 +628,24 @@ QString exactNumber(const FloatBits& bits) { return number(bits, false); }
 QString decimalText(const FloatBits& bits) { return number(bits, true); }
 
 QString exactDecimal(const Digits& digits) { return writtenOut(digits, false); }
+
+QList<DetailRow> conversionRows(const Result& r) {
+    if (!r.conversion) return {};
+    static const QList<QPair<QString, const char*>> labels{
+        {"hex", QT_TRANSLATE_NOOP("view", "Hex")},          {"class", QT_TRANSLATE_NOOP("view", "Class")},
+        {"stored", QT_TRANSLATE_NOOP("view", "Stored value")}, {"error", QT_TRANSLATE_NOOP("view", "Conversion error")},
+        {"ulp", QT_TRANSLATE_NOOP("view", "ulp")},          {"below", QT_TRANSLATE_NOOP("view", "Next below")},
+        {"above", QT_TRANSLATE_NOOP("view", "Next above")}, {"note", QT_TRANSLATE_NOOP("view", "Note")}};
+    QList<DetailRow> rows;
+    for (const ConversionField& f : r.conversion->fields) {
+        const QString label = fromStd(f.label);
+        QString shown = label;  // unknown labels as they are
+        for (const auto& [key, text] : labels)
+            if (key == label) shown = QCoreApplication::translate("view", text);
+        rows.append({QStringLiteral("field:") + label, shown, fromStd(f.value), false});
+    }
+    return rows;
+}
 
 QList<DetailRow> storedRows(const Result& r, const BitColours& colours) {
     if (!r.stored) return {};
