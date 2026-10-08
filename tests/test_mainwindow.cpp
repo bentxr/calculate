@@ -2076,3 +2076,13 @@ TEST(MainWindow, ANotationConversionKeepsTheBar) {
     run(window, "0.1 to fraction");
     EXPECT_EQ(lcd(window)->outputText(), "3602879701896397/36028797018963968");
 }
+
+TEST(MainWindow, AnApproximateConversionSaysHowFarUnderTheScreen) {
+    MainWindow window;
+    run(window, "2.7 to 1/3");
+    EXPECT_EQ(lcd(window)->outputText(), "8/3");
+    EXPECT_EQ(message(window)->text(), "≈: off by 3.3e-2");
+    EXPECT_TRUE(message(window)->property("dimmed").toBool());
+    run(window, "2.5 to 1/2");
+    EXPECT_EQ(message(window)->text(), "");  // exact: nothing to say
+}

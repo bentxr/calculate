@@ -60,6 +60,7 @@ QString oneLine(const ValueParts& parts);
 QString oneLine(const FractionParts& parts);
 
 QString conversionText(const calculate_core::Result& result);  // "" when there is none
+QString offBy(const calculate_core::Result& result);  // how far an approximate conversion is ("3.3e-2"); "" when exact
 // A conversion that shows a number, as the screen draws a value (the bar, the noise); none for other conversions.
 std::optional<ValueParts> conversionParts(const calculate_core::Result& result);
 QString valueText(const calculate_core::Result& result);       // the value on one line, as the screen shows it

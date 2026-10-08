@@ -324,3 +324,13 @@ TEST(Presenter, TooManyTermsSaysSo) {
     ASSERT_TRUE(r.error);
     EXPECT_EQ(view::errorText(*r.error, "sum(x; 1; 10001)"), "sum(x; 1; 10001) has too many terms");
 }
+
+TEST(Presenter, AnApproximateConversionShowsHowFarItIs) {
+    const Result r = evaluated("2.7 to 1/3");
+    const QList<view::DetailRow> rows = view::details(r, typeInfo(NumberType::Double));
+    bool found = false;
+    for (const view::DetailRow& row : rows)
+        if (row.key == "conversionNote") found = row.value == "3.3e-2";
+    EXPECT_TRUE(found);
+    EXPECT_FALSE(view::explanation("conversionNote").isEmpty());
+}

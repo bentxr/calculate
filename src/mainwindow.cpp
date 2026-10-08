@@ -1699,10 +1699,12 @@ void MainWindow::present() {
     detailsButton_->setEnabled(!valueless);
     enableCopy(valueless ? nullptr : &shown);
     // A note about a result that is not an error shows dimmed, like a live error.
-    const bool note = !shown.error && !shown.warnings.empty();
+    const QString offBy = shown.error ? QString() : view::offBy(shown);
+    const bool note = !shown.error && (!shown.warnings.empty() || !offBy.isEmpty());
     message_->setText(shown.error && !unfinished ? view::errorText(*shown.error, expression)
-                      : note                     ? view::warningText(shown.warnings.front(), expression)
-                                                 : QString());
+                      : !shown.error && !shown.warnings.empty() ? view::warningText(shown.warnings.front(), expression)
+                      : !offBy.isEmpty()                         ? QCoreApplication::translate("view", "≈: off by %1").arg(offBy)
+                                                                 : QString());
     message_->setForegroundRole(previewShown_ || note ? QPalette::PlaceholderText : QPalette::WindowText);
     message_->setProperty("dimmed", previewShown_ || note);
     lcd_->setProvisional(previewShown_);

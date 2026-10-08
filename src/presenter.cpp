@@ -136,6 +136,12 @@ QString verdict(const QString& conditionNumber) {
     return QCoreApplication::translate("view", "ill-conditioned: no algorithm can do better in this type");
 }
 
+QString offBy(const Result& r) {
+    if (!r.conversion || r.conversion->note.empty()) return {};
+    const std::string& note = r.conversion->note;
+    return number(note.substr(note.find_last_of(' ') + 1));
+}
+
 QString conversionText(const Result& r) {
     if (!r.conversion) return {};
     const QString text = fromStd(r.conversion->text);
@@ -161,9 +167,12 @@ QList<DetailRow> details(const Result& r, const TypeInfo& t) {
     if (r.error || r.commentOnly) return {};  // a note has no value
     // A conversion takes the screen: the value as computed leads the card, then the form it is shown in.
     QList<DetailRow> converted;
-    if (r.conversion)
+    if (r.conversion) {
         converted = {{"value", QCoreApplication::translate("view", "Value"), valueText(r)},
                      {"conversion", QCoreApplication::translate("view", "Shown as"), fromStd(r.conversion->target)}};
+        if (!r.conversion->note.empty())  // "off by 3.3e-2": the number alone
+            converted.append({"conversionNote", QCoreApplication::translate("view", "Off by"), offBy(r)});
+    }
     const QString expression = settings::decimalComma() ? withDecimalComma(fromStd(r.expression)) : fromStd(r.expression);
     const DetailRow evaluated{"evaluated", QCoreApplication::translate("view", "Evaluated"), expression};
     if (r.exact)
@@ -197,6 +206,8 @@ QList<DetailRow> details(const Result& r, const TypeInfo& t) {
 QString explanation(const QString& key) {
     if (key == "value")
         return QCoreApplication::translate("view", "The result as computed in this number type; the screen shows it converted.");
+    if (key == "conversionNote")
+        return QCoreApplication::translate("view", "The shown fraction differs from the computed value by this much.");
     if (key == "conversion")
         return QCoreApplication::translate("view", "The form you asked for with “to”: the same value, written another way.");
     if (key == "bound")
