@@ -2206,6 +2206,61 @@
         <source>Uncertainty</source>
         <translation>Incertidumbre</translation>
     </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="206"/>
+        <source>Stored bits</source>
+        <translation>Bits almacenados</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="207"/>
+        <source>The sign, exponent and fraction fields of x as stored in a format.</source>
+        <translation>Los campos de signo, exponente y fracción de x tal como los guarda un formato.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="208"/>
+        <source>Stored parts</source>
+        <translation>Partes almacenadas</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="209"/>
+        <source>x as stored: sign, power of two and significand.</source>
+        <translation>x tal como se guarda: signo, potencia de dos y significando.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="210"/>
+        <source>Stored value</source>
+        <translation>Valor almacenado</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="211"/>
+        <source>The value a format actually stores for x, exactly.</source>
+        <translation>El valor que un formato guarda de verdad para x, exactamente.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="212"/>
+        <source>Conversion error</source>
+        <translation>Error de conversión</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="213"/>
+        <source>Stored value minus x, exactly.</source>
+        <translation>El valor guardado menos x, exactamente.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="214"/>
+        <source>Number from bits</source>
+        <translation>Número a partir de sus bits</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="215"/>
+        <source>The number a bit pattern stands for in a format.</source>
+        <translation>El número que representa un patrón de bits en un formato.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="216"/>
+        <source>Floating point</source>
+        <translation>Coma flotante</translation>
+    </message>
 </context>
 <context>
     <name>keypad</name>

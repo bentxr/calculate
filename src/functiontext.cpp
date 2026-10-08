@@ -202,7 +202,18 @@ const QStringList& functionTextsForTranslation() {
         QT_TRANSLATE_NOOP("functions", "x, whose true value lies within u of it."),
         QT_TRANSLATE_NOOP("functions", "Error part"),
         QT_TRANSLATE_NOOP("functions", "The worst-case uncertainty x carries from its uncertain inputs, as a number."),
-        QT_TRANSLATE_NOOP("functions", "Uncertainty")
+        QT_TRANSLATE_NOOP("functions", "Uncertainty"),
+        QT_TRANSLATE_NOOP("functions", "Stored bits"),
+        QT_TRANSLATE_NOOP("functions", "The sign, exponent and fraction fields of x as stored in a format."),
+        QT_TRANSLATE_NOOP("functions", "Stored parts"),
+        QT_TRANSLATE_NOOP("functions", "x as stored: sign, power of two and significand."),
+        QT_TRANSLATE_NOOP("functions", "Stored value"),
+        QT_TRANSLATE_NOOP("functions", "The value a format actually stores for x, exactly."),
+        QT_TRANSLATE_NOOP("functions", "Conversion error"),
+        QT_TRANSLATE_NOOP("functions", "Stored value minus x, exactly."),
+        QT_TRANSLATE_NOOP("functions", "Number from bits"),
+        QT_TRANSLATE_NOOP("functions", "The number a bit pattern stands for in a format."),
+        QT_TRANSLATE_NOOP("functions", "Floating point")
     };
     return texts;
 }
