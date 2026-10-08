@@ -810,10 +810,12 @@ void MainWindow::layOutKeys(QSize screen) {
         directScroll_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         directScroll_->setMinimumSize(0, 0);
         directScroll_->setMaximumWidth(QWIDGETSIZE_MAX);
+        direct->setMaximumWidth(QWIDGETSIZE_MAX);
     } else {
-        // Room for the column's scroll bar is kept, so the bar appearing moves nothing.
+        // Room for the column's scroll bar is kept, and the keys never take it, so the bar appearing moves nothing.
         directScroll_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
         directScroll_->setFixedWidth(direct->sizeHint().width() + scrollBar);
+        direct->setMaximumWidth(direct->sizeHint().width());
         directScroll_->setMinimumHeight(pad->sizeHint().height());
     }
     area->layout()->activate();

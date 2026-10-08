@@ -127,16 +127,43 @@ const QList<KeySection>& keySections() {
           {"tanh", put("tanh", "tanh(", "tanh")},
           {"asinh", put(QT_TRANSLATE_NOOP("keypad", "asinh"), QT_TRANSLATE_NOOP("keypad", "asinh("), "asinh")},
           {"acosh", put(QT_TRANSLATE_NOOP("keypad", "acosh"), QT_TRANSLATE_NOOP("keypad", "acosh("), "acosh")},
-          {"atanh", put(QT_TRANSLATE_NOOP("keypad", "atanh"), QT_TRANSLATE_NOOP("keypad", "atanh("), "atanh")}}},
+          {"atanh", put(QT_TRANSLATE_NOOP("keypad", "atanh"), QT_TRANSLATE_NOOP("keypad", "atanh("), "atanh")},
+          {"sech", put("sech", "sech(", "sech")},
+          {"csch", put("csch", "csch(", "csch")},
+          {"coth", put("coth", "coth(", "coth")},
+          {"asech", put("asech", "asech(", "asech")},
+          {"acsch", put("acsch", "acsch(", "acsch")},
+          {"acoth", put("acoth", "acoth(", "acoth")}}},
         {"trigonometry", QT_TRANSLATE_NOOP("keypad", "Trigonometry"),
          {{"asin", put(QT_TRANSLATE_NOOP("keypad", "asin"), QT_TRANSLATE_NOOP("keypad", "asin("), "asin")},
           {"acos", put(QT_TRANSLATE_NOOP("keypad", "acos"), QT_TRANSLATE_NOOP("keypad", "acos("), "acos")},
-          {"atan", put(QT_TRANSLATE_NOOP("keypad", "atan"), QT_TRANSLATE_NOOP("keypad", "atan("), "atan")}}},
+          {"atan", put(QT_TRANSLATE_NOOP("keypad", "atan"), QT_TRANSLATE_NOOP("keypad", "atan("), "atan")},
+          {"sec", put("sec", "sec(", "sec")},
+          {"csc", put("csc", "csc(", "csc")},
+          {"cot", put("cot", "cot(", "cot")},
+          {"asec", put("asec", "asec(", "asec")},
+          {"acsc", put("acsc", "acsc(", "acsc")},
+          {"acot", put("acot", "acot(", "acot")},
+          {"atan2", put("atan2", "atan2(", "atan2")},
+          {"hypot", put("hypot", "hypot(", "hypot")},
+          {"sinc", put("sinc", "sinc(", "sinc")}}},
         {"powers", QT_TRANSLATE_NOOP("keypad", "Powers, roots and logs"),
          {{"cube", shape("x³", Template::Power, {}, "3")}, {"cbrt", shape("∛", Template::Cbrt, "cbrt")}, {"root", shape("ⁿ√", Template::Root, "root")},
           {"power10", shape("10ˣ", Template::Pow10)}, {"exp", shape("eˣ", Template::Exp, "exp")}, {"log", put("log", "log(", "log")},
+          {"log2", put("log2", "log2(", "log2")}, {"exp2", put("exp2", "exp2(", "exp2")}, {"sqrtpi", put("sqrtpi", "sqrtpi(", "sqrtpi")},
           {"sum", shape("Σ", Template::Sum, "sum")}, {"product", shape("Π", Template::Product, "product")},
           {"variable", put("x", "x")}}},
+        {"rounding", QT_TRANSLATE_NOOP("keypad", "Rounding and parts"),
+         {{"round", put("round", "round(", "round")},
+          {"floor", put("floor", "floor(", "floor")},
+          {"ceil", put("ceil", "ceil(", "ceil")},
+          {"trunc", put("trunc", "trunc(", "trunc")},
+          {"int", put("int", "int(", "int")},
+          {"frac", put("frac", "frac(", "frac")},
+          {"clip", put("clip", "clip(", "clip")},
+          {"numerator", put("numerator", "numerator(", "numerator")},
+          {"denominator", put("denominator", "denominator(", "denominator")},
+          {"sgn", put("sgn", "sgn(", "sgn")}}},
         {"constants", QT_TRANSLATE_NOOP("keypad", "Constants"), {{"pi", put("π", "π", "pi")}, {"e", put("e", "e", "e")}}},
         {"statistics", QT_TRANSLATE_NOOP("keypad", "Statistics"), statisticsKeys()},
         {"showAs", QT_TRANSLATE_NOOP("keypad", "Show as"), QList<Key>{{"to", put("→", "→")}} + conversionKeys(showAsTargets())},
@@ -147,6 +174,11 @@ const QList<KeySection>& keySections() {
         {"letters", QT_TRANSLATE_NOOP("keypad", "Letters"), letterKeys()},
     };
     return sections;
+}
+
+const QList<QPair<QString, QString>>& aliasKeys() {
+    static const QList<QPair<QString, QString>> list{{"exp10", "power10"}, {"sq", "square"}};
+    return list;
 }
 
 const QList<Key>& statisticsKeys() {
@@ -228,13 +260,13 @@ QString legend(const Face& face, bool decimalComma) {
 
 const QList<QPair<QString, QStringList>>& alternates() {
     static const QList<QPair<QString, QStringList>> list{
-        {"sin", {"asin", "sinh", "asinh"}},
-        {"cos", {"acos", "cosh", "acosh"}},
-        {"tan", {"atan", "tanh", "atanh"}},
-        {"ln", {"log", "exp"}},
-        {"logBase", {"log"}},
+        {"sin", {"asin", "sinh", "asinh", "csc", "acsc"}},
+        {"cos", {"acos", "cosh", "acosh", "sec", "asec"}},
+        {"tan", {"atan", "tanh", "atanh", "cot", "acot", "atan2"}},
+        {"ln", {"log", "exp", "log2"}},
+        {"logBase", {"log", "log2"}},
         {"square", {"cube"}},
-        {"sqrt", {"cbrt", "root"}},
+        {"sqrt", {"cbrt", "root", "sqrtpi"}},
         {"memoryAdd", {"memorySubtract", "memoryStore", "memory", "memoryClear"}},
     };
     return list;

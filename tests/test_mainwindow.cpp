@@ -2096,3 +2096,15 @@ TEST(MainWindow, TheReadingShowsWhileTyping) {
     QTest::keyClicks(lcd(window), "7");
     EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->readingText().isEmpty(); }, 5000));  // nothing to add
 }
+
+TEST(MainWindow, FunctionKeysTypeTheirNames) {
+    MainWindow window;
+    openSection(window, "rounding");
+    for (const char* name : {"direct:floor", "key:2", "key:point", "key:7", "key:close"})
+        QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "floor(2.7)");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "2");
+}

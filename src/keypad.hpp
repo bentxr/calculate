@@ -53,6 +53,9 @@ inline constexpr int commonLimit = 12;  // two rows of six
 // each once, at most commonLimit of them.
 bool canBeCommon(const QStringList& ids);
 
+// Engine functions that compute what another key does, and that key's id (exp10 → 10ˣ).
+const QList<QPair<QString, QString>>& aliasKeys();
+
 // The Statistics mode's functions, in their order on its page; each takes the values as arguments.
 const QList<Key>& statisticsKeys();
 
