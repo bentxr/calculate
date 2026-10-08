@@ -485,3 +485,9 @@ TEST(Keypad, TheProgrammingKeys) {
     EXPECT_EQ(find("width16").face.insert, " 16");
     EXPECT_EQ(find("signed").face.insert, "signed(");
 }
+
+TEST(Keypad, TheBitwiseKeysSpeakTheirNames) {
+    const QStringList ids{"and", "or", "xor", "not", "shiftLeft", "shiftRight", "fp"};
+    const QStringList words{"and", "or", "exclusive or", "not", "shift left", "shift right", "IEEE 754 tool"};
+    for (int i = 0; i < ids.size(); ++i) EXPECT_EQ(spokenName(find(ids[i])), words[i]) << ids[i].toStdString();
+}
