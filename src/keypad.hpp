@@ -68,7 +68,9 @@ struct SearchEntry {
 // The keys of every section but Letters, under the section's title and in order; then the main pad's keys that
 // stand for a function, under "Main keys"; then extraSearchEntries().
 QList<SearchEntry> searchEntries();
-const QList<SearchEntry>& extraSearchEntries();  // what has no key of its own (empty until Plan 3)
+// What has no key of its own: the physical constants without a key, by kind, then the number names; titles in the
+// user's language.
+QList<SearchEntry> extraSearchEntries();
 // Whether an entry matches the search box's text: its legend (as written or translated), what it types, its
 // function, its description or its heading, ignoring case. An empty text matches everything.
 bool searchMatches(const SearchEntry& entry, const QString& text);

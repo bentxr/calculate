@@ -2203,3 +2203,22 @@ TEST(MainWindow, ThePlusMinusKeyEntersAnUncertainty) {
     EXPECT_TRUE(answered(window));
     EXPECT_EQ(lcd(window)->outputText(), "5 ± 0.20");
 }
+
+TEST(MainWindow, ANameWithoutAKeyIsFoundBySearch) {
+    MainWindow window;
+    window.resize(640, 480);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    auto* box = child<QLineEdit>(window, "search");
+    auto* list = child<QListWidget>(window, "searchList");
+    QTest::mouseClick(box, Qt::LeftButton);
+    QTest::keyClicks(box, "googol");
+    EXPECT_TRUE(QRect(QPoint(0, 0), window.size()).contains(QRect(list->mapTo(&window, QPoint(0, 0)), list->size())));
+    QListWidgetItem* entry = nullptr;
+    for (int i = 0; i < list->count() && !entry; ++i)
+        if (!list->item(i)->isHidden() && list->item(i)->data(Qt::UserRole).isValid()) entry = list->item(i);
+    ASSERT_NE(entry, nullptr);
+    QTest::mouseClick(list->viewport(), Qt::LeftButton, {}, list->visualItemRect(entry).center());
+    EXPECT_EQ(lcd(window)->input(), "googol");
+    EXPECT_FALSE(list->isVisible());
+}

@@ -192,7 +192,11 @@ const QList<KeySection>& keySections() {
           {"apery", put("apery", "apery", "apery")}, {"sqrt2", put("√2", "sqrt2", "sqrt2")},
           {"plastic", put("plastic", "plastic", "plastic")}, {"omega", put("Ω", "omega", "omega")},
           {"plusMinus", put("±", "±")}, {"uncertainty", put("uncertainty", "uncertainty(", "uncertainty")},
-          {"errorPart", put("errorPart", "errorPart(", "errorPart")}}},
+          {"errorPart", put("errorPart", "errorPart(", "errorPart")}, {"c", put("c", "c", "c")}, {"h", put("h", "h", "h")},
+          {"hbar", put("ħ", "hbar", "hbar")}, {"G", put("G", "G", "G")}, {"k_B", put("k_B", "k_B", "k_B")},
+          {"N_A", put("N_A", "N_A", "N_A")}, {"R", put("R", "R", "R")}, {"m_e", put("mₑ", "m_e", "m_e")},
+          {"m_p", put("mₚ", "m_p", "m_p")}, {"eps_0", put("ε₀", "eps_0", "eps_0")}, {"mu_0", put("μ₀", "mu_0", "mu_0")},
+          {"perMille", put("‰", "‰")}, {"perMyriad", put("‱", "‱")}}},
         {"statistics", QT_TRANSLATE_NOOP("keypad", "Statistics"), statisticsKeys()},
         {"showAs", QT_TRANSLATE_NOOP("keypad", "Show as"), QList<Key>{{"to", put("→", "→")}} + conversionKeys(showAsTargets())},
         {"special", QT_TRANSLATE_NOOP("keypad", "Special functions"),
@@ -269,8 +273,32 @@ QList<SearchEntry> searchEntries() {
     return entries + extraSearchEntries();
 }
 
-const QList<SearchEntry>& extraSearchEntries() {
-    static const QList<SearchEntry> entries;
+QList<SearchEntry> extraSearchEntries() {
+    static const char* const groups[] = {QT_TRANSLATE_NOOP("keypad", "Universal"), QT_TRANSLATE_NOOP("keypad", "Electromagnetic"),
+                                         QT_TRANSLATE_NOOP("keypad", "Atomic and nuclear"),
+                                         QT_TRANSLATE_NOOP("keypad", "Physico-chemical"),
+                                         QT_TRANSLATE_NOOP("keypad", "Particle masses"), QT_TRANSLATE_NOOP("keypad", "Planck units")};
+    QSet<QString> keyed;  // what the sections' keys type: those constants are found under their sections
+    for (const KeySection& section : keySections())
+        for (const Key& key : section.keys) keyed.insert(key.face.insert);
+    const std::vector<calculate_core::ConstantDescription> all = calculate_core::constants();
+    QList<SearchEntry> entries;
+    for (const char* group : groups)
+        for (const calculate_core::ConstantDescription& c : all) {
+            const QString name = QString::fromStdString(c.name);
+            if (c.category != "physical" || c.group != group || keyed.contains(name)) continue;
+            QString title = constantTitle(name);  // "Newtonian constant of gravitation · ± 4.5e-15 m³·kg⁻¹·s⁻²"
+            const QString unit = QString::fromStdString(c.unit);
+            const QString limit = QString::fromStdString(c.limit);
+            const QString detail = limit.isEmpty() ? unit : QStringLiteral("± ") + limit + (unit.isEmpty() ? QString() : QStringLiteral(" ") + unit);
+            if (!detail.isEmpty()) title += QStringLiteral(" · ") + detail;
+            entries.append({group, put(name, name, name), title});
+        }
+    for (const calculate_core::ConstantDescription& c : all)
+        if (c.category == "number name") {
+            const QString name = QString::fromStdString(c.name);
+            entries.append({QT_TRANSLATE_NOOP("keypad", "Number names"), put(name, name), constantTitle(name)});
+        }
     return entries;
 }
 

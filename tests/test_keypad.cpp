@@ -131,7 +131,8 @@ TEST(Keypad, EveryOtherKeyHasAHomeSection) {
               QStringList({"asin", "acos", "atan", "sec", "csc", "cot", "asec", "acsc", "acot", "atan2", "hypot", "sinc"}));
     EXPECT_EQ(sectionLabels("powers"), QStringList({"x³", "∛", "ⁿ√", "10ˣ", "eˣ", "log", "log2", "exp2", "sqrtpi", "Σ", "Π", "x"}));
     EXPECT_EQ(sectionLabels("constants"), QStringList({"π", "e", "φ", "τ", "γ", "catalan", "apery", "√2", "plastic", "Ω", "±",
-                                                       "uncertainty", "errorPart"}));
+                                                       "uncertainty", "errorPart", "c", "h", "ħ", "G", "k_B", "N_A", "R",
+                                                       "mₑ", "mₚ", "ε₀", "μ₀", "‰", "‱"}));
     EXPECT_EQ(labels(memoryKeys()), QStringList({"MS", "M", "M−", "MC", "↶", "↷"}));
 }
 
@@ -237,11 +238,10 @@ TEST(Keypad, TheSearchListsEveryKeyUnderItsSection) {
             titles << s.title;
             keys += s.keys.size();
         }
-    EXPECT_EQ(groups, titles + QStringList({"Main keys"}));  // by section, in order, then the main pad's functions
+    EXPECT_EQ(groups.mid(0, titles.size() + 1), titles + QStringList({"Main keys"}));  // by section, in order, then the main pad's functions
     EXPECT_GE(searchEntries().size(), keys);
     for (const calculate_core::FunctionDescription& f : calculate_core::functions())
         EXPECT_TRUE(functions.contains(QString::fromStdString(f.name))) << f.name;  // every function can be found
-    EXPECT_TRUE(extraSearchEntries().isEmpty());  // until Plan 3 adds the constants without keys
 }
 
 TEST(Keypad, SearchMatchesNamesWhatTheyTypeAndHeadings) {
@@ -265,7 +265,7 @@ TEST(Keypad, EverySyntaxElementHasAKey) {
     for (const Key& key : everyKey())
         if (key.face.action == KeyAction::Insert || key.face.action == KeyAction::Type) entered.insert(key.face.insert);
     QStringList syntax{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "e", "+", "−", "×", "÷", "(", ")",
-                       ", ", "!", "%", "-", "π", "Ans", "M", "_", " ", "#", "→", ":=", "±"};
+                       ", ", "!", "%", "-", "π", "Ans", "M", "_", " ", "#", "→", ":=", "±", "‰", "‱"};
     for (char c = 'a'; c <= 'z'; ++c) syntax << QString(QChar(c));  // capitals through ⇧
     for (const QString& piece : syntax) EXPECT_TRUE(entered.contains(piece)) << piece.toStdString();
     QSet<Template> shapes;
@@ -420,8 +420,8 @@ TEST(Keypad, SearchEntriesCarryTheirTitles) {
 }
 
 TEST(Keypad, TheConstantsSection) {
-    EXPECT_EQ(sectionLabels("constants"), QStringList({"π", "e", "φ", "τ", "γ", "catalan", "apery", "√2", "plastic", "Ω", "±",
-                                                       "uncertainty", "errorPart"}));
+    EXPECT_EQ(sectionLabels("constants").mid(0, 13), QStringList({"π", "e", "φ", "τ", "γ", "catalan", "apery", "√2", "plastic",
+                                                                  "Ω", "±", "uncertainty", "errorPart"}));  // then the physical ones
     EXPECT_EQ(directKey("plusMinus").face.insert, "±");
     EXPECT_EQ(directKey("uncertainty").face.insert, "uncertainty(");
     EXPECT_EQ(directKey("errorPart").face.function, "errorPart");
@@ -429,4 +429,28 @@ TEST(Keypad, TheConstantsSection) {
     EXPECT_EQ(directKey("omega").face.insert, "omega");
     for (const SearchEntry& e : searchEntries())
         if (e.face.insert == "φ") EXPECT_EQ(e.title, constantTitle("phi"));  // found by what it is
+}
+
+TEST(Keypad, CommonPhysicalConstantsHaveKeysAndTheRestAreFound) {
+    const QStringList constants = sectionLabels("constants");
+    EXPECT_EQ(constants.mid(constants.size() - 13),
+              QStringList({"c", "h", "ħ", "G", "k_B", "N_A", "R", "mₑ", "mₚ", "ε₀", "μ₀", "‰", "‱"}));
+    QStringList groups;
+    for (const SearchEntry& e : extraSearchEntries()) {
+        if (!groups.contains(e.group)) groups << e.group;
+        EXPECT_FALSE(e.title.isEmpty()) << e.face.label.toStdString();
+    }
+    EXPECT_EQ(groups, QStringList({"Universal", "Electromagnetic", "Atomic and nuclear", "Physico-chemical",
+                                   "Particle masses", "Planck units", "Number names"}));
+}
+
+// Every named value the engine knows is on a key or in the search list.
+TEST(Keypad, EveryEngineConstantIsReachable) {
+    QSet<QString> reachable;
+    for (const Key& key : everyKey()) reachable.insert(key.face.insert);
+    for (const SearchEntry& e : searchEntries()) reachable.insert(e.face.insert);
+    for (const auto& [symbol, name] : {std::pair<const char*, const char*>{"π", "pi"}, {"φ", "phi"}, {"τ", "tau"}, {"γ", "egamma"}})
+        if (reachable.contains(symbol)) reachable.insert(name);  // their keys type the symbol, which reads as the name
+    for (const calculate_core::ConstantDescription& c : calculate_core::constants())
+        EXPECT_TRUE(reachable.contains(QString::fromStdString(c.name))) << c.name;
 }
