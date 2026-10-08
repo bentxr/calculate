@@ -6,6 +6,8 @@
 #include <QEvent>
 #include <QFormLayout>
 #include <QKeyEvent>
+#include <QMouseEvent>
+#include <QPainter>
 #include <QMimeData>
 #include <QGridLayout>
 #include <QLabel>
@@ -93,6 +95,72 @@ const char* const outputs[] = {"class", "parts", "value", "error", "ulp", "below
 
 }  // namespace
 
+BitStrip::BitStrip(QWidget* parent) : QWidget(parent) {
+    setObjectName("inspectorBitStrip");
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+}
+
+void BitStrip::setPattern(const QString& sign, const QString& exponent, const QString& fraction) {
+    bits_ = sign + exponent + fraction;
+    exponentBits_ = static_cast<int>(exponent.size());
+    boxes_ = layOut(width());
+    updateGeometry();
+    update();
+}
+
+std::vector<QRect> BitStrip::layOut(int width) const {
+    const QFontMetrics m(font());
+    const int w = m.horizontalAdvance('0') + 2;
+    const int h = m.height() + 4;
+    std::vector<QRect> boxes;
+    int x = 0, y = 0;
+    for (int i = 0; i < bits_.size(); ++i) {
+        // the bit's place in its field: the sign, then the exponent, then the fraction
+        const int start = i == 0 ? 0 : i <= exponentBits_ ? 1 : 1 + exponentBits_;
+        if (i > 0 && i == start) x += w;                     // between fields
+        else if (i > 0 && (i - start) % 4 == 0) x += w / 2;  // between groups
+        if (width > 0 && x + w > width && x > 0) {
+            x = 0;
+            y += h;
+        }
+        boxes.emplace_back(x, y, w, h);
+        x += w;
+    }
+    return boxes;
+}
+
+int BitStrip::heightForWidth(int width) const {
+    const std::vector<QRect> boxes = layOut(width);
+    return boxes.empty() ? QFontMetrics(font()).height() + 4 : boxes.back().bottom() + 1;
+}
+
+QSize BitStrip::sizeHint() const { return {QFontMetrics(font()).horizontalAdvance('0') * 40, heightForWidth(width())}; }
+
+QPoint BitStrip::bitCenter(int index) const { return boxes_.at(static_cast<std::size_t>(index)).center(); }
+
+void BitStrip::paintEvent(QPaintEvent*) {
+    QPainter painter(this);
+    const view::BitColours colours = view::bitColours(palette().color(QPalette::Window).lightness() < 128);
+    for (int i = 0; i < bits_.size(); ++i) {
+        const QString& colour = i == 0 ? colours.sign : i <= exponentBits_ ? colours.exponent : colours.fraction;
+        painter.setPen(isEnabled() ? QColor(colour) : palette().color(QPalette::Disabled, QPalette::Text));
+        painter.drawText(boxes_[static_cast<std::size_t>(i)], Qt::AlignCenter, QString(bits_[i]));
+    }
+}
+
+void BitStrip::mouseReleaseEvent(QMouseEvent* event) {
+    for (std::size_t i = 0; i < boxes_.size(); ++i)
+        if (boxes_[i].contains(event->position().toPoint())) {
+            emit flipped(static_cast<int>(i));
+            return;
+        }
+}
+
+void BitStrip::resizeEvent(QResizeEvent* event) {
+    boxes_ = layOut(width());
+    QWidget::resizeEvent(event);
+}
+
 Inspector::Inspector(QWidget* parent) : QWidget(parent), formats_(floatFormats()) {
     auto* layout = new QVBoxLayout(this);
     auto* form = new QFormLayout;
@@ -116,6 +184,8 @@ Inspector::Inspector(QWidget* parent) : QWidget(parent), formats_(floatFormats()
     form->addRow(captions_["format"], format_);
     form->addRow(captions_["decimal"], decimal_);
     form->addRow(captions_["binary"], binary_);
+    strip_ = new BitStrip(this);
+    form->addRow(QString(), strip_);
     form->addRow(captions_["hex"], hex_);
     layout->addLayout(form);
     message_ = new QLabel(this);
@@ -164,6 +234,13 @@ Inspector::Inspector(QWidget* parent) : QWidget(parent), formats_(floatFormats()
         recolour();
         if (!updating_) formatChanged();
     });
+    connect(strip_, &BitStrip::flipped, this, [this](int index) {  // that bit XORed into the pattern, reloaded
+        QString bits = QString::fromStdString(current_.stored.sign + current_.stored.exponent + current_.stored.fraction);
+        if (index < 0 || index >= bits.size()) return;
+        bits[index] = bits[index] == '0' ? '1' : '0';
+        const FloatInspection inspection = inspectBits(format(), bits.toStdString(), 2);
+        if (!inspection.error) display(inspection, nullptr);
+    });
     connect(down_, &QPushButton::clicked, this, [this] { loadBits(format_->currentIndex(), QString::fromStdString(current_.below.hex)); });
     connect(up_, &QPushButton::clicked, this, [this] { loadBits(format_->currentIndex(), QString::fromStdString(current_.above.hex)); });
     down_->setEnabled(false);
@@ -190,7 +267,7 @@ void Inspector::loadBits(int index, const QString& hex) {
     updating_ = false;
     recolour();
     const FloatInspection inspection = inspectBits(format(), hex.toStdString(), 16);
-    if (!inspection.error) show(inspection, nullptr);
+    if (!inspection.error) display(inspection, nullptr);
 }
 
 // A new format: the decimal is converted again; a value written as a power of two (or none) cannot be reread, so the
@@ -208,7 +285,7 @@ void Inspector::formatChanged() {
         convertBits(hex_, 16);  // says why
         return;
     }
-    show(inspection, nullptr);  // every field in the new format
+    display(inspection, nullptr);  // every field in the new format
     message_->setText(tr("The bits were read again in the new format."));
 }
 
@@ -227,9 +304,10 @@ void Inspector::convertDecimal() {
     const FloatInspection inspection = inspectDecimal(format(), text.toStdString());
     if (inspection.error) {
         message_->setText(tr("Not a decimal number"));
+        strip_->setEnabled(false);
         return;
     }
-    show(inspection, decimal_);
+    display(inspection, decimal_);
 }
 
 void Inspector::convertBits(QPlainTextEdit* field, int base) {
@@ -244,9 +322,10 @@ void Inspector::convertBits(QPlainTextEdit* field, int base) {
                               ? tr("%1 has %2 bits").arg(QString::fromStdString(format().name)).arg(format().storageBits)
                           : base == 2 ? tr("Not a binary number")
                                       : tr("Not a hexadecimal number"));
+        strip_->setEnabled(false);
         return;
     }
-    show(inspection, field);
+    display(inspection, field);
 }
 
 void Inspector::clearOutputs(QWidget* typedIn) {
@@ -257,12 +336,16 @@ void Inspector::clearOutputs(QWidget* typedIn) {
     message_->clear();
     for (auto& [key, label] : values_) label->clear();
     current_ = {};
+    strip_->setPattern(QString(), QString(), QString());
     down_->setEnabled(false);
     up_->setEnabled(false);
 }
 
-void Inspector::show(const FloatInspection& inspection, QWidget* typedIn) {
+void Inspector::display(const FloatInspection& inspection, QWidget* typedIn) {
     current_ = inspection;
+    strip_->setPattern(QString::fromStdString(inspection.stored.sign), QString::fromStdString(inspection.stored.exponent),
+                       QString::fromStdString(inspection.stored.fraction));
+    strip_->setEnabled(true);
     down_->setEnabled(inspection.hasNeighbours);
     up_->setEnabled(inspection.hasNeighbours);
     const FloatBits& b = inspection.stored;
@@ -306,6 +389,7 @@ void Inspector::retranslate() {
         format_->setItemText(static_cast<int>(i), QString::fromStdString(formats_[i].name) + QStringLiteral(" · ") + type);
     }
     captions_["format"]->setText(tr("Format"));
+    strip_->setAccessibleName(tr("Bits (click one to flip it)"));
     captions_["decimal"]->setText(tr("Decimal"));
     captions_["binary"]->setText(tr("Binary"));
     captions_["hex"]->setText(tr("Hexadecimal"));

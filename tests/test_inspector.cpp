@@ -129,3 +129,34 @@ TEST(Inspector, AValueWithoutDecimalsIsRereadFromItsBits) {
     EXPECT_EQ(text(inspector, "inspectorHex"), "0000 0001");
     EXPECT_FALSE(child<QLabel>(inspector, "inspectorMessage")->text().isEmpty());  // says the bits were reread
 }
+
+TEST(Inspector, ClickingABitFlipsIt) {
+    Inspector inspector;
+    inspector.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&inspector));
+    inspector.setFormatIndex(inspector.formatIndex(NumberType::Float));
+    inspector.setDecimal("1");
+    auto* strip = child<BitStrip>(inspector, "inspectorBitStrip");
+    ASSERT_EQ(strip->bitCount(), 32);
+    QTest::mouseClick(strip, Qt::LeftButton, {}, strip->bitCenter(0));  // the sign bit
+    EXPECT_EQ(text(inspector, "inspectorHex"), "BF80 0000");
+    EXPECT_EQ(text(inspector, "inspectorDecimal"), "-1");
+    QTest::mouseClick(strip, Qt::LeftButton, {}, strip->bitCenter(31));  // the last fraction bit
+    EXPECT_EQ(text(inspector, "inspectorHex"), "BF80 0001");
+    QTest::mouseClick(strip, Qt::LeftButton, {}, strip->bitCenter(0));
+    EXPECT_EQ(text(inspector, "inspectorHex"), "3F80 0001");
+    EXPECT_FALSE(strip->accessibleName().isEmpty());
+}
+
+TEST(Inspector, TheBitsWaitWhileAFieldIsUnreadable) {
+    Inspector inspector;
+    inspector.setDecimal("0.1");
+    auto* strip = child<BitStrip>(inspector, "inspectorBitStrip");
+    EXPECT_TRUE(strip->isEnabled());
+    auto* decimal = child<QPlainTextEdit>(inspector, "inspectorDecimal");
+    decimal->selectAll();
+    QTest::keyClicks(decimal, "0.1.");
+    EXPECT_FALSE(strip->isEnabled());
+    inspector.setDecimal("");
+    EXPECT_EQ(strip->bitCount(), 0);
+}
