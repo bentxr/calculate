@@ -211,6 +211,10 @@ const QStringList& functionTextsForTranslation() {
         QT_TRANSLATE_NOOP("functions", "The value a format actually stores for x, exactly."),
         QT_TRANSLATE_NOOP("functions", "Conversion error"),
         QT_TRANSLATE_NOOP("functions", "Stored value minus x, exactly."),
+        QT_TRANSLATE_NOOP("functions", "Signed"),
+        QT_TRANSLATE_NOOP("functions", "x wrapped into that many bits, read as two's complement (the top bit counts as negative)."),
+        QT_TRANSLATE_NOOP("functions", "Unsigned"),
+        QT_TRANSLATE_NOOP("functions", "x wrapped into that many bits, read without a sign."),
         QT_TRANSLATE_NOOP("functions", "Number from bits"),
         QT_TRANSLATE_NOOP("functions", "The number a bit pattern stands for in a format."),
         QT_TRANSLATE_NOOP("functions", "Floating point")

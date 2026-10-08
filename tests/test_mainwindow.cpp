@@ -2317,3 +2317,16 @@ TEST(MainWindow, TheFpKeyOpensTheInspector) {
     EXPECT_EQ(child<QListWidget>(window, "modes")->currentRow(), 3);  // the IEEE 754 page of the rail
     EXPECT_EQ(child<Inspector>(window, "inspector")->findChild<QPlainTextEdit*>("inspectorHex")->toPlainText(), "3FB9 9999 9999 999A");
 }
+
+TEST(MainWindow, ProgrammingKeysBuildABitwiseExpression) {
+    MainWindow window;
+    openSection(window, "programming");
+    for (const char* name : {"direct:prefixHex", "direct:hexF", "direct:hexF", "direct:and", "key:1", "key:5",
+                             "direct:to:bin", "direct:width16"})
+        QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "0xFF&15→bin 16");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "0b0000000000001111");
+}

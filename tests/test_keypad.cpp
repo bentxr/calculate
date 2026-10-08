@@ -265,7 +265,8 @@ TEST(Keypad, EverySyntaxElementHasAKey) {
     for (const Key& key : everyKey())
         if (key.face.action == KeyAction::Insert || key.face.action == KeyAction::Type) entered.insert(key.face.insert);
     QStringList syntax{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "e", "+", "−", "×", "÷", "(", ")",
-                       ", ", "!", "%", "-", "π", "Ans", "M", "_", " ", "#", "→", ":=", "±", "‰", "‱"};
+                       ", ", "!", "%", "-", "π", "Ans", "M", "_", " ", "#", "→", ":=", "±", "‰", "‱",
+                       "0x", "0b", "0o", "&", "|", " xor ", "~", "<<", ">>", "A", "B", "C", "D", "E", "F"};
     for (char c = 'a'; c <= 'z'; ++c) syntax << QString(QChar(c));  // capitals through ⇧
     for (const QString& piece : syntax) EXPECT_TRUE(entered.contains(piece)) << piece.toStdString();
     QSet<Template> shapes;
@@ -467,4 +468,20 @@ TEST(Keypad, TheProgrammingSectionHasTheFloatingPointKeys) {
     EXPECT_EQ(find("fp").face.opens, "ieee");
     for (const char* name : {"fp32", "binary32", "bits"}) EXPECT_TRUE(programmingTargets().contains(name)) << name;
     EXPECT_TRUE(find("to:binary32").id.isEmpty());  // a synonym gets no key of its own: fp32's covers it
+}
+
+TEST(Keypad, TheProgrammingKeys) {
+    const QStringList programming = sectionLabels("programming");
+    const QStringList added{"BIN", "OCT", "DEC", "HEX", "DUO", "0b", "0o", "0x", "A", "B", "C", "D", "E", "F",
+                            "AND", "OR", "XOR", "NOT", "<<", ">>", "signed", "unsigned", "8", "16", "32", "64"};
+    EXPECT_EQ(programming.mid(programming.size() - added.size()), added);  // after the floating-point keys
+    EXPECT_EQ(find("to:hex").face.insert, "→hex");
+    EXPECT_EQ(find("to:dec").face.insert, "→simple");  // decimal, every digit (Plan 1's target)
+    EXPECT_EQ(find("prefixHex").face.insert, "0x");
+    EXPECT_EQ(find("hexA").face.insert, "A");
+    const QStringList inserts{"&", "|", " xor ", "~", "<<", ">>"};
+    const QStringList ids{"and", "or", "xor", "not", "shiftLeft", "shiftRight"};
+    for (int i = 0; i < ids.size(); ++i) EXPECT_EQ(find(ids[i]).face.insert, inserts[i]) << ids[i].toStdString();
+    EXPECT_EQ(find("width16").face.insert, " 16");
+    EXPECT_EQ(find("signed").face.insert, "signed(");
 }
