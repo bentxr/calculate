@@ -17,6 +17,7 @@ add_executable(calculate-tests
     test_mainwindow.cpp
     test_popupplacement.cpp
     test_presenter.cpp
+    test_screenshots.cpp
     test_settings.cpp
     test_settingsfile.cpp
     test_translation.cpp
