@@ -308,3 +308,13 @@ TEST(Typeset, TheInputDrawsASumWithItsLimitsAroundTheSign) {
     p.insertTemplate(Template::Product);
     EXPECT_NE(runWith(typeset::input(p, font(), nullptr), "Π"), nullptr);
 }
+
+TEST(Typeset, AnUncertaintyFollowsTheValue) {
+    const QFont font;
+    const typeset::Box plain = typeset::value({"", "12", ""}, font, 0);
+    const typeset::Box withIt = typeset::value({"", "12", "", "2.5", ""}, font, 0);
+    EXPECT_GT(withIt.width, plain.width);
+    bool found = false;
+    for (const typeset::Run& run : withIt.runs) found = found || run.text == QStringLiteral(" ± 2.5");
+    EXPECT_TRUE(found);
+}

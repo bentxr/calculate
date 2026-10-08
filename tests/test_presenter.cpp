@@ -419,3 +419,19 @@ TEST(Presenter, AnUnreliableFirstOrderIsANote) {
     ASSERT_EQ(r.warnings.size(), 1u);
     EXPECT_EQ(view::warningText(r.warnings[0], "(0±1)^2"), "The uncertainty may be larger than shown: first order is unreliable here");
 }
+
+TEST(Presenter, TheValueCarriesItsUncertainty) {
+    view::ValueParts p = view::valueParts(evaluated("(3±0.4)*(4±0.3)"));
+    EXPECT_EQ(p.trusted, "");  // the bar moves to where the uncertainty starts
+    EXPECT_EQ(p.noise, "12");
+    EXPECT_EQ(p.uncertainty, "2.5");
+    EXPECT_EQ(p.uncertaintyExponent, "");
+    p = view::valueParts(evaluated("5±0.2"));
+    EXPECT_EQ(p.trusted, "5");
+    EXPECT_EQ(p.uncertainty, "0.20");
+    p = view::valueParts(evaluated("G"));
+    EXPECT_EQ(p.uncertainty, "4.5");  // three standard uncertainties
+    EXPECT_EQ(p.uncertaintyExponent, "−15");
+    EXPECT_EQ(view::valueParts(evaluated("0.1 + 0.2")).uncertainty, "");  // a computing error stays in Details
+    EXPECT_EQ(view::fractionParts(evaluated("1/3±0.1", NumberType::Exact)).uncertainty, "0.011");  // 1/(3±0.1)
+}

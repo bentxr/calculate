@@ -317,3 +317,13 @@ TEST(Lcd, TheStatusJoinsItsMarks) {
     lcd.setStoring(false);
     EXPECT_EQ(lcd.statusText(), "M");
 }
+
+TEST(Lcd, AnUncertainValueShowsItsPlusMinus) {
+    Lcd lcd;
+    lcd.showValue({"", "12", "", "2.5", ""});
+    EXPECT_EQ(lcd.outputText(), "|12 ± 2.5");
+    lcd.showValue({"6.674", "3", "−11", "1.5", "−15"});
+    EXPECT_EQ(lcd.outputText(), "6.674|3×10^−11 ± 1.5×10^−15");
+    lcd.showExact({"", "1", "3", "0.", "3", "0.10", ""});
+    EXPECT_EQ(lcd.outputText(), "1/3 = 0.(3) ± 0.10");
+}

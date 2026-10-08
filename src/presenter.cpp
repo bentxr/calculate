@@ -112,9 +112,19 @@ QString typeDetail(const TypeInfo& t) {
     return s;
 }
 
+// U, the bound plus the leading uncertainty, to its two digits: shown after the value as "± U".
+void addUncertainty(const Result& r, QString& uncertainty, QString& exponent) {
+    if (r.uncertainInputs.empty()) return;
+    const ValueParts u = split(r.uncertaintyShown, 2);
+    uncertainty = u.trusted;
+    exponent = u.exponent;
+}
+
 ValueParts valueParts(const Result& r) {
     if (r.error || r.exact || r.commentOnly) return {};
-    return split(r.value, r.trustedDigits);
+    ValueParts p = split(r.value, r.trustedDigitsWithUncertainty);  // the bar where the uncertainty starts
+    addUncertainty(r, p.uncertainty, p.uncertaintyExponent);
+    return p;
 }
 
 FractionParts fractionParts(const Result& r) {
@@ -128,6 +138,7 @@ FractionParts fractionParts(const Result& r) {
         p.decimal = fromStd(f.integerPart) + "." + fromStd(f.fractionDigits);
         p.recurring = fromStd(f.repeatingDigits);
     }
+    addUncertainty(r, p.uncertainty, p.uncertaintyExponent);
     return p;
 }
 
@@ -153,7 +164,9 @@ QString conversionText(const Result& r) {
 std::optional<ValueParts> conversionParts(const Result& r) {
     if (!r.conversion || !r.conversion->parts) return std::nullopt;
     const NumberParts& n = *r.conversion->parts;
-    ValueParts p{(n.negative ? minus() : QString()) + fromStd(n.trusted), fromStd(n.noise), QString()};
+    ValueParts p;
+    p.trusted = (n.negative ? minus() : QString()) + fromStd(n.trusted);
+    p.noise = fromStd(n.noise);
     if (n.hasExponent) p.exponent = n.exponent10 < 0 ? minus() + QString::number(-n.exponent10) : QString::number(n.exponent10);
     (p.noise.isEmpty() ? p.trusted : p.noise) += fromStd(n.suffix);
     return p;
@@ -418,6 +431,8 @@ QString oneLine(const ValueParts& parts) {
     QString s = parts.trusted;
     if (!parts.noise.isEmpty()) s += "|" + parts.noise;
     if (!parts.exponent.isEmpty()) s += "×10^" + parts.exponent;
+    if (!parts.uncertainty.isEmpty()) s += " ± " + parts.uncertainty;
+    if (!parts.uncertaintyExponent.isEmpty()) s += "×10^" + parts.uncertaintyExponent;
     return s;
 }
 
@@ -426,6 +441,8 @@ QString oneLine(const FractionParts& parts) {
     QString s = parts.sign + parts.numerator + "/" + parts.denominator;
     if (!parts.decimal.isEmpty()) s += " = " + parts.sign + parts.decimal;
     if (!parts.recurring.isEmpty()) s += "(" + parts.recurring + ")";
+    if (!parts.uncertainty.isEmpty()) s += " ± " + parts.uncertainty;
+    if (!parts.uncertaintyExponent.isEmpty()) s += "×10^" + parts.uncertaintyExponent;
     return s;
 }
 

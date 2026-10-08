@@ -317,24 +317,42 @@ QRectF selectionRect(const Box& input, const Entry& entry) {
     return covered;
 }
 
-Box value(const view::ValueParts& parts, const QFont& font, qreal maxWidth) {
-    QList<Segment> segments{{parts.trusted, Role::Plain}};
-    if (!parts.noise.isEmpty()) segments << Segment{QStringLiteral("|") + parts.noise, Role::Noise};
-    Box b = paragraph(segments, font, maxWidth);
-    if (parts.exponent.isEmpty()) return b;
-    const Box tail = superscript(text(QStringLiteral("×10"), font), text(parts.exponent, smaller(font)));
+namespace {
+
+// A tail after the value (its exponent, its ± U): on the same line when it fits, else at the start of the next.
+void append(Box& b, const Box& tail, const QFont& font, qreal maxWidth) {
     QPointF at = end(b);
     if (maxWidth > 0 && at.x() + tail.width > maxWidth) at = QPointF(0, at.y() + QFontMetricsF(font).lineSpacing());
     place(b, tail, at.x(), at.y());
     b.width = qMax(b.width, at.x() + tail.width);
     b.ascent = qMax(b.ascent, tail.ascent - at.y());
     b.descent = qMax(b.descent, at.y() + tail.descent);
+}
+
+// " ± U", with U's ×10 power when it has one.
+Box plusMinus(const QString& uncertainty, const QString& exponent, const QFont& font) {
+    const Box u = text(QStringLiteral(" ± ") + uncertainty, font);
+    if (exponent.isEmpty()) return u;
+    return row({u, superscript(text(QStringLiteral("×10"), font), text(exponent, smaller(font)))});
+}
+
+}  // namespace
+
+Box value(const view::ValueParts& parts, const QFont& font, qreal maxWidth) {
+    QList<Segment> segments{{parts.trusted, Role::Plain}};
+    if (!parts.noise.isEmpty()) segments << Segment{QStringLiteral("|") + parts.noise, Role::Noise};
+    Box b = paragraph(segments, font, maxWidth);
+    if (!parts.exponent.isEmpty())
+        append(b, superscript(text(QStringLiteral("×10"), font), text(parts.exponent, smaller(font))), font, maxWidth);
+    if (!parts.uncertainty.isEmpty()) append(b, plusMinus(parts.uncertainty, parts.uncertaintyExponent, font), font, maxWidth);
     return b;
 }
 
+namespace {
+
 // The fraction, then " = " and its decimal with the recurring digits overlined; a whole number alone.
 // The decimal moves to its own line when the whole does not fit.
-Box exact(const view::FractionParts& parts, const QFont& font, qreal maxWidth) {
+Box exactValue(const view::FractionParts& parts, const QFont& font, qreal maxWidth) {
     if (parts.denominator == QStringLiteral("1")) return paragraph({{parts.sign + parts.numerator}}, font, maxWidth);
     Box result = fraction(paragraph({{parts.numerator}}, font, maxWidth), paragraph({{parts.denominator}}, font, maxWidth), font);
     if (!parts.sign.isEmpty()) result = row({text(parts.sign, font), result});
@@ -348,6 +366,15 @@ Box exact(const view::FractionParts& parts, const QFont& font, qreal maxWidth) {
     place(b, tail, 0, y);
     b.width = qMax(result.width, tail.width);
     b.descent = y + tail.descent;
+    return b;
+}
+
+}  // namespace
+
+// The exact value, then its ± U when it has uncertain inputs.
+Box exact(const view::FractionParts& parts, const QFont& font, qreal maxWidth) {
+    Box b = exactValue(parts, font, maxWidth);
+    if (!parts.uncertainty.isEmpty()) append(b, plusMinus(parts.uncertainty, parts.uncertaintyExponent, font), font, maxWidth);
     return b;
 }
 
