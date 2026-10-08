@@ -273,7 +273,20 @@ QString explanation(const QString& key) {
                                                    "When it is large, no algorithm can do better in this number type.");
     if (key == "input")
         return QCoreApplication::translate("view", "The error of storing the numbers you typed in this type: "
-                                                   "0.1, for example, has no exact binary form.");
+                                                   "0.1, for example, has no exact binary form (floatError shows it for one number).");
+    if (key == "bits")
+        return QCoreApplication::translate("view", "The bits the computer stores for this result: sign, exponent and fraction, in the result's own type.");
+    if (key == "hex") return QCoreApplication::translate("view", "The same bits written in hexadecimal, four bits per digit.");
+    if (key == "class")
+        return QCoreApplication::translate("view", "What kind of value this is (zero, subnormal, normal…), its power of two, and the "
+                                                   "exponent field that encodes it (the power plus the bias).");
+    if (key == "ulp")
+        return QCoreApplication::translate("view", "Unit in the last place: the gap between neighbouring values of this type at this size. "
+                                                   "Rounding moves a value by at most half of it.");
+    if (key == "below")
+        return QCoreApplication::translate("view", "The nearest value this type can store below this one: nothing in between exists in this type.");
+    if (key == "above")
+        return QCoreApplication::translate("view", "The nearest value this type can store above this one: nothing in between exists in this type.");
     if (key == "unit")
         return QCoreApplication::translate("view", "The SI unit of the result, followed from the units of the constants in it. "
                                                    "Plain numbers have none.");
@@ -514,6 +527,121 @@ HintParts argumentHint(const QString& name, int argument) {
         return h;
     }
     return {};
+}
+
+namespace {
+
+// Thin spaces every four characters from the left.
+QString grouped(const QString& text) {
+    QString s;
+    for (int i = 0; i < text.size(); ++i) {
+        if (i > 0 && i % 4 == 0) s += QChar(0x2009);
+        s += text[i];
+    }
+    return s;
+}
+
+// A finite stored value written out: positional for −7 <= exponent < 21, else d.ddd…e−N; `ascii` uses - for minus.
+QString writtenOut(const calculate_core::Digits& d, bool ascii) {
+    const QString minusSign = ascii ? QStringLiteral("-") : minus();
+    const QString digits = fromStd(d.digits);
+    const long long e = d.exponent10;
+    QString s = d.negative ? minusSign : QString();
+    if (e >= -7 && e < 21) {
+        if (e < 0) return s + QStringLiteral("0.") + QString(static_cast<int>(-e - 1), QChar('0')) + digits;
+        QString whole = digits.left(static_cast<int>(e) + 1);
+        whole += QString(qMax(0, static_cast<int>(e) + 1 - static_cast<int>(digits.size())), QChar('0'));
+        const QString rest = digits.mid(static_cast<int>(e) + 1);
+        return s + whole + (rest.isEmpty() ? QString() : QStringLiteral(".") + rest);
+    }
+    s += digits.left(1);
+    if (digits.size() > 1) s += QStringLiteral(".") + digits.mid(1);
+    return s + QStringLiteral("e") + (e < 0 ? minusSign + QString::number(-e) : QString::number(e));
+}
+
+// The value, or its power-of-two form when it is too long to write out.
+QString number(const FloatBits& b, bool ascii) {
+    const QString minusSign = ascii ? QStringLiteral("-") : minus();
+    switch (b.valueClass) {
+    case FloatClass::Infinite: return ascii ? (b.negative ? QStringLiteral("-inf") : QStringLiteral("inf")) : (b.negative ? minusSign : QString()) + QStringLiteral("∞");
+    case FloatClass::QuietNaN:
+    case FloatClass::SignalingNaN: return ascii ? QStringLiteral("nan") : QStringLiteral("NaN");
+    default: break;
+    }
+    if (!b.value.digits.empty()) return writtenOut(b.value, ascii);
+    const QString sign = b.negative ? minusSign : QString();
+    const QString power = QStringLiteral("2^") + (b.exponent2 < 0 ? minusSign + QString::number(-b.exponent2) : QString::number(b.exponent2));
+    if (b.significand.digits == "1" && b.significand.exponent10 == 0) return sign + power;
+    return sign + writtenOut(b.significand, ascii) + (ascii ? QStringLiteral(" * ") : QStringLiteral(" × ")) + power;
+}
+
+}  // namespace
+
+BitGroups bitGroups(const FloatBits& bits) {
+    return {fromStd(bits.sign), grouped(fromStd(bits.exponent)), grouped(fromStd(bits.fraction))};
+}
+
+BitColours bitColours(bool dark) {
+    if (dark) return {QStringLiteral("#ff8a80"), QStringLiteral("#82b1ff"), QStringLiteral("#8fe3a8")};
+    return {QStringLiteral("#b03a2e"), QStringLiteral("#1f5fbf"), QStringLiteral("#1e7a46")};
+}
+
+QString bitsHtml(const BitGroups& g, const BitColours& c) {
+    const auto span = [](const QString& colour, const QString& text) {
+        return QStringLiteral("<span style=\"color:") + colour + QStringLiteral("\">") + text + QStringLiteral("</span>");
+    };
+    return span(c.sign, g.sign) + QStringLiteral(" ") + span(c.exponent, g.exponent) + QStringLiteral(" ") + span(c.fraction, g.fraction);
+}
+
+QString floatClassName(FloatClass c) {
+    switch (c) {
+    case FloatClass::Zero: return QCoreApplication::translate("view", "zero");
+    case FloatClass::Subnormal: return QCoreApplication::translate("view", "subnormal");
+    case FloatClass::Normal: return QCoreApplication::translate("view", "normal");
+    case FloatClass::Infinite: return QCoreApplication::translate("view", "infinite");
+    case FloatClass::QuietNaN: return QCoreApplication::translate("view", "quiet NaN");
+    case FloatClass::SignalingNaN: return QCoreApplication::translate("view", "signaling NaN");
+    case FloatClass::Noncanonical: return QCoreApplication::translate("view", "noncanonical");
+    }
+    return {};
+}
+
+QString exactNumber(const FloatBits& bits) { return number(bits, false); }
+
+QString decimalText(const FloatBits& bits) { return number(bits, true); }
+
+QList<DetailRow> storedRows(const Result& r, const BitColours& colours) {
+    if (!r.stored) return {};
+    const FloatInspection& i = *r.stored;
+    const FloatBits& b = i.stored;
+    QString formatName;
+    for (const FloatFormatInfo& f : floatFormats())
+        if (f.format == i.format) formatName = fromStd(f.name);
+    QList<DetailRow> rows;
+    rows.append({"bits", QCoreApplication::translate("view", "Stored bits"), bitsHtml(bitGroups(b), colours), true});
+    rows.append({"hex", QCoreApplication::translate("view", "Hex"), QStringLiteral("0x") + grouped(fromStd(b.hex)), false});
+    const bool hasExponent = b.valueClass == FloatClass::Subnormal || b.valueClass == FloatClass::Normal;
+    const QString exponent2 = b.exponent2 < 0 ? minus() + QString::number(-b.exponent2) : QString::number(b.exponent2);
+    rows.append({"class", QCoreApplication::translate("view", "Class"),
+                 hasExponent ? QCoreApplication::translate("view", "%1 · exponent %2 (field %3) · %4")
+                                   .arg(floatClassName(b.valueClass), exponent2, QString::number(b.biasedExponent), formatName)
+                             : floatClassName(b.valueClass) + QStringLiteral(" · ") + formatName,
+                 false});
+    if (i.hasNeighbours) {
+        if (b.valueClass != FloatClass::Infinite) {
+            const QString power = QStringLiteral("2^") + (i.ulpExponent < 0 ? minus() + QString::number(-i.ulpExponent) : QString::number(i.ulpExponent));
+            rows.append({"ulp", QCoreApplication::translate("view", "ulp"),
+                         i.ulp.digits.empty() ? power : power + QStringLiteral(" = ") + writtenOut(i.ulp, false), false});
+        }
+        rows.append({"below", QCoreApplication::translate("view", "Next below"), exactNumber(i.below), false});
+        rows.append({"above", QCoreApplication::translate("view", "Next above"), exactNumber(i.above), false});
+    }
+    static const char* const notes[] = {QT_TRANSLATE_NOOP("view", "overflow"), QT_TRANSLATE_NOOP("view", "underflow"),
+                                        QT_TRANSLATE_NOOP("view", "no subnormals")};  // the engine's notes, for lupdate
+    (void)notes;
+    if (!i.note.empty())
+        rows.append({"note", QCoreApplication::translate("view", "Note"), QCoreApplication::translate("view", i.note.c_str()), false});
+    return rows;
 }
 
 }  // namespace view
