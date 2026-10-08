@@ -24,6 +24,7 @@ public:
     int formatIndex(calculate_core::NumberType type) const;  // the list row of a type's own format
     void setFormatIndex(int index);
     void setDecimal(const QString& text);                    // as if typed in the decimal field
+    void loadBits(int formatIndex, const QString& hex);      // a stored pattern, e.g. a result's or a neighbour
     void retranslate();
 
 protected:
@@ -35,7 +36,9 @@ private:
     void convertBits(QPlainTextEdit* field, int base);  // base 2 or 16
     // Fills every field and output but `typedIn`, which keeps what the user wrote.
     void show(const calculate_core::FloatInspection& inspection, QWidget* typedIn);
-    void clearOutputs(QWidget* typedIn);  // an emptied field: the others and the outputs too
+    void clearOutputs(QWidget* typedIn);
+    void formatChanged();
+    void recolour();  // the binary field's colours, for the format and the theme  // an emptied field: the others and the outputs too
 
     std::vector<calculate_core::FloatFormatInfo> formats_;
     QComboBox* format_ = nullptr;
@@ -49,4 +52,5 @@ private:
     QPushButton* down_ = nullptr;
     QPushButton* up_ = nullptr;
     bool updating_ = false;  // filling the fields: their change signals are not edits
+    calculate_core::FloatInspection current_;  // what the fields show now: its neighbours for ◄ ►
 };

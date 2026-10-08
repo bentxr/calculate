@@ -161,9 +161,13 @@ Inspector::Inspector(QWidget* parent) : QWidget(parent), formats_(floatFormats()
         if (!updating_) convertBits(hex_, 16);
     });
     connect(format_, &QComboBox::currentIndexChanged, this, [this] {
-        static_cast<BitsHighlighter*>(highlighter_)->setLayout(format().exponentBits, dark(this));
-        convertDecimal();
+        recolour();
+        if (!updating_) formatChanged();
     });
+    connect(down_, &QPushButton::clicked, this, [this] { loadBits(format_->currentIndex(), QString::fromStdString(current_.below.hex)); });
+    connect(up_, &QPushButton::clicked, this, [this] { loadBits(format_->currentIndex(), QString::fromStdString(current_.above.hex)); });
+    down_->setEnabled(false);
+    up_->setEnabled(false);
     retranslate();
     setFormatIndex(formatIndex(NumberType::Double));
 }
@@ -179,6 +183,40 @@ void Inspector::setFormatIndex(int index) { format_->setCurrentIndex(index); }
 const FloatFormatInfo& Inspector::format() const { return formats_[static_cast<std::size_t>(qMax(0, format_->currentIndex()))]; }
 
 void Inspector::setDecimal(const QString& text) { decimal_->setPlainText(text); }  // textChanged converts it
+
+void Inspector::loadBits(int index, const QString& hex) {
+    updating_ = true;
+    format_->setCurrentIndex(index);  // without converting: the bits come next
+    updating_ = false;
+    recolour();
+    const FloatInspection inspection = inspectBits(format(), hex.toStdString(), 16);
+    if (!inspection.error) show(inspection, nullptr);
+}
+
+// A new format: the decimal is converted again; a value written as a power of two (or none) cannot be reread, so the
+// bits are read again in the new format instead.
+void Inspector::formatChanged() {
+    const QString text = decimal_->toPlainText().trimmed();
+    if (!text.isEmpty() && !text.contains(QStringLiteral("2^"))) {
+        convertDecimal();
+        return;
+    }
+    const QString hex = hex_->toPlainText().trimmed();
+    if (hex.isEmpty()) return;
+    const FloatInspection inspection = inspectBits(format(), hex.toStdString(), 16);
+    if (inspection.error) {
+        convertBits(hex_, 16);  // says why
+        return;
+    }
+    show(inspection, nullptr);  // every field in the new format
+    message_->setText(tr("The bits were read again in the new format."));
+}
+
+void Inspector::recolour() {
+    updating_ = true;  // a new layout of colours is not an edit
+    static_cast<BitsHighlighter*>(highlighter_)->setLayout(format().exponentBits, dark(this));
+    updating_ = false;
+}
 
 void Inspector::convertDecimal() {
     const QString text = decimal_->toPlainText().trimmed();
@@ -218,9 +256,15 @@ void Inspector::clearOutputs(QWidget* typedIn) {
     updating_ = false;
     message_->clear();
     for (auto& [key, label] : values_) label->clear();
+    current_ = {};
+    down_->setEnabled(false);
+    up_->setEnabled(false);
 }
 
 void Inspector::show(const FloatInspection& inspection, QWidget* typedIn) {
+    current_ = inspection;
+    down_->setEnabled(inspection.hasNeighbours);
+    up_->setEnabled(inspection.hasNeighbours);
     const FloatBits& b = inspection.stored;
     updating_ = true;
     if (typedIn != binary_)
@@ -276,7 +320,6 @@ void Inspector::retranslate() {
 
 void Inspector::changeEvent(QEvent* event) {
     if (event->type() == QEvent::LanguageChange) retranslate();
-    if (event->type() == QEvent::PaletteChange && highlighter_)
-        static_cast<BitsHighlighter*>(highlighter_)->setLayout(format().exponentBits, dark(this));
+    if (event->type() == QEvent::PaletteChange && highlighter_) recolour();
     QWidget::changeEvent(event);
 }

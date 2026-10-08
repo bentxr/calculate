@@ -92,3 +92,40 @@ TEST(Inspector, FieldsTakeOnlyTheirCharacters) {
     QTest::keyClick(hex, Qt::Key_Return);
     EXPECT_EQ(hex->toPlainText(), "3");
 }
+
+TEST(Inspector, StepsToTheNeighbours) {
+    Inspector inspector;
+    inspector.setFormatIndex(inspector.formatIndex(NumberType::Double));
+    inspector.setDecimal("0.1");
+    QTest::mouseClick(child<QPushButton>(inspector, "inspectorUp"), Qt::LeftButton);
+    EXPECT_EQ(text(inspector, "inspectorHex"), "3FB9 9999 9999 999B");
+    EXPECT_EQ(text(inspector, "inspectorDecimal"), "0.10000000000000001942890293094023945741355419158935546875");
+    QTest::mouseClick(child<QPushButton>(inspector, "inspectorDown"), Qt::LeftButton);
+    QTest::mouseClick(child<QPushButton>(inspector, "inspectorDown"), Qt::LeftButton);
+    EXPECT_EQ(text(inspector, "inspectorHex"), "3FB9 9999 9999 9999");
+}
+
+TEST(Inspector, ChangingTheFormatConvertsTheDecimalAgain) {
+    Inspector inspector;
+    inspector.setFormatIndex(inspector.formatIndex(NumberType::Float));
+    inspector.setDecimal("0.1");
+    inspector.setFormatIndex(inspector.formatIndex(NumberType::Double));
+    EXPECT_EQ(text(inspector, "inspectorHex"), "3FB9 9999 9999 999A");
+    EXPECT_EQ(text(inspector, "inspectorDecimal"), "0.1");
+}
+
+TEST(Inspector, NoStepsWhereThereIsNoNeighbour) {
+    Inspector inspector;
+    inspector.setDecimal("nan");
+    EXPECT_FALSE(child<QPushButton>(inspector, "inspectorUp")->isEnabled());
+    EXPECT_FALSE(child<QPushButton>(inspector, "inspectorDown")->isEnabled());
+}
+
+TEST(Inspector, AValueWithoutDecimalsIsRereadFromItsBits) {
+    Inspector inspector;
+    inspector.loadBits(inspector.formatIndex(NumberType::Binary512), "1");  // 2^-4194790: no decimal written out
+    ASSERT_TRUE(text(inspector, "inspectorDecimal").contains("2^"));
+    inspector.setFormatIndex(inspector.formatIndex(NumberType::Float));
+    EXPECT_EQ(text(inspector, "inspectorHex"), "0000 0001");
+    EXPECT_FALSE(child<QLabel>(inspector, "inspectorMessage")->text().isEmpty());  // says the bits were reread
+}
