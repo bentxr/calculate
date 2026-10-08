@@ -456,3 +456,85 @@ TEST(Presenter, CopyTheConciseForm) {
     EXPECT_EQ(view::copyText(evaluated("5±0.2"), view::CopyForm::Concise, typeInfo(NumberType::Double)), "5.00(20)");
     EXPECT_EQ(view::copyText(evaluated("1/3", NumberType::Exact), view::CopyForm::Concise, typeInfo(NumberType::Exact)), "");
 }
+
+namespace {
+
+FloatFormatInfo formatInfo(NumberType type) {
+    for (const FloatFormatInfo& f : floatFormats())
+        if (f.type == type) return f;
+    return {};
+}
+
+QString thin(QString s) { return s.replace(' ', QChar(0x2009)); }  // thin spaces between groups
+
+}  // namespace
+
+TEST(Presenter, BitsAreGroupedByField) {
+    const view::BitGroups g = view::bitGroups(inspectDecimal(formatInfo(NumberType::Double), "0.1").stored);
+    EXPECT_EQ(g.sign, "0");
+    EXPECT_EQ(g.exponent, thin("0111 1111 011"));
+    EXPECT_EQ(g.fraction, thin("1001 1001 1001 1001 1001 1001 1001 1001 1001 1001 1001 1001 1010"));
+    EXPECT_EQ(view::bitsHtml({"0", "01", "1"}, {"#111111", "#222222", "#333333"}),
+              "<span style=\"color:#111111\">0</span> <span style=\"color:#222222\">01</span> "
+              "<span style=\"color:#333333\">1</span>");
+    EXPECT_NE(view::bitColours(false).exponent, view::bitColours(true).exponent);
+}
+
+TEST(Presenter, ExactNumbersAndPowersOfTwo) {
+    const FloatInspection tenth = inspectDecimal(formatInfo(NumberType::Float), "0.1");
+    EXPECT_EQ(view::exactNumber(tenth.stored), "0.100000001490116119384765625");
+    EXPECT_EQ(view::decimalText(tenth.stored), "0.100000001490116119384765625");
+    const FloatInspection tiny = inspectDecimal(formatInfo(NumberType::Float), "1e-45");
+    EXPECT_EQ(view::exactNumber(tiny.stored),
+              "1.40129846432481707092372958328991613128026194187651577175706828388979108268586060148663818836212158203125e−45");
+    EXPECT_EQ(view::decimalText(tiny.stored),
+              "1.40129846432481707092372958328991613128026194187651577175706828388979108268586060148663818836212158203125e-45");
+    const FloatInspection zero = inspectDecimal(formatInfo(NumberType::Binary512), "0");
+    EXPECT_EQ(view::exactNumber(zero.above), "2^−4194302");
+    EXPECT_EQ(view::exactNumber(zero.below), "−2^−4194302");
+    EXPECT_EQ(view::exactNumber(inspectDecimal(formatInfo(NumberType::Double), "-inf").stored), "−∞");
+    EXPECT_EQ(view::floatClassName(FloatClass::SignalingNaN), "signaling NaN");
+}
+
+TEST(Presenter, TheStoredValueRows) {
+    const QList<view::DetailRow> rows = view::storedRows(evaluated("0.1 + 0.2"), view::bitColours(false));
+    QStringList keys;
+    for (const view::DetailRow& row : rows) keys << row.key;
+    EXPECT_EQ(keys, QStringList({"bits", "hex", "class", "ulp", "below", "above"}));
+    EXPECT_EQ(rows[0].label, "Stored bits");
+    EXPECT_TRUE(rows[0].rich);
+    EXPECT_TRUE(rows[0].value.contains("<span style=\"color:" + view::bitColours(false).exponent + "\">"
+                                       + thin("0111 1111 101") + "</span>"));
+    EXPECT_FALSE(rows[1].rich);
+    EXPECT_EQ(rows[1].value, thin("0x3FD3 3333 3333 3334"));
+    EXPECT_EQ(rows[2].value, "normal · exponent −2 (field 1021) · binary64");
+    EXPECT_EQ(rows[3].value, "2^−54 = 5.5511151231257827021181583404541015625e−17");
+    EXPECT_EQ(rows[4].value, "0.299999999999999988897769753748434595763683319091796875");
+    EXPECT_EQ(rows[5].value, "0.300000000000000099920072216264088638126850128173828125");
+    EXPECT_TRUE(view::storedRows(evaluated("1/3", NumberType::Exact), view::bitColours(false)).isEmpty());
+    for (const char* key : {"bits", "hex", "class", "ulp", "below", "above"})
+        EXPECT_FALSE(view::explanation(key).isEmpty()) << key;
+}
+
+TEST(Presenter, AValueTooLongForDecimalsIsShownInBinary) {
+    const view::ValueParts p = view::valueParts(evaluated("1e-1000000", NumberType::Binary512));
+    EXPECT_TRUE(p.trusted.contains(QStringLiteral(" × 2^−"))) << p.trusted.toStdString();
+    EXPECT_TRUE(p.noise.isEmpty());
+    EXPECT_FALSE(view::explanation("binary").isEmpty());
+}
+
+TEST(Presenter, ConversionFieldsBecomeRows) {
+    const QList<view::DetailRow> rows = view::conversionRows(evaluate("0.1 to fp32"));
+    ASSERT_FALSE(rows.isEmpty());
+    EXPECT_EQ(rows[0].key, "field:hex");
+    EXPECT_EQ(rows[0].label, "Hex");
+    EXPECT_EQ(rows[0].value, "0x3DCCCCCD");
+    EXPECT_TRUE(view::conversionRows(evaluate("0.1")).isEmpty());
+}
+
+TEST(Presenter, BaseFieldsHaveCaptions) {
+    QStringList labels;
+    for (const view::DetailRow& row : view::conversionRows(evaluate("0.1 to hex"))) labels << row.label;
+    for (const view::DetailRow& row : view::conversionRows(evaluate("-1 to bin 8"))) labels << row.label;
+    EXPECT_EQ(labels, QStringList({"Base", "Trusted digits in this base", "Base", "Width (bits)"}));
+}

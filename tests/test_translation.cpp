@@ -57,3 +57,14 @@ TEST(Translation, EveryConstantTitleIsMarkedForTranslation) {
     for (const calculate_core::ConstantDescription& c : calculate_core::constants())
         EXPECT_TRUE(marked.contains(QString::fromStdString(c.title))) << c.name;
 }
+
+TEST(Translation, TheInspectorInSpanish) {
+    QTranslator spanish;
+    ASSERT_TRUE(spanish.load(QLocale(QLocale::Spanish, QLocale::Spain), "calculate", "_", ":/i18n"));
+    QCoreApplication::installTranslator(&spanish);
+    EXPECT_EQ(view::floatClassName(FloatClass::QuietNaN), "NaN silencioso");
+    const QList<view::DetailRow> rows = view::storedRows(evaluate("0.5"), view::bitColours(false));
+    EXPECT_EQ(rows[0].label, "Bits almacenados");
+    EXPECT_EQ(rows[4].label, "Anterior representable");
+    QCoreApplication::removeTranslator(&spanish);
+}

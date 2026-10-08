@@ -4,6 +4,7 @@
 
 #include <QList>
 #include <QString>
+#include <QHash>
 #include <QStringList>
 
 enum class KeyAction { Insert, Template, Clear, Backspace, Evaluate, MemoryAdd, MemorySubtract, MemoryClear, MemoryStore, Left, Right, Up, Down,
@@ -59,11 +60,11 @@ const QList<QPair<QString, QString>>& aliasKeys();
 // The Statistics mode's functions, in their order on its page; each takes the values as arguments.
 const QList<Key>& statisticsKeys();
 
-// An entry of the search list: what a key (or, from Plan 3, a name without a key) types, under a heading.
+// An entry of the search list: what a key (or a name without a key) types, under a heading.
 struct SearchEntry {
     QString group;  // the heading: a section's title, or "Main keys" (English source text; see translated())
     Face face;
-    QString title;  // a one-line description (Plan 2's metadata fills it)
+    QString title;  // a one-line description (from the function metadata)
 };
 // The keys of every section but Letters, under the section's title and in order; then the main pad's keys that
 // stand for a function, under "Main keys"; then extraSearchEntries().
@@ -74,6 +75,12 @@ QList<SearchEntry> extraSearchEntries();
 // Whether an entry matches the search box's text: its legend (as written or translated), what it types, its
 // function, its description or its heading, ignoring case. An empty text matches everything.
 bool searchMatches(const SearchEntry& entry, const QString& text);
+
+// The conversion targets kept for the Programming section, synonyms included; Show as has every other one.
+QStringList programmingTargets();
+
+// A target's synonym → the name its key carries (binary32 → fp32): one key per format.
+const QHash<QString, QString>& targetTwins();
 
 // Whether the face works in the Exact type when `exact` (Exact refuses irrational functions).
 bool available(const Face& face, bool exact);

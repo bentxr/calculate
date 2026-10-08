@@ -2,9 +2,11 @@
 
 #include "popupplacement.hpp"
 
+#include <QEvent>
 #include <QGridLayout>
 #include <QLabel>
 #include <QPainter>
+#include <QPushButton>
 #include <QScrollArea>
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -49,7 +51,15 @@ DetailsCard::DetailsCard(QWidget* parent) : QFrame(parent, Qt::Popup) {
     scroll_->setFrameShape(QFrame::NoFrame);
     scroll_->setWidgetResizable(true);
     scroll_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    (new QVBoxLayout(this))->addWidget(scroll_);
+    auto* layout = new QVBoxLayout(this);
+    layout->addWidget(scroll_);
+    inspect_ = new QPushButton(tr("Open in the IEEE 754 tool"), this);
+    inspect_->setObjectName("inspectButton");
+    layout->addWidget(inspect_, 0, Qt::AlignLeft);
+    connect(inspect_, &QPushButton::clicked, this, [this] {
+        hide();
+        emit inspectRequested();
+    });
     tip_ = new QFrame(this, Qt::Popup);
     tip_->setObjectName("explanation");
     tip_->setFrameShape(QFrame::StyledPanel);
@@ -72,6 +82,7 @@ void DetailsCard::setRows(const QList<view::DetailRow>& rows) {
         bold.setBold(true);
         label->setFont(bold);
         auto* value = new QLabel(row.value, rows_);
+        value->setTextFormat(row.rich ? Qt::RichText : Qt::PlainText);  // coloured bits; everything else as written
         value->setObjectName("value:" + row.key);
         value->setWordWrap(true);
         value->setTextInteractionFlags(Qt::TextSelectableByMouse);
@@ -114,4 +125,11 @@ void DetailsCard::popUp(QWidget* under) {
     const QSize size(under->width(), rows + margins.top() + margins.bottom() + 2 * frameWidth());
     setGeometry(placed(size, globalGeometry(under), popupBounds(under)));
     show();
+}
+
+void DetailsCard::setInspectable(bool on) { inspect_->setVisible(on); }
+
+void DetailsCard::changeEvent(QEvent* event) {
+    if (event->type() == QEvent::LanguageChange) inspect_->setText(tr("Open in the IEEE 754 tool"));
+    QFrame::changeEvent(event);
 }

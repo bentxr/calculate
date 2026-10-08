@@ -4,7 +4,13 @@
 <context>
     <name>DetailsCard</name>
     <message>
-        <location filename="../src/detailscard.cpp" line="80"/>
+        <location filename="../src/detailscard.cpp" line="56"/>
+        <location filename="../src/detailscard.cpp" line="133"/>
+        <source>Open in the IEEE 754 tool</source>
+        <translation>Abrir en la herramienta IEEE 754</translation>
+    </message>
+    <message>
+        <location filename="../src/detailscard.cpp" line="91"/>
         <source>What does this mean?</source>
         <translation>¿Qué significa esto?</translation>
     </message>
@@ -20,6 +26,114 @@
         <location filename="../src/formulatip.cpp" line="61"/>
         <source>n even</source>
         <translation>n par</translation>
+    </message>
+</context>
+<context>
+    <name>Inspector</name>
+    <message>
+        <location filename="../src/inspector.cpp" line="379"/>
+        <source>The bits were read again in the new format.</source>
+        <translation>Los bits se han vuelto a leer en el nuevo formato.</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="396"/>
+        <source>Not a decimal number</source>
+        <translation>No es un número decimal</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="412"/>
+        <source>%1 has %2 bits</source>
+        <translation>%1 tiene %2 bits</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="413"/>
+        <source>Not a binary number</source>
+        <translation>No es un número binario</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="414"/>
+        <source>Not a hexadecimal number</source>
+        <translation>No es un número hexadecimal</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="455"/>
+        <source>sign %1 · exponent %2 (field %3) · significand %4</source>
+        <translation>signo %1 · exponente %2 (campo %3) · significando %4</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="479"/>
+        <source>display only</source>
+        <translation>solo para mostrar</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="485"/>
+        <source>Show or hide the keypad</source>
+        <translation>Mostrar u ocultar el teclado numérico</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="487"/>
+        <source>Copy</source>
+        <translation>Copiar</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="488"/>
+        <source>Format</source>
+        <translation>Formato</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="489"/>
+        <source>Bits (click one to flip it)</source>
+        <translation>Bits (pulsa uno para invertirlo)</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="490"/>
+        <source>Decimal</source>
+        <translation>Decimal</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="491"/>
+        <source>Binary</source>
+        <translation>Binario</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="492"/>
+        <source>Hexadecimal</source>
+        <translation>Hexadecimal</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="493"/>
+        <source>Class</source>
+        <translation>Clase</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="494"/>
+        <source>Fields</source>
+        <translation>Campos</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="495"/>
+        <source>Value</source>
+        <translation>Valor</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="496"/>
+        <source>Conversion error (stored − typed)</source>
+        <translation>Error de conversión (almacenado − escrito)</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="497"/>
+        <source>ulp</source>
+        <translation>ulp</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="498"/>
+        <source>Next below</source>
+        <translation>Anterior representable</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="499"/>
+        <source>Next above</source>
+        <translation>Siguiente representable</translation>
     </message>
 </context>
 <context>
@@ -68,401 +182,406 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1159"/>
+        <location filename="../src/mainwindow.cpp" line="1170"/>
         <source>calculate</source>
         <translation>calculate</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1160"/>
+        <location filename="../src/mainwindow.cpp" line="1171"/>
         <source>Show or hide the panel</source>
         <translation>Mostrar u ocultar el panel</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1162"/>
+        <location filename="../src/mainwindow.cpp" line="1173"/>
         <source>Calculator</source>
         <translation>Calculadora</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1162"/>
+        <location filename="../src/mainwindow.cpp" line="1173"/>
         <source>Statistics</source>
         <translation>Estadística</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1161"/>
+        <location filename="../src/mainwindow.cpp" line="1172"/>
         <source>Settings</source>
         <translation>Ajustes</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="428"/>
+        <location filename="../src/mainwindow.cpp" line="439"/>
         <source>Too long to work out while typing: press = to calculate it</source>
         <translation>Demasiado largo para calcularlo al escribir: pulsa = para calcularlo</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="466"/>
+        <location filename="../src/mainwindow.cpp" line="477"/>
         <source>Pasted the first of %1 lines</source>
         <translation>Se ha pegado la primera de %1 líneas</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="468"/>
+        <location filename="../src/mainwindow.cpp" line="479"/>
         <source>The browser did not allow reading the clipboard: paste with Ctrl+V</source>
         <translation>El navegador no ha permitido leer el portapapeles: pega con Ctrl+V</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="588"/>
+        <location filename="../src/mainwindow.cpp" line="599"/>
         <source>Common holds at most %1 keys</source>
         <translation>Habituales admite como mucho %1 teclas</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="698"/>
+        <location filename="../src/mainwindow.cpp" line="709"/>
         <source>Click a key to add it to Common, or a key of Common to remove it</source>
         <translation>Pulsa una tecla para añadirla a Habituales, o una de Habituales para quitarla</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1089"/>
+        <location filename="../src/mainwindow.cpp" line="1100"/>
         <source>Some settings were not imported: %1</source>
         <translation>No se importaron algunos ajustes: %1</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1142"/>
+        <location filename="../src/mainwindow.cpp" line="1153"/>
         <source>“%1” cannot be the common keys</source>
         <translation>“%1” no puede ser las teclas habituales</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1162"/>
+        <location filename="../src/mainwindow.cpp" line="1173"/>
         <source>Percentages</source>
         <translation>Porcentajes</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1165"/>
-        <location filename="../src/mainwindow.cpp" line="1166"/>
+        <location filename="../src/mainwindow.cpp" line="1173"/>
+        <source>IEEE 754</source>
+        <translation>IEEE 754</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="1176"/>
+        <location filename="../src/mainwindow.cpp" line="1177"/>
         <source>More</source>
         <translation>Más</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1167"/>
+        <location filename="../src/mainwindow.cpp" line="1178"/>
         <source>Search every function and constant…</source>
         <translation>Buscar entre todas las funciones y constantes…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1168"/>
+        <location filename="../src/mainwindow.cpp" line="1179"/>
         <source>Search</source>
         <translation>Buscar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1170"/>
+        <location filename="../src/mainwindow.cpp" line="1181"/>
         <source>Back to the keypad</source>
         <translation>Volver al teclado</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1171"/>
+        <location filename="../src/mainwindow.cpp" line="1182"/>
         <source>RAD</source>
         <translation>RAD</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1171"/>
+        <location filename="../src/mainwindow.cpp" line="1182"/>
         <source>DEG</source>
         <translation>DEG</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1171"/>
+        <location filename="../src/mainwindow.cpp" line="1182"/>
         <source>GRAD</source>
         <translation>GRAD</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1174"/>
+        <location filename="../src/mainwindow.cpp" line="1185"/>
         <source>=</source>
         <translation>=</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1175"/>
+        <location filename="../src/mainwindow.cpp" line="1186"/>
         <source>Details</source>
         <translation>Detalles</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1176"/>
+        <location filename="../src/mainwindow.cpp" line="1187"/>
         <source>Copy</source>
         <translation>Copiar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1178"/>
+        <location filename="../src/mainwindow.cpp" line="1189"/>
         <source>Copy as</source>
         <translation>Copiar como</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1179"/>
+        <location filename="../src/mainwindow.cpp" line="1190"/>
         <source>Value</source>
         <translation>Valor</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1180"/>
+        <location filename="../src/mainwindow.cpp" line="1191"/>
         <source>Trusted digits</source>
         <translation>Dígitos fiables</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1181"/>
+        <location filename="../src/mainwindow.cpp" line="1192"/>
         <source>Value ± bound</source>
         <translation>Valor ± cota</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1182"/>
+        <location filename="../src/mainwindow.cpp" line="1193"/>
         <source>Details as text</source>
         <translation>Detalles como texto</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1183"/>
+        <location filename="../src/mainwindow.cpp" line="1194"/>
         <source>Concise (1.23(4))</source>
         <translation>Concisa (1.23(4))</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1184"/>
+        <location filename="../src/mainwindow.cpp" line="1195"/>
         <source>Expression</source>
         <translation>Expresión</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1185"/>
+        <location filename="../src/mainwindow.cpp" line="1196"/>
         <source>Copy expression</source>
         <translation>Copiar expresión</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1186"/>
+        <location filename="../src/mainwindow.cpp" line="1197"/>
         <source>Copy value</source>
         <translation>Copiar valor</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1187"/>
+        <location filename="../src/mainwindow.cpp" line="1198"/>
         <source>Copy value ± bound</source>
         <translation>Copiar valor ± cota</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1188"/>
-        <location filename="../src/mainwindow.cpp" line="1257"/>
+        <location filename="../src/mainwindow.cpp" line="1199"/>
+        <location filename="../src/mainwindow.cpp" line="1268"/>
         <source>Edit</source>
         <translation>Editar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1190"/>
+        <location filename="../src/mainwindow.cpp" line="1201"/>
         <source>Keyboard</source>
         <translation>Teclado</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1192"/>
+        <location filename="../src/mainwindow.cpp" line="1203"/>
         <source>Proceed anyway</source>
         <translation>Continuar de todos modos</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1193"/>
+        <location filename="../src/mainwindow.cpp" line="1204"/>
         <source>Computing…</source>
         <translation>Calculando…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1194"/>
+        <location filename="../src/mainwindow.cpp" line="1205"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1195"/>
+        <location filename="../src/mainwindow.cpp" line="1206"/>
         <source>History</source>
         <translation>Historial</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1216"/>
+        <location filename="../src/mainwindow.cpp" line="1227"/>
         <source>Conventions</source>
         <translation>Convenciones</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1217"/>
+        <location filename="../src/mainwindow.cpp" line="1228"/>
         <source>log is base 10</source>
         <translation>log es en base 10</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1218"/>
+        <location filename="../src/mainwindow.cpp" line="1229"/>
         <source>log is natural</source>
         <translation>log es natural</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1219"/>
+        <location filename="../src/mainwindow.cpp" line="1230"/>
         <source>mod keeps the dividend&apos;s sign</source>
         <translation>mod conserva el signo del dividendo</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1220"/>
+        <location filename="../src/mainwindow.cpp" line="1231"/>
         <source>mod keeps the divisor&apos;s sign</source>
         <translation>mod conserva el signo del divisor</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1221"/>
+        <location filename="../src/mainwindow.cpp" line="1232"/>
         <source>% divides by 100</source>
         <translation>% divide entre 100</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1222"/>
+        <location filename="../src/mainwindow.cpp" line="1233"/>
         <source>x + p% adds p% of x</source>
         <translation>x + p% suma el p% de x</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1224"/>
+        <location filename="../src/mainwindow.cpp" line="1235"/>
         <source>Uncertainty</source>
         <translation>Incertidumbre</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1225"/>
+        <location filename="../src/mainwindow.cpp" line="1236"/>
         <source>Combination</source>
         <translation>Combinación</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1226"/>
+        <location filename="../src/mainwindow.cpp" line="1237"/>
         <source>Worst case (a limit)</source>
         <translation>Peor caso (un límite)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1227"/>
+        <location filename="../src/mainwindow.cpp" line="1238"/>
         <source>Statistical (an estimate)</source>
         <translation>Estadística (una estimación)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1228"/>
+        <location filename="../src/mainwindow.cpp" line="1239"/>
         <source>Read precision</source>
         <translation>Precisión de lectura</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1229"/>
+        <location filename="../src/mainwindow.cpp" line="1240"/>
         <source>Off</source>
         <translation>Desactivada</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1230"/>
+        <location filename="../src/mainwindow.cpp" line="1241"/>
         <source>Decimals</source>
         <translation>Con decimales</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1231"/>
+        <location filename="../src/mainwindow.cpp" line="1242"/>
         <source>All numbers</source>
         <translation>Todos los números</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1886"/>
+        <location filename="../src/mainwindow.cpp" line="1924"/>
         <source>Hold for: %1</source>
         <translation>Mantén pulsado para: %1</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1892"/>
+        <location filename="../src/mainwindow.cpp" line="1930"/>
         <source>logarithm (natural)</source>
         <translation>logaritmo (natural)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1892"/>
+        <location filename="../src/mainwindow.cpp" line="1930"/>
         <source>logarithm (base 10)</source>
         <translation>logaritmo (base 10)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="411"/>
+        <location filename="../src/mainwindow.cpp" line="422"/>
         <source>The memory needs a previous result</source>
         <translation>La memoria necesita un resultado anterior</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1198"/>
+        <location filename="../src/mainwindow.cpp" line="1209"/>
         <source>Values (one per line, or separated by commas):</source>
         <translation>Valores (uno por línea, o separados por comas):</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1199"/>
-        <location filename="../src/mainwindow.cpp" line="1200"/>
+        <location filename="../src/mainwindow.cpp" line="1210"/>
+        <location filename="../src/mainwindow.cpp" line="1211"/>
         <source>Show or hide the keypad</source>
         <translation>Mostrar u ocultar el teclado numérico</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1205"/>
+        <location filename="../src/mainwindow.cpp" line="1216"/>
         <source>Language</source>
         <translation>Idioma</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1206"/>
+        <location filename="../src/mainwindow.cpp" line="1217"/>
         <source>Theme</source>
         <translation>Tema</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1207"/>
-        <location filename="../src/mainwindow.cpp" line="1210"/>
+        <location filename="../src/mainwindow.cpp" line="1218"/>
+        <location filename="../src/mainwindow.cpp" line="1221"/>
         <source>System</source>
         <translation>Sistema</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1211"/>
+        <location filename="../src/mainwindow.cpp" line="1222"/>
         <source>Light</source>
         <translation>Claro</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1212"/>
+        <location filename="../src/mainwindow.cpp" line="1223"/>
         <source>Dark</source>
         <translation>Oscuro</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1213"/>
+        <location filename="../src/mainwindow.cpp" line="1224"/>
         <source>Decimal separator</source>
         <translation>Separador decimal</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1214"/>
+        <location filename="../src/mainwindow.cpp" line="1225"/>
         <source>As the language</source>
         <translation>Según el idioma</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1215"/>
+        <location filename="../src/mainwindow.cpp" line="1226"/>
         <source>Point</source>
         <translation>Punto</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1223"/>
+        <location filename="../src/mainwindow.cpp" line="1234"/>
         <source>Comma</source>
         <translation>Coma</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1232"/>
+        <location filename="../src/mainwindow.cpp" line="1243"/>
         <source>Input</source>
         <translation>Entrada</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1233"/>
+        <location filename="../src/mainwindow.cpp" line="1244"/>
         <source>Calculate as you type</source>
         <translation>Calcular al escribir</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1234"/>
+        <location filename="../src/mainwindow.cpp" line="1245"/>
         <source>Settings file</source>
         <translation>Archivo de ajustes</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1235"/>
+        <location filename="../src/mainwindow.cpp" line="1246"/>
         <source>Export settings…</source>
         <translation>Exportar ajustes…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1236"/>
+        <location filename="../src/mainwindow.cpp" line="1247"/>
         <source>Import settings…</source>
         <translation>Importar ajustes…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1245"/>
+        <location filename="../src/mainwindow.cpp" line="1256"/>
         <source>Common</source>
         <translation>Habituales</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1246"/>
+        <location filename="../src/mainwindow.cpp" line="1257"/>
         <source>Memory and editing</source>
         <translation>Memoria y edición</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1258"/>
+        <location filename="../src/mainwindow.cpp" line="1269"/>
         <source>Reset</source>
         <translation>Restablecer</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1643"/>
+        <location filename="../src/mainwindow.cpp" line="1655"/>
         <source>No digit is trusted</source>
         <translation>Ningún dígito es fiable</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1861"/>
+        <location filename="../src/mainwindow.cpp" line="1899"/>
         <source>Exact arithmetic cannot represent %1: its result is irrational. Switch to a floating type to compute it.</source>
         <translation>La aritmética exacta no puede representar %1: su resultado es irracional. Cambia a un tipo de coma flotante para calcularlo.</translation>
     </message>
@@ -2087,6 +2206,81 @@
         <source>Uncertainty</source>
         <translation>Incertidumbre</translation>
     </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="206"/>
+        <source>Stored bits</source>
+        <translation>Bits almacenados</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="207"/>
+        <source>The sign, exponent and fraction fields of x as stored in a format.</source>
+        <translation>Los campos de signo, exponente y fracción de x tal como los guarda un formato.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="208"/>
+        <source>Stored parts</source>
+        <translation>Partes almacenadas</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="209"/>
+        <source>x as stored: sign, power of two and significand.</source>
+        <translation>x tal como se guarda: signo, potencia de dos y significando.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="210"/>
+        <source>Stored value</source>
+        <translation>Valor almacenado</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="211"/>
+        <source>The value a format actually stores for x, exactly.</source>
+        <translation>El valor que un formato guarda de verdad para x, exactamente.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="212"/>
+        <source>Conversion error</source>
+        <translation>Error de conversión</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="213"/>
+        <source>Stored value minus x, exactly.</source>
+        <translation>El valor guardado menos x, exactamente.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="214"/>
+        <source>Signed</source>
+        <translation>Con signo</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="215"/>
+        <source>x wrapped into that many bits, read as two&apos;s complement (the top bit counts as negative).</source>
+        <translation>x reducido a ese número de bits, leído en complemento a dos (el bit más alto cuenta como negativo).</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="216"/>
+        <source>Unsigned</source>
+        <translation>Sin signo</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="217"/>
+        <source>x wrapped into that many bits, read without a sign.</source>
+        <translation>x reducido a ese número de bits, leído sin signo.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="218"/>
+        <source>Number from bits</source>
+        <translation>Número a partir de sus bits</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="219"/>
+        <source>The number a bit pattern stands for in a format.</source>
+        <translation>El número que representa un patrón de bits en un formato.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="220"/>
+        <source>Floating point</source>
+        <translation>Coma flotante</translation>
+    </message>
 </context>
 <context>
     <name>keypad</name>
@@ -2101,187 +2295,192 @@
         <translation>sen(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="160"/>
+        <location filename="../src/keypad.cpp" line="193"/>
         <source>asin</source>
         <translation>arcsen</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="160"/>
+        <location filename="../src/keypad.cpp" line="193"/>
         <source>asin(</source>
         <translation>arcsen(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="161"/>
+        <location filename="../src/keypad.cpp" line="194"/>
         <source>acos</source>
         <translation>arccos</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="161"/>
+        <location filename="../src/keypad.cpp" line="194"/>
         <source>acos(</source>
         <translation>arccos(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="162"/>
+        <location filename="../src/keypad.cpp" line="195"/>
         <source>atan</source>
         <translation>arctan</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="162"/>
+        <location filename="../src/keypad.cpp" line="195"/>
         <source>atan(</source>
         <translation>arctan(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="143"/>
+        <location filename="../src/keypad.cpp" line="176"/>
         <source>gcd</source>
         <translation>mcd</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="143"/>
+        <location filename="../src/keypad.cpp" line="176"/>
         <source>gcd(</source>
         <translation>mcd(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="144"/>
+        <location filename="../src/keypad.cpp" line="177"/>
         <source>lcm</source>
         <translation>mcm</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="144"/>
+        <location filename="../src/keypad.cpp" line="177"/>
         <source>lcm(</source>
         <translation>mcm(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="147"/>
+        <location filename="../src/keypad.cpp" line="180"/>
         <source>sinh</source>
         <translation>senh</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="147"/>
+        <location filename="../src/keypad.cpp" line="180"/>
         <source>sinh(</source>
         <translation>senh(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="150"/>
+        <location filename="../src/keypad.cpp" line="183"/>
         <source>asinh</source>
         <translation>arcsenh</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="150"/>
+        <location filename="../src/keypad.cpp" line="183"/>
         <source>asinh(</source>
         <translation>arcsenh(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="151"/>
+        <location filename="../src/keypad.cpp" line="184"/>
         <source>acosh</source>
         <translation>arccosh</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="151"/>
+        <location filename="../src/keypad.cpp" line="184"/>
         <source>acosh(</source>
         <translation>arccosh(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="152"/>
+        <location filename="../src/keypad.cpp" line="185"/>
         <source>atanh</source>
         <translation>arctanh</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="152"/>
+        <location filename="../src/keypad.cpp" line="185"/>
         <source>atanh(</source>
         <translation>arctanh(</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="159"/>
+        <location filename="../src/keypad.cpp" line="192"/>
         <source>Trigonometry</source>
         <translation>Trigonometría</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="172"/>
+        <location filename="../src/keypad.cpp" line="205"/>
         <source>Powers, roots and logs</source>
         <translation>Potencias, raíces y logaritmos</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="178"/>
+        <location filename="../src/keypad.cpp" line="211"/>
         <source>Rounding and parts</source>
         <translation>Redondeo y partes</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="189"/>
+        <location filename="../src/keypad.cpp" line="222"/>
         <source>Constants</source>
         <translation>Constantes</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="200"/>
+        <location filename="../src/keypad.cpp" line="233"/>
         <source>Statistics</source>
         <translation>Estadística</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="201"/>
+        <location filename="../src/keypad.cpp" line="234"/>
         <source>Show as</source>
         <translation>Mostrar como</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="202"/>
+        <location filename="../src/keypad.cpp" line="235"/>
+        <source>Programming</source>
+        <translation>Programación</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="243"/>
         <source>Special functions</source>
         <translation>Funciones especiales</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="217"/>
+        <location filename="../src/keypad.cpp" line="258"/>
         <source>Variables</source>
         <translation>Variables</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="221"/>
+        <location filename="../src/keypad.cpp" line="262"/>
         <source>Letters</source>
         <translation>Letras</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="272"/>
+        <location filename="../src/keypad.cpp" line="313"/>
         <source>Main keys</source>
         <translation>Teclas principales</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="277"/>
+        <location filename="../src/keypad.cpp" line="318"/>
         <source>Universal</source>
         <translation>Universales</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="277"/>
+        <location filename="../src/keypad.cpp" line="318"/>
         <source>Electromagnetic</source>
         <translation>Electromagnéticas</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="278"/>
+        <location filename="../src/keypad.cpp" line="319"/>
         <source>Atomic and nuclear</source>
         <translation>Atómicas y nucleares</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="279"/>
+        <location filename="../src/keypad.cpp" line="320"/>
         <source>Physico-chemical</source>
         <translation>Fisicoquímicas</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="280"/>
+        <location filename="../src/keypad.cpp" line="321"/>
         <source>Particle masses</source>
         <translation>Masas de partículas</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="280"/>
+        <location filename="../src/keypad.cpp" line="321"/>
         <source>Planck units</source>
         <translation>Unidades de Planck</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="300"/>
+        <location filename="../src/keypad.cpp" line="341"/>
         <source>Number names</source>
         <translation>Nombres de números</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="146"/>
+        <location filename="../src/keypad.cpp" line="179"/>
         <source>Hyperbolic</source>
         <translation>Hiperbólicas</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="138"/>
+        <location filename="../src/keypad.cpp" line="171"/>
         <source>Numbers</source>
         <translation>Números</translation>
     </message>
@@ -2318,248 +2517,283 @@
 <context>
     <name>spoken</name>
     <message>
-        <location filename="../src/keypad.cpp" line="349"/>
+        <location filename="../src/keypad.cpp" line="390"/>
         <source>fraction</source>
         <translation>fracción</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="350"/>
+        <location filename="../src/keypad.cpp" line="391"/>
         <source>square root</source>
         <translation>raíz cuadrada</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="351"/>
+        <location filename="../src/keypad.cpp" line="392"/>
         <source>square</source>
         <translation>cuadrado</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="352"/>
+        <location filename="../src/keypad.cpp" line="393"/>
         <source>power</source>
         <translation>potencia</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="353"/>
+        <location filename="../src/keypad.cpp" line="394"/>
         <source>negative</source>
         <translation>negativo</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="354"/>
+        <location filename="../src/keypad.cpp" line="395"/>
         <source>plus or minus</source>
         <translation>más o menos</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="355"/>
+        <location filename="../src/keypad.cpp" line="396"/>
         <source>reciprocal</source>
         <translation>inverso</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="356"/>
+        <location filename="../src/keypad.cpp" line="397"/>
         <source>logarithm in a base</source>
         <translation>logaritmo en una base</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="357"/>
+        <location filename="../src/keypad.cpp" line="398"/>
         <source>times ten to the power</source>
         <translation>por diez elevado a</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="358"/>
+        <location filename="../src/keypad.cpp" line="399"/>
         <source>up</source>
         <translation>arriba</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="359"/>
+        <location filename="../src/keypad.cpp" line="400"/>
         <source>left</source>
         <translation>izquierda</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="360"/>
+        <location filename="../src/keypad.cpp" line="401"/>
         <source>right</source>
         <translation>derecha</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="361"/>
+        <location filename="../src/keypad.cpp" line="402"/>
         <source>down</source>
         <translation>abajo</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="362"/>
+        <location filename="../src/keypad.cpp" line="403"/>
         <source>delete</source>
         <translation>borrar</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="363"/>
+        <location filename="../src/keypad.cpp" line="404"/>
         <source>clear all</source>
         <translation>borrar todo</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="364"/>
+        <location filename="../src/keypad.cpp" line="405"/>
         <source>equals</source>
         <translation>igual</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="365"/>
+        <location filename="../src/keypad.cpp" line="406"/>
         <source>plus</source>
         <translation>más</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="366"/>
+        <location filename="../src/keypad.cpp" line="407"/>
         <source>minus</source>
         <translation>menos</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="367"/>
+        <location filename="../src/keypad.cpp" line="408"/>
         <source>times</source>
         <translation>por</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="368"/>
+        <location filename="../src/keypad.cpp" line="409"/>
         <source>divided by</source>
         <translation>entre</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="369"/>
+        <location filename="../src/keypad.cpp" line="410"/>
         <source>point</source>
         <translation>punto</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="370"/>
+        <location filename="../src/keypad.cpp" line="411"/>
         <source>open parenthesis</source>
         <translation>abrir paréntesis</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="371"/>
+        <location filename="../src/keypad.cpp" line="412"/>
         <source>close parenthesis</source>
         <translation>cerrar paréntesis</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="372"/>
+        <location filename="../src/keypad.cpp" line="413"/>
         <source>cube</source>
         <translation>cubo</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="373"/>
+        <location filename="../src/keypad.cpp" line="414"/>
         <source>cube root</source>
         <translation>raíz cúbica</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="374"/>
+        <location filename="../src/keypad.cpp" line="415"/>
         <source>root</source>
         <translation>raíz</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="375"/>
+        <location filename="../src/keypad.cpp" line="416"/>
         <source>ten to the power</source>
         <translation>diez elevado a</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="376"/>
+        <location filename="../src/keypad.cpp" line="417"/>
         <source>e to the power</source>
         <translation>e elevado a</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="377"/>
+        <location filename="../src/keypad.cpp" line="418"/>
         <source>factorial</source>
         <translation>factorial</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="378"/>
+        <location filename="../src/keypad.cpp" line="419"/>
         <source>percent</source>
         <translation>por ciento</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="379"/>
+        <location filename="../src/keypad.cpp" line="420"/>
         <source>percentages</source>
         <translation>porcentajes</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="380"/>
+        <location filename="../src/keypad.cpp" line="421"/>
+        <source>IEEE 754 tool</source>
+        <translation>herramienta IEEE 754</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="422"/>
+        <source>and</source>
+        <translation>y</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="423"/>
+        <source>or</source>
+        <translation>o</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="424"/>
+        <source>exclusive or</source>
+        <translation>o exclusivo</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="425"/>
+        <source>not</source>
+        <translation>no</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="426"/>
+        <source>shift left</source>
+        <translation>desplazar a la izquierda</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="427"/>
+        <source>shift right</source>
+        <translation>desplazar a la derecha</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="428"/>
         <source>separator</source>
         <translation>separador</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="381"/>
+        <location filename="../src/keypad.cpp" line="429"/>
         <source>pi</source>
         <translation>pi</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="382"/>
+        <location filename="../src/keypad.cpp" line="430"/>
         <source>memory plus</source>
         <translation>memoria más</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="383"/>
+        <location filename="../src/keypad.cpp" line="431"/>
         <source>memory minus</source>
         <translation>memoria menos</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="384"/>
+        <location filename="../src/keypad.cpp" line="432"/>
         <source>memory store</source>
         <translation>guardar en memoria</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="385"/>
+        <location filename="../src/keypad.cpp" line="433"/>
         <source>memory</source>
         <translation>memoria</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="386"/>
+        <location filename="../src/keypad.cpp" line="434"/>
         <source>memory clear</source>
         <translation>borrar memoria</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="387"/>
+        <location filename="../src/keypad.cpp" line="435"/>
         <source>undo</source>
         <translation>deshacer</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="388"/>
+        <location filename="../src/keypad.cpp" line="436"/>
         <source>redo</source>
         <translation>rehacer</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="389"/>
+        <location filename="../src/keypad.cpp" line="437"/>
         <source>shift</source>
         <translation>mayúscula</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="390"/>
+        <location filename="../src/keypad.cpp" line="438"/>
         <source>space</source>
         <translation>espacio</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="391"/>
+        <location filename="../src/keypad.cpp" line="439"/>
         <source>comment</source>
         <translation>comentario</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="392"/>
+        <location filename="../src/keypad.cpp" line="440"/>
         <source>underscore</source>
         <translation>guion bajo</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="393"/>
-        <location filename="../src/keypad.cpp" line="400"/>
+        <location filename="../src/keypad.cpp" line="441"/>
+        <location filename="../src/keypad.cpp" line="448"/>
         <source>convert to</source>
         <translation>convertir a</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="394"/>
+        <location filename="../src/keypad.cpp" line="442"/>
         <source>sum</source>
         <translation>sumatorio</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="395"/>
+        <location filename="../src/keypad.cpp" line="443"/>
         <source>store</source>
         <translation>guardar</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="396"/>
+        <location filename="../src/keypad.cpp" line="444"/>
         <source>assign</source>
         <translation>asignar</translation>
     </message>
     <message>
-        <location filename="../src/keypad.cpp" line="397"/>
+        <location filename="../src/keypad.cpp" line="445"/>
         <source>product</source>
         <translation>productorio</translation>
     </message>
@@ -2627,93 +2861,93 @@
         <translation>~%1 dígitos</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="222"/>
+        <location filename="../src/presenter.cpp" line="230"/>
         <source>exact · no rounding error</source>
         <translation>exacto · sin error de redondeo</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="149"/>
+        <location filename="../src/presenter.cpp" line="157"/>
         <source>well-conditioned</source>
         <translation>bien condicionado</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="150"/>
+        <location filename="../src/presenter.cpp" line="158"/>
         <source>moderately conditioned</source>
         <translation>moderadamente condicionado</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="151"/>
+        <location filename="../src/presenter.cpp" line="159"/>
         <source>ill-conditioned: no algorithm can do better in this type</source>
         <translation>mal condicionado: ningún algoritmo puede hacerlo mejor en este tipo</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="222"/>
+        <location filename="../src/presenter.cpp" line="230"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="224"/>
-        <location filename="../src/presenter.cpp" line="243"/>
+        <location filename="../src/presenter.cpp" line="232"/>
+        <location filename="../src/presenter.cpp" line="251"/>
         <source>Number type</source>
         <translation>Tipo numérico</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="225"/>
+        <location filename="../src/presenter.cpp" line="233"/>
         <source>%1, exact fractions</source>
         <translation>%1, fracciones exactas</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="228"/>
+        <location filename="../src/presenter.cpp" line="236"/>
         <source>unavailable</source>
         <translation>no disponible</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="229"/>
+        <location filename="../src/presenter.cpp" line="237"/>
         <source>unreliable</source>
         <translation>poco fiable</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="231"/>
+        <location filename="../src/presenter.cpp" line="239"/>
         <source>Guaranteed bound</source>
         <translation>Cota garantizada</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="232"/>
+        <location filename="../src/presenter.cpp" line="240"/>
         <source>Measured error</source>
         <translation>Error medido</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="239"/>
+        <location filename="../src/presenter.cpp" line="247"/>
         <source>Input error</source>
         <translation>Error de entrada</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="240"/>
+        <location filename="../src/presenter.cpp" line="248"/>
         <source>Rounding error</source>
         <translation>Error de redondeo</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="241"/>
+        <location filename="../src/presenter.cpp" line="249"/>
         <source>Library error</source>
         <translation>Error de biblioteca</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="238"/>
+        <location filename="../src/presenter.cpp" line="246"/>
         <source>Condition number κ</source>
         <translation>Número de condición κ</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="233"/>
+        <location filename="../src/presenter.cpp" line="241"/>
         <source>Trusted digits</source>
         <translation>Dígitos fiables</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="235"/>
+        <location filename="../src/presenter.cpp" line="243"/>
         <source>%1 by the bound, %2 by the measurement</source>
         <translation>%1 según la cota, %2 según la medición</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="194"/>
+        <location filename="../src/presenter.cpp" line="202"/>
         <source>Evaluated</source>
         <translation>Evaluado</translation>
     </message>
@@ -2738,402 +2972,573 @@
         <translation>%1 · %2 bits de almacenamiento · mantisa de %3 bits</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="188"/>
+        <location filename="../src/presenter.cpp" line="196"/>
         <source>Value</source>
         <translation>Valor</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="189"/>
+        <location filename="../src/presenter.cpp" line="197"/>
         <source>Shown as</source>
         <translation>Mostrado como</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="191"/>
+        <location filename="../src/presenter.cpp" line="199"/>
         <source>Off by</source>
         <translation>Desviación</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="196"/>
+        <location filename="../src/presenter.cpp" line="204"/>
         <source>Read as</source>
         <translation>Leído como</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="201"/>
+        <location filename="../src/presenter.cpp" line="209"/>
         <source>± %1 worst case</source>
         <translation>± %1 peor caso</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="202"/>
+        <location filename="../src/presenter.cpp" line="210"/>
         <source>± %1 statistical</source>
         <translation>± %1 estadística</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="204"/>
+        <location filename="../src/presenter.cpp" line="212"/>
         <source>Uncertainty</source>
         <translation>Incertidumbre</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="211"/>
+        <location filename="../src/presenter.cpp" line="219"/>
         <source>Uncertain inputs</source>
         <translation>Datos inciertos</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="213"/>
+        <location filename="../src/presenter.cpp" line="221"/>
         <source>First order</source>
         <translation>Primer orden</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="215"/>
+        <location filename="../src/presenter.cpp" line="223"/>
         <source>unreliable: an input shifted by its limit leaves a function&apos;s domain</source>
         <translation>poco fiable: un dato desplazado hasta su límite sale del dominio de una función</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="216"/>
+        <location filename="../src/presenter.cpp" line="224"/>
         <source>unreliable: at the corners the result moved by %1</source>
         <translation>poco fiable: en los extremos el resultado se movió %1</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="219"/>
+        <location filename="../src/presenter.cpp" line="227"/>
         <source>Unit</source>
         <translation>Unidad</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="236"/>
+        <location filename="../src/presenter.cpp" line="244"/>
         <source>%1 by the bound, %2 by the measurement, %3 with the uncertainty</source>
         <translation>%1 según la cota, %2 según la medición, %3 con la incertidumbre</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="242"/>
+        <location filename="../src/presenter.cpp" line="250"/>
         <source>Rounded operations</source>
         <translation>Operaciones redondeadas</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="244"/>
+        <location filename="../src/presenter.cpp" line="252"/>
         <source>%1, %2-bit significand</source>
         <translation>%1, mantisa de %2 bits</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="248"/>
+        <location filename="../src/presenter.cpp" line="256"/>
         <source>Incomplete</source>
         <translation>Incompleto</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="249"/>
+        <location filename="../src/presenter.cpp" line="257"/>
         <source>an uncertain argument was accepted</source>
         <translation>se aceptó un argumento incierto</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="258"/>
+        <location filename="../src/presenter.cpp" line="259"/>
+        <source>Written in binary</source>
+        <translation>Escrito en binario</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="260"/>
+        <source>the decimal would need more than 20 000 digits</source>
+        <translation>el decimal necesitaría más de 20 000 cifras</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="269"/>
+        <source>The value the format actually stores for this number, written out exactly.</source>
+        <translation>El valor que el formato guarda de verdad para este número, escrito exactamente.</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="272"/>
         <source>The result as computed in this number type; the screen shows it converted.</source>
         <translation>El resultado tal como se calculó en este tipo de número; la pantalla lo muestra convertido.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="260"/>
+        <location filename="../src/presenter.cpp" line="274"/>
         <source>The shown fraction differs from the computed value by this much.</source>
         <translation>La fracción mostrada difiere del valor calculado en esta cantidad.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="262"/>
+        <location filename="../src/presenter.cpp" line="276"/>
         <source>The form you asked for with “to”: the same value, written another way.</source>
         <translation>La forma que pediste con «to»: el mismo valor, escrito de otra manera.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="264"/>
+        <location filename="../src/presenter.cpp" line="278"/>
         <source>A proven upper limit on how far the shown value can be from the exact result.</source>
         <translation>Un límite superior demostrado de cuánto puede alejarse el valor mostrado del resultado exacto.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="266"/>
+        <location filename="../src/presenter.cpp" line="280"/>
         <source>The actual difference from the same calculation redone with far more precision. An estimate, usually much smaller than the guaranteed bound.</source>
         <translation>La diferencia real con el mismo cálculo repetido con mucha más precisión. Es una estimación, normalmente mucho menor que la cota garantizada.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="269"/>
+        <location filename="../src/presenter.cpp" line="283"/>
         <source>How many leading digits you can rely on: according to the guaranteed bound, and according to the measured error.</source>
         <translation>Cuántos dígitos iniciales son fiables: según la cota garantizada y según el error medido.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="272"/>
+        <location filename="../src/presenter.cpp" line="286"/>
         <source>How much the problem itself magnifies small changes in its input. When it is large, no algorithm can do better in this number type.</source>
         <translation>Cuánto amplifica el propio problema los pequeños cambios en su entrada. Cuando es grande, ningún algoritmo puede hacerlo mejor en este tipo numérico.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="275"/>
-        <source>The error of storing the numbers you typed in this type: 0.1, for example, has no exact binary form.</source>
-        <translation>El error al guardar en este tipo los números que escribiste: 0.1, por ejemplo, no tiene una forma binaria exacta.</translation>
+        <location filename="../src/presenter.cpp" line="289"/>
+        <source>The error of storing the numbers you typed in this type: 0.1, for example, has no exact binary form (floatError shows it for one number).</source>
+        <translation>El error al guardar en este tipo los números que escribiste: 0.1, por ejemplo, no tiene una forma binaria exacta (floatError lo muestra para un número).</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="278"/>
+        <location filename="../src/presenter.cpp" line="292"/>
+        <source>This value is written exactly as an odd whole number times a power of two, because its decimal expansion is too long to show.</source>
+        <translation>Este valor se escribe exactamente como un entero impar por una potencia de dos, porque su desarrollo decimal es demasiado largo para mostrarlo.</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="295"/>
+        <source>The bits the computer stores for this result: sign, exponent and fraction, in the result&apos;s own type.</source>
+        <translation>Los bits que el ordenador guarda para este resultado: signo, exponente y fracción, en el tipo del propio resultado.</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="296"/>
+        <source>The same bits written in hexadecimal, four bits per digit.</source>
+        <translation>Los mismos bits escritos en hexadecimal, cuatro bits por cifra.</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="298"/>
+        <source>What kind of value this is (zero, subnormal, normal…), its power of two, and the exponent field that encodes it (the power plus the bias).</source>
+        <translation>Qué clase de valor es (cero, subnormal, normal…), su potencia de dos y el campo de exponente que la codifica (la potencia más el sesgo).</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="301"/>
+        <source>Unit in the last place: the gap between neighbouring values of this type at this size. Rounding moves a value by at most half of it.</source>
+        <translation>Unidad en la última posición: la distancia entre valores vecinos de este tipo a este tamaño. Redondear mueve un valor como mucho la mitad.</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="304"/>
+        <source>The nearest value this type can store below this one: nothing in between exists in this type.</source>
+        <translation>El valor más cercano por debajo que este tipo puede guardar: entre ambos no hay ninguno en este tipo.</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="306"/>
+        <source>The nearest value this type can store above this one: nothing in between exists in this type.</source>
+        <translation>El valor más cercano por encima que este tipo puede guardar: entre ambos no hay ninguno en este tipo.</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="308"/>
         <source>The SI unit of the result, followed from the units of the constants in it. Plain numbers have none.</source>
         <translation>La unidad SI del resultado, deducida de las unidades de las constantes que contiene. Los números sin más no tienen.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="281"/>
+        <location filename="../src/presenter.cpp" line="311"/>
         <source>How far the result can move because of the uncertainty of your inputs (values written with ±, whose ± is a limit, and measured constants, given three standard uncertainties). The worst case adds every contribution: it is a limit, to first order, whatever the inputs&apos; correlations. The statistical figure combines them in quadrature: an estimate of the usual spread if the inputs are independent, not a limit.</source>
         <translation>Cuánto puede variar el resultado por la incertidumbre de tus datos (valores escritos con ±, cuyo ± es un límite, y constantes medidas, a las que se dan tres incertidumbres típicas). El peor caso suma todas las contribuciones: es un límite, en primer orden, sean cuales sean las correlaciones. El estadístico las combina en cuadratura: es una estimación de la variación habitual si los datos son independientes, no un límite.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="287"/>
+        <location filename="../src/presenter.cpp" line="317"/>
         <source>Each uncertain input and how much it moves the result: its uncertainty times how sensitive the result is to it. The largest comes first.</source>
         <translation>Cada dato incierto y cuánto mueve el resultado: su incertidumbre por la sensibilidad del resultado a él. El mayor va primero.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="290"/>
+        <location filename="../src/presenter.cpp" line="320"/>
         <source>The uncertainty is propagated with derivatives, which is accurate when it is small. The inputs were also shifted to the ends of their limits: the result moved by more than the estimate says, so the limit above is not safe.</source>
         <translation>La incertidumbre se propaga con derivadas, lo que es preciso cuando es pequeña. Los datos también se llevaron a los extremos de su límite: el resultado se movió más de lo que dice la estimación, así que el límite de arriba no es seguro.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="294"/>
+        <location filename="../src/presenter.cpp" line="324"/>
         <source>The error added by rounding the result of each arithmetic operation.</source>
         <translation>El error añadido al redondear el resultado de cada operación aritmética.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="296"/>
+        <location filename="../src/presenter.cpp" line="326"/>
         <source>The error of functions such as sin or exp, which can&apos;t be computed exactly; it is bounded by their tested accuracy.</source>
         <translation>El error de funciones como sen o exp, que no se pueden calcular exactamente; está acotado por su precisión comprobada.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="299"/>
+        <location filename="../src/presenter.cpp" line="329"/>
         <source>How many operations had to round their result.</source>
         <translation>Cuántas operaciones tuvieron que redondear su resultado.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="301"/>
+        <location filename="../src/presenter.cpp" line="331"/>
         <source>The C++ type the calculation ran in, and the bits of its significand: more bits, more correct digits.</source>
         <translation>El tipo de C++ en el que se hizo el cálculo y los bits de su mantisa: más bits, más dígitos correctos.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="304"/>
+        <location filename="../src/presenter.cpp" line="334"/>
         <source>How the calculator read the expression: every operation in parentheses, in the order it is done.</source>
         <translation>Cómo leyó la calculadora la expresión: cada operación entre paréntesis, en el orden en que se hace.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="306"/>
+        <location filename="../src/presenter.cpp" line="336"/>
         <source>The expression as it was computed, with Ans and M replaced by what they stand for.</source>
         <translation>La expresión tal como se calculó, con Ans y M sustituidos por lo que representan.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="308"/>
+        <location filename="../src/presenter.cpp" line="338"/>
         <source>Exact arithmetic works with fractions of whole numbers, so nothing is ever rounded: the result is exactly right.</source>
         <translation>La aritmética exacta trabaja con fracciones de números enteros, así que nunca se redondea nada: el resultado es exactamente correcto.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="311"/>
+        <location filename="../src/presenter.cpp" line="341"/>
         <source>You chose to proceed with an uncertain argument for a whole-number function; that uncertainty is not included in the figures above.</source>
         <translation>Decidiste continuar con un argumento incierto en una función de números enteros; esa incertidumbre no está incluida en las cifras anteriores.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="370"/>
+        <location filename="../src/presenter.cpp" line="400"/>
         <source>%1 has no terms</source>
         <translation>%1 no tiene términos</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="372"/>
+        <location filename="../src/presenter.cpp" line="402"/>
         <source>The uncertainty may be larger than shown: first order is unreliable here</source>
         <translation>La incertidumbre puede ser mayor de lo que se muestra: el primer orden no es fiable aquí</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="378"/>
+        <location filename="../src/presenter.cpp" line="408"/>
         <source>The units of %1 and %2 differ</source>
         <translation>Las unidades de %1 y %2 no coinciden</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="380"/>
+        <location filename="../src/presenter.cpp" line="410"/>
         <source>%1 needs a number without a unit</source>
         <translation>%1 necesita un número sin unidad</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="393"/>
+        <location filename="../src/presenter.cpp" line="423"/>
         <source>Unexpected character “%1”</source>
         <translation>Carácter inesperado «%1»</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="394"/>
+        <location filename="../src/presenter.cpp" line="424"/>
         <source>“%1” is not a valid number</source>
         <translation>«%1» no es un número válido</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="395"/>
+        <location filename="../src/presenter.cpp" line="425"/>
         <source>Unexpected “%1”</source>
         <translation>«%1» inesperado</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="396"/>
+        <location filename="../src/presenter.cpp" line="426"/>
         <source>The expression ends too early</source>
         <translation>La expresión termina antes de tiempo</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="397"/>
+        <location filename="../src/presenter.cpp" line="427"/>
         <source>Missing “)”</source>
         <translation>Falta «)»</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="398"/>
+        <location filename="../src/presenter.cpp" line="428"/>
         <source>Missing operator before “%1” (write 2×π, not 2π)</source>
         <translation>Falta un operador antes de «%1» (escribe 2×π, no 2π)</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="400"/>
+        <location filename="../src/presenter.cpp" line="430"/>
         <source>There is no previous result yet</source>
         <translation>Todavía no hay un resultado anterior</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="401"/>
+        <location filename="../src/presenter.cpp" line="431"/>
         <source>The memory is empty</source>
         <translation>La memoria está vacía</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="402"/>
+        <location filename="../src/presenter.cpp" line="432"/>
         <source>Unknown name “%1”</source>
         <translation>Nombre desconocido «%1»</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="403"/>
+        <location filename="../src/presenter.cpp" line="433"/>
         <source>Wrong number of arguments for %1</source>
         <translation>Número de argumentos incorrecto para %1</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="405"/>
+        <location filename="../src/presenter.cpp" line="435"/>
         <source>Exact arithmetic cannot represent %1: its result is irrational. Switch to a floating type to compute it.</source>
         <translation>La aritmética exacta no puede representar %1: su resultado es irracional. Cambia a un tipo de coma flotante para calcularlo.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="406"/>
+        <location filename="../src/presenter.cpp" line="436"/>
         <source>%1 cannot be represented in this number type</source>
         <translation>%1 no se puede representar en este tipo numérico</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="407"/>
+        <location filename="../src/presenter.cpp" line="437"/>
         <source>Division by zero</source>
         <translation>División por cero</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="408"/>
+        <location filename="../src/presenter.cpp" line="438"/>
         <source>%1 is not defined here</source>
         <translation>%1 no está definido aquí</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="409"/>
+        <location filename="../src/presenter.cpp" line="439"/>
         <source>The result is too large for this number type</source>
         <translation>El resultado es demasiado grande para este tipo numérico</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="410"/>
+        <location filename="../src/presenter.cpp" line="440"/>
         <source>The exact result of %1 is irrational</source>
         <translation>El resultado exacto de %1 es irracional</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="411"/>
+        <location filename="../src/presenter.cpp" line="441"/>
         <source>The arguments of %1 are too large to compute accurately</source>
         <translation>Los argumentos de %1 son demasiado grandes para calcularlos con precisión</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="412"/>
+        <location filename="../src/presenter.cpp" line="442"/>
         <source>%1 needs whole numbers</source>
         <translation>%1 necesita números enteros</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="414"/>
+        <location filename="../src/presenter.cpp" line="444"/>
         <source>%1 needs an exactly known whole number, but its argument carries an error. If you proceed anyway, the error report will not include that error.</source>
         <translation>%1 necesita un número entero conocido con exactitud, pero su argumento arrastra un error. Si continúas de todos modos, el informe de error no incluirá ese error.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="416"/>
+        <location filename="../src/presenter.cpp" line="446"/>
         <source>%1 jumps within the error of its arguments, so the result could be off by a whole step. If you proceed anyway, the error report will not include that error.</source>
         <translation>%1 salta dentro del error de sus argumentos, así que el resultado podría desviarse un salto entero. Si continúas de todos modos, el informe de error no incluirá ese error.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="417"/>
+        <location filename="../src/presenter.cpp" line="447"/>
         <source>The error of the argument of %1 reaches a point where it is not defined or not smooth, so no bound can be given. If you proceed anyway, the error report will not include that.</source>
         <translation>El error del argumento de %1 alcanza un punto donde no está definida o no es suave, así que no se puede dar una cota. Si continúas de todos modos, el informe de error no lo incluirá.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="418"/>
+        <location filename="../src/presenter.cpp" line="448"/>
         <source>Cancelled</source>
         <translation>Cancelado</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="419"/>
+        <location filename="../src/presenter.cpp" line="449"/>
         <source>Unknown conversion “%1”</source>
         <translation>Conversión desconocida «%1»</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="420"/>
+        <location filename="../src/presenter.cpp" line="450"/>
         <source>%1 has too many terms</source>
         <translation>%1 tiene demasiados términos</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="421"/>
+        <location filename="../src/presenter.cpp" line="451"/>
         <source>“%1” is a reserved name</source>
         <translation>«%1» es un nombre reservado</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="435"/>
+        <location filename="../src/presenter.cpp" line="465"/>
         <source>The values are added from left to right, then divided by n.</source>
         <translation>Los valores se suman de izquierda a derecha y luego se dividen entre n.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="437"/>
+        <location filename="../src/presenter.cpp" line="467"/>
         <source>The values are sorted; the middle one is taken, or the mean of the two middle ones.</source>
         <translation>Los valores se ordenan; se toma el central, o la media de los dos centrales.</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="439"/>
+        <location filename="../src/presenter.cpp" line="469"/>
         <source>Two passes: the mean first, then the squared deviations from it, divided by n − 1 (a sample).</source>
         <translation>Dos pasadas: primero la media, luego las desviaciones al cuadrado respecto a ella, divididas entre n − 1 (una muestra).</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="441"/>
+        <location filename="../src/presenter.cpp" line="471"/>
         <source>Two passes: the mean first, then the squared deviations from it, divided by n (the whole population).</source>
         <translation>Dos pasadas: primero la media, luego las desviaciones al cuadrado respecto a ella, divididas entre n (toda la población).</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="443"/>
+        <location filename="../src/presenter.cpp" line="473"/>
         <source>The square root of the sample variance (two passes, divided by n − 1).</source>
         <translation>La raíz cuadrada de la varianza muestral (dos pasadas, dividida entre n − 1).</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="445"/>
+        <location filename="../src/presenter.cpp" line="475"/>
         <source>The square root of the population variance (two passes, divided by n).</source>
         <translation>La raíz cuadrada de la varianza poblacional (dos pasadas, dividida entre n).</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="475"/>
+        <location filename="../src/presenter.cpp" line="505"/>
         <source>Change from 1 to 2 (%)</source>
         <translation>Variación de 1 a 2 (%)</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="476"/>
+        <location filename="../src/presenter.cpp" line="506"/>
         <source>Change from 2 to 1 (%)</source>
         <translation>Variación de 2 a 1 (%)</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="477"/>
+        <location filename="../src/presenter.cpp" line="507"/>
         <source>2 as a percentage of 1</source>
         <translation>2 como porcentaje de 1</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="478"/>
+        <location filename="../src/presenter.cpp" line="508"/>
         <source>1 as a percentage of 2</source>
         <translation>1 como porcentaje de 2</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="479"/>
+        <location filename="../src/presenter.cpp" line="509"/>
         <source>1 plus 2 %</source>
         <translation>1 más el 2 %</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="480"/>
+        <location filename="../src/presenter.cpp" line="510"/>
         <source>1 minus 2 %</source>
         <translation>1 menos el 2 %</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="481"/>
+        <location filename="../src/presenter.cpp" line="511"/>
         <source>2 % of 1</source>
         <translation>el 2 % de 1</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1737"/>
+        <location filename="../src/presenter.cpp" line="615"/>
+        <source>zero</source>
+        <translation>cero</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="616"/>
+        <source>subnormal</source>
+        <translation>subnormal</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="617"/>
+        <source>normal</source>
+        <translation>normal</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="618"/>
+        <source>infinite</source>
+        <translation>infinito</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="619"/>
+        <source>quiet NaN</source>
+        <translation>NaN silencioso</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="620"/>
+        <source>signaling NaN</source>
+        <translation>NaN señalizador</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="621"/>
+        <source>noncanonical</source>
+        <translation>no canónico</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="636"/>
+        <source>Stored value</source>
+        <translation>Valor almacenado</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="636"/>
+        <source>Conversion error</source>
+        <translation>Error de conversión</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="639"/>
+        <source>Base</source>
+        <translation>Base</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="639"/>
+        <source>Trusted digits in this base</source>
+        <translation>Dígitos fiables en esta base</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="640"/>
+        <source>Width (bits)</source>
+        <translation>Ancho (bits)</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="660"/>
+        <source>Stored bits</source>
+        <translation>Bits almacenados</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="635"/>
+        <location filename="../src/presenter.cpp" line="661"/>
+        <source>Hex</source>
+        <translation>Hex</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="635"/>
+        <location filename="../src/presenter.cpp" line="664"/>
+        <source>Class</source>
+        <translation>Clase</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="665"/>
+        <source>%1 · exponent %2 (field %3) · %4</source>
+        <translation>%1 · exponente %2 (campo %3) · %4</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="637"/>
+        <location filename="../src/presenter.cpp" line="672"/>
+        <source>ulp</source>
+        <translation>ulp</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="637"/>
+        <location filename="../src/presenter.cpp" line="675"/>
+        <source>Next below</source>
+        <translation>Anterior representable</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="638"/>
+        <location filename="../src/presenter.cpp" line="676"/>
+        <source>Next above</source>
+        <translation>Siguiente representable</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="678"/>
+        <source>overflow</source>
+        <translation>desbordamiento</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="678"/>
+        <source>underflow</source>
+        <translation>subdesbordamiento</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="679"/>
+        <source>no subnormals</source>
+        <translation>sin subnormales</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="638"/>
+        <location filename="../src/presenter.cpp" line="682"/>
+        <source>Note</source>
+        <translation>Nota</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="1751"/>
         <source>≈: off by %1</source>
         <translation>≈: desviación de %1</translation>
     </message>

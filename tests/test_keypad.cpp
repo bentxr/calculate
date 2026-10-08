@@ -122,8 +122,8 @@ TEST(Keypad, EveryOtherKeyHasAHomeSection) {
         ids << s.id;
         titles << s.title;
     }
-    EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "rounding", "constants", "statistics", "showAs", "special", "variables", "letters"}));
-    EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Rounding and parts", "Constants", "Statistics", "Show as", "Special functions", "Variables", "Letters"}));
+    EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "rounding", "constants", "statistics", "showAs", "programming", "special", "variables", "letters"}));
+    EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Rounding and parts", "Constants", "Statistics", "Show as", "Programming", "Special functions", "Variables", "Letters"}));
     EXPECT_EQ(sectionLabels("numbers"), QStringList({"x!", "abs", "%", "%…", "mod", "rem", "floormod", "nPr", "nCr", "gcd", "lcm", ","}));
     EXPECT_EQ(sectionLabels("hyperbolic"), QStringList({"sinh", "cosh", "tanh", "asinh", "acosh", "atanh", "sech", "csch",
                                                         "coth", "asech", "acsch", "acoth"}));
@@ -265,7 +265,8 @@ TEST(Keypad, EverySyntaxElementHasAKey) {
     for (const Key& key : everyKey())
         if (key.face.action == KeyAction::Insert || key.face.action == KeyAction::Type) entered.insert(key.face.insert);
     QStringList syntax{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "e", "+", "−", "×", "÷", "(", ")",
-                       ", ", "!", "%", "-", "π", "Ans", "M", "_", " ", "#", "→", ":=", "±", "‰", "‱"};
+                       ", ", "!", "%", "-", "π", "Ans", "M", "_", " ", "#", "→", ":=", "±", "‰", "‱",
+                       "0x", "0b", "0o", "&", "|", " xor ", "~", "<<", ">>", "A", "B", "C", "D", "E", "F"};
     for (char c = 'a'; c <= 'z'; ++c) syntax << QString(QChar(c));  // capitals through ⇧
     for (const QString& piece : syntax) EXPECT_TRUE(entered.contains(piece)) << piece.toStdString();
     QSet<Template> shapes;
@@ -343,7 +344,9 @@ TEST(Keypad, TheConversionKeys) {
 // Every target of → has a one-tap key; it is generated, so a new target needs no new line.
 TEST(Keypad, EveryConversionTargetHasAKey) {
     for (const calculate_core::TargetDescription& target : calculate_core::conversionTargets()) {
-        const Key key = directKey("to:" + QString::fromStdString(target.name));
+        const QString name = QString::fromStdString(target.name);
+        const QString twin = targetTwins().value(name, name);  // binary32 → fp32
+        const Key key = find("to:" + twin);
         EXPECT_FALSE(key.id.isEmpty()) << target.name;
         EXPECT_TRUE(key.face.insert.startsWith("→")) << target.name;
     }
@@ -453,4 +456,38 @@ TEST(Keypad, EveryEngineConstantIsReachable) {
         if (reachable.contains(symbol)) reachable.insert(name);  // their keys type the symbol, which reads as the name
     for (const calculate_core::ConstantDescription& c : calculate_core::constants())
         EXPECT_TRUE(reachable.contains(QString::fromStdString(c.name))) << c.name;
+}
+
+TEST(Keypad, TheProgrammingSectionHasTheFloatingPointKeys) {
+    EXPECT_EQ(section("programming").title, "Programming");
+    EXPECT_EQ(sectionLabels("programming").mid(0, 15),  // the integer keys follow these
+              QStringList({"fromBits", "floatBits", "floatParts", "floatValue", "floatError", "fp", "→fp16", "→bf16", "→fp32",
+                           "→fp64", "→fp80", "→fp128", "→fp256", "→fp512", "→bits"}));
+    EXPECT_EQ(find("floatBits").face.insert, "floatBits(");
+    EXPECT_EQ(find("fp").face.action, KeyAction::Tool);
+    EXPECT_EQ(find("fp").face.opens, "ieee");
+    for (const char* name : {"fp32", "binary32", "bits"}) EXPECT_TRUE(programmingTargets().contains(name)) << name;
+    EXPECT_TRUE(find("to:binary32").id.isEmpty());  // a synonym gets no key of its own: fp32's covers it
+}
+
+TEST(Keypad, TheProgrammingKeys) {
+    const QStringList programming = sectionLabels("programming");
+    const QStringList added{"BIN", "OCT", "DEC", "HEX", "DUO", "0b", "0o", "0x", "A", "B", "C", "D", "E", "F",
+                            "AND", "OR", "XOR", "NOT", "<<", ">>", "signed", "unsigned", "8", "16", "32", "64"};
+    EXPECT_EQ(programming.mid(programming.size() - added.size()), added);  // after the floating-point keys
+    EXPECT_EQ(find("to:hex").face.insert, "→hex");
+    EXPECT_EQ(find("to:dec").face.insert, "→simple");  // decimal, every digit (the simple target)
+    EXPECT_EQ(find("prefixHex").face.insert, "0x");
+    EXPECT_EQ(find("hexA").face.insert, "A");
+    const QStringList inserts{"&", "|", " xor ", "~", "<<", ">>"};
+    const QStringList ids{"and", "or", "xor", "not", "shiftLeft", "shiftRight"};
+    for (int i = 0; i < ids.size(); ++i) EXPECT_EQ(find(ids[i]).face.insert, inserts[i]) << ids[i].toStdString();
+    EXPECT_EQ(find("width16").face.insert, " 16");
+    EXPECT_EQ(find("signed").face.insert, "signed(");
+}
+
+TEST(Keypad, TheBitwiseKeysSpeakTheirNames) {
+    const QStringList ids{"and", "or", "xor", "not", "shiftLeft", "shiftRight", "fp"};
+    const QStringList words{"and", "or", "exclusive or", "not", "shift left", "shift right", "IEEE 754 tool"};
+    for (int i = 0; i < ids.size(); ++i) EXPECT_EQ(spokenName(find(ids[i])), words[i]) << ids[i].toStdString();
 }

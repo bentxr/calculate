@@ -5,6 +5,7 @@
 #include <QFrame>
 
 class QLabel;
+class QPushButton;
 class QScrollArea;
 class QToolButton;
 
@@ -19,6 +20,13 @@ public:
 
     void setRows(const QList<view::DetailRow>& rows);
     void popUp(QWidget* under);  // just below `under` and as wide as it, inside the window
+    void setInspectable(bool on);  // whether "Open in the IEEE 754 tool" is offered (floating results)
+
+signals:
+    void inspectRequested();
+
+protected:
+    void changeEvent(QEvent* event) override;
 
 private:
     void explain(const QString& key, QToolButton* info);
@@ -27,4 +35,5 @@ private:
     QWidget* rows_ = nullptr;        // rebuilt for every result
     QFrame* tip_ = nullptr;    // the explanation popup, object "explanation"
     QLabel* tipText_ = nullptr;
+    QPushButton* inspect_ = nullptr;
 };

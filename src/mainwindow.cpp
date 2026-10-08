@@ -3,6 +3,7 @@
 #include "detailscard.hpp"
 #include "formulatip.hpp"
 #include "icons.hpp"
+#include "inspector.hpp"
 #include "keybutton.hpp"
 #include "keypad.hpp"
 #include "keysizing.hpp"
@@ -121,7 +122,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     panelToggle_->setAutoRaise(true);
     modes_ = new QListWidget(rail_);
     modes_->setObjectName("modes");
-    modes_->addItems({QString(), QString(), QString()});  // Calculator, Statistics, Percentages (see retranslate)
+    modes_->addItems({QString(), QString(), QString(), QString()});  // Calculator, Statistics, Percentages, IEEE 754 (see retranslate)
     modes_->setFixedWidth(140);
     settingsButton_ = new QToolButton(rail_);
     settingsButton_->setObjectName("settingsButton");
@@ -254,6 +255,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     lcd_->addToBar(busy_);
     lcd_->addToBar(cancel_);
     card_ = new DetailsCard(this);
+    connect(card_, &DetailsCard::inspectRequested, this, &MainWindow::inspectResult);
     card_->setObjectName("detailsCard");
     formulaTip_ = new FormulaTip(this);
     formulaTip_->setObjectName("formulaTip");
@@ -389,6 +391,15 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     percentages->setWidgetResizable(true);
     percentages->setWidget(buildPercentages());
     pages_->addWidget(percentages);
+    auto* inspection = new QScrollArea(pages_);
+    inspection->setObjectName("inspectorScroll");
+    inspection->setFrameShape(QFrame::NoFrame);
+    inspection->setWidgetResizable(true);
+    inspection->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    inspector_ = new Inspector;
+    inspector_->setObjectName("inspector");
+    inspection->setWidget(inspector_);
+    pages_->addWidget(inspection);
     main->addWidget(pages_, 1);
     setCentralWidget(central);
     modes_->setCurrentRow(0);
@@ -1159,7 +1170,7 @@ void MainWindow::retranslate() {
     setWindowTitle(tr("calculate"));
     panelToggle_->setToolTip(tr("Show or hide the panel"));
     settingsButton_->setToolTip(tr("Settings"));
-    const QStringList modes{tr("Calculator"), tr("Statistics"), tr("Percentages")};
+    const QStringList modes{tr("Calculator"), tr("Statistics"), tr("Percentages"), tr("IEEE 754")};
     for (int i = 0; i < modes.size(); ++i) modes_->item(i)->setText(modes[i]);
     for (int i = 0; i < modes_->count(); ++i) findChild<QAction*>(QStringLiteral("mode:%1").arg(i))->setText(modes_->item(i)->text());
     drawerToggle_->setText(tr("More") + QStringLiteral(" ▾"));
@@ -1321,6 +1332,7 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event) {
 void MainWindow::changeEvent(QEvent* event) {
     if (event->type() == QEvent::LanguageChange) retranslate();
     if (event->type() == QEvent::PaletteChange && settingsButton_) drawIcons();
+    if (event->type() == QEvent::PaletteChange && hasResult_) present();  // the bits' colours follow the theme
     QMainWindow::changeEvent(event);
 }
 
@@ -1725,7 +1737,9 @@ void MainWindow::present() {
     const bool unfinished = previewShown_ && shown.error
                             && (view::incomplete(*shown.error) || lcd_->entry().hasEmptyBox() || namePending(*shown.error, expression));
     proceed_->setVisible(!previewShown_ && shown.error && canProceed(shown.error->code));  // it acts on the last request
-    card_->setRows(view::details(shown, types_[static_cast<std::size_t>(shown.type)]));
+    card_->setInspectable(last_.stored.has_value());
+    const bool dark = palette().color(QPalette::Window).lightness() < 128;
+    card_->setRows(view::details(shown, types_[static_cast<std::size_t>(shown.type)]) + view::conversionRows(shown) + view::storedRows(shown, view::bitColours(dark)));
     const bool valueless = shown.error || shown.commentOnly;  // an error, or a note
     detailsButton_->setEnabled(!valueless);
     enableCopy(valueless ? nullptr : &shown);
@@ -1823,6 +1837,13 @@ void MainWindow::apply(const Face& f) {
             percentFirst_->setFocus();
             return;
         }
+        if (f.opens == "ieee") {  // the last result's bits, or the tool as it was left
+            if (hasResult_ && !last_.error)
+                inspectResult();
+            else
+                showInspector();
+            return;
+        }
         break;
     }
     lcd_->setFocus();
@@ -1846,6 +1867,23 @@ void MainWindow::replay(int index) {
     historyIndex_ = index;
     lcd_->setEntry(historyEntries_[static_cast<std::size_t>(index)]);
     if (settings::liveCalculation()) liveTimer_.start();
+}
+
+void MainWindow::showInspector() {
+    if (!inspectorOpened_) {
+        const NumberType type = exactType() ? NumberType::Double : type_->currentType();
+        inspector_->setFormatIndex(inspector_->formatIndex(type));
+        inspectorOpened_ = true;
+    }
+    modes_->setCurrentRow(3);
+}
+
+void MainWindow::inspectResult() {
+    if (last_.stored) {
+        inspector_->loadBits(inspector_->formatIndex(last_.type), QString::fromStdString(last_.stored->stored.hex));
+        inspectorOpened_ = true;
+    }
+    modes_->setCurrentRow(3);
 }
 
 void MainWindow::reevaluate() {

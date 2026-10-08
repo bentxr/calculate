@@ -3,6 +3,7 @@
 #include "constanttext.hpp"
 #include "detailscard.hpp"
 #include "formulatip.hpp"
+#include "inspector.hpp"
 #include "keybutton.hpp"
 #include "keypad.hpp"
 #include "keysizing.hpp"
@@ -33,6 +34,8 @@
 #include <QScroller>
 #include <QStackedWidget>
 #include <QTest>
+#include <QTextBlock>
+#include <QTextLayout>
 #include <QToolButton>
 #include <QToolTip>
 
@@ -1815,7 +1818,7 @@ TEST(MainWindow, ARightClickOffersTheKeysOtherFaces) {
 TEST(MainWindow, ThePercentagesModeAnswersWithTheirBounds) {
     MainWindow window;
     auto* modes = child<QListWidget>(window, "modes");
-    ASSERT_EQ(modes->count(), 3);
+    ASSERT_EQ(modes->count(), 4);  // with the IEEE 754 tool
     modes->setCurrentRow(2);
     child<QLineEdit>(window, "percentFirst")->setText("80");
     child<QLineEdit>(window, "percentSecond")->setText("10");
@@ -1912,7 +1915,7 @@ TEST(MainWindow, TheConventionsAreSettings) {
     EXPECT_EQ(lcd(window)->outputText(), "0");
     run(window, "log(100)");
     EXPECT_TRUE(lcd(window)->outputText().startsWith("4.60517")) << lcd(window)->outputText().toStdString();
-    EXPECT_TRUE(window.exportSettings().contains("\"log\": \"e\""));  // Plan 5's file gets it for free
+    EXPECT_TRUE(window.exportSettings().contains("\"log\": \"e\""));  // the settings file gets it for free
     setting(window, "log:10")->trigger();
 }
 
@@ -2002,7 +2005,7 @@ TEST(MainWindow, ANoteShowsDimmedUnderTheScreen) {
     MainWindow window;
     run(window, "sum(x; 5; 1)");
     EXPECT_EQ(lcd(window)->outputText(), "0");
-    EXPECT_EQ(message(window)->text(), "Σ(x, 5, 1) has no terms");  // typed sums read back as Σ templates (1.27)
+    EXPECT_EQ(message(window)->text(), "Σ(x, 5, 1) has no terms");  // typed sums read back as Σ templates
     EXPECT_TRUE(message(window)->property("dimmed").toBool());
     run(window, "1+1");
     EXPECT_EQ(message(window)->text(), "");
@@ -2175,7 +2178,7 @@ TEST(MainWindow, UncertaintySettings) {
     EXPECT_TRUE(answered(window));
     run(window, "1.1×3.20");
     EXPECT_EQ(detail(window, "sources"), "1.1: 1.6e-1 · 3.20: 5.5e-3");
-    EXPECT_TRUE(window.exportSettings().contains("\"readprecision\": \"decimals\""));  // Plan 5's file takes them
+    EXPECT_TRUE(window.exportSettings().contains("\"readprecision\": \"decimals\""));  // the settings file takes them
     setting(window, "uncertainty:worst")->trigger();
     setting(window, "readprecision:off")->trigger();
 }
@@ -2221,4 +2224,109 @@ TEST(MainWindow, ANameWithoutAKeyIsFoundBySearch) {
     QTest::mouseClick(list->viewport(), Qt::LeftButton, {}, list->visualItemRect(entry).center());
     EXPECT_EQ(lcd(window)->input(), "googol");
     EXPECT_FALSE(list->isVisible());
+}
+
+TEST(MainWindow, TheCardShowsHowTheResultIsStored) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    run(window, "0.1 + 0.2");
+    auto* card = child<DetailsCard>(window, "detailsCard");
+    EXPECT_EQ(detail(window, "hex"), QString("0x3FD3 3333 3333 3334").replace(' ', QChar(0x2009)));
+    auto* bits = card->findChild<QLabel*>("value:bits");
+    ASSERT_NE(bits, nullptr);
+    EXPECT_EQ(bits->textFormat(), Qt::RichText);
+    EXPECT_EQ(card->findChild<QLabel*>("value:bound")->textFormat(), Qt::PlainText);
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
+    run(window, "1/3");
+    EXPECT_EQ(detail(window, "hex"), "");
+}
+
+TEST(MainWindow, TheInspectorIsAPageOfTheRail) {
+    MainWindow window;
+    auto* modes = child<QListWidget>(window, "modes");
+    ASSERT_EQ(modes->count(), 4);  // Calculator, Statistics, Percentages, IEEE 754
+    EXPECT_EQ(modes->item(3)->text(), "IEEE 754");
+    modes->setCurrentRow(3);
+    EXPECT_EQ(child<QStackedWidget>(window, "pages")->currentIndex(), 3);
+    EXPECT_NE(child<Inspector>(window, "inspector"), nullptr);
+}
+
+TEST(MainWindow, AResultOpensInTheInspector) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    run(window, "0.1 + 0.2");
+    QTest::mouseClick(child<QToolButton>(window, "detailsButton"), Qt::LeftButton);
+    auto* card = child<DetailsCard>(window, "detailsCard");
+    auto* inspect = card->findChild<QPushButton*>("inspectButton");
+    ASSERT_NE(inspect, nullptr);
+    QTest::mouseClick(inspect, Qt::LeftButton);
+    EXPECT_FALSE(card->isVisible());
+    EXPECT_EQ(child<QListWidget>(window, "modes")->currentRow(), 3);
+    auto* inspector = child<Inspector>(window, "inspector");
+    EXPECT_EQ(inspector->findChild<QPlainTextEdit*>("inspectorHex")->toPlainText(), "3FD3 3333 3333 3334");
+    EXPECT_EQ(inspector->findChild<QComboBox*>("inspectorFormat")->currentIndex(), inspector->formatIndex(calculate_core::NumberType::Double));
+}
+
+TEST(MainWindow, ShowInspectorOpensItOnTheCurrentType) {
+    MainWindow window;
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Float);
+    window.showInspector();
+    EXPECT_EQ(child<QListWidget>(window, "modes")->currentRow(), 3);
+    auto* inspector = child<Inspector>(window, "inspector");
+    EXPECT_EQ(inspector->findChild<QComboBox*>("inspectorFormat")->currentIndex(), inspector->formatIndex(calculate_core::NumberType::Float));
+}
+
+TEST(MainWindow, ExactResultsOfferNoInspection) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
+    run(window, "1/3");
+    auto* inspect = child<DetailsCard>(window, "detailsCard")->findChild<QPushButton*>("inspectButton");
+    ASSERT_NE(inspect, nullptr);
+    EXPECT_FALSE(inspect->isVisibleTo(child<DetailsCard>(window, "detailsCard")));
+}
+
+TEST(MainWindow, TheInspectorFitsAPhone) {
+    MainWindow window;
+    window.resize(390, 844);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    child<QToolButton>(window, "panelToggle")->setChecked(true);  // the rail folded, as on a phone
+    window.showInspector();
+    auto* inspector = child<Inspector>(window, "inspector");
+    inspector->setFormatIndex(inspector->formatIndex(calculate_core::NumberType::Binary512));
+    inspector->setDecimal("0.1");
+    QTest::qWait(50);
+    auto* page = qobject_cast<QScrollArea*>(child<QStackedWidget>(window, "pages")->currentWidget());
+    ASSERT_NE(page, nullptr);
+    EXPECT_LE(inspector->width(), page->viewport()->width());
+    const QRect inside(window.mapToGlobal(QPoint(0, 0)), window.size());
+    EXPECT_TRUE(inside.contains(QRect(inspector->mapToGlobal(QPoint(0, 0)), QSize(inspector->width(), 1))));
+    auto* binary = inspector->findChild<QPlainTextEdit*>("inspectorBinary");
+    EXPECT_GT(binary->document()->firstBlock().layout()->lineCount(), 1);  // 512 bits wrap
+}
+
+TEST(MainWindow, TheFpKeyOpensTheInspector) {
+    MainWindow window;
+    run(window, "0.1");
+    openSection(window, "programming");
+    QTest::mouseClick(child<QPushButton>(window, "direct:fp"), Qt::LeftButton);
+    EXPECT_EQ(child<QListWidget>(window, "modes")->currentRow(), 3);  // the IEEE 754 page of the rail
+    EXPECT_EQ(child<Inspector>(window, "inspector")->findChild<QPlainTextEdit*>("inspectorHex")->toPlainText(), "3FB9 9999 9999 999A");
+}
+
+TEST(MainWindow, ProgrammingKeysBuildABitwiseExpression) {
+    MainWindow window;
+    openSection(window, "programming");
+    for (const char* name : {"direct:prefixHex", "direct:hexF", "direct:hexF", "direct:and", "key:1", "key:5",
+                             "direct:to:bin", "direct:width16"})
+        QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "0xFF&15→bin 16");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "0b0000000000001111");
 }

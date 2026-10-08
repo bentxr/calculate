@@ -38,6 +38,7 @@ struct DetailRow {
     QString key;
     QString label;
     QString value;
+    bool rich = false;  // value is rich text (coloured bits)
 };
 
 QString typeLabel(const calculate_core::TypeInfo& type);
@@ -95,5 +96,28 @@ struct HintParts {
     QString before, current, after;
 };
 HintParts argumentHint(const QString& name, int argument);
+
+// A stored value's fields, each grouped by four bits from its left with thin spaces (U+2009).
+struct BitGroups {
+    QString sign;
+    QString exponent;
+    QString fraction;
+};
+struct BitColours {  // "#rrggbb"
+    QString sign;
+    QString exponent;
+    QString fraction;
+};
+BitGroups bitGroups(const calculate_core::FloatBits& bits);
+BitColours bitColours(bool dark);  // light: #b03a2e #1f5fbf #1e7a46; dark: #ff8a80 #82b1ff #8fe3a8
+QString bitsHtml(const BitGroups& groups, const BitColours& colours);  // one span per field, a space between
+QString floatClassName(calculate_core::FloatClass c);
+QString exactNumber(const calculate_core::FloatBits& bits);  // for reading: U+2212 minus, ∞, "2^−e" when too long
+QString decimalText(const calculate_core::FloatBits& bits);  // ASCII, as the inspector reads it back
+QString exactDecimal(const calculate_core::Digits& digits);  // every digit: positional for −7 <= exponent < 21, else d.ddd…e−N
+// A conversion's labelled fields (to fp32: hex, class, stored…) as rows keyed "field:<label>".
+QList<DetailRow> conversionRows(const calculate_core::Result& result);
+// The result as stored, bit by bit: empty for Exact and errors.
+QList<DetailRow> storedRows(const calculate_core::Result& result, const BitColours& colours);
 
 }  // namespace view
