@@ -150,17 +150,22 @@ TEST(Typing, ReadFinishesEveryBox) {
 // back into exactly the same items, so "copy expression" and paste undo each other.
 TEST(Typing, CopiedTextReadsBackIntoTheSameTemplates) {
     for (Template t : {Template::Fraction, Template::Sqrt, Template::Cbrt, Template::Root, Template::Power, Template::Exp,
-                       Template::Pow10, Template::LogBase, Template::Abs}) {
+                       Template::Pow10, Template::LogBase, Template::Abs, Template::Sum, Template::Product}) {
         Entry e;
         e.insert("1");
         e.insert("+");
         e.insertTemplate(t);
         e.insert("7");
-        if (t == Template::Fraction || t == Template::Root || t == Template::LogBase) {
+        const bool range = t == Template::Sum || t == Template::Product;
+        if (t == Template::Fraction || t == Template::Root || t == Template::LogBase || range) {
             e.right();
             e.insertTemplate(Template::Sqrt);
             e.insert("9");
             e.right();
+        }
+        if (range) {  // the body, after the lower and the upper limit
+            e.right();
+            e.insert("x");
         }
         e.right();
         e.insert("−");
@@ -183,14 +188,11 @@ QString valueOf(const QString& expression) {
 TEST(Typing, PastedTextMeansWhatItSays) {
     for (const char* text : {"2^10+1", "-2^2", "2^-1", "√4+5", "√2^2", "sqrt(16)/4", "1/3", "((1)/(3))+1", "root(27, 3)",
                              "log(8, 2)", "log(100)", "10^3", "(10^(3))", "e^1", "exp(1)", "abs(-3)*2", "3!^2", "2^3!",
-                             "nCr(5, 2)", "50%", "1e3+2", "1.5e-3*2", "pi*2", "mean(1, 2, 3)", "2^(1+2)*3"}) {
+                             "nCr(5, 2)", "50%", "1e3+2", "1.5e-3*2", "pi*2", "mean(1, 2, 3)", "2^(1+2)*3", "2**3**2"}) {
         Entry e;
         e.setRoot(typing::read(QString::fromUtf8(text)));
         EXPECT_EQ(valueOf(e.text()), valueOf(QString::fromUtf8(text))) << text << " → " << e.text().toStdString();
     }
-    Entry e;
-    e.setRoot(typing::read("2**3**2"));  // the engine doesn't read ** yet: compared with what it means
-    EXPECT_EQ(valueOf(e.text()), valueOf("2^3^2"));
 }
 
 TEST(Typing, PasteGoesInAtTheCursor) {
@@ -276,4 +278,25 @@ TEST(Typing, WithADecimalCommaTheSemicolonSeparates) {
     EXPECT_EQ(typed("1.5").text(), "1.5");  // the point still works
     settings::setDecimalComma(false);
     EXPECT_EQ(typed("nCr(5,2)").text(), "nCr(5, 2)");
+}
+
+TEST(Typing, SumsShowTheirSymbolAndReadBackAsTemplates) {
+    EXPECT_EQ(typed("sum(").text(), "Σ(");
+    EXPECT_EQ(typed("product(").text(), "Π(");
+    const Entry e = typed("sum(x^2,1,4)");
+    ASSERT_EQ(e.root().size(), 1u);
+    EXPECT_EQ(e.root()[0].kind, Template::Sum);
+    EXPECT_EQ(e.text(), "Σ(x^(2), 1, 4)");
+    EXPECT_EQ(typed("Σ(x;1;3)").root()[0].kind, Template::Sum);   // the symbol and ; read the same
+    const Entry named = typed("sum(k,1,3,k)");
+    EXPECT_EQ(named.root()[0].kind, Template::Text);  // a named variable stays linear
+    EXPECT_EQ(named.text(), "Σ(k, 1, 3, k)");
+    EXPECT_EQ(typing::read("product(x, 1, 5)")[0].kind, Template::Product);
+}
+
+TEST(Typing, ATargetIsTypedAsWritten) {
+    EXPECT_EQ(typed("2.7 to 1/3").text(), "2.7 to 1/3");  // after `to` the text names a target: no ÷ or ×
+    EXPECT_EQ(typed("2.7→1/4").text(), "2.7→1/4");
+    EXPECT_EQ(typed("2.7->1/4").text(), "2.7→1/4");
+    EXPECT_EQ(typed("total/2").text(), "total÷2");  // a word that only starts with "to"
 }

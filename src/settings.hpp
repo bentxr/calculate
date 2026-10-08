@@ -1,5 +1,7 @@
 #pragma once
 
+#include <calculate-core/calculate-core.hpp>
+
 #include <QPalette>
 #include <QStringList>
 
@@ -26,6 +28,10 @@ inline void setDecimalComma(bool on) { setDecimalSeparator(on ? DecimalSeparator
 // Whether the result is worked out while the expression is typed (on at every start).
 bool liveCalculation();
 void setLiveCalculation(bool on);
+
+// How log, mod and % are read (the engine's defaults at every start).
+calculate_core::Conventions conventions();
+void setConventions(const calculate_core::Conventions& conventions);
 
 // The theme at start: the system's on the desktop. In the browser, Dark: what browsers report of the
 // system's scheme does not reach the app reliably.

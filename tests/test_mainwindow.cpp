@@ -1887,3 +1887,212 @@ TEST(MainWindow, TheKeysShowTheSeparatorsInUse) {
     EXPECT_EQ(child<QPushButton>(window, "direct:comma")->text(), ",");
     EXPECT_EQ(child<QPushButton>(window, "percentKey:point")->text(), ".");
 }
+
+TEST(MainWindow, RemainderKeysTypeTheirFunctions) {
+    MainWindow window;
+    openSection(window, "numbers");
+    for (const char* name : {"direct:floormod", "key:negative", "key:7", "direct:comma", "key:3", "key:close"})
+        QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "floormod(-7, 3)");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "2");
+}
+
+TEST(MainWindow, TheConventionsAreSettings) {
+    MainWindow window;
+    for (const char* name : {"log:10", "log:e", "mod:truncated", "mod:floored", "percent:divide", "percent:ofvalue"})
+        EXPECT_NE(setting(window, name), nullptr) << name;
+    EXPECT_TRUE(setting(window, "log:10")->isChecked());
+    setting(window, "log:e")->trigger();
+    run(window, "log(1)");
+    EXPECT_EQ(lcd(window)->outputText(), "0");
+    run(window, "log(100)");
+    EXPECT_TRUE(lcd(window)->outputText().startsWith("4.60517")) << lcd(window)->outputText().toStdString();
+    EXPECT_TRUE(window.exportSettings().contains("\"log\": \"e\""));  // Plan 5's file gets it for free
+    setting(window, "log:10")->trigger();
+}
+
+TEST(MainWindow, TheLogKeySaysWhichLogarithm) {
+    MainWindow window;
+    EXPECT_EQ(child<QPushButton>(window, "direct:log")->toolTip(), "logarithm (base 10)");
+    setting(window, "log:e")->trigger();
+    EXPECT_EQ(child<QPushButton>(window, "direct:log")->toolTip(), "logarithm (natural)");
+    setting(window, "log:10")->trigger();
+}
+
+TEST(MainWindow, TheConventionsSitApartInTheirOwnMenu) {
+    MainWindow window;
+    const QList<QAction*> top = child<QMenu>(window, "settings")->actions();
+    const int index = top.indexOf(child<QMenu>(window, "conventions")->menuAction());
+    ASSERT_GT(index, 0);
+    EXPECT_TRUE(top[index - 1]->isSeparator());  // not read as one more decimal separator
+    int separators = 0;
+    for (QAction* action : child<QMenu>(window, "conventions")->actions()) separators += action->isSeparator();
+    EXPECT_EQ(separators, 2);  // log | mod | %
+}
+
+TEST(MainWindow, TheHistoryKeepsComments) {
+    MainWindow window;
+    run(window, "1+1 # two");
+    auto* list = child<QListWidget>(window, "history");
+    EXPECT_EQ(list->item(0)->text(), "1+1 = 2   # two");
+    forget(window);
+    lcd(window)->clear();
+    lcd(window)->setInput("# a note");
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    ASSERT_TRUE(QTest::qWaitFor([&] { return list->count() == 2; }, 10000));
+    EXPECT_EQ(list->item(0)->text(), "# a note");
+    EXPECT_EQ(lcd(window)->outputText(), "");
+    EXPECT_FALSE(child<QToolButton>(window, "detailsButton")->isEnabled());
+}
+
+TEST(MainWindow, ACommentCanBeEnteredWithKeysAlone) {
+    MainWindow window;
+    for (const char* name : {"key:1", "key:plus", "key:1"}) QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    openSection(window, "letters");
+    QTest::mouseClick(child<QPushButton>(window, "direct:comment"), Qt::LeftButton);
+    for (const char* name : {"direct:space", "direct:letterT", "direct:letterW", "direct:letterO"})
+        QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "1+1# two");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(child<QListWidget>(window, "history")->item(0)->text(), "1+1 = 2   # two");
+}
+
+TEST(MainWindow, AConversionTakesTheScreenAndTheCardKeepsTheValue) {
+    MainWindow window;
+    run(window, "0.1 to fraction");
+    EXPECT_EQ(lcd(window)->outputText(), "3602879701896397/36028797018963968");
+    EXPECT_EQ(detail(window, "value"), "0.1000000000000000|055511151231257827021181583404541015625");
+    EXPECT_EQ(detail(window, "conversion"), "fraction");
+    EXPECT_EQ(child<QListWidget>(window, "history")->item(0)->text(), "0.1 to fraction = 3602879701896397/36028797018…");
+}
+
+TEST(MainWindow, ArrowKeysConvertTheResult) {
+    MainWindow window;
+    for (const char* name : {"key:fraction", "key:1", "key:down", "key:4", "key:right"})
+        QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    openSection(window, "showAs");
+    QTest::mouseClick(child<QPushButton>(window, "direct:to:fraction"), Qt::LeftButton);
+    EXPECT_TRUE(lcd(window)->input().endsWith("→fraction")) << lcd(window)->input().toStdString();
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "1/4");
+}
+
+TEST(MainWindow, SumKeysBuildASum) {
+    MainWindow window;
+    openSection(window, "powers");
+    for (const char* name : {"direct:sum", "key:1", "key:right", "key:4", "key:right", "direct:variable", "key:square"})
+        QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "Σ(x^(2), 1, 4)");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "30");
+}
+
+TEST(MainWindow, ANoteShowsDimmedUnderTheScreen) {
+    MainWindow window;
+    run(window, "sum(x; 5; 1)");
+    EXPECT_EQ(lcd(window)->outputText(), "0");
+    EXPECT_EQ(message(window)->text(), "Σ(x, 5, 1) has no terms");  // typed sums read back as Σ templates (1.27)
+    EXPECT_TRUE(message(window)->property("dimmed").toBool());
+    run(window, "1+1");
+    EXPECT_EQ(message(window)->text(), "");
+}
+
+TEST(MainWindow, StoreKeepsAnExpressionInAVariable) {
+    MainWindow window;
+    const auto click = [&](const char* name) { QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton); };
+    openSection(window, "variables");
+    lcd(window)->setInput("0.1+0.2");
+    forget(window);
+    click("direct:store");
+    EXPECT_EQ(lcd(window)->statusText(), "STO");
+    click("direct:varA");  // with STO armed, the letter stores instead of typing
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->statusText(), "");
+    EXPECT_EQ(child<QListWidget>(window, "history")->item(0)->data(Qt::UserRole).toString(), "A := 0.1+0.2");
+    lcd(window)->clear();
+    click("direct:varA");
+    EXPECT_EQ(lcd(window)->input(), "A");
+}
+
+TEST(MainWindow, AnyNameCanBeAssignedWithTheLetters) {
+    MainWindow window;
+    openSection(window, "letters");
+    for (const char* name : {"direct:letterR", "direct:letterA", "direct:letterT", "direct:letterE"})
+        QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    openSection(window, "variables");
+    for (const char* name : {"direct:assign", "key:2", "key:1"}) QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "rate:=21");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "21");
+}
+
+TEST(MainWindow, StoreKeepsThePhoneDrawerOpenForTheLetter) {
+    MainWindow window;
+    window.resize(390, 844);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    window.layOutKeys(QSize(390, 844));
+    auto* toggle = child<QPushButton>(window, "drawerToggle");
+    QTest::mouseClick(toggle, Qt::LeftButton);
+    openSection(window, "variables");
+    QTest::mouseClick(child<QPushButton>(window, "direct:store"), Qt::LeftButton);
+    EXPECT_TRUE(toggle->isChecked());  // the letter is in the drawer too
+}
+
+TEST(MainWindow, AWordRemainderIsTypedOrKeyedLetterByLetter) {
+    MainWindow window;
+    QTest::keyClicks(lcd(window), "7 mod 3");
+    EXPECT_EQ(lcd(window)->input(), "7 mod 3");  // letters stay letters; the engine reads the word
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "1");
+    lcd(window)->clear();
+    openSection(window, "letters");
+    for (const char* name : {"key:7", "direct:space", "direct:letterR", "direct:letterE", "direct:letterM", "direct:space", "key:3"})
+        QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "7 rem 3");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "1");
+}
+
+TEST(MainWindow, ANotationConversionKeepsTheBar) {
+    MainWindow window;
+    run(window, "0.1 to sci");
+    EXPECT_EQ(lcd(window)->outputText(), "1.000000000000000|055511151231257827021181583404541015625×10^−1");
+    run(window, "0.1 to fraction");
+    EXPECT_EQ(lcd(window)->outputText(), "3602879701896397/36028797018963968");
+}
+
+TEST(MainWindow, AnApproximateConversionSaysHowFarUnderTheScreen) {
+    MainWindow window;
+    run(window, "2.7 to 1/3");
+    EXPECT_EQ(lcd(window)->outputText(), "8/3");
+    EXPECT_EQ(message(window)->text(), "≈: off by 3.3e-2");
+    EXPECT_TRUE(message(window)->property("dimmed").toBool());
+    run(window, "2.5 to 1/2");
+    EXPECT_EQ(message(window)->text(), "");  // exact: nothing to say
+}
+
+TEST(MainWindow, TheReadingShowsWhileTyping) {
+    MainWindow window;
+    QTest::keyClicks(lcd(window), "2^3^2");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->readingText() == "(2 ^ (3 ^ 2))"; }, 5000))
+        << lcd(window)->readingText().toStdString();
+    lcd(window)->clear();
+    QTest::keyClicks(lcd(window), "7");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->readingText().isEmpty(); }, 5000));  // nothing to add
+}

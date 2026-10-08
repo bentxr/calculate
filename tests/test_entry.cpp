@@ -383,3 +383,43 @@ TEST(Entry, AByteOfARootLeadsToTheBoxItIsWrittenIn) {
     EXPECT_TRUE(e.positionAt(8) == (Position{{{0, 0}}, 0}));
     EXPECT_TRUE(e.positionAt(10) == (Position{{}, 1}));  // past the end
 }
+
+TEST(Entry, SumsAndProductsTakeTheirLimitsThenTheBody) {
+    Entry e;
+    e.insertTemplate(Template::Sum);  // the cursor goes to the lower limit
+    type(e, {"1"});
+    e.right();
+    type(e, {"4"});
+    e.right();
+    type(e, {"x"});
+    e.insertTemplate(Template::Power);
+    type(e, {"2"});
+    EXPECT_EQ(e.text(), "Σ(x^(2), 1, 4)");  // the symbol, also in the text the engine reads
+    EXPECT_EQ(value(e, calculate_core::NumberType::Exact), "30/1");
+    Entry p;
+    p.insertTemplate(Template::Product);
+    type(p, {"1"});
+    p.right();
+    type(p, {"5"});
+    p.right();
+    type(p, {"x"});
+    EXPECT_EQ(p.text(), "Π(x, 1, 5)");
+    EXPECT_EQ(value(p, calculate_core::NumberType::Exact), "120/1");
+}
+
+TEST(Entry, DeleteTurnsASumIntoItsLinearForm) {
+    Entry e;
+    e.insertTemplate(Template::Sum);
+    type(e, {"1"});
+    e.right();
+    type(e, {"3"});
+    e.right();
+    type(e, {"x"});
+    for (int i = 0; i < 5; ++i) e.left();  // to the start of the lower limit
+    EXPECT_EQ(e.path(), (Path{{0, 0}}));
+    EXPECT_EQ(e.cursor(), 0);
+    e.backspace();
+    EXPECT_EQ(e.text(), "Σ(x, 1, 3)");  // nothing typed is lost; still the symbol
+    EXPECT_EQ(e.path(), Path{});
+    EXPECT_EQ(value(e, calculate_core::NumberType::Exact), "6/1");
+}

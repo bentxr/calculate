@@ -10,7 +10,8 @@ enum class KeyAction { Insert, Template, Clear, Backspace, Evaluate, MemoryAdd, 
                        Type,    // the inserted text goes through the typing rules, character by character
                        Shift,  // the next letter is a capital
                        Undo, Redo,
-                       Tool };  // opens one of the rail's tools
+                       Tool,    // opens one of the rail's tools
+                       Store };  // the next variable letter stores the input under its name
 
 // What a key does.
 struct Face {

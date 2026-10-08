@@ -280,3 +280,31 @@ TEST(Typeset, WithADecimalCommaTheInputShowsCommasAndSemicolons) {
     EXPECT_TRUE(texts.contains("; "));
     EXPECT_FALSE(texts.contains("."));
 }
+
+TEST(Typeset, TheInputDrawsASumWithItsLimitsAroundTheSign) {
+    Entry e;
+    e.insertTemplate(Template::Sum);
+    e.insert("1");
+    e.right();
+    e.insert("9");
+    e.right();
+    e.insert("x");
+    QRectF caret;
+    const Box b = typeset::input(e, font(), &caret);
+    const typeset::Run* sign = runWith(b, "Σ");
+    const typeset::Run* start = runWith(b, "x=");
+    const typeset::Run* lower = runWith(b, "1");
+    const typeset::Run* upper = runWith(b, "9");
+    const typeset::Run* body = runWith(b, "x");
+    ASSERT_TRUE(sign && start && lower && upper && body);
+    EXPECT_GT(lower->origin.y(), sign->origin.y());  // under the sign
+    EXPECT_EQ(start->origin.y(), lower->origin.y());
+    EXPECT_LT(upper->origin.y(), sign->origin.y());  // over it
+    EXPECT_LT(lower->font.pixelSize(), sign->font.pixelSize());
+    EXPECT_GT(body->origin.x(), sign->origin.x());
+    EXPECT_EQ(body->origin.y(), 0);
+    EXPECT_NEAR(caret.left(), body->origin.x() + width(*body), 0.01);
+    Entry p;
+    p.insertTemplate(Template::Product);
+    EXPECT_NE(runWith(typeset::input(p, font(), nullptr), "Π"), nullptr);
+}

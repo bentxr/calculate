@@ -160,11 +160,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     side_ = new QVBoxLayout;
     angle_ = new QComboBox(central);
     angle_->setObjectName("angle");
-    angle_->setSizeAdjustPolicy(QComboBox::AdjustToContents);  // its texts change with the language
+    // No AdjustToContents: angle, type and = get one fixed width for every language (see retranslate), and that policy
+    // resizes a combo to its size hint 20 ms after its texts change, which leaves the side briefly out of its layout.
     angle_->addItems({QString(), QString(), QString()});  // RAD, DEG, GRAD (see retranslate)
     type_ = new TypeChooser(central);
     type_->setObjectName("type");
-    type_->setSizeAdjustPolicy(QComboBox::AdjustToContents);
     equals_ = new QPushButton(central);
     equals_->setObjectName("equals");
     for (QWidget* w : {static_cast<QWidget*>(angle_), static_cast<QWidget*>(type_), static_cast<QWidget*>(equals_)}) {
@@ -999,13 +999,13 @@ void MainWindow::showEvent(QShowEvent* event) {
 void MainWindow::buildSettings() {
     settings_ = new QMenu(this);
     settings_->setObjectName("settings");
-    // One heading, then one checkable action per value, in the order of the setting's enum.
-    const auto addSetting = [this](QAction*& section, std::initializer_list<const char*> values, int checked, auto apply) {
-        section = settings_->addSection(QString());
-        auto* group = new QActionGroup(settings_);
+    // One checkable action per value, in the order of the setting's enum; addSetting puts a heading first.
+    const auto addGroup = [this](std::initializer_list<const char*> values, int checked, auto apply, QMenu* menu = nullptr) {
+        if (!menu) menu = settings_;
+        auto* group = new QActionGroup(menu);
         int i = 0;
         for (const char* value : values) {
-            QAction* action = settings_->addAction(QString());  // the texts: see retranslate
+            QAction* action = menu->addAction(QString());  // the texts: see retranslate
             action->setObjectName(QString::fromLatin1(value));
             action->setCheckable(true);
             action->setChecked(i == checked);
@@ -1013,6 +1013,10 @@ void MainWindow::buildSettings() {
             connect(action, &QAction::triggered, this, [apply, i] { apply(i); });
             ++i;
         }
+    };
+    const auto addSetting = [this, addGroup](QAction*& section, std::initializer_list<const char*> values, int checked, auto apply) {
+        section = settings_->addSection(QString());
+        addGroup(values, checked, apply);
     };
     addSetting(languageSection_, {"language:system", "language:en", "language:es"}, 0,
                [](int i) { settings::setLanguage(static_cast<settings::Language>(i)); });
@@ -1026,6 +1030,27 @@ void MainWindow::buildSettings() {
                    lcd_->update();
                    retranslate();  // the separator keys' legends, and the percentages again
                });
+    // What log, mod and % mean. Earlier results keep theirs (the engine stores them spelled out); what is being
+    // typed is worked out again.
+    settings_->addSeparator();
+    conventions_ = settings_->addMenu(QString());
+    conventions_->setObjectName("conventions");
+    const auto changeConvention = [this](auto change) {
+        calculate_core::Conventions c = settings::conventions();
+        change(c);
+        settings::setConventions(c);
+        updateKeys();  // the log key's tooltip
+        if (settings::liveCalculation() && (previewShown_ || lcd_->input().trimmed() != lastExpression_)) requestPreview();
+    };
+    using calculate_core::Conventions;
+    addGroup({"log:10", "log:e"}, static_cast<int>(settings::conventions().log),
+             [changeConvention](int i) { changeConvention([i](Conventions& c) { c.log = static_cast<Conventions::Log>(i); }); }, conventions_);
+    conventions_->addSeparator();
+    addGroup({"mod:truncated", "mod:floored"}, static_cast<int>(settings::conventions().mod),
+             [changeConvention](int i) { changeConvention([i](Conventions& c) { c.mod = static_cast<Conventions::Mod>(i); }); }, conventions_);
+    conventions_->addSeparator();
+    addGroup({"percent:divide", "percent:ofvalue"}, static_cast<int>(settings::conventions().percent),
+             [changeConvention](int i) { changeConvention([i](Conventions& c) { c.percent = static_cast<Conventions::Percent>(i); }); }, conventions_);
     inputSection_ = settings_->addSection(QString());
     QAction* live = settings_->addAction(QString());
     live->setObjectName("live");
@@ -1061,9 +1086,11 @@ const QStringList angleIds{"rad", "deg", "grad"};
 
 }  // namespace
 
+QList<QAction*> MainWindow::settingActions() const { return settings_->actions() + conventions_->actions(); }
+
 QMap<QString, QStringList> MainWindow::settingKeys() const {
     QMap<QString, QStringList> keys;
-    for (QAction* action : settings_->actions()) {
+    for (QAction* action : settingActions()) {
         if (!action->isCheckable()) continue;
         if (action->actionGroup()) keys[action->objectName().section(':', 0, 0)] << action->objectName().section(':', 1);
         else keys[action->objectName()] = QStringList{"true", "false"};
@@ -1077,7 +1104,7 @@ QMap<QString, QStringList> MainWindow::settingKeys() const {
 
 QMap<QString, QString> MainWindow::settingValues() const {
     QMap<QString, QString> values;
-    for (QAction* action : settings_->actions()) {
+    for (QAction* action : settingActions()) {
         if (!action->isCheckable()) continue;
         if (!action->actionGroup()) values[action->objectName()] = action->isChecked() ? "true" : "false";
         else if (action->isChecked()) values[action->objectName().section(':', 0, 0)] = action->objectName().section(':', 1);
@@ -1169,6 +1196,13 @@ void MainWindow::retranslate() {
     decimalSection_->setText(tr("Decimal separator"));
     findChild<QAction*>("decimal:language")->setText(tr("As the language"));
     findChild<QAction*>("decimal:point")->setText(tr("Point"));
+    conventions_->setTitle(tr("Conventions"));
+    findChild<QAction*>("log:10")->setText(tr("log is base 10"));
+    findChild<QAction*>("log:e")->setText(tr("log is natural"));
+    findChild<QAction*>("mod:truncated")->setText(tr("mod keeps the dividend's sign"));
+    findChild<QAction*>("mod:floored")->setText(tr("mod keeps the divisor's sign"));
+    findChild<QAction*>("percent:divide")->setText(tr("% divides by 100"));
+    findChild<QAction*>("percent:ofvalue")->setText(tr("x + p% adds p% of x"));
     findChild<QAction*>("decimal:comma")->setText(tr("Comma"));
     inputSection_->setText(tr("Input"));
     findChild<QAction*>("live")->setText(tr("Calculate as you type"));
@@ -1472,6 +1506,7 @@ Options MainWindow::options() const {
     Options o;
     o.type = type_->currentType();
     o.angle = static_cast<AngleUnit>(angle_->currentIndex());
+    o.conventions = settings::conventions();
     return o;
 }
 
@@ -1590,10 +1625,17 @@ void MainWindow::popUpHistoryMenu(QPoint position) {
 }
 
 // "expression = value", the value cut short: the list only points back to the calculation.
+// `#` can only start a comment, so the text before the first one is the expression: "1+1 = 2   # two". A note (only a
+// comment) is shown as typed.
 QString MainWindow::historyLabel(const QString& expression, const QString& value) const {
+    const QString typed = expression.section('#', 0, 0).trimmed();
+    if (typed.isEmpty()) return expression.trimmed();
     QString shown = shownExpression(value);
     if (shown.size() > 28) shown = shown.left(28) + QStringLiteral("…");
-    return shownExpression(expression) + QStringLiteral(" = ") + shown;
+    QString label = shownExpression(typed) + QStringLiteral(" = ") + shown;
+    const QString comment = expression.section('#', 1).trimmed();
+    if (!comment.isEmpty()) label += QStringLiteral("   # ") + comment;
+    return label;
 }
 
 void MainWindow::relabelHistory() {
@@ -1653,10 +1695,18 @@ void MainWindow::present() {
                             && (view::incomplete(*shown.error) || lcd_->entry().hasEmptyBox() || namePending(*shown.error, expression));
     proceed_->setVisible(!previewShown_ && shown.error && canProceed(shown.error->code));  // it acts on the last request
     card_->setRows(view::details(shown, types_[static_cast<std::size_t>(shown.type)]));
-    detailsButton_->setEnabled(!shown.error);
-    enableCopy(shown.error ? nullptr : &shown);
-    message_->setText(shown.error && !unfinished ? view::errorText(*shown.error, expression) : QString());
-    message_->setForegroundRole(previewShown_ ? QPalette::PlaceholderText : QPalette::WindowText);
+    const bool valueless = shown.error || shown.commentOnly;  // an error, or a note
+    detailsButton_->setEnabled(!valueless);
+    enableCopy(valueless ? nullptr : &shown);
+    // A note about a result that is not an error shows dimmed, like a live error.
+    const QString offBy = shown.error ? QString() : view::offBy(shown);
+    const bool note = !shown.error && (!shown.warnings.empty() || !offBy.isEmpty());
+    message_->setText(shown.error && !unfinished ? view::errorText(*shown.error, expression)
+                      : !shown.error && !shown.warnings.empty() ? view::warningText(shown.warnings.front(), expression)
+                      : !offBy.isEmpty()                         ? QCoreApplication::translate("view", "≈: off by %1").arg(offBy)
+                                                                 : QString());
+    message_->setForegroundRole(previewShown_ || note ? QPalette::PlaceholderText : QPalette::WindowText);
+    message_->setProperty("dimmed", previewShown_ || note);
     lcd_->setProvisional(previewShown_);
     // The error's span is in bytes of the text that was evaluated: mark it only on that same input.
     const QString input = lcd_->input();
@@ -1666,14 +1716,37 @@ void MainWindow::present() {
     } else {
         lcd_->clearMarked();
     }
-    if (shown.error) lcd_->clearResult();
+    // How the input was read, unless it adds nothing to what was typed.
+    const QString reading = valueless ? QString() : QString::fromStdString(shown.reading);
+    QString typed = input;
+    typed.remove(' ');
+    QString read = reading;
+    read.remove(' ');
+    lcd_->setReading(read == typed ? QString() : settings::decimalComma() ? view::withDecimalComma(reading) : reading);
+    if (valueless) lcd_->clearResult();
+    else if (const auto parts = view::conversionParts(shown))  // a number: drawn like a value, with its bar
+        lcd_->showValue(settings::decimalComma() ? view::withDecimalComma(*parts) : *parts);
+    else if (shown.conversion) lcd_->showText(view::conversionText(shown));
     else if (shown.exact) lcd_->showExact(settings::decimalComma() ? view::withDecimalComma(view::fractionParts(shown)) : view::fractionParts(shown));
     else lcd_->showValue(settings::decimalComma() ? view::withDecimalComma(view::valueParts(shown)) : view::valueParts(shown));
 }
 
 void MainWindow::apply(const Face& f) {
     // A key pressed in the phone's drawer brings back the pad; the letters keep it open, to type a whole name.
-    if (f.action != KeyAction::Type && f.action != KeyAction::Shift) drawerToggle_->setChecked(false);
+    if (f.action != KeyAction::Type && f.action != KeyAction::Shift && f.action != KeyAction::Store) drawerToggle_->setChecked(false);
+    // STO armed: a variable letter stores what is on the screen under its name; any other key disarms it first.
+    if (storing_) {
+        storing_ = false;
+        lcd_->setStoring(false);
+        static const QStringList variables{"A", "B", "C", "D", "E", "F", "x", "y"};
+        if (f.action == KeyAction::Type && variables.contains(f.insert)) {
+            drawerToggle_->setChecked(false);
+            const QString input = lcd_->input().trimmed();
+            if (!input.isEmpty()) request(f.insert + " := " + input, false);
+            lcd_->setFocus();
+            return;
+        }
+    }
     switch (f.action) {
     case KeyAction::Insert: lcd_->insert(translated(f.insert)); break;
     case KeyAction::Type:
@@ -1702,6 +1775,10 @@ void MainWindow::apply(const Face& f) {
         break;
     case KeyAction::Down:
         if (!lcd_->down()) replay(historyIndex_ - 1);
+        break;
+    case KeyAction::Store:
+        storing_ = true;
+        lcd_->setStoring(true);
         break;
     case KeyAction::Tool:
         if (f.opens == "percentages") {
@@ -1769,4 +1846,8 @@ void MainWindow::updateKeys() {
         for (const QString& other : others) legends << legend(directKey(other).face, settings::decimalComma());
         button->setToolTip(tr("Hold for: %1").arg(legends.join(QStringLiteral(", "))));
     }
+    const bool natural = settings::conventions().log == calculate_core::Conventions::Log::Natural;
+    for (const char* name : {"direct:log", "common:log"})
+        if (auto* button = findChild<QPushButton*>(name); button && button->isEnabled())
+            button->setToolTip(natural ? tr("logarithm (natural)") : tr("logarithm (base 10)"));
 }

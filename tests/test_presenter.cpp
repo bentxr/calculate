@@ -42,7 +42,7 @@ TEST(Presenter, TheDetailsCardHoldsEveryFigure) {
     QStringList keys;
     for (const view::DetailRow& row : rows) keys << row.key;
     EXPECT_EQ(keys, QStringList({"bound", "measured", "trusted", "condition", "input", "rounding", "library",
-                                 "operations", "type", "evaluated"}));
+                                 "operations", "type", "evaluated", "reading"}));
     EXPECT_EQ(rows[0].label, "Guaranteed bound");
     EXPECT_EQ(rows[0].value, "4.4e-17");
     EXPECT_EQ(rows[1].value, "4.4e-17");
@@ -58,22 +58,22 @@ TEST(Presenter, TheDetailsCardHoldsEveryFigure) {
 
 TEST(Presenter, ExactAndIncompleteResultsSaySo) {
     const QList<view::DetailRow> exact = view::details(evaluated("1/3", NumberType::Exact), typeInfo(NumberType::Exact));
-    ASSERT_EQ(exact.size(), 3);
+    ASSERT_EQ(exact.size(), 4);
     EXPECT_EQ(exact[0].key, "exact");
     EXPECT_EQ(exact[0].value, "exact · no rounding error");
     EXPECT_EQ(exact[1].value, "cpp_rational, exact fractions");
     Options allow;
     allow.allowUncertainDiscreteArguments = true;
     const QList<view::DetailRow> rows = view::details(evaluate("(0.1*30)!", allow), typeInfo(NumberType::Double));
-    ASSERT_GE(rows.size(), 2);
-    EXPECT_EQ(rows[rows.size() - 2].key, "incomplete");
-    EXPECT_EQ(rows[rows.size() - 2].value, "an uncertain argument was accepted");
+    ASSERT_GE(rows.size(), 3);
+    EXPECT_EQ(rows[rows.size() - 3].key, "incomplete");  // before Evaluated and Read as
+    EXPECT_EQ(rows[rows.size() - 3].value, "an uncertain argument was accepted");
     EXPECT_TRUE(view::details(evaluated("1/0"), typeInfo(NumberType::Double)).isEmpty());
 }
 
 TEST(Presenter, EveryDetailIsExplained) {
     for (const char* key : {"bound", "measured", "trusted", "condition", "input", "rounding", "library", "operations",
-                            "type", "evaluated", "exact", "incomplete"})
+                            "type", "evaluated", "reading", "exact", "incomplete"})
         EXPECT_FALSE(view::explanation(key).isEmpty()) << key;
     EXPECT_TRUE(view::explanation("nonsense").isEmpty());
 }
@@ -295,4 +295,51 @@ TEST(Presenter, ThePercentageQuestionsAreExpressions) {
     }
     EXPECT_EQ(values, QStringList({"25/1", "-20/1", "125/1", "80/1", "160/1", "0/1", "80/1"}));
     EXPECT_TRUE(view::percentageRows(QStringLiteral(""), QStringLiteral("100")).isEmpty());  // a value is missing
+}
+
+TEST(Presenter, ANoteHasNoDetails) {
+    const Result note = evaluated("# a note");
+    EXPECT_TRUE(view::details(note, typeInfo(NumberType::Double)).isEmpty());
+    EXPECT_EQ(view::valueParts(note).trusted, "");
+}
+
+TEST(Presenter, AConversionIsShownAndTheValueKept) {
+    const Result r = evaluated("0.1 to fraction");
+    EXPECT_EQ(view::conversionText(r), "3602879701896397/36028797018963968");
+    const QList<view::DetailRow> rows = view::details(r, typeInfo(NumberType::Double));
+    ASSERT_GE(rows.size(), 2);
+    EXPECT_EQ(rows[0].key, "value");
+    EXPECT_EQ(rows[0].value, "0.1000000000000000|055511151231257827021181583404541015625");
+    EXPECT_EQ(rows[1].key, "conversion");
+    EXPECT_EQ(rows[1].value, "fraction");
+    EXPECT_EQ(view::details(evaluated("0.1"), typeInfo(NumberType::Double))[0].key, "bound");  // unchanged without to
+    EXPECT_TRUE(view::conversionText(evaluated("0.1")).isEmpty());
+    EXPECT_FALSE(view::explanation("value").isEmpty());
+    EXPECT_FALSE(view::explanation("conversion").isEmpty());
+    EXPECT_EQ(view::errorText(*evaluated("1 to nothing").error, "1 to nothing"), "Unknown conversion “nothing”");
+}
+
+TEST(Presenter, TooManyTermsSaysSo) {
+    const Result r = evaluated("sum(x; 1; 10001)");
+    ASSERT_TRUE(r.error);
+    EXPECT_EQ(view::errorText(*r.error, "sum(x; 1; 10001)"), "sum(x; 1; 10001) has too many terms");
+}
+
+TEST(Presenter, AnApproximateConversionShowsHowFarItIs) {
+    const Result r = evaluated("2.7 to 1/3");
+    const QList<view::DetailRow> rows = view::details(r, typeInfo(NumberType::Double));
+    bool found = false;
+    for (const view::DetailRow& row : rows)
+        if (row.key == "conversionNote") found = row.value == "3.3e-2";
+    EXPECT_TRUE(found);
+    EXPECT_FALSE(view::explanation("conversionNote").isEmpty());
+}
+
+TEST(Presenter, DetailsShowTheReading) {
+    const QList<view::DetailRow> rows = view::details(evaluated("2^3^2"), typeInfo(NumberType::Double));
+    bool found = false;
+    for (const view::DetailRow& row : rows)
+        if (row.key == "reading") found = row.value == "(2 ^ (3 ^ 2))";
+    EXPECT_TRUE(found);
+    EXPECT_FALSE(view::explanation("reading").isEmpty());
 }

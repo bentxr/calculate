@@ -26,6 +26,10 @@ Spelling spelling(Template kind) {
     case Template::Pow10: return {{"(10^(", "))"}, {0}};
     case Template::LogBase: return {{"log(", ", ", ")"}, {1, 0}};  // the engine takes the base second
     case Template::Abs: return {{"abs(", ")"}, {0}};
+    // Boxes: lower limit, upper limit, body; the engine takes the body first, and x is the variable. Only the
+    // symbol is shown.
+    case Template::Sum: return {{"Σ(", ", ", ", ", ")"}, {2, 0, 1}};
+    case Template::Product: return {{"Π(", ", ", ", ", ")"}, {2, 0, 1}};
     }
     return {};
 }
@@ -217,9 +221,19 @@ void Entry::backspace() {
     Row& parent = rowAt(path_.size() - 1);
     const Item gone = parent[static_cast<std::size_t>(item)];
     Row kept;
-    for (std::size_t i = 0; i < gone.boxes.size(); ++i) {
-        if (i > 0 && gone.kind == Template::Fraction) kept.push_back(Item{Template::Text, QStringLiteral("÷"), {}});
-        kept.insert(kept.end(), gone.boxes[i].begin(), gone.boxes[i].end());
+    if (gone.kind == Template::Sum || gone.kind == Template::Product) {  // its linear form, still with the symbol
+        const auto text = [&kept](const QString& t) { kept.push_back(Item{Template::Text, t, {}}); };
+        text(gone.kind == Template::Sum ? QStringLiteral("Σ(") : QStringLiteral("Π("));
+        for (const int b : {2, 0, 1}) {
+            if (b != 2) text(QStringLiteral(", "));
+            kept.insert(kept.end(), gone.boxes[static_cast<std::size_t>(b)].begin(), gone.boxes[static_cast<std::size_t>(b)].end());
+        }
+        text(QStringLiteral(")"));
+    } else {
+        for (std::size_t i = 0; i < gone.boxes.size(); ++i) {
+            if (i > 0 && gone.kind == Template::Fraction) kept.push_back(Item{Template::Text, QStringLiteral("÷"), {}});
+            kept.insert(kept.end(), gone.boxes[i].begin(), gone.boxes[i].end());
+        }
     }
     parent.erase(parent.begin() + item);
     parent.insert(parent.begin() + item, kept.begin(), kept.end());

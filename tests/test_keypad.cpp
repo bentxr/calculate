@@ -121,12 +121,12 @@ TEST(Keypad, EveryOtherKeyHasAHomeSection) {
         ids << s.id;
         titles << s.title;
     }
-    EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "constants", "statistics", "letters"}));
-    EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Constants", "Statistics", "Letters"}));
-    EXPECT_EQ(sectionLabels("numbers"), QStringList({"x!", "abs", "%", "%…", "mod", "nPr", "nCr", "gcd", "lcm", ","}));
+    EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "constants", "statistics", "showAs", "variables", "letters"}));
+    EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Constants", "Statistics", "Show as", "Variables", "Letters"}));
+    EXPECT_EQ(sectionLabels("numbers"), QStringList({"x!", "abs", "%", "%…", "mod", "rem", "floormod", "nPr", "nCr", "gcd", "lcm", ","}));
     EXPECT_EQ(sectionLabels("hyperbolic"), QStringList({"sinh", "cosh", "tanh", "asinh", "acosh", "atanh"}));
     EXPECT_EQ(sectionLabels("trigonometry"), QStringList({"asin", "acos", "atan"}));
-    EXPECT_EQ(sectionLabels("powers"), QStringList({"x³", "∛", "ⁿ√", "10ˣ", "eˣ", "log"}));
+    EXPECT_EQ(sectionLabels("powers"), QStringList({"x³", "∛", "ⁿ√", "10ˣ", "eˣ", "log", "Σ", "Π", "x"}));
     EXPECT_EQ(sectionLabels("constants"), QStringList({"π", "e"}));
     EXPECT_EQ(labels(memoryKeys()), QStringList({"MS", "M", "M−", "MC", "↶", "↷"}));
 }
@@ -200,7 +200,7 @@ TEST(Keypad, TheLettersSectionHasTheAlphabet) {
     EXPECT_EQ(section("letters").title, "Letters");
     QStringList alphabet;
     for (char c = 'a'; c <= 'z'; ++c) alphabet << QString(QChar(c));
-    EXPECT_EQ(sectionLabels("letters"), alphabet + QStringList({"⇧", "_", "␣"}));
+    EXPECT_EQ(sectionLabels("letters"), alphabet + QStringList({"⇧", "_", "␣", "#"}));
     EXPECT_EQ(directKey("letterA").face.action, KeyAction::Type);
     EXPECT_EQ(directKey("letterA").face.insert, "a");
     EXPECT_EQ(directKey("shift").face.action, KeyAction::Shift);
@@ -257,18 +257,18 @@ TEST(Keypad, EverySyntaxElementHasAKey) {
     for (const Key& key : everyKey())
         if (key.face.action == KeyAction::Insert || key.face.action == KeyAction::Type) entered.insert(key.face.insert);
     QStringList syntax{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "e", "+", "−", "×", "÷", "(", ")",
-                       ", ", "!", "%", "-", "π", "Ans", "M", "_", " "};
+                       ", ", "!", "%", "-", "π", "Ans", "M", "_", " ", "#", "→", ":="};
     for (char c = 'a'; c <= 'z'; ++c) syntax << QString(QChar(c));  // capitals through ⇧
     for (const QString& piece : syntax) EXPECT_TRUE(entered.contains(piece)) << piece.toStdString();
     QSet<Template> shapes;
     for (const Key& key : everyKey()) shapes.insert(key.face.shape);
     for (Template t : {Template::Fraction, Template::Sqrt, Template::Cbrt, Template::Root, Template::Power, Template::Exp,
-                       Template::Pow10, Template::LogBase, Template::Abs})
+                       Template::Pow10, Template::LogBase, Template::Abs, Template::Sum, Template::Product})
         EXPECT_TRUE(shapes.contains(t)) << static_cast<int>(t);
     QSet<KeyAction> actions;
     for (const Key& key : everyKey()) actions.insert(key.face.action);
     for (KeyAction a : {KeyAction::Clear, KeyAction::Backspace, KeyAction::Evaluate, KeyAction::Left, KeyAction::Right,
-                        KeyAction::Up, KeyAction::Down, KeyAction::Undo, KeyAction::Redo, KeyAction::Shift})
+                        KeyAction::Up, KeyAction::Down, KeyAction::Undo, KeyAction::Redo, KeyAction::Shift, KeyAction::Store})
         EXPECT_TRUE(actions.contains(a)) << static_cast<int>(a);
 }
 
@@ -312,4 +312,57 @@ TEST(Keypad, TheSeparatorKeysFollowTheDecimalComma) {
     EXPECT_EQ(legend(directKey("comma").face, false), ",");
     EXPECT_EQ(legend(directKey("comma").face, true), ";");   // the argument separator
     EXPECT_EQ(legend(directKey("sinh").face, true), translated("sinh"));
+}
+
+TEST(Keypad, ACommentKeyWithTheLetters) {
+    const QStringList letters = sectionLabels("letters");
+    EXPECT_EQ(letters.mid(letters.size() - 4), QStringList({"⇧", "_", "␣", "#"}));  // a comment is typed with letters
+    EXPECT_EQ(directKey("comment").face.action, KeyAction::Type);
+    EXPECT_EQ(directKey("comment").face.insert, "#");
+}
+
+TEST(Keypad, TheCommentKeyHasASpokenName) {
+    EXPECT_EQ(spokenName(directKey("comment")), "comment");  // not the bare sign
+}
+
+TEST(Keypad, TheConversionKeys) {
+    EXPECT_EQ(section("showAs").title, "Show as");
+    EXPECT_EQ(sectionLabels("showAs").first(), "→");
+    EXPECT_EQ(directKey("to").face.insert, "→");
+    EXPECT_EQ(directKey("to:fraction").face.insert, "→fraction");
+}
+
+// Every target of → has a one-tap key; it is generated, so a new target needs no new line.
+TEST(Keypad, EveryConversionTargetHasAKey) {
+    for (const calculate_core::TargetDescription& target : calculate_core::conversionTargets()) {
+        const Key key = directKey("to:" + QString::fromStdString(target.name));
+        EXPECT_FALSE(key.id.isEmpty()) << target.name;
+        EXPECT_TRUE(key.face.insert.startsWith("→")) << target.name;
+    }
+}
+
+TEST(Keypad, ConversionKeysHaveSpokenNames) {
+    EXPECT_EQ(spokenName(directKey("to")), "convert to");
+    EXPECT_EQ(spokenName(directKey("to:fraction")), "convert to fraction");
+}
+
+TEST(Keypad, SumsAndProductsHaveKeys) {
+    const QStringList powers = sectionLabels("powers");
+    EXPECT_EQ(powers.mid(powers.size() - 3), QStringList({"Σ", "Π", "x"}));
+    EXPECT_EQ(directKey("sum").face.shape, Template::Sum);
+    EXPECT_EQ(directKey("product").face.shape, Template::Product);
+    EXPECT_EQ(directKey("variable").face.insert, "x");
+}
+
+TEST(Keypad, SumAndProductKeysHaveSpokenNames) {
+    EXPECT_EQ(spokenName(directKey("sum")), "sum");  // not the bare sign
+    EXPECT_EQ(spokenName(directKey("product")), "product");
+}
+
+TEST(Keypad, TheVariablesSection) {
+    EXPECT_EQ(section("variables").title, "Variables");
+    EXPECT_EQ(sectionLabels("variables"), QStringList({"A", "B", "C", "D", "E", "F", "y", "STO", ":="}));
+    EXPECT_EQ(directKey("store").face.action, KeyAction::Store);
+    EXPECT_EQ(directKey("assign").face.insert, ":=");
+    EXPECT_EQ(directKey("varA").face.insert, "A");
 }

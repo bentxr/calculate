@@ -291,6 +291,13 @@ void Lcd::showExact(const view::FractionParts& parts) {
     announceResult();
 }
 
+void Lcd::showText(const QString& text) {
+    shown_ = Shown::Text;
+    text_ = text;
+    changed();
+    announceResult();
+}
+
 void Lcd::setProvisional(bool provisional) {
     if (provisional == provisional_) return;
     provisional_ = provisional;
@@ -332,6 +339,7 @@ QString Lcd::outputText() const {
     case Shown::Nothing: return {};
     case Shown::Value: return view::oneLine(value_);
     case Shown::Exact: return view::oneLine(exact_);
+    case Shown::Text: return text_;
     }
     return {};
 }
@@ -342,7 +350,22 @@ void Lcd::setMemory(const QString& memory) {
     update();
 }
 
-QString Lcd::statusText() const { return memory_.isEmpty() ? QString() : QStringLiteral("M"); }
+QString Lcd::statusText() const {
+    QStringList marks;
+    if (storing_) marks << QStringLiteral("STO");
+    if (!memory_.isEmpty()) marks << QStringLiteral("M");
+    return marks.join(' ');
+}
+
+void Lcd::setReading(const QString& reading) {
+    reading_ = reading;
+    update();
+}
+
+void Lcd::setStoring(bool on) {
+    storing_ = on;
+    update();
+}
 
 // JetBrains Mono, loaded once from the resources; the system's fixed font if that ever fails.
 QString Lcd::fontFamily() {
@@ -444,6 +467,7 @@ void Lcd::changed() {
         case Shown::Nothing: return typeset::Box{};
         case Shown::Value: return typeset::value(value_, outputFont(), width);
         case Shown::Exact: return typeset::exact(exact_, outputFont(), width);
+        case Shown::Text: return typeset::paragraph({{text_, typeset::Role::Plain}}, outputFont(), width);
         }
         return typeset::Box{};
     };
@@ -493,6 +517,11 @@ void Lcd::paintEvent(QPaintEvent*) {
         painter.drawLine(under.bottomLeft(), under.bottomRight());
     }
     typeset::paint(painter, input, origin, ink, ink, rect());
+    if (provisional_ && !reading_.isEmpty()) {  // how the input is read, under it
+        painter.setFont(statusFont());
+        painter.setPen(noiseColor());
+        painter.drawText(QPointF(margin, origin.y() + input.descent + status.ascent()), reading_);
+    }
     if (hasFocus()) {
         painter.setPen(QPen(ink, 1.5));
         const QRectF at = caret.translated(origin);

@@ -270,6 +270,11 @@ struct InputLayout {
             return typeset::row({text(QStringLiteral("log"), font), subscript(strut(font), box(0, small)),
                                  text(QStringLiteral("("), font), box(1, font), text(QStringLiteral(")"), font)});
         case Template::Abs: return typeset::row({text(QStringLiteral("|"), font), box(0, font), text(QStringLiteral("|"), font)});
+        case Template::Sum:
+        case Template::Product:
+            return typeset::row({bigOperator(it.kind == Template::Sum ? QStringLiteral("Σ") : QStringLiteral("Π"),
+                                             typeset::row({text(QStringLiteral("x="), small), box(0, small)}), box(1, small), font),
+                                 text(QStringLiteral("("), font), box(2, font), text(QStringLiteral(")"), font)});
         }
         return {};
     }

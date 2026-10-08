@@ -5,6 +5,8 @@
 #include <QList>
 #include <QString>
 
+#include <optional>
+
 // Pure translation from the engine's results to display text; the numeric logic stays in the engine.
 namespace view {
 
@@ -43,6 +45,7 @@ QString verdict(const QString& conditionNumber);
 QList<DetailRow> details(const calculate_core::Result& result, const calculate_core::TypeInfo& type);
 QString explanation(const QString& key);
 QString errorText(const calculate_core::Error& error, const QString& expression);
+QString warningText(const calculate_core::Warning& warning, const QString& expression);
 // The expression only stops short (an operand or a ")" still to come): no fault yet while it is typed.
 bool incomplete(const calculate_core::Error& error);
 
@@ -55,6 +58,12 @@ QString withDecimalComma(const QString& expression);
 // A result on one line of plain text, as the screen shows it: "1.000|2×10^−7", "−1/3 = −0.(3)".
 QString oneLine(const ValueParts& parts);
 QString oneLine(const FractionParts& parts);
+
+QString conversionText(const calculate_core::Result& result);  // "" when there is none
+QString offBy(const calculate_core::Result& result);  // how far an approximate conversion is ("3.3e-2"); "" when exact
+// A conversion that shows a number, as the screen draws a value (the bar, the noise); none for other conversions.
+std::optional<ValueParts> conversionParts(const calculate_core::Result& result);
+QString valueText(const calculate_core::Result& result);       // the value on one line, as the screen shows it
 
 enum class CopyForm { Value, Trusted, ValueAndBound, Details };
 // The result as plain text for the clipboard: ASCII signs ("-", "e30"), no bar; empty when the form has

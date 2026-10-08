@@ -111,7 +111,7 @@ QString typeDetail(const TypeInfo& t) {
 }
 
 ValueParts valueParts(const Result& r) {
-    if (r.error || r.exact) return {};
+    if (r.error || r.exact || r.commentOnly) return {};
     return split(r.value, r.trustedDigits);
 }
 
@@ -136,15 +136,53 @@ QString verdict(const QString& conditionNumber) {
     return QCoreApplication::translate("view", "ill-conditioned: no algorithm can do better in this type");
 }
 
+QString offBy(const Result& r) {
+    if (!r.conversion || r.conversion->note.empty()) return {};
+    const std::string& note = r.conversion->note;
+    return number(note.substr(note.find_last_of(' ') + 1));
+}
+
+QString conversionText(const Result& r) {
+    if (!r.conversion) return {};
+    const QString text = fromStd(r.conversion->text);
+    return settings::decimalComma() ? withDecimalComma(text) : text;
+}
+
+std::optional<ValueParts> conversionParts(const Result& r) {
+    if (!r.conversion || !r.conversion->parts) return std::nullopt;
+    const NumberParts& n = *r.conversion->parts;
+    ValueParts p{(n.negative ? minus() : QString()) + fromStd(n.trusted), fromStd(n.noise), QString()};
+    if (n.hasExponent) p.exponent = n.exponent10 < 0 ? minus() + QString::number(-n.exponent10) : QString::number(n.exponent10);
+    (p.noise.isEmpty() ? p.trusted : p.noise) += fromStd(n.suffix);
+    return p;
+}
+
+QString valueText(const Result& r) {
+    const bool comma = settings::decimalComma();
+    if (r.exact) return oneLine(comma ? withDecimalComma(fractionParts(r)) : fractionParts(r));
+    return oneLine(comma ? withDecimalComma(valueParts(r)) : valueParts(r));
+}
+
 QList<DetailRow> details(const Result& r, const TypeInfo& t) {
-    if (r.error) return {};
+    if (r.error || r.commentOnly) return {};  // a note has no value
+    // A conversion takes the screen: the value as computed leads the card, then the form it is shown in.
+    QList<DetailRow> converted;
+    if (r.conversion) {
+        converted = {{"value", QCoreApplication::translate("view", "Value"), valueText(r)},
+                     {"conversion", QCoreApplication::translate("view", "Shown as"), fromStd(r.conversion->target)}};
+        if (!r.conversion->note.empty())  // "off by 3.3e-2": the number alone
+            converted.append({"conversionNote", QCoreApplication::translate("view", "Off by"), offBy(r)});
+    }
     const QString expression = settings::decimalComma() ? withDecimalComma(fromStd(r.expression)) : fromStd(r.expression);
     const DetailRow evaluated{"evaluated", QCoreApplication::translate("view", "Evaluated"), expression};
+    const QString read = settings::decimalComma() ? withDecimalComma(fromStd(r.reading)) : fromStd(r.reading);
+    const QList<DetailRow> reading{{"reading", QCoreApplication::translate("view", "Read as"), read}};
     if (r.exact)
-        return {{"exact", QCoreApplication::translate("view", "Error"), QCoreApplication::translate("view", "exact · no rounding error")},
-                {"type", QCoreApplication::translate("view", "Number type"),
-                 QCoreApplication::translate("view", "%1, exact fractions").arg(fromStd(t.cppName))},
-                evaluated};
+        return converted
+               + QList<DetailRow>{{"exact", QCoreApplication::translate("view", "Error"), QCoreApplication::translate("view", "exact · no rounding error")},
+                                  {"type", QCoreApplication::translate("view", "Number type"),
+                                   QCoreApplication::translate("view", "%1, exact fractions").arg(fromStd(t.cppName))},
+                                  evaluated} + reading;
     QString measured = r.measuredAvailable ? number(r.measured) : QCoreApplication::translate("view", "unavailable");
     if (r.measuredAvailable && !r.measurementReliable) measured += QStringLiteral(" (") + QCoreApplication::translate("view", "unreliable") + QStringLiteral(")");
     QList<DetailRow> rows{
@@ -164,10 +202,17 @@ QList<DetailRow> details(const Result& r, const TypeInfo& t) {
         rows.append({"incomplete", QCoreApplication::translate("view", "Incomplete"),
                      QCoreApplication::translate("view", "an uncertain argument was accepted")});
     rows.append(evaluated);
-    return rows;
+    rows += reading;
+    return converted + rows;
 }
 
 QString explanation(const QString& key) {
+    if (key == "value")
+        return QCoreApplication::translate("view", "The result as computed in this number type; the screen shows it converted.");
+    if (key == "conversionNote")
+        return QCoreApplication::translate("view", "The shown fraction differs from the computed value by this much.");
+    if (key == "conversion")
+        return QCoreApplication::translate("view", "The form you asked for with “to”: the same value, written another way.");
     if (key == "bound")
         return QCoreApplication::translate("view", "A proven upper limit on how far the shown value can be from the exact result.");
     if (key == "measured")
@@ -192,6 +237,8 @@ QString explanation(const QString& key) {
     if (key == "type")
         return QCoreApplication::translate("view", "The C++ type the calculation ran in, and the bits of its significand: "
                                                    "more bits, more correct digits.");
+    if (key == "reading")
+        return QCoreApplication::translate("view", "How the calculator read the expression: every operation in parentheses, in the order it is done.");
     if (key == "evaluated")
         return QCoreApplication::translate("view", "The expression as it was computed, with Ans and M replaced by what they stand for.");
     if (key == "exact")
@@ -252,6 +299,15 @@ bool incomplete(const Error& error) {
     return error.code == ErrorCode::UnexpectedEnd || error.code == ErrorCode::MissingClosingParenthesis;
 }
 
+QString warningText(const Warning& w, const QString& expression) {
+    QString part = QString::fromUtf8(expression.toUtf8().mid(static_cast<int>(w.begin), static_cast<int>(w.end - w.begin)));
+    if (settings::decimalComma()) part = withDecimalComma(part);  // quoted as the screen shows it
+    switch (w.code) {
+    case WarningCode::EmptyRange: return QCoreApplication::translate("view", "%1 has no terms").arg(part);
+    }
+    return {};
+}
+
 QString errorText(const Error& e, const QString& expression) {
     const QByteArray bytes = expression.toUtf8();
     QString part = QString::fromUtf8(bytes.mid(static_cast<int>(e.begin), static_cast<int>(e.end - e.begin)));
@@ -284,6 +340,9 @@ QString errorText(const Error& e, const QString& expression) {
     case ErrorCode::ArgumentNearJump: return QCoreApplication::translate("view", "%1 jumps within the error of its arguments, so the result could be off by a whole step. If you proceed anyway, the error report will not include that error.").arg(part);
     case ErrorCode::ArgumentNearEdge: return QCoreApplication::translate("view", "The error of the argument of %1 reaches a point where it is not defined or not smooth, so no bound can be given. If you proceed anyway, the error report will not include that.").arg(part);
     case ErrorCode::Cancelled: return QCoreApplication::translate("view", "Cancelled");
+    case ErrorCode::UnknownTarget: return QCoreApplication::translate("view", "Unknown conversion “%1”").arg(part);
+    case ErrorCode::TooManyTerms: return QCoreApplication::translate("view", "%1 has too many terms").arg(part);
+    case ErrorCode::ReservedName: return QCoreApplication::translate("view", "“%1” is a reserved name").arg(part);
     }
     return {};
 }
