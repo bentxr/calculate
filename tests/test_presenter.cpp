@@ -515,3 +515,10 @@ TEST(Presenter, TheStoredValueRows) {
     for (const char* key : {"bits", "hex", "class", "ulp", "below", "above"})
         EXPECT_FALSE(view::explanation(key).isEmpty()) << key;
 }
+
+TEST(Presenter, AValueTooLongForDecimalsIsShownInBinary) {
+    const view::ValueParts p = view::valueParts(evaluated("1e-1000000", NumberType::Binary512));
+    EXPECT_TRUE(p.trusted.contains(QStringLiteral(" × 2^−"))) << p.trusted.toStdString();
+    EXPECT_TRUE(p.noise.isEmpty());
+    EXPECT_FALSE(view::explanation("binary").isEmpty());
+}

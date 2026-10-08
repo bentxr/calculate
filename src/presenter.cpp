@@ -122,6 +122,14 @@ void addUncertainty(const Result& r, QString& uncertainty, QString& exponent) {
 
 ValueParts valueParts(const Result& r) {
     if (r.error || r.exact || r.commentOnly) return {};
+    if (r.binaryValue) {  // too long for decimals: exactly, as an odd whole number times a power of two
+        const BinaryValue& b = *r.binaryValue;
+        ValueParts p;
+        const QString power = QStringLiteral("2^") + (b.exponent2 < 0 ? minus() + QString::number(-b.exponent2) : QString::number(b.exponent2));
+        p.trusted = (b.negative ? minus() : QString()) + (b.significand == "1" ? power : fromStd(b.significand) + QStringLiteral(" × ") + power);
+        p.unit = fromStd(r.unit);
+        return p;
+    }
     ValueParts p = split(r.value, r.trustedDigitsWithUncertainty);  // the bar where the uncertainty starts
     addUncertainty(r, p.uncertainty, p.uncertaintyExponent);
     p.unit = fromStd(r.unit);
@@ -247,6 +255,9 @@ QList<DetailRow> details(const Result& r, const TypeInfo& t) {
     if (!r.boundComplete)
         rows.append({"incomplete", QCoreApplication::translate("view", "Incomplete"),
                      QCoreApplication::translate("view", "an uncertain argument was accepted")});
+    if (r.binaryValue)
+        rows.append({"binary", QCoreApplication::translate("view", "Written in binary"),
+                     QCoreApplication::translate("view", "the decimal would need more than 20 000 digits")});
     rows.append(evaluated);
     rows += unit;
     rows += reading;
@@ -274,6 +285,9 @@ QString explanation(const QString& key) {
     if (key == "input")
         return QCoreApplication::translate("view", "The error of storing the numbers you typed in this type: "
                                                    "0.1, for example, has no exact binary form (floatError shows it for one number).");
+    if (key == "binary")
+        return QCoreApplication::translate("view", "This value is written exactly as an odd whole number times a power of two, because "
+                                                   "its decimal expansion is too long to show.");
     if (key == "bits")
         return QCoreApplication::translate("view", "The bits the computer stores for this result: sign, exponent and fraction, in the result's own type.");
     if (key == "hex") return QCoreApplication::translate("view", "The same bits written in hexadecimal, four bits per digit.");
