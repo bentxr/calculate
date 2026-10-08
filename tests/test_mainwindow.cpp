@@ -2036,3 +2036,16 @@ TEST(MainWindow, AnyNameCanBeAssignedWithTheLetters) {
     EXPECT_TRUE(answered(window));
     EXPECT_EQ(lcd(window)->outputText(), "21");
 }
+
+TEST(MainWindow, StoreKeepsThePhoneDrawerOpenForTheLetter) {
+    MainWindow window;
+    window.resize(390, 844);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    window.layOutKeys(QSize(390, 844));
+    auto* toggle = child<QPushButton>(window, "drawerToggle");
+    QTest::mouseClick(toggle, Qt::LeftButton);
+    openSection(window, "variables");
+    QTest::mouseClick(child<QPushButton>(window, "direct:store"), Qt::LeftButton);
+    EXPECT_TRUE(toggle->isChecked());  // the letter is in the drawer too
+}

@@ -307,3 +307,13 @@ TEST(Lcd, AConversionIsShownAsText) {
     lcd.clearResult();
     EXPECT_EQ(lcd.outputText(), "");
 }
+
+TEST(Lcd, TheStatusJoinsItsMarks) {
+    Lcd lcd;
+    lcd.setStoring(true);
+    EXPECT_EQ(lcd.statusText(), "STO");
+    lcd.setMemory("1");
+    EXPECT_EQ(lcd.statusText(), "STO M");
+    lcd.setStoring(false);
+    EXPECT_EQ(lcd.statusText(), "M");
+}
