@@ -1,5 +1,6 @@
 #include "mainwindow.hpp"
 
+#include "constanttext.hpp"
 #include "detailscard.hpp"
 #include "formulatip.hpp"
 #include "keybutton.hpp"
@@ -2177,4 +2178,15 @@ TEST(MainWindow, UncertaintySettings) {
     EXPECT_TRUE(window.exportSettings().contains("\"readprecision\": \"decimals\""));  // Plan 5's file takes them
     setting(window, "uncertainty:worst")->trigger();
     setting(window, "readprecision:off")->trigger();
+}
+
+TEST(MainWindow, TheUncertaintyIsInSpanishToo) {
+    settings::setLanguage(settings::Language::Spanish);
+    const QList<view::DetailRow> rows = view::details(calculate_core::evaluate("(3±0.4)*(4±0.3)"),
+                                                      calculate_core::numberTypes()[1]);
+    EXPECT_EQ(rows[5].label, "Incertidumbre");
+    EXPECT_EQ(rows[5].value, "± 2,5e+0 peor caso · ± 1,8e+0 estadística");  // Spanish brings the decimal comma
+    EXPECT_EQ(constantTitle("G"), "Constante de gravitación universal");
+    EXPECT_EQ(constantTitle("billion"), "un billón (10^12)");
+    settings::setLanguage(settings::Language::English);
 }

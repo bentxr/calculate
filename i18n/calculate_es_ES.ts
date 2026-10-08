@@ -468,6 +468,674 @@
     </message>
 </context>
 <context>
+    <name>constants</name>
+    <message>
+        <location filename="../src/constanttext.cpp" line="16"/>
+        <source>pi</source>
+        <translation>pi</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="17"/>
+        <source>Euler&apos;s number</source>
+        <translation>número de Euler</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="18"/>
+        <source>tau, 2π</source>
+        <translation>tau, 2π</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="19"/>
+        <source>square root of 2</source>
+        <translation>raíz cuadrada de 2</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="20"/>
+        <source>golden ratio</source>
+        <translation>número áureo</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="21"/>
+        <source>Euler–Mascheroni constant</source>
+        <translation>Constante de Euler-Mascheroni</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="22"/>
+        <source>Catalan&apos;s constant</source>
+        <translation>Constante de Catalan</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="23"/>
+        <source>Apéry&apos;s constant, ζ(3)</source>
+        <translation>constante de Apéry, ζ(3)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="24"/>
+        <source>plastic ratio</source>
+        <translation>número plástico</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="25"/>
+        <source>omega constant, W(1)</source>
+        <translation>constante omega, W(1)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="26"/>
+        <source>one million (10^6)</source>
+        <translation>un millón (10^6)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="27"/>
+        <source>one milliard (10^9)</source>
+        <translation>mil millones (10^9)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="28"/>
+        <source>one billion (10^12)</source>
+        <translation>un billón (10^12)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="29"/>
+        <source>one billiard (10^15)</source>
+        <translation>mil billones (10^15)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="30"/>
+        <source>one trillion (10^18)</source>
+        <translation>un trillón (10^18)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="31"/>
+        <source>one trilliard (10^21)</source>
+        <translation>mil trillones (10^21)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="32"/>
+        <source>one quadrillion (10^24)</source>
+        <translation>un cuatrillón (10^24)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="33"/>
+        <source>one quintillion (10^30)</source>
+        <translation>un quintillón (10^30)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="34"/>
+        <source>one sextillion (10^36)</source>
+        <translation>un sextillón (10^36)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="35"/>
+        <source>one septillion (10^42)</source>
+        <translation>un septillón (10^42)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="36"/>
+        <source>one octillion (10^48)</source>
+        <translation>un octillón (10^48)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="37"/>
+        <source>one nonillion (10^54)</source>
+        <translation>un nonillón (10^54)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="38"/>
+        <source>one decillion (10^60)</source>
+        <translation>un decillón (10^60)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="39"/>
+        <source>one googol (10^100)</source>
+        <translation>un gúgol (10^100)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="40"/>
+        <source>one lakh (10^5)</source>
+        <translation>un lakh (10^5)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="41"/>
+        <source>one crore (10^7)</source>
+        <translation>un crore (10^7)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="42"/>
+        <source>one dozen (12)</source>
+        <translation>una docena (12)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="43"/>
+        <source>one gross (144)</source>
+        <translation>una gruesa (144)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="44"/>
+        <source>one score (20)</source>
+        <translation>una veintena (20)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="45"/>
+        <source>parts per million</source>
+        <translation>partes por millón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="46"/>
+        <source>per cent mille (10^-5)</source>
+        <translation>por cien mil (10^-5)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="47"/>
+        <source>one million (10^6) (Spanish name)</source>
+        <translation>un millón (10^6)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="48"/>
+        <source>one milliard (10^9) (Spanish name)</source>
+        <translation>mil millones (10^9)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="49"/>
+        <source>one billion (10^12) (Spanish name)</source>
+        <translation>un billón (10^12)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="50"/>
+        <source>one trillion (10^18) (Spanish name)</source>
+        <translation>un trillón (10^18)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="51"/>
+        <source>one quadrillion (10^24) (Spanish name)</source>
+        <translation>un cuatrillón (10^24)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="52"/>
+        <source>one quintillion (10^30) (Spanish name)</source>
+        <translation>un quintillón (10^30)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="53"/>
+        <source>one sextillion (10^36) (Spanish name)</source>
+        <translation>un sextillón (10^36)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="54"/>
+        <source>one septillion (10^42) (Spanish name)</source>
+        <translation>un septillón (10^42)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="55"/>
+        <source>one octillion (10^48) (Spanish name)</source>
+        <translation>un octillón (10^48)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="56"/>
+        <source>one nonillion (10^54) (Spanish name)</source>
+        <translation>un nonillón (10^54)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="57"/>
+        <source>one decillion (10^60) (Spanish name)</source>
+        <translation>un decillón (10^60)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="58"/>
+        <source>one dozen (12) (Spanish name)</source>
+        <translation>una docena (12)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="59"/>
+        <source>one gross (144) (Spanish name)</source>
+        <translation>una gruesa (144)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="60"/>
+        <source>speed of light in vacuum</source>
+        <translation>Velocidad de la luz en el vacío</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="61"/>
+        <source>Planck constant</source>
+        <translation>Constante de Planck</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="62"/>
+        <source>reduced Planck constant</source>
+        <translation>Constante de Planck reducida</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="63"/>
+        <source>elementary charge</source>
+        <translation>Carga elemental</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="64"/>
+        <source>Boltzmann constant</source>
+        <translation>Constante de Boltzmann</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="65"/>
+        <source>Avogadro constant</source>
+        <translation>Constante de Avogadro</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="66"/>
+        <source>hyperfine transition frequency of Cs-133</source>
+        <translation>Frecuencia de la transición hiperfina del cesio 133</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="67"/>
+        <source>luminous efficacy</source>
+        <translation>Eficacia luminosa</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="68"/>
+        <source>Newtonian constant of gravitation</source>
+        <translation>Constante de gravitación universal</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="69"/>
+        <source>standard acceleration of gravity</source>
+        <translation>Aceleración estándar de la gravedad</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="70"/>
+        <source>standard atmosphere</source>
+        <translation>Atmósfera estándar</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="71"/>
+        <source>standard-state pressure</source>
+        <translation>Presión del estado estándar</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="72"/>
+        <source>molar gas constant</source>
+        <translation>Constante molar de los gases</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="73"/>
+        <source>Faraday constant</source>
+        <translation>Constante de Faraday</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="74"/>
+        <source>Stefan-Boltzmann constant</source>
+        <translation>Constante de Stefan-Boltzmann</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="75"/>
+        <source>first radiation constant</source>
+        <translation>Primera constante de radiación</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="76"/>
+        <source>first radiation constant for spectral radiance</source>
+        <translation>Primera constante de radiación para la radiancia espectral</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="77"/>
+        <source>second radiation constant</source>
+        <translation>Segunda constante de radiación</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="78"/>
+        <source>molar volume of ideal gas (273.15 K, 100 kPa)</source>
+        <translation>Volumen molar del gas ideal (273,15 K, 100 kPa)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="79"/>
+        <source>molar volume of ideal gas (273.15 K, 101.325 kPa)</source>
+        <translation>Volumen molar del gas ideal (273,15 K, 101,325 kPa)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="80"/>
+        <source>Loschmidt constant (273.15 K, 100 kPa)</source>
+        <translation>Constante de Loschmidt (273,15 K, 100 kPa)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="81"/>
+        <source>Loschmidt constant (273.15 K, 101.325 kPa)</source>
+        <translation>Constante de Loschmidt (273,15 K, 101,325 kPa)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="82"/>
+        <source>molar mass constant</source>
+        <translation>Constante de masa molar</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="83"/>
+        <source>vacuum mag. permeability</source>
+        <translation>Permeabilidad magnética del vacío</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="84"/>
+        <source>vacuum electric permittivity</source>
+        <translation>Permitividad eléctrica del vacío</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="85"/>
+        <source>characteristic impedance of vacuum</source>
+        <translation>Impedancia característica del vacío</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="86"/>
+        <source>fine-structure constant</source>
+        <translation>Constante de estructura fina</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="87"/>
+        <source>inverse fine-structure constant</source>
+        <translation>Inversa de la constante de estructura fina</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="88"/>
+        <source>Rydberg constant</source>
+        <translation>Constante de Rydberg</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="89"/>
+        <source>Bohr radius</source>
+        <translation>Radio de Bohr</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="90"/>
+        <source>Hartree energy</source>
+        <translation>Energía de Hartree</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="91"/>
+        <source>classical electron radius</source>
+        <translation>Radio clásico del electrón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="92"/>
+        <source>Thomson cross section</source>
+        <translation>Sección eficaz de Thomson</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="93"/>
+        <source>Compton wavelength</source>
+        <translation>Longitud de onda de Compton</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="94"/>
+        <source>reduced Compton wavelength</source>
+        <translation>Longitud de onda de Compton reducida</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="95"/>
+        <source>Bohr magneton</source>
+        <translation>Magnetón de Bohr</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="96"/>
+        <source>nuclear magneton</source>
+        <translation>Magnetón nuclear</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="97"/>
+        <source>mag. flux quantum</source>
+        <translation>Cuanto de flujo magnético</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="98"/>
+        <source>conductance quantum</source>
+        <translation>Cuanto de conductancia</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="99"/>
+        <source>Josephson constant</source>
+        <translation>Constante de Josephson</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="100"/>
+        <source>von Klitzing constant</source>
+        <translation>Constante de von Klitzing</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="101"/>
+        <source>electron volt</source>
+        <translation>Electronvoltio</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="102"/>
+        <source>atomic mass constant</source>
+        <translation>Constante de masa atómica</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="103"/>
+        <source>electron mass</source>
+        <translation>Masa del electrón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="104"/>
+        <source>proton mass</source>
+        <translation>Masa del protón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="105"/>
+        <source>neutron mass</source>
+        <translation>Masa del neutrón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="106"/>
+        <source>deuteron mass</source>
+        <translation>Masa del deuterón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="107"/>
+        <source>helion mass</source>
+        <translation>Masa del helión</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="108"/>
+        <source>triton mass</source>
+        <translation>Masa del tritón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="109"/>
+        <source>alpha particle mass</source>
+        <translation>Masa de la partícula alfa</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="110"/>
+        <source>muon mass</source>
+        <translation>Masa del muon</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="111"/>
+        <source>tau mass</source>
+        <translation>Masa del tau</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="112"/>
+        <source>electron mass in u</source>
+        <translation>Masa del electrón en u</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="113"/>
+        <source>proton mass in u</source>
+        <translation>Masa del protón en u</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="114"/>
+        <source>neutron mass in u</source>
+        <translation>Masa del neutrón en u</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="115"/>
+        <source>electron mass energy equivalent in MeV</source>
+        <translation>Energía equivalente a la masa del electrón, en MeV</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="116"/>
+        <source>proton mass energy equivalent in MeV</source>
+        <translation>Energía equivalente a la masa del protón, en MeV</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="117"/>
+        <source>neutron mass energy equivalent in MeV</source>
+        <translation>Energía equivalente a la masa del neutrón, en MeV</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="118"/>
+        <source>muon mass energy equivalent in MeV</source>
+        <translation>Energía equivalente a la masa del muon, en MeV</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="119"/>
+        <source>proton-electron mass ratio</source>
+        <translation>Razón de masas protón-electrón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="120"/>
+        <source>muon-electron mass ratio</source>
+        <translation>Razón de masas muon-electrón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="121"/>
+        <source>electron mag. mom.</source>
+        <translation>Momento magnético del electrón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="122"/>
+        <source>proton mag. mom.</source>
+        <translation>Momento magnético del protón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="123"/>
+        <source>neutron mag. mom.</source>
+        <translation>Momento magnético del neutrón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="124"/>
+        <source>muon mag. mom.</source>
+        <translation>Momento magnético del muon</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="125"/>
+        <source>electron g factor</source>
+        <translation>Factor g del electrón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="126"/>
+        <source>proton g factor</source>
+        <translation>Factor g del protón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="127"/>
+        <source>muon g factor</source>
+        <translation>Factor g del muon</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="128"/>
+        <source>electron mag. mom. anomaly</source>
+        <translation>Anomalía del momento magnético del electrón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="129"/>
+        <source>muon mag. mom. anomaly</source>
+        <translation>Anomalía del momento magnético del muon</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="130"/>
+        <source>electron gyromag. ratio</source>
+        <translation>Razón giromagnética del electrón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="131"/>
+        <source>proton gyromag. ratio</source>
+        <translation>Razón giromagnética del protón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="132"/>
+        <source>proton rms charge radius</source>
+        <translation>Radio de carga cuadrático medio del protón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="133"/>
+        <source>deuteron rms charge radius</source>
+        <translation>Radio de carga cuadrático medio del deuterón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="134"/>
+        <source>electron charge to mass quotient</source>
+        <translation>Cociente carga-masa del electrón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="135"/>
+        <source>Boltzmann constant in eV/K</source>
+        <translation>Constante de Boltzmann en eV/K</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="136"/>
+        <source>Planck constant in eV/Hz</source>
+        <translation>Constante de Planck en eV/Hz</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="137"/>
+        <source>reduced Planck constant in eV s</source>
+        <translation>Constante de Planck reducida en eV·s</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="138"/>
+        <source>reduced Planck constant times c in MeV fm</source>
+        <translation>Constante de Planck reducida por c, en MeV·fm</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="139"/>
+        <source>Rydberg constant times hc in eV</source>
+        <translation>Constante de Rydberg por hc, en eV</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="140"/>
+        <source>Hartree energy in eV</source>
+        <translation>Energía de Hartree en eV</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="141"/>
+        <source>molar Planck constant</source>
+        <translation>Constante de Planck molar</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="142"/>
+        <source>Fermi coupling constant</source>
+        <translation>Constante de acoplamiento de Fermi</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="143"/>
+        <source>weak mixing angle</source>
+        <translation>Ángulo de mezcla débil (sen²θ_W)</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="144"/>
+        <source>W to Z mass ratio</source>
+        <translation>Razón de masas W-Z</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="145"/>
+        <source>Planck length</source>
+        <translation>Longitud de Planck</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="146"/>
+        <source>Planck mass</source>
+        <translation>Masa de Planck</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="147"/>
+        <source>Planck time</source>
+        <translation>Tiempo de Planck</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="148"/>
+        <source>Planck temperature</source>
+        <translation>Temperatura de Planck</translation>
+    </message>
+</context>
+<context>
     <name>functions</name>
     <message>
         <location filename="../src/functiontext.cpp" line="16"/>
@@ -1313,6 +1981,111 @@
         <location filename="../src/functiontext.cpp" line="184"/>
         <source>Probability</source>
         <translation>Probabilidad</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="185"/>
+        <source>Tau</source>
+        <translation>Tau</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="186"/>
+        <source>Twice pi: the ratio of a circle&apos;s circumference to its radius.</source>
+        <translation>Dos veces pi: la razón entre la circunferencia de un círculo y su radio.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="187"/>
+        <source>Square root of 2</source>
+        <translation>Raíz cuadrada de 2</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="188"/>
+        <source>The positive number whose square is 2.</source>
+        <translation>El número positivo cuyo cuadrado es 2.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="189"/>
+        <source>Golden ratio</source>
+        <translation>Número áureo</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="190"/>
+        <source>(1 + √5)/2, the positive root of x² = x + 1.</source>
+        <translation>(1 + √5)/2, la raíz positiva de x² = x + 1.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="191"/>
+        <source>Euler–Mascheroni constant</source>
+        <translation>Constante de Euler-Mascheroni</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="192"/>
+        <source>The limit of 1 + 1/2 + … + 1/n − ln n.</source>
+        <translation>El límite de 1 + 1/2 + … + 1/n − ln n.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="193"/>
+        <source>Catalan&apos;s constant</source>
+        <translation>Constante de Catalan</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="194"/>
+        <source>1 − 1/3² + 1/5² − 1/7² + …, over the odd squares with alternating signs.</source>
+        <translation>1 − 1/3² + 1/5² − 1/7² + …, sobre los cuadrados impares con signos alternos.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="195"/>
+        <source>Apéry&apos;s constant</source>
+        <translation>Constante de Apéry</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="196"/>
+        <source>1 + 1/2³ + 1/3³ + …, the value of zeta(3).</source>
+        <translation>1 + 1/2³ + 1/3³ + …, el valor de zeta(3).</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="197"/>
+        <source>Plastic ratio</source>
+        <translation>Número plástico</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="198"/>
+        <source>The real root of x³ = x + 1.</source>
+        <translation>La raíz real de x³ = x + 1.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="199"/>
+        <source>Omega constant</source>
+        <translation>Constante omega</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="200"/>
+        <source>The number x with x·eˣ = 1.</source>
+        <translation>El número x con x·eˣ = 1.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="201"/>
+        <source>Value with uncertainty</source>
+        <translation>Valor con incertidumbre</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="202"/>
+        <source>x, whose true value lies within u of it.</source>
+        <translation>x, cuyo valor verdadero está a menos de u de él.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="203"/>
+        <source>Error part</source>
+        <translation>Parte de error</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="204"/>
+        <source>The worst-case uncertainty x carries from its uncertain inputs, as a number.</source>
+        <translation>La incertidumbre en el peor caso que x arrastra de sus datos inciertos, como número.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="205"/>
+        <source>Uncertainty</source>
+        <translation>Incertidumbre</translation>
     </message>
 </context>
 <context>

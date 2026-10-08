@@ -181,7 +181,28 @@ const QStringList& functionTextsForTranslation() {
         QT_TRANSLATE_NOOP("functions", "Statistics"),
         QT_TRANSLATE_NOOP("functions", "Sums and products"),
         QT_TRANSLATE_NOOP("functions", "Special functions"),
-        QT_TRANSLATE_NOOP("functions", "Probability")
+        QT_TRANSLATE_NOOP("functions", "Probability"),
+        QT_TRANSLATE_NOOP("functions", "Tau"),
+        QT_TRANSLATE_NOOP("functions", "Twice pi: the ratio of a circle's circumference to its radius."),
+        QT_TRANSLATE_NOOP("functions", "Square root of 2"),
+        QT_TRANSLATE_NOOP("functions", "The positive number whose square is 2."),
+        QT_TRANSLATE_NOOP("functions", "Golden ratio"),
+        QT_TRANSLATE_NOOP("functions", "(1 + √5)/2, the positive root of x² = x + 1."),
+        QT_TRANSLATE_NOOP("functions", "Euler–Mascheroni constant"),
+        QT_TRANSLATE_NOOP("functions", "The limit of 1 + 1/2 + … + 1/n − ln n."),
+        QT_TRANSLATE_NOOP("functions", "Catalan's constant"),
+        QT_TRANSLATE_NOOP("functions", "1 − 1/3² + 1/5² − 1/7² + …, over the odd squares with alternating signs."),
+        QT_TRANSLATE_NOOP("functions", "Apéry's constant"),
+        QT_TRANSLATE_NOOP("functions", "1 + 1/2³ + 1/3³ + …, the value of zeta(3)."),
+        QT_TRANSLATE_NOOP("functions", "Plastic ratio"),
+        QT_TRANSLATE_NOOP("functions", "The real root of x³ = x + 1."),
+        QT_TRANSLATE_NOOP("functions", "Omega constant"),
+        QT_TRANSLATE_NOOP("functions", "The number x with x·eˣ = 1."),
+        QT_TRANSLATE_NOOP("functions", "Value with uncertainty"),
+        QT_TRANSLATE_NOOP("functions", "x, whose true value lies within u of it."),
+        QT_TRANSLATE_NOOP("functions", "Error part"),
+        QT_TRANSLATE_NOOP("functions", "The worst-case uncertainty x carries from its uncertain inputs, as a number."),
+        QT_TRANSLATE_NOOP("functions", "Uncertainty")
     };
     return texts;
 }
