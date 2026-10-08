@@ -121,8 +121,8 @@ TEST(Keypad, EveryOtherKeyHasAHomeSection) {
         ids << s.id;
         titles << s.title;
     }
-    EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "rounding", "constants", "statistics", "showAs", "variables", "letters"}));
-    EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Rounding and parts", "Constants", "Statistics", "Show as", "Variables", "Letters"}));
+    EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "rounding", "constants", "statistics", "showAs", "special", "variables", "letters"}));
+    EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Rounding and parts", "Constants", "Statistics", "Show as", "Special functions", "Variables", "Letters"}));
     EXPECT_EQ(sectionLabels("numbers"), QStringList({"x!", "abs", "%", "%…", "mod", "rem", "floormod", "nPr", "nCr", "gcd", "lcm", ","}));
     EXPECT_EQ(sectionLabels("hyperbolic"), QStringList({"sinh", "cosh", "tanh", "asinh", "acosh", "atanh", "sech", "csch",
                                                         "coth", "asech", "acsch", "acoth"}));
@@ -392,4 +392,12 @@ TEST(Keypad, TheElementaryFunctionsHaveKeys) {
 TEST(Keypad, AnAliasUsesItsTwinsKey) {
     ASSERT_FALSE(aliasKeys().isEmpty());
     for (const auto& [alias, id] : aliasKeys()) EXPECT_FALSE(find(id).id.isEmpty()) << alias.toStdString();
+}
+
+TEST(Keypad, TheSpecialFunctionsHaveKeys) {
+    EXPECT_EQ(section("special").title, "Special functions");
+    EXPECT_EQ(sectionLabels("special"),
+              QStringList({"gamma", "lgamma", "beta", "digamma", "erf", "erfc", "erfinv", "erfcinv", "gammap", "gammaq",
+                           "igamma", "gammainc", "betainc", "betaincinv"}));
+    for (const char* name : {"gamma", "erfcinv", "gammainc", "betaincinv"}) EXPECT_EQ(directKey(name).face.function, name) << name;
 }

@@ -2108,3 +2108,14 @@ TEST(MainWindow, FunctionKeysTypeTheirNames) {
     EXPECT_TRUE(answered(window));
     EXPECT_EQ(lcd(window)->outputText(), "2");
 }
+
+TEST(MainWindow, SpecialFunctionKeysTypeTheirNames) {
+    MainWindow window;
+    openSection(window, "special");
+    for (const char* name : {"direct:gamma", "key:5", "key:close"}) QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "gamma(5)");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "24");
+}
