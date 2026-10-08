@@ -5,6 +5,8 @@
 #include <QComboBox>
 #include <QEvent>
 #include <QFormLayout>
+#include <QKeyEvent>
+#include <QMimeData>
 #include <QGridLayout>
 #include <QLabel>
 #include <QPlainTextEdit>
@@ -16,14 +18,33 @@ using namespace calculate_core;
 
 namespace {
 
-// A field that wraps anywhere, about three lines tall, plain text only.
+// A field that wraps anywhere, about three lines tall, plain text only, and takes only `allowed` characters
+// (typed or pasted); never Enter.
 class FieldEdit : public QPlainTextEdit {
 public:
-    explicit FieldEdit(QWidget* parent) : QPlainTextEdit(parent) {
+    FieldEdit(QWidget* parent, QString allowed) : QPlainTextEdit(parent), allowed_(std::move(allowed)) {
         setWordWrapMode(QTextOption::WrapAnywhere);
         setTabChangesFocus(true);
         setFixedHeight(fontMetrics().lineSpacing() * 3 + 2 * frameWidth() + 8);
     }
+
+protected:
+    void keyPressEvent(QKeyEvent* event) override {
+        const QString typed = event->text();
+        if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) return;
+        if (!typed.isEmpty() && typed[0].isPrint() && filtered(typed) != typed) return;
+        QPlainTextEdit::keyPressEvent(event);
+    }
+    void insertFromMimeData(const QMimeData* source) override { insertPlainText(filtered(source->text())); }
+
+private:
+    QString filtered(const QString& text) const {
+        QString s;
+        for (const QChar c : text)
+            if (allowed_.contains(c)) s += c;
+        return s;
+    }
+    QString allowed_;
 };
 
 // Colours the binary digits by field: the sign, w exponent digits, then the fraction (spaces don't count).
@@ -81,11 +102,11 @@ Inspector::Inspector(QWidget* parent) : QWidget(parent), formats_(floatFormats()
     format_->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
     format_->setMinimumContentsLength(10);
     for (std::size_t i = 0; i < formats_.size(); ++i) format_->addItem(QString());
-    decimal_ = new FieldEdit(this);
+    decimal_ = new FieldEdit(this, QStringLiteral("0123456789.eE+-\u2212infaINFA\u221E "));
     decimal_->setObjectName("inspectorDecimal");
-    binary_ = new FieldEdit(this);
+    binary_ = new FieldEdit(this, QStringLiteral("01 "));
     binary_->setObjectName("inspectorBinary");
-    hex_ = new FieldEdit(this);
+    hex_ = new FieldEdit(this, QStringLiteral("0123456789abcdefABCDEFxX "));
     hex_->setObjectName("inspectorHex");
     for (const char* key : {"format", "decimal", "binary", "hex"}) {
         auto* caption = new QLabel(this);
@@ -133,6 +154,12 @@ Inspector::Inspector(QWidget* parent) : QWidget(parent), formats_(floatFormats()
     connect(decimal_, &QPlainTextEdit::textChanged, this, [this] {
         if (!updating_) convertDecimal();
     });
+    connect(binary_, &QPlainTextEdit::textChanged, this, [this] {
+        if (!updating_) convertBits(binary_, 2);
+    });
+    connect(hex_, &QPlainTextEdit::textChanged, this, [this] {
+        if (!updating_) convertBits(hex_, 16);
+    });
     connect(format_, &QComboBox::currentIndexChanged, this, [this] {
         static_cast<BitsHighlighter*>(highlighter_)->setLayout(format().exponentBits, dark(this));
         convertDecimal();
@@ -156,21 +183,38 @@ void Inspector::setDecimal(const QString& text) { decimal_->setPlainText(text); 
 void Inspector::convertDecimal() {
     const QString text = decimal_->toPlainText().trimmed();
     if (text.isEmpty()) {
-        clearOutputs();
+        clearOutputs(decimal_);
         return;
     }
     const FloatInspection inspection = inspectDecimal(format(), text.toStdString());
     if (inspection.error) {
-        message_->setText(view::errorText(*inspection.error, text));
+        message_->setText(tr("Not a decimal number"));
         return;
     }
     show(inspection, decimal_);
 }
 
-void Inspector::clearOutputs() {
+void Inspector::convertBits(QPlainTextEdit* field, int base) {
+    const QString text = field->toPlainText().trimmed();
+    if (text.isEmpty()) {
+        clearOutputs(field);
+        return;
+    }
+    const FloatInspection inspection = inspectBits(format(), text.toStdString(), base);
+    if (inspection.error) {
+        message_->setText(inspection.error->code == ErrorCode::LiteralOutOfRange
+                              ? tr("%1 has %2 bits").arg(QString::fromStdString(format().name)).arg(format().storageBits)
+                          : base == 2 ? tr("Not a binary number")
+                                      : tr("Not a hexadecimal number"));
+        return;
+    }
+    show(inspection, field);
+}
+
+void Inspector::clearOutputs(QWidget* typedIn) {
     updating_ = true;
-    binary_->clear();
-    hex_->clear();
+    for (QPlainTextEdit* field : {decimal_, binary_, hex_})
+        if (field != typedIn) field->clear();
     updating_ = false;
     message_->clear();
     for (auto& [key, label] : values_) label->clear();

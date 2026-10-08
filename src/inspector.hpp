@@ -32,9 +32,10 @@ protected:
 private:
     const calculate_core::FloatFormatInfo& format() const;
     void convertDecimal();
+    void convertBits(QPlainTextEdit* field, int base);  // base 2 or 16
     // Fills every field and output but `typedIn`, which keeps what the user wrote.
     void show(const calculate_core::FloatInspection& inspection, QWidget* typedIn);
-    void clearOutputs();
+    void clearOutputs(QWidget* typedIn);  // an emptied field: the others and the outputs too
 
     std::vector<calculate_core::FloatFormatInfo> formats_;
     QComboBox* format_ = nullptr;

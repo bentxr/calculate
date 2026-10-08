@@ -25,67 +25,87 @@
 <context>
     <name>Inspector</name>
     <message>
-        <location filename="../src/inspector.cpp" line="194"/>
+        <location filename="../src/inspector.cpp" line="191"/>
+        <source>Not a decimal number</source>
+        <translation>No es un número decimal</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="206"/>
+        <source>%1 has %2 bits</source>
+        <translation>%1 tiene %2 bits</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="207"/>
+        <source>Not a binary number</source>
+        <translation>No es un número binario</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="208"/>
+        <source>Not a hexadecimal number</source>
+        <translation>No es un número hexadecimal</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="238"/>
         <source>sign %1 · exponent %2 (field %3) · significand %4</source>
         <translation>signo %1 · exponente %2 (campo %3) · significando %4</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="214"/>
+        <location filename="../src/inspector.cpp" line="258"/>
         <source>display only</source>
         <translation>solo para mostrar</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="220"/>
+        <location filename="../src/inspector.cpp" line="264"/>
         <source>Format</source>
         <translation>Formato</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="221"/>
+        <location filename="../src/inspector.cpp" line="265"/>
         <source>Decimal</source>
         <translation>Decimal</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="222"/>
+        <location filename="../src/inspector.cpp" line="266"/>
         <source>Binary</source>
         <translation>Binario</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="223"/>
+        <location filename="../src/inspector.cpp" line="267"/>
         <source>Hexadecimal</source>
         <translation>Hexadecimal</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="224"/>
+        <location filename="../src/inspector.cpp" line="268"/>
         <source>Class</source>
         <translation>Clase</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="225"/>
+        <location filename="../src/inspector.cpp" line="269"/>
         <source>Fields</source>
         <translation>Campos</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="226"/>
+        <location filename="../src/inspector.cpp" line="270"/>
         <source>Value</source>
         <translation>Valor</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="227"/>
+        <location filename="../src/inspector.cpp" line="271"/>
         <source>Conversion error (stored − typed)</source>
         <translation>Error de conversión (almacenado − escrito)</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="228"/>
+        <location filename="../src/inspector.cpp" line="272"/>
         <source>ulp</source>
         <translation>ulp</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="229"/>
+        <location filename="../src/inspector.cpp" line="273"/>
         <source>Next below</source>
         <translation>Anterior representable</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="230"/>
+        <location filename="../src/inspector.cpp" line="274"/>
         <source>Next above</source>
         <translation>Siguiente representable</translation>
     </message>

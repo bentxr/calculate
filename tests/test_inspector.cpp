@@ -49,3 +49,46 @@ TEST(Inspector, ConvertsADecimal) {
     EXPECT_EQ(shown(inspector, "below"), "0.0999999940395355224609375");
     EXPECT_EQ(shown(inspector, "above"), "0.10000000894069671630859375");
 }
+
+TEST(Inspector, EditingTheHexUpdatesTheOthers) {
+    Inspector inspector;
+    inspector.setFormatIndex(inspector.formatIndex(NumberType::Float));
+    auto* hex = child<QPlainTextEdit>(inspector, "inspectorHex");
+    hex->selectAll();
+    QTest::keyClicks(hex, "3F800000");
+    EXPECT_EQ(hex->toPlainText(), "3F800000");  // the field being typed in stays as typed
+    EXPECT_EQ(text(inspector, "inspectorDecimal"), "1");
+    EXPECT_EQ(text(inspector, "inspectorBinary"), "0  0111 1111  0000 0000 0000 0000 0000 000");
+    EXPECT_EQ(shown(inspector, "error"), "");  // a pattern, not a conversion
+}
+
+TEST(Inspector, EditingTheBitsUpdatesTheOthers) {
+    Inspector inspector;
+    inspector.setFormatIndex(inspector.formatIndex(NumberType::Float));
+    auto* binary = child<QPlainTextEdit>(inspector, "inspectorBinary");
+    binary->selectAll();
+    QTest::keyClicks(binary, "01000000010000000000000000000000");
+    EXPECT_EQ(text(inspector, "inspectorHex"), "4040 0000");
+    EXPECT_EQ(text(inspector, "inspectorDecimal"), "3");
+}
+
+TEST(Inspector, AnUnreadableFieldLeavesTheOthers) {
+    Inspector inspector;
+    inspector.setFormatIndex(inspector.formatIndex(NumberType::Float));
+    inspector.setDecimal("0.1");
+    auto* decimal = child<QPlainTextEdit>(inspector, "inspectorDecimal");
+    decimal->selectAll();
+    QTest::keyClicks(decimal, "0.1.");
+    EXPECT_FALSE(child<QLabel>(inspector, "inspectorMessage")->text().isEmpty());
+    EXPECT_EQ(text(inspector, "inspectorHex"), "3DCC CCCD");
+}
+
+TEST(Inspector, FieldsTakeOnlyTheirCharacters) {
+    Inspector inspector;
+    auto* hex = child<QPlainTextEdit>(inspector, "inspectorHex");
+    hex->clear();
+    QTest::keyClicks(hex, "3z!");
+    EXPECT_EQ(hex->toPlainText(), "3");
+    QTest::keyClick(hex, Qt::Key_Return);
+    EXPECT_EQ(hex->toPlainText(), "3");
+}
