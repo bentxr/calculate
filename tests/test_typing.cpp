@@ -293,3 +293,10 @@ TEST(Typing, SumsShowTheirSymbolAndReadBackAsTemplates) {
     EXPECT_EQ(named.text(), "Σ(k, 1, 3, k)");
     EXPECT_EQ(typing::read("product(x, 1, 5)")[0].kind, Template::Product);
 }
+
+TEST(Typing, ATargetIsTypedAsWritten) {
+    EXPECT_EQ(typed("2.7 to 1/3").text(), "2.7 to 1/3");  // after `to` the text names a target: no ÷ or ×
+    EXPECT_EQ(typed("2.7→1/4").text(), "2.7→1/4");
+    EXPECT_EQ(typed("2.7->1/4").text(), "2.7→1/4");
+    EXPECT_EQ(typed("total/2").text(), "total÷2");  // a word that only starts with "to"
+}

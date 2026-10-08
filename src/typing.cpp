@@ -4,6 +4,8 @@
 
 #include <calculate-core/calculate-core.hpp>
 
+#include <QRegularExpression>
+
 #include <utility>
 #include <vector>
 
@@ -259,6 +261,18 @@ bool inComment(const Entry& e) {
     return false;
 }
 
+// After a `to` or `→` in the outer row, the text names a conversion target ("1/3", "sci"): typed as it is.
+bool inTarget(const Entry& e) {
+    if (!e.path().empty()) return false;
+    QString before;
+    for (int i = 0; i < e.cursor(); ++i) {
+        const Item& item = e.root()[static_cast<std::size_t>(i)];
+        before += item.kind == Template::Text ? item.text : QStringLiteral("□");
+    }
+    static const QRegularExpression keyword(QStringLiteral("(→|(^|\\s)to\\s)"));
+    return before.contains(keyword);
+}
+
 void leaveOperands(Entry& e, const QString& piece) {
     while (endsOperand(e, piece)) e.right();
 }
@@ -310,7 +324,7 @@ void complete(Entry& e, const QString& name) {
 
 bool typeCharacter(Entry& e, QChar c) {
     if (!c.isPrint()) return false;
-    if (inComment(e)) {
+    if (inComment(e) || (inTarget(e) && c != '#')) {  // a comment may follow a target
         e.insert(QString(c));
         return true;
     }
