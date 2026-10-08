@@ -175,12 +175,14 @@ QList<DetailRow> details(const Result& r, const TypeInfo& t) {
     }
     const QString expression = settings::decimalComma() ? withDecimalComma(fromStd(r.expression)) : fromStd(r.expression);
     const DetailRow evaluated{"evaluated", QCoreApplication::translate("view", "Evaluated"), expression};
+    const QString read = settings::decimalComma() ? withDecimalComma(fromStd(r.reading)) : fromStd(r.reading);
+    const QList<DetailRow> reading{{"reading", QCoreApplication::translate("view", "Read as"), read}};
     if (r.exact)
         return converted
                + QList<DetailRow>{{"exact", QCoreApplication::translate("view", "Error"), QCoreApplication::translate("view", "exact · no rounding error")},
                                   {"type", QCoreApplication::translate("view", "Number type"),
                                    QCoreApplication::translate("view", "%1, exact fractions").arg(fromStd(t.cppName))},
-                                  evaluated};
+                                  evaluated} + reading;
     QString measured = r.measuredAvailable ? number(r.measured) : QCoreApplication::translate("view", "unavailable");
     if (r.measuredAvailable && !r.measurementReliable) measured += QStringLiteral(" (") + QCoreApplication::translate("view", "unreliable") + QStringLiteral(")");
     QList<DetailRow> rows{
@@ -200,6 +202,7 @@ QList<DetailRow> details(const Result& r, const TypeInfo& t) {
         rows.append({"incomplete", QCoreApplication::translate("view", "Incomplete"),
                      QCoreApplication::translate("view", "an uncertain argument was accepted")});
     rows.append(evaluated);
+    rows += reading;
     return converted + rows;
 }
 
@@ -234,6 +237,8 @@ QString explanation(const QString& key) {
     if (key == "type")
         return QCoreApplication::translate("view", "The C++ type the calculation ran in, and the bits of its significand: "
                                                    "more bits, more correct digits.");
+    if (key == "reading")
+        return QCoreApplication::translate("view", "How the calculator read the expression: every operation in parentheses, in the order it is done.");
     if (key == "evaluated")
         return QCoreApplication::translate("view", "The expression as it was computed, with Ans and M replaced by what they stand for.");
     if (key == "exact")
