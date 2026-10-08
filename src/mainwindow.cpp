@@ -1321,6 +1321,7 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event) {
 void MainWindow::changeEvent(QEvent* event) {
     if (event->type() == QEvent::LanguageChange) retranslate();
     if (event->type() == QEvent::PaletteChange && settingsButton_) drawIcons();
+    if (event->type() == QEvent::PaletteChange && hasResult_) present();  // the bits' colours follow the theme
     QMainWindow::changeEvent(event);
 }
 
@@ -1725,7 +1726,8 @@ void MainWindow::present() {
     const bool unfinished = previewShown_ && shown.error
                             && (view::incomplete(*shown.error) || lcd_->entry().hasEmptyBox() || namePending(*shown.error, expression));
     proceed_->setVisible(!previewShown_ && shown.error && canProceed(shown.error->code));  // it acts on the last request
-    card_->setRows(view::details(shown, types_[static_cast<std::size_t>(shown.type)]));
+    const bool dark = palette().color(QPalette::Window).lightness() < 128;
+    card_->setRows(view::details(shown, types_[static_cast<std::size_t>(shown.type)]) + view::storedRows(shown, view::bitColours(dark)));
     const bool valueless = shown.error || shown.commentOnly;  // an error, or a note
     detailsButton_->setEnabled(!valueless);
     enableCopy(valueless ? nullptr : &shown);

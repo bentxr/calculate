@@ -2222,3 +2222,19 @@ TEST(MainWindow, ANameWithoutAKeyIsFoundBySearch) {
     EXPECT_EQ(lcd(window)->input(), "googol");
     EXPECT_FALSE(list->isVisible());
 }
+
+TEST(MainWindow, TheCardShowsHowTheResultIsStored) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    run(window, "0.1 + 0.2");
+    auto* card = child<DetailsCard>(window, "detailsCard");
+    EXPECT_EQ(detail(window, "hex"), QString("0x3FD3 3333 3333 3334").replace(' ', QChar(0x2009)));
+    auto* bits = card->findChild<QLabel*>("value:bits");
+    ASSERT_NE(bits, nullptr);
+    EXPECT_EQ(bits->textFormat(), Qt::RichText);
+    EXPECT_EQ(card->findChild<QLabel*>("value:bound")->textFormat(), Qt::PlainText);
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
+    run(window, "1/3");
+    EXPECT_EQ(detail(window, "hex"), "");
+}

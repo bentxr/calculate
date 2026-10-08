@@ -72,6 +72,7 @@ void DetailsCard::setRows(const QList<view::DetailRow>& rows) {
         bold.setBold(true);
         label->setFont(bold);
         auto* value = new QLabel(row.value, rows_);
+        value->setTextFormat(row.rich ? Qt::RichText : Qt::PlainText);  // coloured bits; everything else as written
         value->setObjectName("value:" + row.key);
         value->setWordWrap(true);
         value->setTextInteractionFlags(Qt::TextSelectableByMouse);
