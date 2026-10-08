@@ -1915,7 +1915,7 @@ TEST(MainWindow, TheConventionsAreSettings) {
     EXPECT_EQ(lcd(window)->outputText(), "0");
     run(window, "log(100)");
     EXPECT_TRUE(lcd(window)->outputText().startsWith("4.60517")) << lcd(window)->outputText().toStdString();
-    EXPECT_TRUE(window.exportSettings().contains("\"log\": \"e\""));  // Plan 5's file gets it for free
+    EXPECT_TRUE(window.exportSettings().contains("\"log\": \"e\""));  // the settings file gets it for free
     setting(window, "log:10")->trigger();
 }
 
@@ -2005,7 +2005,7 @@ TEST(MainWindow, ANoteShowsDimmedUnderTheScreen) {
     MainWindow window;
     run(window, "sum(x; 5; 1)");
     EXPECT_EQ(lcd(window)->outputText(), "0");
-    EXPECT_EQ(message(window)->text(), "Σ(x, 5, 1) has no terms");  // typed sums read back as Σ templates (1.27)
+    EXPECT_EQ(message(window)->text(), "Σ(x, 5, 1) has no terms");  // typed sums read back as Σ templates
     EXPECT_TRUE(message(window)->property("dimmed").toBool());
     run(window, "1+1");
     EXPECT_EQ(message(window)->text(), "");
@@ -2178,7 +2178,7 @@ TEST(MainWindow, UncertaintySettings) {
     EXPECT_TRUE(answered(window));
     run(window, "1.1×3.20");
     EXPECT_EQ(detail(window, "sources"), "1.1: 1.6e-1 · 3.20: 5.5e-3");
-    EXPECT_TRUE(window.exportSettings().contains("\"readprecision\": \"decimals\""));  // Plan 5's file takes them
+    EXPECT_TRUE(window.exportSettings().contains("\"readprecision\": \"decimals\""));  // the settings file takes them
     setting(window, "uncertainty:worst")->trigger();
     setting(window, "readprecision:off")->trigger();
 }
@@ -2245,7 +2245,7 @@ TEST(MainWindow, TheCardShowsHowTheResultIsStored) {
 TEST(MainWindow, TheInspectorIsAPageOfTheRail) {
     MainWindow window;
     auto* modes = child<QListWidget>(window, "modes");
-    ASSERT_EQ(modes->count(), 4);  // Calculator, Statistics, Percentages (Plan 6), IEEE 754
+    ASSERT_EQ(modes->count(), 4);  // Calculator, Statistics, Percentages, IEEE 754
     EXPECT_EQ(modes->item(3)->text(), "IEEE 754");
     modes->setCurrentRow(3);
     EXPECT_EQ(child<QStackedWidget>(window, "pages")->currentIndex(), 3);

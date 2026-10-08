@@ -60,11 +60,11 @@ const QList<QPair<QString, QString>>& aliasKeys();
 // The Statistics mode's functions, in their order on its page; each takes the values as arguments.
 const QList<Key>& statisticsKeys();
 
-// An entry of the search list: what a key (or, from Plan 3, a name without a key) types, under a heading.
+// An entry of the search list: what a key (or a name without a key) types, under a heading.
 struct SearchEntry {
     QString group;  // the heading: a section's title, or "Main keys" (English source text; see translated())
     Face face;
-    QString title;  // a one-line description (Plan 2's metadata fills it)
+    QString title;  // a one-line description (from the function metadata)
 };
 // The keys of every section but Letters, under the section's title and in order; then the main pad's keys that
 // stand for a function, under "Main keys"; then extraSearchEntries().

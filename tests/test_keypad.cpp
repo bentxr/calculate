@@ -460,7 +460,7 @@ TEST(Keypad, EveryEngineConstantIsReachable) {
 
 TEST(Keypad, TheProgrammingSectionHasTheFloatingPointKeys) {
     EXPECT_EQ(section("programming").title, "Programming");
-    EXPECT_EQ(sectionLabels("programming").mid(0, 15),  // 4.51 adds the integer keys after these
+    EXPECT_EQ(sectionLabels("programming").mid(0, 15),  // the integer keys follow these
               QStringList({"fromBits", "floatBits", "floatParts", "floatValue", "floatError", "fp", "→fp16", "→bf16", "→fp32",
                            "→fp64", "→fp80", "→fp128", "→fp256", "→fp512", "→bits"}));
     EXPECT_EQ(find("floatBits").face.insert, "floatBits(");
@@ -476,7 +476,7 @@ TEST(Keypad, TheProgrammingKeys) {
                             "AND", "OR", "XOR", "NOT", "<<", ">>", "signed", "unsigned", "8", "16", "32", "64"};
     EXPECT_EQ(programming.mid(programming.size() - added.size()), added);  // after the floating-point keys
     EXPECT_EQ(find("to:hex").face.insert, "→hex");
-    EXPECT_EQ(find("to:dec").face.insert, "→simple");  // decimal, every digit (Plan 1's target)
+    EXPECT_EQ(find("to:dec").face.insert, "→simple");  // decimal, every digit (the simple target)
     EXPECT_EQ(find("prefixHex").face.insert, "0x");
     EXPECT_EQ(find("hexA").face.insert, "A");
     const QStringList inserts{"&", "|", " xor ", "~", "<<", ">>"};
