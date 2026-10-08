@@ -3462,63 +3462,78 @@
         <translation>Error de conversión</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="658"/>
+        <location filename="../src/presenter.cpp" line="639"/>
+        <source>Base</source>
+        <translation>Base</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="639"/>
+        <source>Trusted digits in this base</source>
+        <translation>Dígitos fiables en esta base</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="640"/>
+        <source>Width (bits)</source>
+        <translation>Ancho (bits)</translation>
+    </message>
+    <message>
+        <location filename="../src/presenter.cpp" line="660"/>
         <source>Stored bits</source>
         <translation>Bits almacenados</translation>
     </message>
     <message>
         <location filename="../src/presenter.cpp" line="635"/>
-        <location filename="../src/presenter.cpp" line="659"/>
+        <location filename="../src/presenter.cpp" line="661"/>
         <source>Hex</source>
         <translation>Hex</translation>
     </message>
     <message>
         <location filename="../src/presenter.cpp" line="635"/>
-        <location filename="../src/presenter.cpp" line="662"/>
+        <location filename="../src/presenter.cpp" line="664"/>
         <source>Class</source>
         <translation>Clase</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="663"/>
+        <location filename="../src/presenter.cpp" line="665"/>
         <source>%1 · exponent %2 (field %3) · %4</source>
         <translation>%1 · exponente %2 (campo %3) · %4</translation>
     </message>
     <message>
         <location filename="../src/presenter.cpp" line="637"/>
-        <location filename="../src/presenter.cpp" line="670"/>
+        <location filename="../src/presenter.cpp" line="672"/>
         <source>ulp</source>
         <translation>ulp</translation>
     </message>
     <message>
         <location filename="../src/presenter.cpp" line="637"/>
-        <location filename="../src/presenter.cpp" line="673"/>
+        <location filename="../src/presenter.cpp" line="675"/>
         <source>Next below</source>
         <translation>Anterior representable</translation>
     </message>
     <message>
         <location filename="../src/presenter.cpp" line="638"/>
-        <location filename="../src/presenter.cpp" line="674"/>
+        <location filename="../src/presenter.cpp" line="676"/>
         <source>Next above</source>
         <translation>Siguiente representable</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="676"/>
+        <location filename="../src/presenter.cpp" line="678"/>
         <source>overflow</source>
         <translation>desbordamiento</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="676"/>
+        <location filename="../src/presenter.cpp" line="678"/>
         <source>underflow</source>
         <translation>subdesbordamiento</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="677"/>
+        <location filename="../src/presenter.cpp" line="679"/>
         <source>no subnormals</source>
         <translation>sin subnormales</translation>
     </message>
     <message>
         <location filename="../src/presenter.cpp" line="638"/>
-        <location filename="../src/presenter.cpp" line="680"/>
+        <location filename="../src/presenter.cpp" line="682"/>
         <source>Note</source>
         <translation>Nota</translation>
     </message>

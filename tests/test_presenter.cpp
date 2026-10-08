@@ -531,3 +531,10 @@ TEST(Presenter, ConversionFieldsBecomeRows) {
     EXPECT_EQ(rows[0].value, "0x3DCCCCCD");
     EXPECT_TRUE(view::conversionRows(evaluate("0.1")).isEmpty());
 }
+
+TEST(Presenter, BaseFieldsHaveCaptions) {
+    QStringList labels;
+    for (const view::DetailRow& row : view::conversionRows(evaluate("0.1 to hex"))) labels << row.label;
+    for (const view::DetailRow& row : view::conversionRows(evaluate("-1 to bin 8"))) labels << row.label;
+    EXPECT_EQ(labels, QStringList({"Base", "Trusted digits in this base", "Base", "Width (bits)"}));
+}

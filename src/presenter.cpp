@@ -635,7 +635,9 @@ QList<DetailRow> conversionRows(const Result& r) {
         {"hex", QT_TRANSLATE_NOOP("view", "Hex")},          {"class", QT_TRANSLATE_NOOP("view", "Class")},
         {"stored", QT_TRANSLATE_NOOP("view", "Stored value")}, {"error", QT_TRANSLATE_NOOP("view", "Conversion error")},
         {"ulp", QT_TRANSLATE_NOOP("view", "ulp")},          {"below", QT_TRANSLATE_NOOP("view", "Next below")},
-        {"above", QT_TRANSLATE_NOOP("view", "Next above")}, {"note", QT_TRANSLATE_NOOP("view", "Note")}};
+        {"above", QT_TRANSLATE_NOOP("view", "Next above")}, {"note", QT_TRANSLATE_NOOP("view", "Note")},
+        {"base", QT_TRANSLATE_NOOP("view", "Base")},        {"trusted", QT_TRANSLATE_NOOP("view", "Trusted digits in this base")},
+        {"width", QT_TRANSLATE_NOOP("view", "Width (bits)")}};
     QList<DetailRow> rows;
     for (const ConversionField& f : r.conversion->fields) {
         const QString label = fromStd(f.label);
