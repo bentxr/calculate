@@ -102,6 +102,9 @@ private:
     void replay(int index);
     bool exactType() const;
     void updateKeys();
+    // After a change of type, angle or how results are read: what is being typed is worked out again, else the last
+    // result.
+    void reevaluate();
     QString exactRefusal(const QString& label) const;  // why Exact greys out a key
     void arrange();
     bool editCommon(const Key& key, const QString& prefix);
@@ -167,6 +170,11 @@ private:
     QAction* themeSection_ = nullptr;
     QAction* decimalSection_ = nullptr;
     QMenu* conventions_ = nullptr;  // a submenu, so the settings menu stays short enough to open above the gear
+    QMenu* uncertainty_ = nullptr;  // a submenu too: the combination that leads, and read precision
+    QAction* uncertaintySection_ = nullptr;
+    QAction* readingSection_ = nullptr;
+    calculate_core::UncertaintyRule rule_ = calculate_core::UncertaintyRule::Linear;  // which uncertainty leads
+    calculate_core::ReadPrecision reading_ = calculate_core::ReadPrecision::Off;      // typed numbers' own uncertainty
     QAction* inputSection_ = nullptr;
     QAction* fileSection_ = nullptr;
     QMap<QString, QString> defaults_;  // settingValues() as the window started

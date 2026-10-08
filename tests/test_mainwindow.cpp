@@ -2154,3 +2154,27 @@ TEST(MainWindow, TheUnitFollowsTheValueAndAMismatchIsANote) {
     run(window, "c+1");
     EXPECT_EQ(message(window)->text(), "The units of c and 1 differ");
 }
+
+TEST(MainWindow, UncertaintySettings) {
+    MainWindow window;
+    for (const char* name : {"uncertainty:worst", "uncertainty:statistical", "readprecision:off",
+                             "readprecision:decimals", "readprecision:all"})
+        ASSERT_NE(setting(window, name), nullptr) << name;
+    EXPECT_TRUE(setting(window, "uncertainty:worst")->isChecked());
+    EXPECT_TRUE(setting(window, "readprecision:off")->isChecked());
+    run(window, "(3±0.4)×(4±0.3)");
+    EXPECT_EQ(lcd(window)->outputText(), "|12 ± 2.5");
+    EXPECT_EQ(detail(window, "uncertainty"), "± 2.5e+0 worst case · ± 1.8e+0 statistical");
+    forget(window);
+    setting(window, "uncertainty:statistical")->trigger();
+    EXPECT_TRUE(answered(window));  // the last expression again
+    EXPECT_EQ(detail(window, "uncertainty"), "± 1.8e+0 statistical · ± 2.5e+0 worst case");
+    forget(window);
+    setting(window, "readprecision:decimals")->trigger();
+    EXPECT_TRUE(answered(window));
+    run(window, "1.1×3.20");
+    EXPECT_EQ(detail(window, "sources"), "1.1: 1.6e-1 · 3.20: 5.5e-3");
+    EXPECT_TRUE(window.exportSettings().contains("\"readprecision\": \"decimals\""));  // Plan 5's file takes them
+    setting(window, "uncertainty:worst")->trigger();
+    setting(window, "readprecision:off")->trigger();
+}
