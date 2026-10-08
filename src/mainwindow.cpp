@@ -449,6 +449,10 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     completions_->setFocusPolicy(Qt::NoFocus);
     completions_->hide();
     connect(lcd_, &Lcd::nameTyped, this, &MainWindow::showCompletions);
+    connect(lcd_, &Lcd::nameTyped, this, [this] {  // after every edit and movement: the call the cursor is in
+        const typing::Call call = typing::callAround(lcd_->entry());
+        lcd_->setHint(call.name.isEmpty() ? view::HintParts{} : view::argumentHint(call.name, call.argument));
+    });
     connect(completions_, &QListWidget::itemClicked, this,
             [this](QListWidgetItem* item) { chooseCompletion(item->data(Qt::UserRole).toString()); });
     connect(lcd_, &Lcd::completionKey, this, [this](int key) {

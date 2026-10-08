@@ -349,3 +349,27 @@ TEST(Presenter, ArgumentsTooLargeSaysComputeNotReduce) {
                                          QStringLiteral("gammap(1e15, 1e15)"));
     EXPECT_TRUE(text.contains(QStringLiteral("too large to compute accurately"))) << text.toStdString();
 }
+
+TEST(Presenter, ArgumentHintsMarkTheCurrentArgument) {
+    const view::HintParts h = view::argumentHint("nCr", 1);
+    EXPECT_EQ(h.before, "nCr(n, ");
+    EXPECT_EQ(h.current, "r");
+    EXPECT_EQ(h.after, ")");
+    const view::HintParts log = view::argumentHint("log", 0);
+    EXPECT_EQ(log.before, "log(");
+    EXPECT_EQ(log.current, "x");
+    EXPECT_EQ(log.after, "[, base])");  // an optional argument in brackets
+    const view::HintParts beta = view::argumentHint("betainc", 2);
+    EXPECT_EQ(beta.before, "betainc(a, b, ");
+    EXPECT_EQ(beta.current, "x");
+    EXPECT_EQ(view::argumentHint("mean", 3).current, "value");  // repeated
+    EXPECT_EQ(view::argumentHint("nosuch", 0).current, "");
+}
+
+TEST(Presenter, ArgumentHintsFollowTheSeparatorAndEndWithTheArguments) {
+    settings::setDecimalComma(true);
+    EXPECT_EQ(view::argumentHint("nCr", 1).before, "nCr(n; ");
+    settings::setDecimalComma(false);
+    EXPECT_EQ(view::argumentHint("nCr", 2).before, "");  // past the last argument: no hint
+    EXPECT_EQ(view::argumentHint("sen", 0).before, "sen(");  // a spelling: its function's arguments
+}

@@ -2137,3 +2137,12 @@ TEST(MainWindow, EveryKeySaysWhatItIs) {
     child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
     EXPECT_TRUE(child<QPushButton>(window, "key:sin")->toolTip().startsWith("Exact arithmetic cannot represent"));
 }
+
+TEST(MainWindow, TheHintFollowsTheCursor) {
+    MainWindow window;
+    QTest::keyClicks(lcd(window), "nCr(5,");
+    EXPECT_EQ(lcd(window)->hintText(), "nCr(n, r)");
+    EXPECT_EQ(lcd(window)->hintCurrent(), "r");
+    QTest::keyClicks(lcd(window), "2)");
+    EXPECT_EQ(lcd(window)->hintText(), "");
+}

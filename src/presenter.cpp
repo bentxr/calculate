@@ -6,6 +6,8 @@
 #include <QRegularExpression>
 #include <QStringList>
 
+#include <algorithm>
+
 namespace view {
 
 using namespace calculate_core;
@@ -398,6 +400,40 @@ QList<PercentageRow> percentageRows(const QString& first, const QString& second)
         {"minus", QCoreApplication::translate("view", "1 minus 2 %"), a + "−" + a + "×" + b + "÷100"},
         {"of", QCoreApplication::translate("view", "2 % of 1"), a + "×" + b + "÷100"},
     };
+}
+
+HintParts argumentHint(const QString& name, int argument) {
+    for (const calculate_core::FunctionDescription& f : calculate_core::functions()) {
+        bool named = QString::fromStdString(f.name) == name;
+        for (const std::string& alias : f.aliases) named = named || QString::fromStdString(alias) == name;
+        if (!named || f.arguments.empty()) continue;
+        const QString separator = settings::decimalComma() ? QStringLiteral("; ") : QStringLiteral(", ");
+        const bool repeated = f.maxArgs < 0;
+        const int shown = repeated ? std::max(f.minArgs, argument + 1) : static_cast<int>(f.arguments.size());
+        QStringList parts;  // each argument with what comes before it
+        for (int k = 0; k < shown; ++k) {
+            const QString argumentName = QString::fromStdString(f.arguments[repeated ? 0 : static_cast<std::size_t>(k)].name);
+            const QString open = !repeated && k >= f.minArgs ? QStringLiteral("[") : QString();
+            parts << open + (k > 0 ? separator : QString()) + argumentName;
+        }
+        HintParts h;
+        h.before = name + QLatin1Char('(');
+        for (int k = 0; k < shown; ++k) {
+            const QString& part = parts[k];
+            const QString argumentName = QString::fromStdString(f.arguments[repeated ? 0 : static_cast<std::size_t>(k)].name);
+            if (k < argument) h.before += part;
+            else if (k == argument) {
+                h.before += part.chopped(argumentName.size());
+                h.current = argumentName;
+            } else h.after += part;
+        }
+        if (repeated) h.after += separator + QStringLiteral("…");
+        for (int k = f.minArgs; !repeated && k < shown; ++k) h.after += QLatin1Char(']');
+        h.after += QLatin1Char(')');
+        if (h.current.isEmpty()) return {};  // past the last argument
+        return h;
+    }
+    return {};
 }
 
 }  // namespace view

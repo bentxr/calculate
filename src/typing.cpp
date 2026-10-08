@@ -341,7 +341,6 @@ QString completionTitle(const QString& name) {
     for (const calculate_core::FunctionDescription& f : calculate_core::functions()) {
         bool named = QString::fromStdString(f.name) == name;
         for (const std::string& alias : f.aliases) named = named || QString::fromStdString(alias) == name;
-        named = named || settings::inEveryLanguage("keypad", QString::fromStdString(f.name) + "(").contains(name + "(");
         if (named) return functionTitle(f);
     }
     return {};

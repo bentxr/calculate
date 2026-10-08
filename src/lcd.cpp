@@ -362,6 +362,11 @@ void Lcd::setReading(const QString& reading) {
     update();
 }
 
+void Lcd::setHint(const view::HintParts& hint) {
+    hint_ = hint;
+    update();
+}
+
 void Lcd::setStoring(bool on) {
     storing_ = on;
     update();
@@ -501,6 +506,19 @@ void Lcd::paintEvent(QPaintEvent*) {
     painter.setFont(statusFont());
     painter.setPen(ink);
     painter.drawText(QPointF(margin, margin + status.ascent()), statusText());
+    if (!hint_.current.isEmpty()) {  // right-aligned: before, the current argument in bold, after
+        QFont bold = statusFont();
+        bold.setBold(true);
+        const QFontMetricsF strong(bold);
+        qreal x = width() - margin - status.horizontalAdvance(hint_.after);
+        painter.drawText(QPointF(x, margin + status.ascent()), hint_.after);
+        x -= strong.horizontalAdvance(hint_.current);
+        painter.setFont(bold);
+        painter.drawText(QPointF(x, margin + status.ascent()), hint_.current);
+        painter.setFont(statusFont());
+        x -= status.horizontalAdvance(hint_.before);
+        painter.drawText(QPointF(x, margin + status.ascent()), hint_.before);
+    }
 
     QRectF caret;
     const typeset::Box input = inputBox(&caret);
