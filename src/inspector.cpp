@@ -31,7 +31,7 @@ namespace {
 class FieldEdit : public QPlainTextEdit {
 public:
     FieldEdit(QWidget* parent, QString allowed) : QPlainTextEdit(parent), allowed_(std::move(allowed)) {
-        setWordWrapMode(QTextOption::WrapAnywhere);
+        setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);  // groups of bits stay whole when they fit
         setTabChangesFocus(true);
         setFixedHeight(fontMetrics().lineSpacing() * 3 + 2 * frameWidth() + 8);
     }
@@ -90,7 +90,7 @@ private:
     // Lines of the text broken anywhere at this width; returns the height.
     qreal lineUp(QTextLayout& layout, int width) const {
         QTextOption option;
-        option.setWrapMode(QTextOption::WrapAnywhere);
+        option.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);  // words stay whole when they fit
         layout.setTextOption(option);
         layout.beginLayout();
         qreal y = 0;
