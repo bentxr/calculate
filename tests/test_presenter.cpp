@@ -373,3 +373,49 @@ TEST(Presenter, ArgumentHintsFollowTheSeparatorAndEndWithTheArguments) {
     EXPECT_EQ(view::argumentHint("nCr", 2).before, "");  // past the last argument: no hint
     EXPECT_EQ(view::argumentHint("sen", 0).before, "sen(");  // a spelling: its function's arguments
 }
+
+TEST(Presenter, UncertainInputsGetTheirOwnRows) {
+    const QList<view::DetailRow> rows = view::details(evaluated("(3±0.4)*(4±0.3)"), typeInfo(NumberType::Double));
+    QStringList keys;
+    for (const view::DetailRow& row : rows) keys << row.key;
+    EXPECT_EQ(keys, QStringList({"bound", "measured", "trusted", "condition", "input", "uncertainty", "sources",
+                                 "rounding", "library", "operations", "type", "evaluated", "reading"}));
+    EXPECT_EQ(rows[2].value, "2 by the bound, 2 by the measurement, 0 with the uncertainty");
+    EXPECT_EQ(rows[5].label, "Uncertainty");
+    EXPECT_EQ(rows[5].value, "± 2.5e+0 worst case · ± 1.8e+0 statistical");
+    EXPECT_EQ(rows[6].label, "Uncertain inputs");
+    EXPECT_EQ(rows[6].value, "3±0.4: 1.6e+0 · 4±0.3: 9e-1");
+    Options statistical;
+    statistical.uncertaintyRule = UncertaintyRule::Quadrature;
+    EXPECT_EQ(view::details(evaluate("(3±0.4)*(4±0.3)", statistical), typeInfo(NumberType::Double))[5].value,
+              "± 1.8e+0 statistical · ± 2.5e+0 worst case");
+}
+
+TEST(Presenter, AnUnreliableFirstOrderSaysSo) {
+    const auto row = [](const char* text) {
+        for (const view::DetailRow& r : view::details(evaluated(text), typeInfo(NumberType::Double)))
+            if (r.key == "firstorder") return r;
+        return view::DetailRow{};
+    };
+    EXPECT_EQ(row("(0±1)^2").label, "First order");
+    EXPECT_EQ(row("(0±1)^2").value, "unreliable: at the corners the result moved by 1e+0");
+    EXPECT_TRUE(row("sqrt(0.05±0.1)").key.isEmpty());  // refused: its limit reaches below 0
+    EXPECT_TRUE(row("5±0.2").key.isEmpty());  // reliable: no row
+}
+
+TEST(Presenter, ExactResultsWithAnUncertainty) {
+    QStringList keys;
+    for (const view::DetailRow& row : view::details(evaluated("1/3±0.1", NumberType::Exact), typeInfo(NumberType::Exact)))
+        keys << row.key;
+    EXPECT_EQ(keys, QStringList({"exact", "uncertainty", "sources", "type", "evaluated", "reading"}));
+}
+
+TEST(Presenter, TheUncertaintyRowsAreExplained) {
+    for (const char* key : {"uncertainty", "sources", "firstorder"}) EXPECT_FALSE(view::explanation(key).isEmpty()) << key;
+}
+
+TEST(Presenter, AnUnreliableFirstOrderIsANote) {
+    const Result r = evaluated("(0±1)^2");
+    ASSERT_EQ(r.warnings.size(), 1u);
+    EXPECT_EQ(view::warningText(r.warnings[0], "(0±1)^2"), "The uncertainty may be larger than shown: first order is unreliable here");
+}

@@ -179,10 +179,32 @@ QList<DetailRow> details(const Result& r, const TypeInfo& t) {
     const DetailRow evaluated{"evaluated", QCoreApplication::translate("view", "Evaluated"), expression};
     const QString read = settings::decimalComma() ? withDecimalComma(fromStd(r.reading)) : fromStd(r.reading);
     const QList<DetailRow> reading{{"reading", QCoreApplication::translate("view", "Read as"), read}};
+    // The user's uncertain inputs: both combinations (the leading one first), where they come from, and whether
+    // first order can be trusted with them.
+    QList<DetailRow> uncertainty;
+    if (!r.uncertainInputs.empty()) {
+        const QString worst = QCoreApplication::translate("view", "± %1 worst case").arg(number(r.uncertaintyLinear));
+        const QString statistical = QCoreApplication::translate("view", "± %1 statistical").arg(number(r.uncertaintyQuadrature));
+        const bool linear = r.uncertaintyRule == UncertaintyRule::Linear;
+        uncertainty.append({"uncertainty", QCoreApplication::translate("view", "Uncertainty"),
+                            (linear ? worst : statistical) + QStringLiteral(" · ") + (linear ? statistical : worst)});
+        QStringList sources;
+        for (const UncertainInput& u : r.uncertainInputs) {
+            const QString name = settings::decimalComma() ? withDecimalComma(fromStd(u.name)) : fromStd(u.name);
+            sources << name + QStringLiteral(": ") + number(u.contribution);
+        }
+        uncertainty.append({"sources", QCoreApplication::translate("view", "Uncertain inputs"), sources.join(QStringLiteral(" · "))});
+        if (r.firstOrderChecked && !r.firstOrderReliable)
+            uncertainty.append({"firstorder", QCoreApplication::translate("view", "First order"),
+                                r.firstOrderObserved == "inf"
+                                    ? QCoreApplication::translate("view", "unreliable: an input shifted by its limit leaves a function's domain")
+                                    : QCoreApplication::translate("view", "unreliable: at the corners the result moved by %1").arg(number(r.firstOrderObserved))});
+    }
     if (r.exact)
         return converted
-               + QList<DetailRow>{{"exact", QCoreApplication::translate("view", "Error"), QCoreApplication::translate("view", "exact · no rounding error")},
-                                  {"type", QCoreApplication::translate("view", "Number type"),
+               + QList<DetailRow>{{"exact", QCoreApplication::translate("view", "Error"), QCoreApplication::translate("view", "exact · no rounding error")}}
+               + uncertainty
+               + QList<DetailRow>{{"type", QCoreApplication::translate("view", "Number type"),
                                    QCoreApplication::translate("view", "%1, exact fractions").arg(fromStd(t.cppName))},
                                   evaluated} + reading;
     QString measured = r.measuredAvailable ? number(r.measured) : QCoreApplication::translate("view", "unavailable");
@@ -191,7 +213,10 @@ QList<DetailRow> details(const Result& r, const TypeInfo& t) {
         {"bound", QCoreApplication::translate("view", "Guaranteed bound"), number(r.bound)},
         {"measured", QCoreApplication::translate("view", "Measured error"), measured},
         {"trusted", QCoreApplication::translate("view", "Trusted digits"),
-         QCoreApplication::translate("view", "%1 by the bound, %2 by the measurement").arg(r.trustedDigits).arg(r.trustedDigitsMeasured)},
+         uncertainty.isEmpty()
+             ? QCoreApplication::translate("view", "%1 by the bound, %2 by the measurement").arg(r.trustedDigits).arg(r.trustedDigitsMeasured)
+             : QCoreApplication::translate("view", "%1 by the bound, %2 by the measurement, %3 with the uncertainty")
+                   .arg(r.trustedDigits).arg(r.trustedDigitsMeasured).arg(r.trustedDigitsWithUncertainty)},
         {"condition", QCoreApplication::translate("view", "Condition number κ"), number(r.conditionNumber) + QStringLiteral(" · ") + verdict(fromStd(r.conditionNumber))},
         {"input", QCoreApplication::translate("view", "Input error"), number(r.inputError)},
         {"rounding", QCoreApplication::translate("view", "Rounding error"), number(r.roundingError)},
@@ -200,6 +225,7 @@ QList<DetailRow> details(const Result& r, const TypeInfo& t) {
         {"type", QCoreApplication::translate("view", "Number type"),
          QCoreApplication::translate("view", "%1, %2-bit significand").arg(fromStd(t.cppName)).arg(t.precisionBits)},
     };
+    for (int i = 0; i < uncertainty.size(); ++i) rows.insert(5 + i, uncertainty[i]);  // after the input error
     if (!r.boundComplete)
         rows.append({"incomplete", QCoreApplication::translate("view", "Incomplete"),
                      QCoreApplication::translate("view", "an uncertain argument was accepted")});
@@ -229,6 +255,19 @@ QString explanation(const QString& key) {
     if (key == "input")
         return QCoreApplication::translate("view", "The error of storing the numbers you typed in this type: "
                                                    "0.1, for example, has no exact binary form.");
+    if (key == "uncertainty")
+        return QCoreApplication::translate("view", "How far the result can move because of the uncertainty of your inputs (values written "
+                                                   "with ±, whose ± is a limit, and measured constants, given three standard uncertainties). "
+                                                   "The worst case adds every contribution: it is a limit, to first order, whatever the inputs' "
+                                                   "correlations. The statistical figure combines them in quadrature: an estimate of the usual "
+                                                   "spread if the inputs are independent, not a limit.");
+    if (key == "sources")
+        return QCoreApplication::translate("view", "Each uncertain input and how much it moves the result: its uncertainty times how "
+                                                   "sensitive the result is to it. The largest comes first.");
+    if (key == "firstorder")
+        return QCoreApplication::translate("view", "The uncertainty is propagated with derivatives, which is accurate when it is small. "
+                                                   "The inputs were also shifted to the ends of their limits: the result moved by more than "
+                                                   "the estimate says, so the limit above is not safe.");
     if (key == "rounding")
         return QCoreApplication::translate("view", "The error added by rounding the result of each arithmetic operation.");
     if (key == "library")
@@ -306,6 +345,9 @@ QString warningText(const Warning& w, const QString& expression) {
     if (settings::decimalComma()) part = withDecimalComma(part);  // quoted as the screen shows it
     switch (w.code) {
     case WarningCode::EmptyRange: return QCoreApplication::translate("view", "%1 has no terms").arg(part);
+    case WarningCode::FirstOrderUnreliable:
+        return QCoreApplication::translate("view", "The uncertainty may be larger than shown: first order is unreliable here");
+    case WarningCode::UnitsDiffer: return fromStd(w.message);
     }
     return {};
 }

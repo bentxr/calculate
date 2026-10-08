@@ -236,7 +236,7 @@ TEST(Typing, TypingOverASelectionReplacesOrWrapsIt) {
 }
 
 TEST(Typing, CompletionsListTheNamesThatStartWithWhatIsTyped) {
-    EXPECT_EQ(typing::completions("sq"), QStringList({"sq", "sqrt", "sqrtpi"}));  // in alphabetical order
+    EXPECT_EQ(typing::completions("sq"), QStringList({"sq", "sqrt", "sqrt2", "sqrtpi"}));  // in alphabetical order
     const QStringList as = typing::completions("as");
     EXPECT_TRUE(as.contains("asin"));
     EXPECT_TRUE(as.contains("asinh"));
