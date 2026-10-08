@@ -2190,3 +2190,16 @@ TEST(MainWindow, TheUncertaintyIsInSpanishToo) {
     EXPECT_EQ(constantTitle("billion"), "un billón (10^12)");
     settings::setLanguage(settings::Language::English);
 }
+
+TEST(MainWindow, ThePlusMinusKeyEntersAnUncertainty) {
+    MainWindow window;
+    QTest::mouseClick(child<QPushButton>(window, "key:5"), Qt::LeftButton);
+    openSection(window, "constants");
+    QTest::mouseClick(child<QPushButton>(window, "direct:plusMinus"), Qt::LeftButton);
+    for (const char* name : {"key:0", "key:point", "key:2"}) QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "5±0.2");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "5 ± 0.20");
+}

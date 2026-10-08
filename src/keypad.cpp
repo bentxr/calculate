@@ -1,5 +1,6 @@
 #include "keypad.hpp"
 
+#include "constanttext.hpp"
 #include "functiontext.hpp"
 
 #include <calculate-core/calculate-core.hpp>
@@ -36,8 +37,10 @@ const calculate_core::FunctionDescription* functionOf(const Face& face) {
     return nullptr;
 }
 
-// The face's function's title in the user's language; "" for a face without one.
+// The face's function's title in the user's language (a named value's own title for a constant: "golden ratio");
+// "" for a face without one.
 QString titleOf(const Face& face) {
+    if (const QString constant = constantTitle(face.function); !constant.isEmpty()) return constant;
     const calculate_core::FunctionDescription* f = functionOf(face);
     return f ? functionTitle(*f) : QString();
 }
@@ -183,7 +186,13 @@ const QList<KeySection>& keySections() {
           {"numerator", put("numerator", "numerator(", "numerator")},
           {"denominator", put("denominator", "denominator(", "denominator")},
           {"sgn", put("sgn", "sgn(", "sgn")}}},
-        {"constants", QT_TRANSLATE_NOOP("keypad", "Constants"), {{"pi", put("π", "π", "pi")}, {"e", put("e", "e", "e")}}},
+        {"constants", QT_TRANSLATE_NOOP("keypad", "Constants"),
+         {{"pi", put("π", "π", "pi")}, {"e", put("e", "e", "e")}, {"golden", put("φ", "φ", "phi")}, {"tau", put("τ", "τ", "tau")},
+          {"eulerGamma", put("γ", "γ", "egamma")}, {"catalan", put("catalan", "catalan", "catalan")},
+          {"apery", put("apery", "apery", "apery")}, {"sqrt2", put("√2", "sqrt2", "sqrt2")},
+          {"plastic", put("plastic", "plastic", "plastic")}, {"omega", put("Ω", "omega", "omega")},
+          {"plusMinus", put("±", "±")}, {"uncertainty", put("uncertainty", "uncertainty(", "uncertainty")},
+          {"errorPart", put("errorPart", "errorPart(", "errorPart")}}},
         {"statistics", QT_TRANSLATE_NOOP("keypad", "Statistics"), statisticsKeys()},
         {"showAs", QT_TRANSLATE_NOOP("keypad", "Show as"), QList<Key>{{"to", put("→", "→")}} + conversionKeys(showAsTargets())},
         {"special", QT_TRANSLATE_NOOP("keypad", "Special functions"),
@@ -300,6 +309,7 @@ const QList<QPair<QString, QStringList>>& alternates() {
         {"ln", {"log", "exp", "log2"}},
         {"logBase", {"log", "log2"}},
         {"square", {"cube"}},
+        {"negative", {"plusMinus"}},
         {"sqrt", {"cbrt", "root", "sqrtpi"}},
         {"memoryAdd", {"memorySubtract", "memoryStore", "memory", "memoryClear"}},
     };
@@ -313,6 +323,7 @@ QString spokenName(const Key& key) {
         {"x²", QT_TRANSLATE_NOOP("spoken", "square")},
         {"x^□", QT_TRANSLATE_NOOP("spoken", "power")},
         {"(−)", QT_TRANSLATE_NOOP("spoken", "negative")},
+        {"±", QT_TRANSLATE_NOOP("spoken", "plus or minus")},
         {"x⁻¹", QT_TRANSLATE_NOOP("spoken", "reciprocal")},
         {"log□□", QT_TRANSLATE_NOOP("spoken", "logarithm in a base")},
         {"×10ˣ", QT_TRANSLATE_NOOP("spoken", "times ten to the power")},

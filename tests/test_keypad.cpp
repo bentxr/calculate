@@ -1,5 +1,6 @@
 #include "keypad.hpp"
 
+#include "constanttext.hpp"
 #include "printers.hpp"
 
 #include <calculate-core/calculate-core.hpp>
@@ -129,7 +130,8 @@ TEST(Keypad, EveryOtherKeyHasAHomeSection) {
     EXPECT_EQ(sectionLabels("trigonometry"),
               QStringList({"asin", "acos", "atan", "sec", "csc", "cot", "asec", "acsc", "acot", "atan2", "hypot", "sinc"}));
     EXPECT_EQ(sectionLabels("powers"), QStringList({"x³", "∛", "ⁿ√", "10ˣ", "eˣ", "log", "log2", "exp2", "sqrtpi", "Σ", "Π", "x"}));
-    EXPECT_EQ(sectionLabels("constants"), QStringList({"π", "e"}));
+    EXPECT_EQ(sectionLabels("constants"), QStringList({"π", "e", "φ", "τ", "γ", "catalan", "apery", "√2", "plastic", "Ω", "±",
+                                                       "uncertainty", "errorPart"}));
     EXPECT_EQ(labels(memoryKeys()), QStringList({"MS", "M", "M−", "MC", "↶", "↷"}));
 }
 
@@ -263,7 +265,7 @@ TEST(Keypad, EverySyntaxElementHasAKey) {
     for (const Key& key : everyKey())
         if (key.face.action == KeyAction::Insert || key.face.action == KeyAction::Type) entered.insert(key.face.insert);
     QStringList syntax{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "e", "+", "−", "×", "÷", "(", ")",
-                       ", ", "!", "%", "-", "π", "Ans", "M", "_", " ", "#", "→", ":="};
+                       ", ", "!", "%", "-", "π", "Ans", "M", "_", " ", "#", "→", ":=", "±"};
     for (char c = 'a'; c <= 'z'; ++c) syntax << QString(QChar(c));  // capitals through ⇧
     for (const QString& piece : syntax) EXPECT_TRUE(entered.contains(piece)) << piece.toStdString();
     QSet<Template> shapes;
@@ -415,4 +417,16 @@ TEST(Keypad, SearchEntriesCarryTheirTitles) {
     }
     EXPECT_EQ(asin.title, "Inverse sine");
     EXPECT_TRUE(searchMatches(asin, "inverse sine"));  // found by what it does
+}
+
+TEST(Keypad, TheConstantsSection) {
+    EXPECT_EQ(sectionLabels("constants"), QStringList({"π", "e", "φ", "τ", "γ", "catalan", "apery", "√2", "plastic", "Ω", "±",
+                                                       "uncertainty", "errorPart"}));
+    EXPECT_EQ(directKey("plusMinus").face.insert, "±");
+    EXPECT_EQ(directKey("uncertainty").face.insert, "uncertainty(");
+    EXPECT_EQ(directKey("errorPart").face.function, "errorPart");
+    EXPECT_EQ(directKey("golden").face.insert, "φ");
+    EXPECT_EQ(directKey("omega").face.insert, "omega");
+    for (const SearchEntry& e : searchEntries())
+        if (e.face.insert == "φ") EXPECT_EQ(e.title, constantTitle("phi"));  // found by what it is
 }
