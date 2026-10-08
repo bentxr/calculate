@@ -34,6 +34,8 @@
 #include <QScroller>
 #include <QStackedWidget>
 #include <QTest>
+#include <QTextBlock>
+#include <QTextLayout>
 #include <QToolButton>
 #include <QToolTip>
 
@@ -2285,4 +2287,24 @@ TEST(MainWindow, ExactResultsOfferNoInspection) {
     auto* inspect = child<DetailsCard>(window, "detailsCard")->findChild<QPushButton*>("inspectButton");
     ASSERT_NE(inspect, nullptr);
     EXPECT_FALSE(inspect->isVisibleTo(child<DetailsCard>(window, "detailsCard")));
+}
+
+TEST(MainWindow, TheInspectorFitsAPhone) {
+    MainWindow window;
+    window.resize(390, 844);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    child<QToolButton>(window, "panelToggle")->setChecked(true);  // the rail folded, as on a phone
+    window.showInspector();
+    auto* inspector = child<Inspector>(window, "inspector");
+    inspector->setFormatIndex(inspector->formatIndex(calculate_core::NumberType::Binary512));
+    inspector->setDecimal("0.1");
+    QTest::qWait(50);
+    auto* page = qobject_cast<QScrollArea*>(child<QStackedWidget>(window, "pages")->currentWidget());
+    ASSERT_NE(page, nullptr);
+    EXPECT_LE(inspector->width(), page->viewport()->width());
+    const QRect inside(window.mapToGlobal(QPoint(0, 0)), window.size());
+    EXPECT_TRUE(inside.contains(QRect(inspector->mapToGlobal(QPoint(0, 0)), QSize(inspector->width(), 1))));
+    auto* binary = inspector->findChild<QPlainTextEdit*>("inspectorBinary");
+    EXPECT_GT(binary->document()->firstBlock().layout()->lineCount(), 1);  // 512 bits wrap
 }

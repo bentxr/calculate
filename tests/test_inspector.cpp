@@ -2,7 +2,10 @@
 
 #include "printers.hpp"
 
+#include <QAction>
+#include <QClipboard>
 #include <QComboBox>
+#include <QGuiApplication>
 #include <QLabel>
 #include <QPlainTextEdit>
 #include <QPushButton>
@@ -178,4 +181,13 @@ TEST(Inspector, AKeypadTypesIntoTheLastField) {
     EXPECT_TRUE(keys->isVisible());
     QTest::mouseClick(child<QToolButton>(inspector, "inspectorKeysToggle"), Qt::LeftButton);
     EXPECT_FALSE(keys->isVisible());
+}
+
+TEST(Inspector, AValueIsCopiedFromItsMenu) {
+    Inspector inspector;
+    inspector.setDecimal("0.1");
+    auto* value = child<QLabel>(inspector, "inspector:value");
+    ASSERT_FALSE(value->actions().isEmpty());
+    value->actions().first()->trigger();
+    EXPECT_EQ(QGuiApplication::clipboard()->text(), value->text());
 }

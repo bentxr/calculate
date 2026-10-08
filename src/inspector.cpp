@@ -3,18 +3,22 @@
 #include "icons.hpp"
 #include "presenter.hpp"
 
+#include <QAction>
+#include <QClipboard>
 #include <QComboBox>
 #include <QEvent>
 #include <QFormLayout>
+#include <QGridLayout>
+#include <QGuiApplication>
 #include <QKeyEvent>
+#include <QLabel>
+#include <QMimeData>
 #include <QMouseEvent>
 #include <QPainter>
-#include <QMimeData>
-#include <QGridLayout>
-#include <QLabel>
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QSyntaxHighlighter>
+#include <QTextLayout>
 #include <QToolButton>
 #include <QVBoxLayout>
 
@@ -52,6 +56,56 @@ private:
         return s;
     }
     QString allowed_;
+};
+
+// A value that wraps anywhere (a binary512 value has hundreds of digits and no spaces), so the page fits a phone.
+// Its text is copied from a context menu, since it paints itself.
+class WrapLabel : public QLabel {
+public:
+    explicit WrapLabel(QWidget* parent) : QLabel(parent) {
+        setTextFormat(Qt::PlainText);
+        setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        setContextMenuPolicy(Qt::ActionsContextMenu);
+        auto* copy = new QAction(this);
+        copy->setObjectName("copyValue");
+        connect(copy, &QAction::triggered, this, [this] { QGuiApplication::clipboard()->setText(text()); });
+        addAction(copy);
+    }
+    QAction* copyAction() const { return actions().first(); }
+    QSize minimumSizeHint() const override { return {fontMetrics().averageCharWidth() * 8, heightForWidth(fontMetrics().averageCharWidth() * 8)}; }
+    QSize sizeHint() const override { return {fontMetrics().horizontalAdvance(text()) + 1, fontMetrics().height()}; }
+    bool hasHeightForWidth() const override { return true; }
+    int heightForWidth(int width) const override { return text().isEmpty() ? fontMetrics().height() : static_cast<int>(laidOut(width)); }
+
+protected:
+    void paintEvent(QPaintEvent*) override {
+        QPainter painter(this);
+        painter.setPen(palette().color(QPalette::WindowText));
+        QTextLayout layout(text(), font());
+        lineUp(layout, width());
+        layout.draw(&painter, QPointF(0, 0));
+    }
+
+private:
+    // Lines of the text broken anywhere at this width; returns the height.
+    qreal lineUp(QTextLayout& layout, int width) const {
+        QTextOption option;
+        option.setWrapMode(QTextOption::WrapAnywhere);
+        layout.setTextOption(option);
+        layout.beginLayout();
+        qreal y = 0;
+        for (QTextLine line = layout.createLine(); line.isValid(); line = layout.createLine()) {
+            line.setLineWidth(qMax(1, width));
+            line.setPosition(QPointF(0, y));
+            y += line.height();
+        }
+        layout.endLayout();
+        return y;
+    }
+    qreal laidOut(int width) const {
+        QTextLayout layout(text(), font());
+        return lineUp(layout, width);
+    }
 };
 
 // Colours the binary digits by field: the sign, w exponent digits, then the fraction (spaces don't count).
@@ -211,6 +265,7 @@ Inspector::Inspector(QWidget* parent) : QWidget(parent), formats_(floatFormats()
         auto* key = new QPushButton(labels[i], keys);
         key->setObjectName(QStringLiteral("inspectorKey:") + labels[i]);
         key->setFocusPolicy(Qt::NoFocus);
+        key->setMinimumWidth(32);  // below the style's default, as the main keys: six fit a phone
         keyGrid->addWidget(key, i / 6, i % 6);
         const QString label = labels[i];
         connect(key, &QPushButton::clicked, this, [this, label] {
@@ -233,11 +288,9 @@ Inspector::Inspector(QWidget* parent) : QWidget(parent), formats_(floatFormats()
         QFont bold = caption->font();
         bold.setBold(true);
         caption->setFont(bold);
-        auto* value = new QLabel(this);
+        caption->setWordWrap(true);  // long captions ("Conversion error…") wrap on a phone
+        auto* value = new WrapLabel(this);
         value->setObjectName(QStringLiteral("inspector:") + key);
-        value->setWordWrap(true);
-        value->setTextFormat(Qt::PlainText);
-        value->setTextInteractionFlags(Qt::TextSelectableByMouse);
         captions_[key] = caption;
         values_[key] = value;
         grid->addWidget(caption, row, 0, Qt::AlignTop);
@@ -248,6 +301,7 @@ Inspector::Inspector(QWidget* parent) : QWidget(parent), formats_(floatFormats()
     down_->setObjectName("inspectorDown");
     up_ = new QPushButton(QStringLiteral("►"), this);
     up_->setObjectName("inspectorUp");
+    for (QPushButton* step : {down_, up_}) step->setMinimumWidth(32);
     grid->addWidget(down_, row - 2, 2, Qt::AlignTop);
     grid->addWidget(up_, row - 1, 2, Qt::AlignTop);
     grid->setColumnStretch(1, 1);
@@ -430,6 +484,7 @@ void Inspector::retranslate() {
     }
     keysToggle_->setToolTip(tr("Show or hide the keypad"));
     keysToggle_->setAccessibleName(keysToggle_->toolTip());
+    for (auto& [key, label] : values_) static_cast<WrapLabel*>(label)->copyAction()->setText(tr("Copy"));
     captions_["format"]->setText(tr("Format"));
     strip_->setAccessibleName(tr("Bits (click one to flip it)"));
     captions_["decimal"]->setText(tr("Decimal"));
