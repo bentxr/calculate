@@ -76,6 +76,9 @@ public:
     QString memory() const { return memory_; }
     QString statusText() const;  // the marks in the corner: "STO" while storing, "M" while the memory holds something
     void setStoring(bool on);
+    // How the input is read, "(2 ^ (3 ^ 2))": drawn small and dimmed under the input while the result is a preview.
+    void setReading(const QString& reading);
+    QString readingText() const { return reading_; }
 
     static QString fontFamily();  // the bundled screen typeface
     QColor background() const;    // an LCD panel: pale grey-green, or dark in a dark theme
@@ -146,6 +149,7 @@ private:
     bool completing_ = false;
     bool provisional_ = false;
     Entry marked_;  // a copy of the input whose selection is the marked part; none when nothing is marked
+    QString reading_;
     bool storing_ = false;
     QString text_;  // Shown::Text: a conversion
     Shown shown_ = Shown::Nothing;

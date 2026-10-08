@@ -2086,3 +2086,13 @@ TEST(MainWindow, AnApproximateConversionSaysHowFarUnderTheScreen) {
     run(window, "2.5 to 1/2");
     EXPECT_EQ(message(window)->text(), "");  // exact: nothing to say
 }
+
+TEST(MainWindow, TheReadingShowsWhileTyping) {
+    MainWindow window;
+    QTest::keyClicks(lcd(window), "2^3^2");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->readingText() == "(2 ^ (3 ^ 2))"; }, 5000))
+        << lcd(window)->readingText().toStdString();
+    lcd(window)->clear();
+    QTest::keyClicks(lcd(window), "7");
+    EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->readingText().isEmpty(); }, 5000));  // nothing to add
+}

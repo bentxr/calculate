@@ -357,6 +357,11 @@ QString Lcd::statusText() const {
     return marks.join(' ');
 }
 
+void Lcd::setReading(const QString& reading) {
+    reading_ = reading;
+    update();
+}
+
 void Lcd::setStoring(bool on) {
     storing_ = on;
     update();
@@ -512,6 +517,11 @@ void Lcd::paintEvent(QPaintEvent*) {
         painter.drawLine(under.bottomLeft(), under.bottomRight());
     }
     typeset::paint(painter, input, origin, ink, ink, rect());
+    if (provisional_ && !reading_.isEmpty()) {  // how the input is read, under it
+        painter.setFont(statusFont());
+        painter.setPen(noiseColor());
+        painter.drawText(QPointF(margin, origin.y() + input.descent + status.ascent()), reading_);
+    }
     if (hasFocus()) {
         painter.setPen(QPen(ink, 1.5));
         const QRectF at = caret.translated(origin);

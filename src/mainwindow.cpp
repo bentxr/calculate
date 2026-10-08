@@ -1716,6 +1716,13 @@ void MainWindow::present() {
     } else {
         lcd_->clearMarked();
     }
+    // How the input was read, unless it adds nothing to what was typed.
+    const QString reading = valueless ? QString() : QString::fromStdString(shown.reading);
+    QString typed = input;
+    typed.remove(' ');
+    QString read = reading;
+    read.remove(' ');
+    lcd_->setReading(read == typed ? QString() : settings::decimalComma() ? view::withDecimalComma(reading) : reading);
     if (valueless) lcd_->clearResult();
     else if (const auto parts = view::conversionParts(shown))  // a number: drawn like a value, with its bar
         lcd_->showValue(settings::decimalComma() ? view::withDecimalComma(*parts) : *parts);
