@@ -2049,3 +2049,22 @@ TEST(MainWindow, StoreKeepsThePhoneDrawerOpenForTheLetter) {
     QTest::mouseClick(child<QPushButton>(window, "direct:store"), Qt::LeftButton);
     EXPECT_TRUE(toggle->isChecked());  // the letter is in the drawer too
 }
+
+TEST(MainWindow, AWordRemainderIsTypedOrKeyedLetterByLetter) {
+    MainWindow window;
+    QTest::keyClicks(lcd(window), "7 mod 3");
+    EXPECT_EQ(lcd(window)->input(), "7 mod 3");  // letters stay letters; the engine reads the word
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "1");
+    lcd(window)->clear();
+    openSection(window, "letters");
+    for (const char* name : {"key:7", "direct:space", "direct:letterR", "direct:letterE", "direct:letterM", "direct:space", "key:3"})
+        QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "7 rem 3");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "1");
+}
