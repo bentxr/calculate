@@ -1176,7 +1176,7 @@ TEST(MainWindow, CompletionsDropDownUnderTheName) {
     EXPECT_FALSE(list->isVisible());  // from the second letter
     QTest::keyClicks(lcd(window), "s");
     ASSERT_TRUE(list->isVisible());
-    EXPECT_EQ(list->currentItem()->text(), "asin");
+    EXPECT_EQ(list->currentItem()->text(), "asec");  // the first in alphabetical order
     EXPECT_GE(list->mapTo(&window, QPoint(0, 0)).y(),
               lcd(window)->mapTo(&window, lcd(window)->caretRectAt(lcd(window)->entry().position()).bottomLeft().toPoint()).y());
     EXPECT_TRUE(window.rect().contains(QRect(list->mapTo(&window, QPoint(0, 0)), list->size())));  // inside the window
@@ -1200,13 +1200,13 @@ TEST(MainWindow, TabOrEnterChoosesACompletionAndEscCloses) {
     window.show();
     ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
     auto* list = child<QListWidget>(window, "completions");
-    QTest::keyClicks(lcd(window), "as");
+    QTest::keyClicks(lcd(window), "asi");
     QTest::keyClick(lcd(window), Qt::Key_Down);
     QTest::keyClick(lcd(window), Qt::Key_Tab);
     EXPECT_EQ(lcd(window)->input(), "asinh(");
     EXPECT_FALSE(list->isVisible());
     lcd(window)->clear();
-    QTest::keyClicks(lcd(window), "sq");
+    QTest::keyClicks(lcd(window), "sqr");
     QTest::keyClick(lcd(window), Qt::Key_Return);  // chooses, does not evaluate
     EXPECT_EQ(lcd(window)->entry().root()[0].kind, Template::Sqrt);
     lcd(window)->clear();
@@ -1221,7 +1221,7 @@ TEST(MainWindow, UpGoesBackAndAClickChoosesACompletion) {
     window.show();
     ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
     auto* list = child<QListWidget>(window, "completions");
-    QTest::keyClicks(lcd(window), "as");
+    QTest::keyClicks(lcd(window), "asi");
     QTest::keyClick(lcd(window), Qt::Key_Down);
     QTest::keyClick(lcd(window), Qt::Key_Up);
     EXPECT_EQ(list->currentRow(), 0);
