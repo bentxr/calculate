@@ -3,6 +3,7 @@
 #include "constanttext.hpp"
 #include "detailscard.hpp"
 #include "formulatip.hpp"
+#include "inspector.hpp"
 #include "keybutton.hpp"
 #include "keypad.hpp"
 #include "keysizing.hpp"
@@ -1815,7 +1816,7 @@ TEST(MainWindow, ARightClickOffersTheKeysOtherFaces) {
 TEST(MainWindow, ThePercentagesModeAnswersWithTheirBounds) {
     MainWindow window;
     auto* modes = child<QListWidget>(window, "modes");
-    ASSERT_EQ(modes->count(), 3);
+    ASSERT_EQ(modes->count(), 4);  // with the IEEE 754 tool
     modes->setCurrentRow(2);
     child<QLineEdit>(window, "percentFirst")->setText("80");
     child<QLineEdit>(window, "percentSecond")->setText("10");
@@ -2237,4 +2238,51 @@ TEST(MainWindow, TheCardShowsHowTheResultIsStored) {
     child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
     run(window, "1/3");
     EXPECT_EQ(detail(window, "hex"), "");
+}
+
+TEST(MainWindow, TheInspectorIsAPageOfTheRail) {
+    MainWindow window;
+    auto* modes = child<QListWidget>(window, "modes");
+    ASSERT_EQ(modes->count(), 4);  // Calculator, Statistics, Percentages (Plan 6), IEEE 754
+    EXPECT_EQ(modes->item(3)->text(), "IEEE 754");
+    modes->setCurrentRow(3);
+    EXPECT_EQ(child<QStackedWidget>(window, "pages")->currentIndex(), 3);
+    EXPECT_NE(child<Inspector>(window, "inspector"), nullptr);
+}
+
+TEST(MainWindow, AResultOpensInTheInspector) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    run(window, "0.1 + 0.2");
+    QTest::mouseClick(child<QToolButton>(window, "detailsButton"), Qt::LeftButton);
+    auto* card = child<DetailsCard>(window, "detailsCard");
+    auto* inspect = card->findChild<QPushButton*>("inspectButton");
+    ASSERT_NE(inspect, nullptr);
+    QTest::mouseClick(inspect, Qt::LeftButton);
+    EXPECT_FALSE(card->isVisible());
+    EXPECT_EQ(child<QListWidget>(window, "modes")->currentRow(), 3);
+    auto* inspector = child<Inspector>(window, "inspector");
+    EXPECT_EQ(inspector->findChild<QPlainTextEdit*>("inspectorHex")->toPlainText(), "3FD3 3333 3333 3334");
+    EXPECT_EQ(inspector->findChild<QComboBox*>("inspectorFormat")->currentIndex(), inspector->formatIndex(calculate_core::NumberType::Double));
+}
+
+TEST(MainWindow, ShowInspectorOpensItOnTheCurrentType) {
+    MainWindow window;
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Float);
+    window.showInspector();
+    EXPECT_EQ(child<QListWidget>(window, "modes")->currentRow(), 3);
+    auto* inspector = child<Inspector>(window, "inspector");
+    EXPECT_EQ(inspector->findChild<QComboBox*>("inspectorFormat")->currentIndex(), inspector->formatIndex(calculate_core::NumberType::Float));
+}
+
+TEST(MainWindow, ExactResultsOfferNoInspection) {
+    MainWindow window;
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
+    run(window, "1/3");
+    auto* inspect = child<DetailsCard>(window, "detailsCard")->findChild<QPushButton*>("inspectButton");
+    ASSERT_NE(inspect, nullptr);
+    EXPECT_FALSE(inspect->isVisibleTo(child<DetailsCard>(window, "detailsCard")));
 }

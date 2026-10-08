@@ -8,6 +8,7 @@
 #include <QThread>
 #include <QTimer>
 
+class Inspector;
 class DetailsCard;
 class FormulaTip;
 class Lcd;
@@ -33,6 +34,10 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
+    // The IEEE 754 page; the first time, on the calculator's current type (Exact: Double). The fp key's entry points.
+    void showInspector();
+    // The IEEE 754 page with the last result's type and stored bits.
+    void inspectResult();
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow() override;
 
@@ -171,6 +176,8 @@ private:
     QAction* decimalSection_ = nullptr;
     QMenu* conventions_ = nullptr;  // a submenu, so the settings menu stays short enough to open above the gear
     QMenu* uncertainty_ = nullptr;  // a submenu too: the combination that leads, and read precision
+    Inspector* inspector_ = nullptr;
+    bool inspectorOpened_ = false;  // showInspector picks the type only the first time
     QAction* uncertaintySection_ = nullptr;
     QAction* readingSection_ = nullptr;
     calculate_core::UncertaintyRule rule_ = calculate_core::UncertaintyRule::Linear;  // which uncertainty leads
