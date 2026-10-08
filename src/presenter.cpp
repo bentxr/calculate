@@ -624,6 +624,8 @@ QString exactNumber(const FloatBits& bits) { return number(bits, false); }
 
 QString decimalText(const FloatBits& bits) { return number(bits, true); }
 
+QString exactDecimal(const Digits& digits) { return writtenOut(digits, false); }
+
 QList<DetailRow> storedRows(const Result& r, const BitColours& colours) {
     if (!r.stored) return {};
     const FloatInspection& i = *r.stored;

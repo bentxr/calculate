@@ -23,6 +23,74 @@
     </message>
 </context>
 <context>
+    <name>Inspector</name>
+    <message>
+        <location filename="../src/inspector.cpp" line="194"/>
+        <source>sign %1 · exponent %2 (field %3) · significand %4</source>
+        <translation>signo %1 · exponente %2 (campo %3) · significando %4</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="214"/>
+        <source>display only</source>
+        <translation>solo para mostrar</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="220"/>
+        <source>Format</source>
+        <translation>Formato</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="221"/>
+        <source>Decimal</source>
+        <translation>Decimal</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="222"/>
+        <source>Binary</source>
+        <translation>Binario</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="223"/>
+        <source>Hexadecimal</source>
+        <translation>Hexadecimal</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="224"/>
+        <source>Class</source>
+        <translation>Clase</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="225"/>
+        <source>Fields</source>
+        <translation>Campos</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="226"/>
+        <source>Value</source>
+        <translation>Valor</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="227"/>
+        <source>Conversion error (stored − typed)</source>
+        <translation>Error de conversión (almacenado − escrito)</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="228"/>
+        <source>ulp</source>
+        <translation>ulp</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="229"/>
+        <source>Next below</source>
+        <translation>Anterior representable</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="230"/>
+        <source>Next above</source>
+        <translation>Siguiente representable</translation>
+    </message>
+</context>
+<context>
     <name>Lcd</name>
     <message>
         <location filename="../src/lcd.cpp" line="59"/>
@@ -3213,57 +3281,57 @@
         <translation>no canónico</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="635"/>
+        <location filename="../src/presenter.cpp" line="637"/>
         <source>Stored bits</source>
         <translation>Bits almacenados</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="636"/>
+        <location filename="../src/presenter.cpp" line="638"/>
         <source>Hex</source>
         <translation>Hex</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="639"/>
+        <location filename="../src/presenter.cpp" line="641"/>
         <source>Class</source>
         <translation>Clase</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="640"/>
+        <location filename="../src/presenter.cpp" line="642"/>
         <source>%1 · exponent %2 (field %3) · %4</source>
         <translation>%1 · exponente %2 (campo %3) · %4</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="647"/>
+        <location filename="../src/presenter.cpp" line="649"/>
         <source>ulp</source>
         <translation>ulp</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="650"/>
+        <location filename="../src/presenter.cpp" line="652"/>
         <source>Next below</source>
         <translation>Anterior representable</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="651"/>
+        <location filename="../src/presenter.cpp" line="653"/>
         <source>Next above</source>
         <translation>Siguiente representable</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="653"/>
+        <location filename="../src/presenter.cpp" line="655"/>
         <source>overflow</source>
         <translation>desbordamiento</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="653"/>
+        <location filename="../src/presenter.cpp" line="655"/>
         <source>underflow</source>
         <translation>subdesbordamiento</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="654"/>
+        <location filename="../src/presenter.cpp" line="656"/>
         <source>no subnormals</source>
         <translation>sin subnormales</translation>
     </message>
     <message>
-        <location filename="../src/presenter.cpp" line="657"/>
+        <location filename="../src/presenter.cpp" line="659"/>
         <source>Note</source>
         <translation>Nota</translation>
     </message>

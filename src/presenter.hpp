@@ -114,6 +114,7 @@ QString bitsHtml(const BitGroups& groups, const BitColours& colours);  // one sp
 QString floatClassName(calculate_core::FloatClass c);
 QString exactNumber(const calculate_core::FloatBits& bits);  // for reading: U+2212 minus, ∞, "2^−e" when too long
 QString decimalText(const calculate_core::FloatBits& bits);  // ASCII, as the inspector reads it back
+QString exactDecimal(const calculate_core::Digits& digits);  // every digit: positional for −7 <= exponent < 21, else d.ddd…e−N
 // The result as stored, bit by bit: empty for Exact and errors.
 QList<DetailRow> storedRows(const calculate_core::Result& result, const BitColours& colours);
 
