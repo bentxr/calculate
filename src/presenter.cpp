@@ -332,7 +332,7 @@ QString errorText(const Error& e, const QString& expression) {
     case ErrorCode::DomainError: return QCoreApplication::translate("view", "%1 is not defined here").arg(part);
     case ErrorCode::Overflow: return QCoreApplication::translate("view", "The result is too large for this number type");
     case ErrorCode::IrrationalResult: return QCoreApplication::translate("view", "The exact result of %1 is irrational").arg(part);
-    case ErrorCode::ArgumentTooLarge: return QCoreApplication::translate("view", "The argument of %1 is too large to reduce accurately").arg(name);
+    case ErrorCode::ArgumentTooLarge: return QCoreApplication::translate("view", "The arguments of %1 are too large to compute accurately").arg(name);
     case ErrorCode::NotAnInteger: return QCoreApplication::translate("view", "%1 needs whole numbers").arg(part);
     case ErrorCode::UncertainDiscreteArgument:
         return QCoreApplication::translate("view", "%1 needs an exactly known whole number, but its argument carries an error. "

@@ -295,17 +295,17 @@
         <translation>x + p% suma el p% de x</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1840"/>
+        <location filename="../src/mainwindow.cpp" line="1847"/>
         <source>Hold for: %1</source>
         <translation>Mantén pulsado para: %1</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1845"/>
+        <location filename="../src/mainwindow.cpp" line="1852"/>
         <source>logarithm (natural)</source>
         <translation>logaritmo (natural)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1845"/>
+        <location filename="../src/mainwindow.cpp" line="1852"/>
         <source>logarithm (base 10)</source>
         <translation>logaritmo (base 10)</translation>
     </message>
@@ -417,7 +417,7 @@
         <translation>Ningún dígito es fiable</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1816"/>
+        <location filename="../src/mainwindow.cpp" line="1823"/>
         <source>Exact arithmetic cannot represent %1: its result is irrational. Switch to a floating type to compute it.</source>
         <translation>La aritmética exacta no puede representar %1: su resultado es irracional. Cambia a un tipo de coma flotante para calcularlo.</translation>
     </message>
@@ -1228,8 +1228,8 @@
     </message>
     <message>
         <location filename="../src/presenter.cpp" line="335"/>
-        <source>The argument of %1 is too large to reduce accurately</source>
-        <translation>El argumento de %1 es demasiado grande para reducirlo con exactitud</translation>
+        <source>The arguments of %1 are too large to compute accurately</source>
+        <translation>Los argumentos de %1 son demasiado grandes para calcularlos con precisión</translation>
     </message>
     <message>
         <location filename="../src/presenter.cpp" line="336"/>

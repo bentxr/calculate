@@ -343,3 +343,9 @@ TEST(Presenter, DetailsShowTheReading) {
     EXPECT_TRUE(found);
     EXPECT_FALSE(view::explanation("reading").isEmpty());
 }
+
+TEST(Presenter, ArgumentsTooLargeSaysComputeNotReduce) {
+    const QString text = view::errorText(calculate_core::Error{calculate_core::ErrorCode::ArgumentTooLarge, "", 0, 6},
+                                         QStringLiteral("gammap(1e15, 1e15)"));
+    EXPECT_TRUE(text.contains(QStringLiteral("too large to compute accurately"))) << text.toStdString();
+}
