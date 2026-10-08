@@ -142,6 +142,15 @@ QString conversionText(const Result& r) {
     return settings::decimalComma() ? withDecimalComma(text) : text;
 }
 
+std::optional<ValueParts> conversionParts(const Result& r) {
+    if (!r.conversion || !r.conversion->parts) return std::nullopt;
+    const NumberParts& n = *r.conversion->parts;
+    ValueParts p{(n.negative ? minus() : QString()) + fromStd(n.trusted), fromStd(n.noise), QString()};
+    if (n.hasExponent) p.exponent = n.exponent10 < 0 ? minus() + QString::number(-n.exponent10) : QString::number(n.exponent10);
+    (p.noise.isEmpty() ? p.trusted : p.noise) += fromStd(n.suffix);
+    return p;
+}
+
 QString valueText(const Result& r) {
     const bool comma = settings::decimalComma();
     if (r.exact) return oneLine(comma ? withDecimalComma(fractionParts(r)) : fractionParts(r));

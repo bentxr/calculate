@@ -2068,3 +2068,11 @@ TEST(MainWindow, AWordRemainderIsTypedOrKeyedLetterByLetter) {
     EXPECT_TRUE(answered(window));
     EXPECT_EQ(lcd(window)->outputText(), "1");
 }
+
+TEST(MainWindow, ANotationConversionKeepsTheBar) {
+    MainWindow window;
+    run(window, "0.1 to sci");
+    EXPECT_EQ(lcd(window)->outputText(), "1.000000000000000|055511151231257827021181583404541015625×10^−1");
+    run(window, "0.1 to fraction");
+    EXPECT_EQ(lcd(window)->outputText(), "3602879701896397/36028797018963968");
+}

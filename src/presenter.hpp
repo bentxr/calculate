@@ -5,6 +5,8 @@
 #include <QList>
 #include <QString>
 
+#include <optional>
+
 // Pure translation from the engine's results to display text; the numeric logic stays in the engine.
 namespace view {
 
@@ -58,6 +60,8 @@ QString oneLine(const ValueParts& parts);
 QString oneLine(const FractionParts& parts);
 
 QString conversionText(const calculate_core::Result& result);  // "" when there is none
+// A conversion that shows a number, as the screen draws a value (the bar, the noise); none for other conversions.
+std::optional<ValueParts> conversionParts(const calculate_core::Result& result);
 QString valueText(const calculate_core::Result& result);       // the value on one line, as the screen shows it
 
 enum class CopyForm { Value, Trusted, ValueAndBound, Details };
