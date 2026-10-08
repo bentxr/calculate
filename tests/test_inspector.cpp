@@ -7,6 +7,7 @@
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QTest>
+#include <QToolButton>
 
 #include <gtest/gtest.h>
 
@@ -159,4 +160,22 @@ TEST(Inspector, TheBitsWaitWhileAFieldIsUnreadable) {
     EXPECT_FALSE(strip->isEnabled());
     inspector.setDecimal("");
     EXPECT_EQ(strip->bitCount(), 0);
+}
+
+TEST(Inspector, AKeypadTypesIntoTheLastField) {
+    Inspector inspector;
+    inspector.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&inspector));
+    inspector.setFormatIndex(inspector.formatIndex(NumberType::Float));
+    auto* hex = child<QPlainTextEdit>(inspector, "inspectorHex");
+    hex->setFocus();
+    QTest::mouseClick(child<QPushButton>(inspector, "inspectorKey:3"), Qt::LeftButton);
+    QTest::mouseClick(child<QPushButton>(inspector, "inspectorKey:F"), Qt::LeftButton);
+    EXPECT_EQ(hex->toPlainText(), "3F");
+    QTest::mouseClick(child<QPushButton>(inspector, "inspectorKey:⌫"), Qt::LeftButton);
+    EXPECT_EQ(hex->toPlainText(), "3");
+    auto* keys = child<QWidget>(inspector, "inspectorKeys");
+    EXPECT_TRUE(keys->isVisible());
+    QTest::mouseClick(child<QToolButton>(inspector, "inspectorKeysToggle"), Qt::LeftButton);
+    EXPECT_FALSE(keys->isVisible());
 }

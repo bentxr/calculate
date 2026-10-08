@@ -12,6 +12,7 @@ class QLabel;
 class QPlainTextEdit;
 class QPushButton;
 class QSyntaxHighlighter;
+class QToolButton;
 
 // The bits of a pattern, coloured by field and grouped by four; a click (or tap) on a bit flips it.
 class BitStrip : public QWidget {
@@ -59,6 +60,7 @@ public:
 
 protected:
     void changeEvent(QEvent* event) override;  // LanguageChange → retranslate; PaletteChange → recolour
+    bool eventFilter(QObject* watched, QEvent* event) override;  // remembers the field the keypad types into
 
 private:
     const calculate_core::FloatFormatInfo& format() const;
@@ -68,7 +70,8 @@ private:
     void display(const calculate_core::FloatInspection& inspection, QWidget* typedIn);
     void clearOutputs(QWidget* typedIn);
     void formatChanged();
-    void recolour();  // the binary field's colours, for the format and the theme  // an emptied field: the others and the outputs too
+    void recolour();
+    void drawIcons();  // the binary field's colours, for the format and the theme  // an emptied field: the others and the outputs too
 
     std::vector<calculate_core::FloatFormatInfo> formats_;
     QComboBox* format_ = nullptr;
@@ -76,6 +79,8 @@ private:
     QPlainTextEdit* binary_ = nullptr;
     QPlainTextEdit* hex_ = nullptr;
     BitStrip* strip_ = nullptr;
+    QPlainTextEdit* lastField_ = nullptr;  // the keypad types here: the decimal field until another takes the focus
+    QToolButton* keysToggle_ = nullptr;
     QSyntaxHighlighter* highlighter_ = nullptr;
     QLabel* message_ = nullptr;
     std::map<QString, QLabel*> captions_;  // by key: the bold caption of each output row

@@ -31,97 +31,102 @@
 <context>
     <name>Inspector</name>
     <message>
-        <location filename="../src/inspector.cpp" line="289"/>
+        <location filename="../src/inspector.cpp" line="325"/>
         <source>The bits were read again in the new format.</source>
         <translation>Los bits se han vuelto a leer en el nuevo formato.</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="306"/>
+        <location filename="../src/inspector.cpp" line="342"/>
         <source>Not a decimal number</source>
         <translation>No es un número decimal</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="322"/>
+        <location filename="../src/inspector.cpp" line="358"/>
         <source>%1 has %2 bits</source>
         <translation>%1 tiene %2 bits</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="323"/>
+        <location filename="../src/inspector.cpp" line="359"/>
         <source>Not a binary number</source>
         <translation>No es un número binario</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="324"/>
+        <location filename="../src/inspector.cpp" line="360"/>
         <source>Not a hexadecimal number</source>
         <translation>No es un número hexadecimal</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="365"/>
+        <location filename="../src/inspector.cpp" line="401"/>
         <source>sign %1 · exponent %2 (field %3) · significand %4</source>
         <translation>signo %1 · exponente %2 (campo %3) · significando %4</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="385"/>
+        <location filename="../src/inspector.cpp" line="425"/>
         <source>display only</source>
         <translation>solo para mostrar</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="391"/>
+        <location filename="../src/inspector.cpp" line="431"/>
+        <source>Show or hide the keypad</source>
+        <translation>Mostrar u ocultar el teclado numérico</translation>
+    </message>
+    <message>
+        <location filename="../src/inspector.cpp" line="433"/>
         <source>Format</source>
         <translation>Formato</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="392"/>
+        <location filename="../src/inspector.cpp" line="434"/>
         <source>Bits (click one to flip it)</source>
         <translation>Bits (pulsa uno para invertirlo)</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="393"/>
+        <location filename="../src/inspector.cpp" line="435"/>
         <source>Decimal</source>
         <translation>Decimal</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="394"/>
+        <location filename="../src/inspector.cpp" line="436"/>
         <source>Binary</source>
         <translation>Binario</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="395"/>
+        <location filename="../src/inspector.cpp" line="437"/>
         <source>Hexadecimal</source>
         <translation>Hexadecimal</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="396"/>
+        <location filename="../src/inspector.cpp" line="438"/>
         <source>Class</source>
         <translation>Clase</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="397"/>
+        <location filename="../src/inspector.cpp" line="439"/>
         <source>Fields</source>
         <translation>Campos</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="398"/>
+        <location filename="../src/inspector.cpp" line="440"/>
         <source>Value</source>
         <translation>Valor</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="399"/>
+        <location filename="../src/inspector.cpp" line="441"/>
         <source>Conversion error (stored − typed)</source>
         <translation>Error de conversión (almacenado − escrito)</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="400"/>
+        <location filename="../src/inspector.cpp" line="442"/>
         <source>ulp</source>
         <translation>ulp</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="401"/>
+        <location filename="../src/inspector.cpp" line="443"/>
         <source>Next below</source>
         <translation>Anterior representable</translation>
     </message>
     <message>
-        <location filename="../src/inspector.cpp" line="402"/>
+        <location filename="../src/inspector.cpp" line="444"/>
         <source>Next above</source>
         <translation>Siguiente representable</translation>
     </message>

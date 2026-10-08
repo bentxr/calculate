@@ -1,5 +1,6 @@
 #include "inspector.hpp"
 
+#include "icons.hpp"
 #include "presenter.hpp"
 
 #include <QComboBox>
@@ -14,6 +15,7 @@
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QSyntaxHighlighter>
+#include <QToolButton>
 #include <QVBoxLayout>
 
 using namespace calculate_core;
@@ -38,6 +40,9 @@ protected:
         QPlainTextEdit::keyPressEvent(event);
     }
     void insertFromMimeData(const QMimeData* source) override { insertPlainText(filtered(source->text())); }
+
+public:
+    void type(const QString& text) { insertPlainText(filtered(text)); }  // a key of the tool's keypad
 
 private:
     QString filtered(const QString& text) const {
@@ -188,6 +193,34 @@ Inspector::Inspector(QWidget* parent) : QWidget(parent), formats_(floatFormats()
     form->addRow(QString(), strip_);
     form->addRow(captions_["hex"], hex_);
     layout->addLayout(form);
+    // A keypad, for touch screens: it types into the field that last had the focus.
+    keysToggle_ = new QToolButton(this);
+    keysToggle_->setObjectName("inspectorKeysToggle");
+
+    keysToggle_->setCheckable(true);
+    keysToggle_->setChecked(true);
+    keysToggle_->setFocusPolicy(Qt::NoFocus);
+    layout->addWidget(keysToggle_, 0, Qt::AlignLeft);
+    auto* keys = new QWidget(this);
+    keys->setObjectName("inspectorKeys");
+    auto* keyGrid = new QGridLayout(keys);
+    keyGrid->setContentsMargins(0, 0, 0, 0);
+    const QStringList labels{"7", "8", "9", "A", "B", "C", "4", "5", "6", "D", "E", "F", "1", "2", "3", ".", "e",
+                             QStringLiteral("−"), "0", QStringLiteral("⌫")};
+    for (int i = 0; i < labels.size(); ++i) {
+        auto* key = new QPushButton(labels[i], keys);
+        key->setObjectName(QStringLiteral("inspectorKey:") + labels[i]);
+        key->setFocusPolicy(Qt::NoFocus);
+        keyGrid->addWidget(key, i / 6, i % 6);
+        const QString label = labels[i];
+        connect(key, &QPushButton::clicked, this, [this, label] {
+            auto* field = static_cast<FieldEdit*>(lastField_);
+            if (label == QStringLiteral("⌫")) field->textCursor().deletePreviousChar();
+            else field->type(label == QStringLiteral("−") ? QStringLiteral("-") : label);
+        });
+    }
+    layout->addWidget(keys);
+    connect(keysToggle_, &QToolButton::toggled, keys, &QWidget::setVisible);
     message_ = new QLabel(this);
     message_->setObjectName("inspectorMessage");
     message_->setWordWrap(true);
@@ -220,6 +253,8 @@ Inspector::Inspector(QWidget* parent) : QWidget(parent), formats_(floatFormats()
     grid->setColumnStretch(1, 1);
     layout->addLayout(grid);
     layout->addStretch();
+    lastField_ = decimal_;
+    for (QPlainTextEdit* field : {decimal_, binary_, hex_}) field->installEventFilter(this);
     highlighter_ = new BitsHighlighter(binary_->document(), 11, dark(this));
     connect(decimal_, &QPlainTextEdit::textChanged, this, [this] {
         if (!updating_) convertDecimal();
@@ -246,6 +281,7 @@ Inspector::Inspector(QWidget* parent) : QWidget(parent), formats_(floatFormats()
     down_->setEnabled(false);
     up_->setEnabled(false);
     retranslate();
+    drawIcons();
     setFormatIndex(formatIndex(NumberType::Double));
 }
 
@@ -379,6 +415,10 @@ void Inspector::display(const FloatInspection& inspection, QWidget* typedIn) {
     values_["above"]->setText(inspection.hasNeighbours ? view::exactNumber(inspection.above) : QString());
 }
 
+void Inspector::drawIcons() {  // drawn, so the theme's ink colours them (no emoji)
+    keysToggle_->setIcon(icons::drawn(icons::Kind::Keyboard, palette().color(QPalette::ButtonText), fontMetrics().height()));
+}
+
 void Inspector::retranslate() {
     const std::vector<TypeInfo> types = numberTypes();
     for (std::size_t i = 0; i < formats_.size(); ++i) {
@@ -388,6 +428,8 @@ void Inspector::retranslate() {
                 if (t.type == *formats_[i].type) type = view::shortTypeName(t);
         format_->setItemText(static_cast<int>(i), QString::fromStdString(formats_[i].name) + QStringLiteral(" · ") + type);
     }
+    keysToggle_->setToolTip(tr("Show or hide the keypad"));
+    keysToggle_->setAccessibleName(keysToggle_->toolTip());
     captions_["format"]->setText(tr("Format"));
     strip_->setAccessibleName(tr("Bits (click one to flip it)"));
     captions_["decimal"]->setText(tr("Decimal"));
@@ -402,8 +444,16 @@ void Inspector::retranslate() {
     captions_["above"]->setText(tr("Next above"));
 }
 
+bool Inspector::eventFilter(QObject* watched, QEvent* event) {
+    if (event->type() == QEvent::FocusIn) lastField_ = static_cast<QPlainTextEdit*>(watched);  // where the keypad types
+    return QWidget::eventFilter(watched, event);
+}
+
 void Inspector::changeEvent(QEvent* event) {
     if (event->type() == QEvent::LanguageChange) retranslate();
-    if (event->type() == QEvent::PaletteChange && highlighter_) recolour();
+    if (event->type() == QEvent::PaletteChange && highlighter_) {
+        recolour();
+        drawIcons();
+    }
     QWidget::changeEvent(event);
 }
