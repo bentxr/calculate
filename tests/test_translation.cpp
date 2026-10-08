@@ -1,3 +1,4 @@
+#include "functiontext.hpp"
 #include "keypad.hpp"
 #include "presenter.hpp"
 #include "printers.hpp"
@@ -31,4 +32,21 @@ TEST(Translation, EveryStringIsTranslated) {
     const QByteArray content = ts.readAll();
     EXPECT_FALSE(content.contains("type=\"unfinished\""));
     EXPECT_FALSE(content.contains("<translation></translation>"));
+}
+
+TEST(Translation, EveryFunctionTextIsMarkedForTranslation) {
+    const QStringList marked = functionTextsForTranslation();
+    for (const calculate_core::FunctionDescription& f : calculate_core::functions()) {
+        EXPECT_TRUE(marked.contains(QString::fromStdString(f.title))) << f.name;
+        EXPECT_TRUE(marked.contains(QString::fromStdString(f.description))) << f.name;
+    }
+}
+
+TEST(Translation, FunctionTextsReadInSpanish) {
+    QTranslator spanish;
+    ASSERT_TRUE(spanish.load(QLocale(QLocale::Spanish, QLocale::Spain), "calculate", "_", ":/i18n"));
+    QCoreApplication::installTranslator(&spanish);
+    for (const calculate_core::FunctionDescription& f : calculate_core::functions())
+        if (f.name == "atan2") EXPECT_EQ(functionTitle(f), QStringLiteral("Ángulo de un punto"));
+    QCoreApplication::removeTranslator(&spanish);
 }

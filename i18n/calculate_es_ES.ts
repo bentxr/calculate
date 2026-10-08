@@ -423,6 +423,854 @@
     </message>
 </context>
 <context>
+    <name>functions</name>
+    <message>
+        <location filename="../src/functiontext.cpp" line="16"/>
+        <source>Pi</source>
+        <translation>Pi</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="17"/>
+        <source>The ratio of a circle&apos;s circumference to its diameter.</source>
+        <translation>La razón entre la circunferencia y el diámetro de un círculo.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="18"/>
+        <source>Euler&apos;s number</source>
+        <translation>Número de Euler</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="19"/>
+        <source>The base of the natural logarithm.</source>
+        <translation>La base del logaritmo natural.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="20"/>
+        <source>Square root</source>
+        <translation>Raíz cuadrada</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="21"/>
+        <source>The non-negative number whose square is x.</source>
+        <translation>El número no negativo cuyo cuadrado es x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="22"/>
+        <source>Cube root</source>
+        <translation>Raíz cúbica</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="23"/>
+        <source>The real number whose cube is x.</source>
+        <translation>El número real cuyo cubo es x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="24"/>
+        <source>n-th root</source>
+        <translation>Raíz n-ésima</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="25"/>
+        <source>The real number whose n-th power is x.</source>
+        <translation>El número real cuya potencia n-ésima es x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="26"/>
+        <source>Exponential</source>
+        <translation>Exponencial</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="27"/>
+        <source>e raised to the power x.</source>
+        <translation>e elevado a x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="28"/>
+        <source>Power of two</source>
+        <translation>Potencia de dos</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="29"/>
+        <source>2 raised to the power x.</source>
+        <translation>2 elevado a x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="30"/>
+        <source>Power of ten</source>
+        <translation>Potencia de diez</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="31"/>
+        <source>10 raised to the power x.</source>
+        <translation>10 elevado a x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="32"/>
+        <source>Square</source>
+        <translation>Cuadrado</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="33"/>
+        <source>x times x.</source>
+        <translation>x por x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="34"/>
+        <source>Square root of x·π</source>
+        <translation>Raíz cuadrada de x·π</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="35"/>
+        <source>The square root of x times pi.</source>
+        <translation>La raíz cuadrada de x por pi.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="36"/>
+        <source>Hypotenuse</source>
+        <translation>Hipotenusa</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="37"/>
+        <source>The square root of x² + y², without overflow.</source>
+        <translation>La raíz cuadrada de x² + y², sin desbordamiento.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="38"/>
+        <source>Natural logarithm</source>
+        <translation>Logaritmo natural</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="39"/>
+        <source>The power to which e must be raised to give x.</source>
+        <translation>La potencia a la que hay que elevar e para obtener x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="40"/>
+        <source>Logarithm</source>
+        <translation>Logaritmo</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="41"/>
+        <source>The logarithm of x in base 10 (or e, when the setting says so), or in the given base.</source>
+        <translation>El logaritmo de x en base 10 (o e, si el ajuste lo indica), o en la base indicada.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="42"/>
+        <source>Binary logarithm</source>
+        <translation>Logaritmo binario</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="43"/>
+        <source>The power to which 2 must be raised to give x.</source>
+        <translation>La potencia a la que hay que elevar 2 para obtener x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="44"/>
+        <source>Sine</source>
+        <translation>Seno</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="45"/>
+        <source>The sine of the angle x.</source>
+        <translation>El seno del ángulo x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="46"/>
+        <source>Cosine</source>
+        <translation>Coseno</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="47"/>
+        <source>The cosine of the angle x.</source>
+        <translation>El coseno del ángulo x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="48"/>
+        <source>Tangent</source>
+        <translation>Tangente</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="49"/>
+        <source>The tangent of the angle x.</source>
+        <translation>La tangente del ángulo x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="50"/>
+        <source>Secant</source>
+        <translation>Secante</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="51"/>
+        <source>One over the cosine of the angle x.</source>
+        <translation>Uno entre el coseno del ángulo x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="52"/>
+        <source>Cosecant</source>
+        <translation>Cosecante</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="53"/>
+        <source>One over the sine of the angle x.</source>
+        <translation>Uno entre el seno del ángulo x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="54"/>
+        <source>Cotangent</source>
+        <translation>Cotangente</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="55"/>
+        <source>The cosine over the sine of the angle x.</source>
+        <translation>El coseno entre el seno del ángulo x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="56"/>
+        <source>Inverse sine</source>
+        <translation>Arcoseno</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="57"/>
+        <source>The angle in [−90°, 90°] whose sine is x.</source>
+        <translation>El ángulo en [−90°, 90°] cuyo seno es x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="58"/>
+        <source>Inverse cosine</source>
+        <translation>Arcocoseno</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="59"/>
+        <source>The angle in [0°, 180°] whose cosine is x.</source>
+        <translation>El ángulo en [0°, 180°] cuyo coseno es x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="60"/>
+        <source>Inverse tangent</source>
+        <translation>Arcotangente</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="61"/>
+        <source>The angle in (−90°, 90°) whose tangent is x.</source>
+        <translation>El ángulo en (−90°, 90°) cuya tangente es x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="62"/>
+        <source>Inverse secant</source>
+        <translation>Arcosecante</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="63"/>
+        <source>The angle whose secant is x, the inverse cosine of 1/x.</source>
+        <translation>El ángulo cuya secante es x, el arcocoseno de 1/x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="64"/>
+        <source>Inverse cosecant</source>
+        <translation>Arcocosecante</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="65"/>
+        <source>The angle whose cosecant is x, the inverse sine of 1/x.</source>
+        <translation>El ángulo cuya cosecante es x, el arcoseno de 1/x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="66"/>
+        <source>Inverse cotangent</source>
+        <translation>Arcocotangente</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="67"/>
+        <source>The angle whose cotangent is x: the inverse tangent of 1/x, and 90° at 0.</source>
+        <translation>El ángulo cuya cotangente es x: la arcotangente de 1/x, y 90° en 0.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="68"/>
+        <source>Angle of a point</source>
+        <translation>Ángulo de un punto</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="69"/>
+        <source>The angle in (−180°, 180°] of the point (x, y).</source>
+        <translation>El ángulo en (−180°, 180°] del punto (x, y).</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="70"/>
+        <source>Cardinal sine</source>
+        <translation>Seno cardinal</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="71"/>
+        <source>sin(x)/x, and 1 at 0.</source>
+        <translation>sen(x)/x, y 1 en 0.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="72"/>
+        <source>Hyperbolic sine</source>
+        <translation>Seno hiperbólico</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="73"/>
+        <source>(eˣ − e⁻ˣ)/2.</source>
+        <translation>(eˣ − e⁻ˣ)/2.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="74"/>
+        <source>Hyperbolic cosine</source>
+        <translation>Coseno hiperbólico</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="75"/>
+        <source>(eˣ + e⁻ˣ)/2.</source>
+        <translation>(eˣ + e⁻ˣ)/2.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="76"/>
+        <source>Hyperbolic tangent</source>
+        <translation>Tangente hiperbólica</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="77"/>
+        <source>sinh(x)/cosh(x).</source>
+        <translation>senh(x)/cosh(x).</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="78"/>
+        <source>Hyperbolic secant</source>
+        <translation>Secante hiperbólica</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="79"/>
+        <source>One over cosh(x).</source>
+        <translation>Uno entre cosh(x).</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="80"/>
+        <source>Hyperbolic cosecant</source>
+        <translation>Cosecante hiperbólica</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="81"/>
+        <source>One over sinh(x).</source>
+        <translation>Uno entre senh(x).</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="82"/>
+        <source>Hyperbolic cotangent</source>
+        <translation>Cotangente hiperbólica</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="83"/>
+        <source>cosh(x)/sinh(x).</source>
+        <translation>cosh(x)/senh(x).</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="84"/>
+        <source>Inverse hyperbolic sine</source>
+        <translation>Arcoseno hiperbólico</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="85"/>
+        <source>The number whose hyperbolic sine is x.</source>
+        <translation>El número cuyo seno hiperbólico es x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="86"/>
+        <source>Inverse hyperbolic cosine</source>
+        <translation>Arcocoseno hiperbólico</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="87"/>
+        <source>The non-negative number whose hyperbolic cosine is x.</source>
+        <translation>El número no negativo cuyo coseno hiperbólico es x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="88"/>
+        <source>Inverse hyperbolic tangent</source>
+        <translation>Arcotangente hiperbólica</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="89"/>
+        <source>The number whose hyperbolic tangent is x.</source>
+        <translation>El número cuya tangente hiperbólica es x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="90"/>
+        <source>Inverse hyperbolic secant</source>
+        <translation>Arcosecante hiperbólica</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="91"/>
+        <source>The non-negative number whose hyperbolic secant is x.</source>
+        <translation>El número no negativo cuya secante hiperbólica es x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="92"/>
+        <source>Inverse hyperbolic cosecant</source>
+        <translation>Arcocosecante hiperbólica</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="93"/>
+        <source>The number whose hyperbolic cosecant is x.</source>
+        <translation>El número cuya cosecante hiperbólica es x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="94"/>
+        <source>Inverse hyperbolic cotangent</source>
+        <translation>Arcocotangente hiperbólica</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="95"/>
+        <source>The number whose hyperbolic cotangent is x.</source>
+        <translation>El número cuya cotangente hiperbólica es x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="96"/>
+        <source>Absolute value</source>
+        <translation>Valor absoluto</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="97"/>
+        <source>x without its sign.</source>
+        <translation>x sin su signo.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="98"/>
+        <source>Sign</source>
+        <translation>Signo</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="99"/>
+        <source>−1, 0 or 1, as x is negative, zero or positive.</source>
+        <translation>−1, 0 o 1, según x sea negativo, cero o positivo.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="100"/>
+        <source>Round down</source>
+        <translation>Redondeo hacia abajo</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="101"/>
+        <source>The largest whole number not above x.</source>
+        <translation>El mayor número entero que no supera x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="102"/>
+        <source>Round up</source>
+        <translation>Redondeo hacia arriba</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="103"/>
+        <source>The smallest whole number not below x.</source>
+        <translation>El menor número entero que no es menor que x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="104"/>
+        <source>Round</source>
+        <translation>Redondeo</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="105"/>
+        <source>The nearest whole number; halves away from zero.</source>
+        <translation>El entero más cercano; las mitades se alejan del cero.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="106"/>
+        <source>Integer part</source>
+        <translation>Parte entera</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="107"/>
+        <source>x without its fractional part, rounded toward zero.</source>
+        <translation>x sin su parte fraccionaria, redondeado hacia el cero.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="108"/>
+        <source>Fractional part</source>
+        <translation>Parte fraccionaria</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="109"/>
+        <source>x minus its integer part.</source>
+        <translation>x menos su parte entera.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="110"/>
+        <source>Clip</source>
+        <translation>Recorte</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="111"/>
+        <source>x, limited to the range from lo to hi.</source>
+        <translation>x, limitado al intervalo de lo a hi.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="112"/>
+        <source>Numerator</source>
+        <translation>Numerador</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="113"/>
+        <source>The numerator of x as a reduced fraction.</source>
+        <translation>El numerador de x como fracción irreducible.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="114"/>
+        <source>Denominator</source>
+        <translation>Denominador</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="115"/>
+        <source>The denominator of x as a reduced fraction.</source>
+        <translation>El denominador de x como fracción irreducible.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="116"/>
+        <source>Modulo</source>
+        <translation>Módulo</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="117"/>
+        <source>The remainder of a divided by b, with the sign of a (or of b, when the setting says so).</source>
+        <translation>El resto de dividir a entre b, con el signo de a (o de b, si el ajuste lo indica).</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="118"/>
+        <source>Remainder</source>
+        <translation>Resto</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="119"/>
+        <source>The remainder of a divided by b, with the sign of a.</source>
+        <translation>El resto de dividir a entre b, con el signo de a.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="120"/>
+        <source>Floored remainder</source>
+        <translation>Resto con el signo del divisor</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="121"/>
+        <source>The remainder of a divided by b, with the sign of b.</source>
+        <translation>El resto de dividir a entre b, con el signo de b.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="122"/>
+        <source>Greatest common divisor</source>
+        <translation>Máximo común divisor</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="123"/>
+        <source>The largest whole number dividing both a and b.</source>
+        <translation>El mayor entero que divide a la vez a a y a b.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="124"/>
+        <source>Least common multiple</source>
+        <translation>Mínimo común múltiplo</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="125"/>
+        <source>The smallest positive whole number divisible by a and b.</source>
+        <translation>El menor entero positivo divisible por a y por b.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="126"/>
+        <source>Combinations</source>
+        <translation>Combinaciones</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="127"/>
+        <source>The ways to choose r of n things, order ignored.</source>
+        <translation>Las formas de elegir r de n elementos, sin importar el orden.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="128"/>
+        <source>Permutations</source>
+        <translation>Variaciones</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="129"/>
+        <source>The ways to arrange r of n things in order.</source>
+        <translation>Las formas de ordenar r de n elementos.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="130"/>
+        <source>Mean</source>
+        <translation>Media</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="131"/>
+        <source>The sum of the values over their count.</source>
+        <translation>La suma de los valores entre su número.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="132"/>
+        <source>Median</source>
+        <translation>Mediana</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="133"/>
+        <source>The middle value, or the mean of the two middle ones.</source>
+        <translation>El valor central, o la media de los dos centrales.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="134"/>
+        <source>Sample variance</source>
+        <translation>Varianza muestral</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="135"/>
+        <source>The squared deviations from the mean over n − 1.</source>
+        <translation>Las desviaciones cuadráticas respecto a la media entre n − 1.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="136"/>
+        <source>Sample standard deviation</source>
+        <translation>Desviación típica muestral</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="137"/>
+        <source>The square root of the sample variance.</source>
+        <translation>La raíz cuadrada de la varianza muestral.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="138"/>
+        <source>Population variance</source>
+        <translation>Varianza poblacional</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="139"/>
+        <source>The squared deviations from the mean over n.</source>
+        <translation>Las desviaciones cuadráticas respecto a la media entre n.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="140"/>
+        <source>Population standard deviation</source>
+        <translation>Desviación típica poblacional</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="141"/>
+        <source>The square root of the population variance.</source>
+        <translation>La raíz cuadrada de la varianza poblacional.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="142"/>
+        <source>Sum</source>
+        <translation>Sumatorio</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="143"/>
+        <source>The term added up for each whole value of its variable from `from` to `to`.</source>
+        <translation>El término sumado para cada valor entero de su variable, de `from` a `to`.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="144"/>
+        <source>Product</source>
+        <translation>Productorio</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="145"/>
+        <source>The term multiplied for each whole value of its variable from `from` to `to`.</source>
+        <translation>El término multiplicado para cada valor entero de su variable, de `from` a `to`.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="146"/>
+        <source>Gamma function</source>
+        <translation>Función gamma</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="147"/>
+        <source>The factorial extended to real numbers: gamma(n) = (n − 1)!.</source>
+        <translation>El factorial extendido a los números reales: gamma(n) = (n − 1)!.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="148"/>
+        <source>Log-gamma</source>
+        <translation>Logaritmo de gamma</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="149"/>
+        <source>The natural logarithm of the absolute value of gamma(x).</source>
+        <translation>El logaritmo natural del valor absoluto de gamma(x).</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="150"/>
+        <source>Digamma</source>
+        <translation>Digamma</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="151"/>
+        <source>The derivative of lgamma.</source>
+        <translation>La derivada de lgamma.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="152"/>
+        <source>Beta function</source>
+        <translation>Función beta</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="153"/>
+        <source>gamma(a)·gamma(b)/gamma(a + b).</source>
+        <translation>gamma(a)·gamma(b)/gamma(a + b).</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="154"/>
+        <source>Error function</source>
+        <translation>Función error</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="155"/>
+        <source>2/√π times the integral of e^(−t²) from 0 to x.</source>
+        <translation>2/√π por la integral de e^(−t²) entre 0 y x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="156"/>
+        <source>Complementary error function</source>
+        <translation>Función error complementaria</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="157"/>
+        <source>1 − erf(x), accurate even when tiny.</source>
+        <translation>1 − erf(x), precisa aunque sea diminuta.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="158"/>
+        <source>Inverse error function</source>
+        <translation>Función error inversa</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="159"/>
+        <source>The x with erf(x) = y.</source>
+        <translation>El x con erf(x) = y.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="160"/>
+        <source>Inverse complementary error function</source>
+        <translation>Función error complementaria inversa</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="161"/>
+        <source>The x with erfc(x) = z.</source>
+        <translation>El x con erfc(x) = z.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="162"/>
+        <source>Regularized lower incomplete gamma</source>
+        <translation>Gamma incompleta inferior regularizada</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="163"/>
+        <source>The integral of t^(a−1) e^(−t) from 0 to x, over gamma(a).</source>
+        <translation>La integral de t^(a−1) e^(−t) entre 0 y x, dividida por gamma(a).</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="164"/>
+        <source>Regularized upper incomplete gamma</source>
+        <translation>Gamma incompleta superior regularizada</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="165"/>
+        <source>1 − gammap(a, x), accurate even when tiny.</source>
+        <translation>1 − gammap(a, x), precisa aunque sea diminuta.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="166"/>
+        <source>Upper incomplete gamma</source>
+        <translation>Gamma incompleta superior</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="167"/>
+        <source>The integral of t^(a−1) e^(−t) from x to infinity.</source>
+        <translation>La integral de t^(a−1) e^(−t) desde x hasta infinito.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="168"/>
+        <source>Lower incomplete gamma</source>
+        <translation>Gamma incompleta inferior</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="169"/>
+        <source>The integral of t^(a−1) e^(−t) from 0 to x.</source>
+        <translation>La integral de t^(a−1) e^(−t) entre 0 y x.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="170"/>
+        <source>Regularized incomplete beta</source>
+        <translation>Beta incompleta regularizada</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="171"/>
+        <source>The integral of t^(a−1)(1 − t)^(b−1) from 0 to x, over beta(a, b).</source>
+        <translation>La integral de t^(a−1)(1 − t)^(b−1) entre 0 y x, dividida por beta(a, b).</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="172"/>
+        <source>Inverse incomplete beta</source>
+        <translation>Beta incompleta inversa</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="173"/>
+        <source>The x with betainc(a, b, x) = y.</source>
+        <translation>El x con betainc(a, b, x) = y.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="174"/>
+        <source>Constants</source>
+        <translation>Constantes</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="175"/>
+        <source>Powers and roots</source>
+        <translation>Potencias y raíces</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="176"/>
+        <source>Logarithms</source>
+        <translation>Logaritmos</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="177"/>
+        <source>Trigonometry</source>
+        <translation>Trigonometría</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="178"/>
+        <source>Hyperbolic</source>
+        <translation>Hiperbólicas</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="179"/>
+        <source>Rounding and parts</source>
+        <translation>Redondeo y partes</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="180"/>
+        <source>Integers</source>
+        <translation>Enteros</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="181"/>
+        <source>Statistics</source>
+        <translation>Estadística</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="182"/>
+        <source>Sums and products</source>
+        <translation>Sumas y productos</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="183"/>
+        <source>Special functions</source>
+        <translation>Funciones especiales</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="184"/>
+        <source>Probability</source>
+        <translation>Probabilidad</translation>
+    </message>
+</context>
+<context>
     <name>keypad</name>
     <message>
         <location filename="../src/keypad.cpp" line="35"/>
