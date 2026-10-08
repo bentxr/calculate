@@ -1995,3 +1995,13 @@ TEST(MainWindow, SumKeysBuildASum) {
     EXPECT_TRUE(answered(window));
     EXPECT_EQ(lcd(window)->outputText(), "30");
 }
+
+TEST(MainWindow, ANoteShowsDimmedUnderTheScreen) {
+    MainWindow window;
+    run(window, "sum(x; 5; 1)");
+    EXPECT_EQ(lcd(window)->outputText(), "0");
+    EXPECT_EQ(message(window)->text(), "Σ(x, 5, 1) has no terms");  // typed sums read back as Σ templates (1.27)
+    EXPECT_TRUE(message(window)->property("dimmed").toBool());
+    run(window, "1+1");
+    EXPECT_EQ(message(window)->text(), "");
+}

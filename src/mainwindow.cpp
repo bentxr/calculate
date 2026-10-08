@@ -1698,8 +1698,13 @@ void MainWindow::present() {
     const bool valueless = shown.error || shown.commentOnly;  // an error, or a note
     detailsButton_->setEnabled(!valueless);
     enableCopy(valueless ? nullptr : &shown);
-    message_->setText(shown.error && !unfinished ? view::errorText(*shown.error, expression) : QString());
-    message_->setForegroundRole(previewShown_ ? QPalette::PlaceholderText : QPalette::WindowText);
+    // A note about a result that is not an error shows dimmed, like a live error.
+    const bool note = !shown.error && !shown.warnings.empty();
+    message_->setText(shown.error && !unfinished ? view::errorText(*shown.error, expression)
+                      : note                     ? view::warningText(shown.warnings.front(), expression)
+                                                 : QString());
+    message_->setForegroundRole(previewShown_ || note ? QPalette::PlaceholderText : QPalette::WindowText);
+    message_->setProperty("dimmed", previewShown_ || note);
     lcd_->setProvisional(previewShown_);
     // The error's span is in bytes of the text that was evaluated: mark it only on that same input.
     const QString input = lcd_->input();

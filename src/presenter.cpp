@@ -274,6 +274,15 @@ bool incomplete(const Error& error) {
     return error.code == ErrorCode::UnexpectedEnd || error.code == ErrorCode::MissingClosingParenthesis;
 }
 
+QString warningText(const Warning& w, const QString& expression) {
+    QString part = QString::fromUtf8(expression.toUtf8().mid(static_cast<int>(w.begin), static_cast<int>(w.end - w.begin)));
+    if (settings::decimalComma()) part = withDecimalComma(part);  // quoted as the screen shows it
+    switch (w.code) {
+    case WarningCode::EmptyRange: return QCoreApplication::translate("view", "%1 has no terms").arg(part);
+    }
+    return {};
+}
+
 QString errorText(const Error& e, const QString& expression) {
     const QByteArray bytes = expression.toUtf8();
     QString part = QString::fromUtf8(bytes.mid(static_cast<int>(e.begin), static_cast<int>(e.end - e.begin)));
