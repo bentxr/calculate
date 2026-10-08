@@ -188,14 +188,11 @@ QString valueOf(const QString& expression) {
 TEST(Typing, PastedTextMeansWhatItSays) {
     for (const char* text : {"2^10+1", "-2^2", "2^-1", "√4+5", "√2^2", "sqrt(16)/4", "1/3", "((1)/(3))+1", "root(27, 3)",
                              "log(8, 2)", "log(100)", "10^3", "(10^(3))", "e^1", "exp(1)", "abs(-3)*2", "3!^2", "2^3!",
-                             "nCr(5, 2)", "50%", "1e3+2", "1.5e-3*2", "pi*2", "mean(1, 2, 3)", "2^(1+2)*3"}) {
+                             "nCr(5, 2)", "50%", "1e3+2", "1.5e-3*2", "pi*2", "mean(1, 2, 3)", "2^(1+2)*3", "2**3**2"}) {
         Entry e;
         e.setRoot(typing::read(QString::fromUtf8(text)));
         EXPECT_EQ(valueOf(e.text()), valueOf(QString::fromUtf8(text))) << text << " → " << e.text().toStdString();
     }
-    Entry e;
-    e.setRoot(typing::read("2**3**2"));  // the engine doesn't read ** yet: compared with what it means
-    EXPECT_EQ(valueOf(e.text()), valueOf("2^3^2"));
 }
 
 TEST(Typing, PasteGoesInAtTheCursor) {
