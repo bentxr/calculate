@@ -53,6 +53,9 @@ inline constexpr int commonLimit = 12;  // two rows of six
 // each once, at most commonLimit of them.
 bool canBeCommon(const QStringList& ids);
 
+// Engine functions that compute what another key does, and that key's id (exp10 → 10ˣ).
+const QList<QPair<QString, QString>>& aliasKeys();
+
 // The Statistics mode's functions, in their order on its page; each takes the values as arguments.
 const QList<Key>& statisticsKeys();
 
@@ -80,6 +83,12 @@ const QList<QPair<QString, QStringList>>& alternates();
 // The key's name for screen readers, in the user's language: words for symbol legends (x⁻¹ "reciprocal"); any
 // other legend speaks as itself.
 QString spokenName(const Key& key);
+
+// What a key is, for its tooltip, in the user's language: a function's title and example ("Inverse sine ·
+// asin(0.5)"); any other key's spoken name, capitalised ("Reciprocal").
+QString keyTip(const Key& key);
+// The name a screen reader says: a function's title, any other key's spoken name.
+QString keyName(const Key& key);
 
 // A label or inserted text in the user's language (Spanish calculators print sen, Arcsen, MCD…).
 QString translated(const QString& text);

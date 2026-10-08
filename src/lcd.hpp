@@ -79,6 +79,10 @@ public:
     // How the input is read, "(2 ^ (3 ^ 2))": drawn small and dimmed under the input while the result is a preview.
     void setReading(const QString& reading);
     QString readingText() const { return reading_; }
+    // The arguments of the function being typed, at the right end of the status line, the current one in bold.
+    void setHint(const view::HintParts& hint);
+    QString hintText() const { return hint_.before + hint_.current + hint_.after; }
+    QString hintCurrent() const { return hint_.current; }
 
     static QString fontFamily();  // the bundled screen typeface
     QColor background() const;    // an LCD panel: pale grey-green, or dark in a dark theme
@@ -150,6 +154,7 @@ private:
     bool provisional_ = false;
     Entry marked_;  // a copy of the input whose selection is the marked part; none when nothing is marked
     QString reading_;
+    view::HintParts hint_;
     bool storing_ = false;
     QString text_;  // Shown::Text: a conversion
     Shown shown_ = Shown::Nothing;

@@ -26,6 +26,17 @@ QString nameBeingTyped(const Entry& entry);
 // Every name that starts with `prefix` (case-sensitive, as the engine): functions and constants in every
 // language the app ships, Ans and M; sorted, none for an empty prefix.
 QStringList completions(const QString& prefix);
+// The call the cursor is in: the function's name as typed ("nCr", "sen"; sum and product for Σ and Π) and which of
+// its arguments the cursor is in, from 0. Plain parentheses around the cursor are looked through. An empty name
+// outside every call.
+struct Call {
+    QString name;
+    int argument = 0;
+};
+Call callAround(const Entry& entry);
+
+// The title of the function `name` (or that spelling) stands for, in the user's language; "" for other names.
+QString completionTitle(const QString& name);
 // Replaces the name being typed with `name`, and opens its call when it takes arguments.
 void complete(Entry& entry, const QString& name);
 

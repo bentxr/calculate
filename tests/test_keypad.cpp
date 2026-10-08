@@ -121,12 +121,14 @@ TEST(Keypad, EveryOtherKeyHasAHomeSection) {
         ids << s.id;
         titles << s.title;
     }
-    EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "constants", "statistics", "showAs", "variables", "letters"}));
-    EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Constants", "Statistics", "Show as", "Variables", "Letters"}));
+    EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "rounding", "constants", "statistics", "showAs", "special", "variables", "letters"}));
+    EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Rounding and parts", "Constants", "Statistics", "Show as", "Special functions", "Variables", "Letters"}));
     EXPECT_EQ(sectionLabels("numbers"), QStringList({"x!", "abs", "%", "%…", "mod", "rem", "floormod", "nPr", "nCr", "gcd", "lcm", ","}));
-    EXPECT_EQ(sectionLabels("hyperbolic"), QStringList({"sinh", "cosh", "tanh", "asinh", "acosh", "atanh"}));
-    EXPECT_EQ(sectionLabels("trigonometry"), QStringList({"asin", "acos", "atan"}));
-    EXPECT_EQ(sectionLabels("powers"), QStringList({"x³", "∛", "ⁿ√", "10ˣ", "eˣ", "log", "Σ", "Π", "x"}));
+    EXPECT_EQ(sectionLabels("hyperbolic"), QStringList({"sinh", "cosh", "tanh", "asinh", "acosh", "atanh", "sech", "csch",
+                                                        "coth", "asech", "acsch", "acoth"}));
+    EXPECT_EQ(sectionLabels("trigonometry"),
+              QStringList({"asin", "acos", "atan", "sec", "csc", "cot", "asec", "acsc", "acot", "atan2", "hypot", "sinc"}));
+    EXPECT_EQ(sectionLabels("powers"), QStringList({"x³", "∛", "ⁿ√", "10ˣ", "eˣ", "log", "log2", "exp2", "sqrtpi", "Σ", "Π", "x"}));
     EXPECT_EQ(sectionLabels("constants"), QStringList({"π", "e"}));
     EXPECT_EQ(labels(memoryKeys()), QStringList({"MS", "M", "M−", "MC", "↶", "↷"}));
 }
@@ -185,8 +187,12 @@ TEST(Keypad, EveryEngineFunctionHasAKey) {
     QSet<QString> onKeys;
     for (const Key& key : everyKey()) onKeys.insert(key.face.function);
     for (const Key& key : statisticsKeys()) onKeys.insert(key.face.function);
-    for (const calculate_core::FunctionDescription& f : calculate_core::functions())
-        EXPECT_TRUE(onKeys.contains(QString::fromStdString(f.name))) << f.name;
+    QHash<QString, QString> twins;
+    for (const auto& [alias, id] : aliasKeys()) twins.insert(alias, id);
+    for (const calculate_core::FunctionDescription& f : calculate_core::functions()) {
+        const QString name = QString::fromStdString(f.name);
+        EXPECT_TRUE(onKeys.contains(name) || !find(twins.value(name)).id.isEmpty()) << f.name;
+    }
 }
 
 TEST(Keypad, AStatisticsSectionTypesTheStatisticsIntoExpressions) {
@@ -365,4 +371,48 @@ TEST(Keypad, TheVariablesSection) {
     EXPECT_EQ(directKey("store").face.action, KeyAction::Store);
     EXPECT_EQ(directKey("assign").face.insert, ":=");
     EXPECT_EQ(directKey("varA").face.insert, "A");
+}
+
+TEST(Keypad, TheElementaryFunctionsHaveKeys) {
+    EXPECT_EQ(sectionLabels("trigonometry"),
+              QStringList({"asin", "acos", "atan", "sec", "csc", "cot", "asec", "acsc", "acot", "atan2", "hypot", "sinc"}));
+    EXPECT_EQ(sectionLabels("hyperbolic"), QStringList({"sinh", "cosh", "tanh", "asinh", "acosh", "atanh", "sech", "csch",
+                                                        "coth", "asech", "acsch", "acoth"}));
+    const QStringList powers = sectionLabels("powers");
+    EXPECT_EQ(powers.mid(powers.indexOf("log"), 4), QStringList({"log", "log2", "exp2", "sqrtpi"}));
+    EXPECT_EQ(section("rounding").title, "Rounding and parts");
+    EXPECT_EQ(sectionLabels("rounding"), QStringList({"round", "floor", "ceil", "trunc", "int", "frac", "clip", "numerator",
+                                                      "denominator", "sgn"}));
+    for (const char* name : {"sec", "acoth", "atan2", "hypot", "log2", "sqrtpi", "round", "frac", "denominator", "sgn"}) {
+        EXPECT_EQ(directKey(name).face.insert, QString(name) + "(") << name;
+        EXPECT_EQ(directKey(name).face.function, name) << name;
+    }
+}
+
+TEST(Keypad, AnAliasUsesItsTwinsKey) {
+    ASSERT_FALSE(aliasKeys().isEmpty());
+    for (const auto& [alias, id] : aliasKeys()) EXPECT_FALSE(find(id).id.isEmpty()) << alias.toStdString();
+}
+
+TEST(Keypad, TheSpecialFunctionsHaveKeys) {
+    EXPECT_EQ(section("special").title, "Special functions");
+    EXPECT_EQ(sectionLabels("special"),
+              QStringList({"gamma", "lgamma", "beta", "digamma", "erf", "erfc", "erfinv", "erfcinv", "gammap", "gammaq",
+                           "igamma", "gammainc", "betainc", "betaincinv"}));
+    for (const char* name : {"gamma", "erfcinv", "gammainc", "betaincinv"}) EXPECT_EQ(directKey(name).face.function, name) << name;
+}
+
+TEST(Keypad, AKeyWithoutAFunctionIsDescribedByItsSpokenName) {
+    EXPECT_EQ(keyTip(directKey("undo")), "Undo");
+    EXPECT_EQ(keyName(directKey("undo")), "undo");
+}
+
+TEST(Keypad, SearchEntriesCarryTheirTitles) {
+    SearchEntry asin;
+    for (const SearchEntry& e : searchEntries()) {
+        if (!e.face.function.isEmpty()) EXPECT_FALSE(e.title.isEmpty()) << e.face.label.toStdString();
+        if (e.face.function == "asin") asin = e;
+    }
+    EXPECT_EQ(asin.title, "Inverse sine");
+    EXPECT_TRUE(searchMatches(asin, "inverse sine"));  // found by what it does
 }

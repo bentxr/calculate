@@ -449,13 +449,18 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     completions_->setFocusPolicy(Qt::NoFocus);
     completions_->hide();
     connect(lcd_, &Lcd::nameTyped, this, &MainWindow::showCompletions);
-    connect(completions_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) { chooseCompletion(item->text()); });
+    connect(lcd_, &Lcd::nameTyped, this, [this] {  // after every edit and movement: the call the cursor is in
+        const typing::Call call = typing::callAround(lcd_->entry());
+        lcd_->setHint(call.name.isEmpty() ? view::HintParts{} : view::argumentHint(call.name, call.argument));
+    });
+    connect(completions_, &QListWidget::itemClicked, this,
+            [this](QListWidgetItem* item) { chooseCompletion(item->data(Qt::UserRole).toString()); });
     connect(lcd_, &Lcd::completionKey, this, [this](int key) {
         const int row = completions_->currentRow();
         if (key == Qt::Key_Up) completions_->setCurrentRow(qMax(row - 1, 0));
         else if (key == Qt::Key_Down) completions_->setCurrentRow(qMin(row + 1, completions_->count() - 1));
         else if (key == Qt::Key_Escape) hideCompletions();
-        else chooseCompletion(completions_->currentItem()->text());  // Tab, Enter: choose, don't evaluate
+        else chooseCompletion(completions_->currentItem()->data(Qt::UserRole).toString());  // Tab, Enter: choose, don't evaluate
     });
     connect(lcd_, &Lcd::pastedFirstLine, this, [this](int lines) { message_->setText(tr("Pasted the first of %1 lines").arg(lines)); });
     connect(lcd_, &Lcd::pasteRefused, this,
@@ -810,10 +815,12 @@ void MainWindow::layOutKeys(QSize screen) {
         directScroll_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         directScroll_->setMinimumSize(0, 0);
         directScroll_->setMaximumWidth(QWIDGETSIZE_MAX);
+        direct->setMaximumWidth(QWIDGETSIZE_MAX);
     } else {
-        // Room for the column's scroll bar is kept, so the bar appearing moves nothing.
+        // Room for the column's scroll bar is kept, and the keys never take it, so the bar appearing moves nothing.
         directScroll_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
         directScroll_->setFixedWidth(direct->sizeHint().width() + scrollBar);
+        direct->setMaximumWidth(direct->sizeHint().width());
         directScroll_->setMinimumHeight(pad->sizeHint().height());
     }
     area->layout()->activate();
@@ -1656,7 +1663,11 @@ void MainWindow::showCompletions(const QString& name) {
         return;
     }
     completions_->clear();
-    completions_->addItems(names);
+    for (const QString& completion : names) {  // "asin — Inverse sine"; the item keeps the name
+        const QString title = typing::completionTitle(completion);
+        auto* item = new QListWidgetItem(title.isEmpty() ? completion : completion + QStringLiteral(" — ") + title, completions_);
+        item->setData(Qt::UserRole, completion);
+    }
     completions_->setCurrentRow(0);
     const int frame = 2 * completions_->frameWidth();
     const QSize size(completions_->sizeHintForColumn(0) + frame + completions_->verticalScrollBar()->sizeHint().width(),
@@ -1836,18 +1847,20 @@ void MainWindow::updateKeys() {
         auto* button = findChild<QPushButton*>(prefix + key.id);
         const bool on = available(key.face, exact);
         button->setEnabled(on);
-        button->setToolTip(on ? QString() : exactRefusal(key.face.label));
+        button->setToolTip(on ? keyTip(key) : exactRefusal(key.face.label));
+        button->setAccessibleName(keyName(key));
     }
-    // A key with more faces says which, and how to reach them.
+    // A key with more faces also says which, and how to reach them.
     for (const auto& [id, others] : alternates()) {
         auto* button = findChild<QPushButton*>("key:" + id);
         if (!button->isEnabled()) continue;
         QStringList legends;
         for (const QString& other : others) legends << legend(directKey(other).face, settings::decimalComma());
-        button->setToolTip(tr("Hold for: %1").arg(legends.join(QStringLiteral(", "))));
+        button->setToolTip(button->toolTip() + QLatin1Char('\n') + tr("Hold for: %1").arg(legends.join(QStringLiteral(", "))));
     }
     const bool natural = settings::conventions().log == calculate_core::Conventions::Log::Natural;
     for (const char* name : {"direct:log", "common:log"})
         if (auto* button = findChild<QPushButton*>(name); button && button->isEnabled())
-            button->setToolTip(natural ? tr("logarithm (natural)") : tr("logarithm (base 10)"));
+            button->setToolTip(button->toolTip() + QLatin1Char('\n')
+                               + (natural ? tr("logarithm (natural)") : tr("logarithm (base 10)")));
 }

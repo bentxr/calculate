@@ -1176,7 +1176,8 @@ TEST(MainWindow, CompletionsDropDownUnderTheName) {
     EXPECT_FALSE(list->isVisible());  // from the second letter
     QTest::keyClicks(lcd(window), "s");
     ASSERT_TRUE(list->isVisible());
-    EXPECT_EQ(list->currentItem()->text(), "asin");
+    EXPECT_EQ(list->currentItem()->data(Qt::UserRole).toString(), "asec");  // the first in alphabetical order
+    EXPECT_EQ(list->currentItem()->text(), "asec — Inverse secant");
     EXPECT_GE(list->mapTo(&window, QPoint(0, 0)).y(),
               lcd(window)->mapTo(&window, lcd(window)->caretRectAt(lcd(window)->entry().position()).bottomLeft().toPoint()).y());
     EXPECT_TRUE(window.rect().contains(QRect(list->mapTo(&window, QPoint(0, 0)), list->size())));  // inside the window
@@ -1200,13 +1201,13 @@ TEST(MainWindow, TabOrEnterChoosesACompletionAndEscCloses) {
     window.show();
     ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
     auto* list = child<QListWidget>(window, "completions");
-    QTest::keyClicks(lcd(window), "as");
+    QTest::keyClicks(lcd(window), "asi");
     QTest::keyClick(lcd(window), Qt::Key_Down);
     QTest::keyClick(lcd(window), Qt::Key_Tab);
     EXPECT_EQ(lcd(window)->input(), "asinh(");
     EXPECT_FALSE(list->isVisible());
     lcd(window)->clear();
-    QTest::keyClicks(lcd(window), "sq");
+    QTest::keyClicks(lcd(window), "sqr");
     QTest::keyClick(lcd(window), Qt::Key_Return);  // chooses, does not evaluate
     EXPECT_EQ(lcd(window)->entry().root()[0].kind, Template::Sqrt);
     lcd(window)->clear();
@@ -1221,7 +1222,7 @@ TEST(MainWindow, UpGoesBackAndAClickChoosesACompletion) {
     window.show();
     ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
     auto* list = child<QListWidget>(window, "completions");
-    QTest::keyClicks(lcd(window), "as");
+    QTest::keyClicks(lcd(window), "asi");
     QTest::keyClick(lcd(window), Qt::Key_Down);
     QTest::keyClick(lcd(window), Qt::Key_Up);
     EXPECT_EQ(list->currentRow(), 0);
@@ -1668,7 +1669,7 @@ TEST(MainWindow, TheSearchBoxFindsAKeyAndTypesIt) {
     EXPECT_TRUE(QRect(QPoint(0, 0), window.size()).contains(QRect(list->mapTo(&window, QPoint(0, 0)), list->size())));
     QTest::keyClicks(box, "acosh");
     ASSERT_EQ(entries().size(), 1);
-    EXPECT_EQ(entries().first()->text(), "acosh");
+    EXPECT_EQ(entries().first()->text(), "acosh  —  Inverse hyperbolic cosine");
     QTest::mouseClick(list->viewport(), Qt::LeftButton, {}, list->visualItemRect(entries().first()).center());
     EXPECT_EQ(lcd(window)->input(), "acosh(");
     EXPECT_FALSE(list->isVisible());
@@ -1688,7 +1689,7 @@ TEST(MainWindow, KeysHaveNamesForScreenReaders) {
     EXPECT_EQ(child<QPushButton>(window, "key:reciprocal")->accessibleName(), "reciprocal");  // words, not symbols
     EXPECT_EQ(child<QPushButton>(window, "direct:undo")->accessibleName(), "undo");
     EXPECT_EQ(child<QPushButton>(window, "direct:space")->accessibleName(), "space");
-    EXPECT_EQ(child<QPushButton>(window, "common:cbrt")->accessibleName(), "cube root");
+    EXPECT_EQ(child<QPushButton>(window, "common:cbrt")->accessibleName(), "Cube root");  // a function's title
     EXPECT_EQ(child<QToolButton>(window, "section:statistics")->accessibleName(), "Statistics");
     EXPECT_EQ(child<QLineEdit>(window, "search")->accessibleName(), "Search");
     EXPECT_EQ(child<QPushButton>(window, "drawerToggle")->accessibleName(), "More");
@@ -1916,9 +1917,9 @@ TEST(MainWindow, TheConventionsAreSettings) {
 
 TEST(MainWindow, TheLogKeySaysWhichLogarithm) {
     MainWindow window;
-    EXPECT_EQ(child<QPushButton>(window, "direct:log")->toolTip(), "logarithm (base 10)");
+    EXPECT_TRUE(child<QPushButton>(window, "direct:log")->toolTip().endsWith("\nlogarithm (base 10)"));
     setting(window, "log:e")->trigger();
-    EXPECT_EQ(child<QPushButton>(window, "direct:log")->toolTip(), "logarithm (natural)");
+    EXPECT_TRUE(child<QPushButton>(window, "direct:log")->toolTip().endsWith("\nlogarithm (natural)"));
     setting(window, "log:10")->trigger();
 }
 
@@ -2095,4 +2096,53 @@ TEST(MainWindow, TheReadingShowsWhileTyping) {
     lcd(window)->clear();
     QTest::keyClicks(lcd(window), "7");
     EXPECT_TRUE(QTest::qWaitFor([&] { return lcd(window)->readingText().isEmpty(); }, 5000));  // nothing to add
+}
+
+TEST(MainWindow, FunctionKeysTypeTheirNames) {
+    MainWindow window;
+    openSection(window, "rounding");
+    for (const char* name : {"direct:floor", "key:2", "key:point", "key:7", "key:close"})
+        QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "floor(2.7)");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "2");
+}
+
+TEST(MainWindow, SpecialFunctionKeysTypeTheirNames) {
+    MainWindow window;
+    openSection(window, "special");
+    for (const char* name : {"direct:gamma", "key:5", "key:close"}) QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "gamma(5)");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "24");
+}
+
+TEST(MainWindow, EveryKeySaysWhatItIs) {
+    MainWindow window;
+    QList<QPair<QString, Key>> keys;
+    for (const QList<Key>& row : keypad())
+        for (const Key& key : row) keys.append({"key:", key});
+    for (const Key& key : everyDirectKey()) keys.append({"direct:", key});
+    for (const QString& id : window.common()) keys.append({"common:", directKey(id)});
+    for (const auto& [prefix, key] : keys) {
+        auto* button = child<QPushButton>(window, (prefix + key.id).toUtf8().constData());
+        EXPECT_FALSE(keyTip(key).isEmpty()) << key.id.toStdString();
+        EXPECT_TRUE(button->toolTip().startsWith(keyTip(key))) << key.id.toStdString();  // then, on some, how to reach more
+    }
+    EXPECT_EQ(keyTip(directKey("asin")), "Inverse sine · asin(0.5)");  // the title, then the example
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
+    EXPECT_TRUE(child<QPushButton>(window, "key:sin")->toolTip().startsWith("Exact arithmetic cannot represent"));
+}
+
+TEST(MainWindow, TheHintFollowsTheCursor) {
+    MainWindow window;
+    QTest::keyClicks(lcd(window), "nCr(5,");
+    EXPECT_EQ(lcd(window)->hintText(), "nCr(n, r)");
+    EXPECT_EQ(lcd(window)->hintCurrent(), "r");
+    QTest::keyClicks(lcd(window), "2)");
+    EXPECT_EQ(lcd(window)->hintText(), "");
 }

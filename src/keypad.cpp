@@ -1,5 +1,7 @@
 #include "keypad.hpp"
 
+#include "functiontext.hpp"
+
 #include <calculate-core/calculate-core.hpp>
 
 #include <QCoreApplication>
@@ -23,6 +25,23 @@ Face shape(const QString& label, Template kind, const QString& function = {}, co
 Face tool(const QString& label, const QString& opens) { return {label, {}, {}, KeyAction::Tool, Template::Text, opens}; }
 Key digit(const QString& d) { return {d, put(d, d)}; }
 
+// The engine's description of the function a face stands for (by its name or another spelling: int is trunc);
+// nullptr for a face without one.
+const calculate_core::FunctionDescription* functionOf(const Face& face) {
+    static const std::vector<calculate_core::FunctionDescription> list = calculate_core::functions();
+    if (face.function.isEmpty()) return nullptr;
+    const std::string name = face.function.toStdString();
+    for (const calculate_core::FunctionDescription& f : list)
+        if (f.name == name || std::find(f.aliases.begin(), f.aliases.end(), name) != f.aliases.end()) return &f;
+    return nullptr;
+}
+
+// The face's function's title in the user's language; "" for a face without one.
+QString titleOf(const Face& face) {
+    const calculate_core::FunctionDescription* f = functionOf(face);
+    return f ? functionTitle(*f) : QString();
+}
+
 }  // namespace
 
 // Names that Spanish calculators spell differently are marked for translation; the engine accepts both.
@@ -30,7 +49,7 @@ const QList<QList<Key>>& keypad() {
     static const QList<QList<Key>> rows{
         {{"open", type("(", "(")}, {"close", put(")", ")")}, {"fraction", shape("□/□", Template::Fraction)},
          {"sqrt", shape("√□", Template::Sqrt, "sqrt")}},
-        {{"square", shape("x²", Template::Power, {}, "2")}, {"power", shape("x^□", Template::Power)}, {"negative", put("(−)", "-")},
+        {{"square", shape("x²", Template::Power, "sq", "2")}, {"power", shape("x^□", Template::Power)}, {"negative", put("(−)", "-")},
          {"reciprocal", shape("x⁻¹", Template::Power, {}, "−1")}},
         {{"sin", put(QT_TRANSLATE_NOOP("keypad", "sin"), QT_TRANSLATE_NOOP("keypad", "sin("), "sin")},
          {"cos", put("cos", "cos(", "cos")},
@@ -127,19 +146,61 @@ const QList<KeySection>& keySections() {
           {"tanh", put("tanh", "tanh(", "tanh")},
           {"asinh", put(QT_TRANSLATE_NOOP("keypad", "asinh"), QT_TRANSLATE_NOOP("keypad", "asinh("), "asinh")},
           {"acosh", put(QT_TRANSLATE_NOOP("keypad", "acosh"), QT_TRANSLATE_NOOP("keypad", "acosh("), "acosh")},
-          {"atanh", put(QT_TRANSLATE_NOOP("keypad", "atanh"), QT_TRANSLATE_NOOP("keypad", "atanh("), "atanh")}}},
+          {"atanh", put(QT_TRANSLATE_NOOP("keypad", "atanh"), QT_TRANSLATE_NOOP("keypad", "atanh("), "atanh")},
+          {"sech", put("sech", "sech(", "sech")},
+          {"csch", put("csch", "csch(", "csch")},
+          {"coth", put("coth", "coth(", "coth")},
+          {"asech", put("asech", "asech(", "asech")},
+          {"acsch", put("acsch", "acsch(", "acsch")},
+          {"acoth", put("acoth", "acoth(", "acoth")}}},
         {"trigonometry", QT_TRANSLATE_NOOP("keypad", "Trigonometry"),
          {{"asin", put(QT_TRANSLATE_NOOP("keypad", "asin"), QT_TRANSLATE_NOOP("keypad", "asin("), "asin")},
           {"acos", put(QT_TRANSLATE_NOOP("keypad", "acos"), QT_TRANSLATE_NOOP("keypad", "acos("), "acos")},
-          {"atan", put(QT_TRANSLATE_NOOP("keypad", "atan"), QT_TRANSLATE_NOOP("keypad", "atan("), "atan")}}},
+          {"atan", put(QT_TRANSLATE_NOOP("keypad", "atan"), QT_TRANSLATE_NOOP("keypad", "atan("), "atan")},
+          {"sec", put("sec", "sec(", "sec")},
+          {"csc", put("csc", "csc(", "csc")},
+          {"cot", put("cot", "cot(", "cot")},
+          {"asec", put("asec", "asec(", "asec")},
+          {"acsc", put("acsc", "acsc(", "acsc")},
+          {"acot", put("acot", "acot(", "acot")},
+          {"atan2", put("atan2", "atan2(", "atan2")},
+          {"hypot", put("hypot", "hypot(", "hypot")},
+          {"sinc", put("sinc", "sinc(", "sinc")}}},
         {"powers", QT_TRANSLATE_NOOP("keypad", "Powers, roots and logs"),
          {{"cube", shape("x³", Template::Power, {}, "3")}, {"cbrt", shape("∛", Template::Cbrt, "cbrt")}, {"root", shape("ⁿ√", Template::Root, "root")},
-          {"power10", shape("10ˣ", Template::Pow10)}, {"exp", shape("eˣ", Template::Exp, "exp")}, {"log", put("log", "log(", "log")},
+          {"power10", shape("10ˣ", Template::Pow10, "exp10")}, {"exp", shape("eˣ", Template::Exp, "exp")}, {"log", put("log", "log(", "log")},
+          {"log2", put("log2", "log2(", "log2")}, {"exp2", put("exp2", "exp2(", "exp2")}, {"sqrtpi", put("sqrtpi", "sqrtpi(", "sqrtpi")},
           {"sum", shape("Σ", Template::Sum, "sum")}, {"product", shape("Π", Template::Product, "product")},
           {"variable", put("x", "x")}}},
+        {"rounding", QT_TRANSLATE_NOOP("keypad", "Rounding and parts"),
+         {{"round", put("round", "round(", "round")},
+          {"floor", put("floor", "floor(", "floor")},
+          {"ceil", put("ceil", "ceil(", "ceil")},
+          {"trunc", put("trunc", "trunc(", "trunc")},
+          {"int", put("int", "int(", "int")},
+          {"frac", put("frac", "frac(", "frac")},
+          {"clip", put("clip", "clip(", "clip")},
+          {"numerator", put("numerator", "numerator(", "numerator")},
+          {"denominator", put("denominator", "denominator(", "denominator")},
+          {"sgn", put("sgn", "sgn(", "sgn")}}},
         {"constants", QT_TRANSLATE_NOOP("keypad", "Constants"), {{"pi", put("π", "π", "pi")}, {"e", put("e", "e", "e")}}},
         {"statistics", QT_TRANSLATE_NOOP("keypad", "Statistics"), statisticsKeys()},
         {"showAs", QT_TRANSLATE_NOOP("keypad", "Show as"), QList<Key>{{"to", put("→", "→")}} + conversionKeys(showAsTargets())},
+        {"special", QT_TRANSLATE_NOOP("keypad", "Special functions"),
+         {{"gamma", put("gamma", "gamma(", "gamma")},
+          {"lgamma", put("lgamma", "lgamma(", "lgamma")},
+          {"beta", put("beta", "beta(", "beta")},
+          {"digamma", put("digamma", "digamma(", "digamma")},
+          {"erf", put("erf", "erf(", "erf")},
+          {"erfc", put("erfc", "erfc(", "erfc")},
+          {"erfinv", put("erfinv", "erfinv(", "erfinv")},
+          {"erfcinv", put("erfcinv", "erfcinv(", "erfcinv")},
+          {"gammap", put("gammap", "gammap(", "gammap")},
+          {"gammaq", put("gammaq", "gammaq(", "gammaq")},
+          {"igamma", put("igamma", "igamma(", "igamma")},
+          {"gammainc", put("gammainc", "gammainc(", "gammainc")},
+          {"betainc", put("betainc", "betainc(", "betainc")},
+          {"betaincinv", put("betaincinv", "betaincinv(", "betaincinv")}}},
         {"variables", QT_TRANSLATE_NOOP("keypad", "Variables"),
          {{"varA", type("A", "A")}, {"varB", type("B", "B")}, {"varC", type("C", "C")}, {"varD", type("D", "D")},
           {"varE", type("E", "E")}, {"varF", type("F", "F")}, {"varY", type("y", "y")},
@@ -147,6 +208,11 @@ const QList<KeySection>& keySections() {
         {"letters", QT_TRANSLATE_NOOP("keypad", "Letters"), letterKeys()},
     };
     return sections;
+}
+
+const QList<QPair<QString, QString>>& aliasKeys() {
+    static const QList<QPair<QString, QString>> list{{"exp10", "power10"}, {"sq", "square"}};
+    return list;
 }
 
 const QList<Key>& statisticsKeys() {
@@ -187,10 +253,10 @@ QList<SearchEntry> searchEntries() {
     QList<SearchEntry> entries;
     for (const KeySection& section : keySections())
         if (section.id != QLatin1String("letters"))  // letters are typing, not something to find
-            for (const Key& key : section.keys) entries.append({section.title, key.face, {}});
+            for (const Key& key : section.keys) entries.append({section.title, key.face, titleOf(key.face)});
     for (const QList<Key>& row : keypad())
         for (const Key& key : row)
-            if (!key.face.function.isEmpty()) entries.append({QT_TRANSLATE_NOOP("keypad", "Main keys"), key.face, {}});
+            if (!key.face.function.isEmpty()) entries.append({QT_TRANSLATE_NOOP("keypad", "Main keys"), key.face, titleOf(key.face)});
     return entries + extraSearchEntries();
 }
 
@@ -228,13 +294,13 @@ QString legend(const Face& face, bool decimalComma) {
 
 const QList<QPair<QString, QStringList>>& alternates() {
     static const QList<QPair<QString, QStringList>> list{
-        {"sin", {"asin", "sinh", "asinh"}},
-        {"cos", {"acos", "cosh", "acosh"}},
-        {"tan", {"atan", "tanh", "atanh"}},
-        {"ln", {"log", "exp"}},
-        {"logBase", {"log"}},
+        {"sin", {"asin", "sinh", "asinh", "csc", "acsc"}},
+        {"cos", {"acos", "cosh", "acosh", "sec", "asec"}},
+        {"tan", {"atan", "tanh", "atanh", "cot", "acot", "atan2"}},
+        {"ln", {"log", "exp", "log2"}},
+        {"logBase", {"log", "log2"}},
         {"square", {"cube"}},
-        {"sqrt", {"cbrt", "root"}},
+        {"sqrt", {"cbrt", "root", "sqrtpi"}},
         {"memoryAdd", {"memorySubtract", "memoryStore", "memory", "memoryClear"}},
     };
     return list;
@@ -295,4 +361,17 @@ QString spokenName(const Key& key) {
         return QCoreApplication::translate("spoken", "convert to") + QLatin1Char(' ') + key.id.mid(3);
     const auto word = words.constFind(key.face.label);
     return word == words.constEnd() ? translated(key.face.label) : QCoreApplication::translate("spoken", *word);
+}
+
+QString keyTip(const Key& key) {
+    if (const calculate_core::FunctionDescription* f = functionOf(key.face))
+        return functionTitle(*f) + QStringLiteral(" · ") + QString::fromStdString(f->example);
+    QString name = spokenName(key);
+    if (!name.isEmpty()) name[0] = name[0].toUpper();
+    return name;
+}
+
+QString keyName(const Key& key) {
+    if (const calculate_core::FunctionDescription* f = functionOf(key.face)) return functionTitle(*f);
+    return spokenName(key);
 }

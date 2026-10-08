@@ -82,4 +82,12 @@ struct PercentageRow {
 // empty when either value is empty.
 QList<PercentageRow> percentageRows(const QString& first, const QString& second);
 
+// The arguments of the function being typed, split around the one the cursor is in: before "nCr(n, ",
+// current "r", after ")". Optional arguments in brackets ("log(x[, base])"); a repeated one shown as often as
+// reached, then "…". Separators as the decimal-comma mode writes them. All empty for an unknown name.
+struct HintParts {
+    QString before, current, after;
+};
+HintParts argumentHint(const QString& name, int argument);
+
 }  // namespace view
