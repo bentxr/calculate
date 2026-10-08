@@ -300,3 +300,9 @@ TEST(Typing, ATargetIsTypedAsWritten) {
     EXPECT_EQ(typed("2.7->1/4").text(), "2.7→1/4");
     EXPECT_EQ(typed("total/2").text(), "total÷2");  // a word that only starts with "to"
 }
+
+TEST(Typing, CompletionsCarryTheirTitles) {
+    EXPECT_EQ(typing::completionTitle("asin"), "Inverse sine");
+    EXPECT_EQ(typing::completionTitle("arcsen"), "Inverse sine");  // a spelling shows its function's title
+    EXPECT_EQ(typing::completionTitle("Ans"), "");
+}

@@ -1,5 +1,6 @@
 #include "typing.hpp"
 
+#include "functiontext.hpp"
 #include "settings.hpp"
 
 #include <calculate-core/calculate-core.hpp>
@@ -309,6 +310,16 @@ QStringList completions(const QString& prefix) {
     list.sort();
     list.removeDuplicates();
     return list;
+}
+
+QString completionTitle(const QString& name) {
+    for (const calculate_core::FunctionDescription& f : calculate_core::functions()) {
+        bool named = QString::fromStdString(f.name) == name;
+        for (const std::string& alias : f.aliases) named = named || QString::fromStdString(alias) == name;
+        named = named || settings::inEveryLanguage("keypad", QString::fromStdString(f.name) + "(").contains(name + "(");
+        if (named) return functionTitle(f);
+    }
+    return {};
 }
 
 void complete(Entry& e, const QString& name) {

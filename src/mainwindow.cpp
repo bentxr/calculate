@@ -449,13 +449,14 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     completions_->setFocusPolicy(Qt::NoFocus);
     completions_->hide();
     connect(lcd_, &Lcd::nameTyped, this, &MainWindow::showCompletions);
-    connect(completions_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) { chooseCompletion(item->text()); });
+    connect(completions_, &QListWidget::itemClicked, this,
+            [this](QListWidgetItem* item) { chooseCompletion(item->data(Qt::UserRole).toString()); });
     connect(lcd_, &Lcd::completionKey, this, [this](int key) {
         const int row = completions_->currentRow();
         if (key == Qt::Key_Up) completions_->setCurrentRow(qMax(row - 1, 0));
         else if (key == Qt::Key_Down) completions_->setCurrentRow(qMin(row + 1, completions_->count() - 1));
         else if (key == Qt::Key_Escape) hideCompletions();
-        else chooseCompletion(completions_->currentItem()->text());  // Tab, Enter: choose, don't evaluate
+        else chooseCompletion(completions_->currentItem()->data(Qt::UserRole).toString());  // Tab, Enter: choose, don't evaluate
     });
     connect(lcd_, &Lcd::pastedFirstLine, this, [this](int lines) { message_->setText(tr("Pasted the first of %1 lines").arg(lines)); });
     connect(lcd_, &Lcd::pasteRefused, this,
@@ -1658,7 +1659,11 @@ void MainWindow::showCompletions(const QString& name) {
         return;
     }
     completions_->clear();
-    completions_->addItems(names);
+    for (const QString& completion : names) {  // "asin — Inverse sine"; the item keeps the name
+        const QString title = typing::completionTitle(completion);
+        auto* item = new QListWidgetItem(title.isEmpty() ? completion : completion + QStringLiteral(" — ") + title, completions_);
+        item->setData(Qt::UserRole, completion);
+    }
     completions_->setCurrentRow(0);
     const int frame = 2 * completions_->frameWidth();
     const QSize size(completions_->sizeHintForColumn(0) + frame + completions_->verticalScrollBar()->sizeHint().width(),

@@ -26,6 +26,8 @@ QString nameBeingTyped(const Entry& entry);
 // Every name that starts with `prefix` (case-sensitive, as the engine): functions and constants in every
 // language the app ships, Ans and M; sorted, none for an empty prefix.
 QStringList completions(const QString& prefix);
+// The title of the function `name` (or that spelling) stands for, in the user's language; "" for other names.
+QString completionTitle(const QString& name);
 // Replaces the name being typed with `name`, and opens its call when it takes arguments.
 void complete(Entry& entry, const QString& name);
 

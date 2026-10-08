@@ -406,3 +406,13 @@ TEST(Keypad, AKeyWithoutAFunctionIsDescribedByItsSpokenName) {
     EXPECT_EQ(keyTip(directKey("undo")), "Undo");
     EXPECT_EQ(keyName(directKey("undo")), "undo");
 }
+
+TEST(Keypad, SearchEntriesCarryTheirTitles) {
+    SearchEntry asin;
+    for (const SearchEntry& e : searchEntries()) {
+        if (!e.face.function.isEmpty()) EXPECT_FALSE(e.title.isEmpty()) << e.face.label.toStdString();
+        if (e.face.function == "asin") asin = e;
+    }
+    EXPECT_EQ(asin.title, "Inverse sine");
+    EXPECT_TRUE(searchMatches(asin, "inverse sine"));  // found by what it does
+}

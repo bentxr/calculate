@@ -25,6 +25,23 @@ Face shape(const QString& label, Template kind, const QString& function = {}, co
 Face tool(const QString& label, const QString& opens) { return {label, {}, {}, KeyAction::Tool, Template::Text, opens}; }
 Key digit(const QString& d) { return {d, put(d, d)}; }
 
+// The engine's description of the function a face stands for (by its name or another spelling: int is trunc);
+// nullptr for a face without one.
+const calculate_core::FunctionDescription* functionOf(const Face& face) {
+    static const std::vector<calculate_core::FunctionDescription> list = calculate_core::functions();
+    if (face.function.isEmpty()) return nullptr;
+    const std::string name = face.function.toStdString();
+    for (const calculate_core::FunctionDescription& f : list)
+        if (f.name == name || std::find(f.aliases.begin(), f.aliases.end(), name) != f.aliases.end()) return &f;
+    return nullptr;
+}
+
+// The face's function's title in the user's language; "" for a face without one.
+QString titleOf(const Face& face) {
+    const calculate_core::FunctionDescription* f = functionOf(face);
+    return f ? functionTitle(*f) : QString();
+}
+
 }  // namespace
 
 // Names that Spanish calculators spell differently are marked for translation; the engine accepts both.
@@ -236,10 +253,10 @@ QList<SearchEntry> searchEntries() {
     QList<SearchEntry> entries;
     for (const KeySection& section : keySections())
         if (section.id != QLatin1String("letters"))  // letters are typing, not something to find
-            for (const Key& key : section.keys) entries.append({section.title, key.face, {}});
+            for (const Key& key : section.keys) entries.append({section.title, key.face, titleOf(key.face)});
     for (const QList<Key>& row : keypad())
         for (const Key& key : row)
-            if (!key.face.function.isEmpty()) entries.append({QT_TRANSLATE_NOOP("keypad", "Main keys"), key.face, {}});
+            if (!key.face.function.isEmpty()) entries.append({QT_TRANSLATE_NOOP("keypad", "Main keys"), key.face, titleOf(key.face)});
     return entries + extraSearchEntries();
 }
 
@@ -346,21 +363,8 @@ QString spokenName(const Key& key) {
     return word == words.constEnd() ? translated(key.face.label) : QCoreApplication::translate("spoken", *word);
 }
 
-namespace {
-
-// The engine's description of the function a key stands for; nullptr for a key without one.
-const calculate_core::FunctionDescription* functionOf(const Key& key) {
-    static const std::vector<calculate_core::FunctionDescription> list = calculate_core::functions();
-    if (key.face.function.isEmpty()) return nullptr;
-    for (const calculate_core::FunctionDescription& f : list)
-        if (QString::fromStdString(f.name) == key.face.function) return &f;
-    return nullptr;
-}
-
-}  // namespace
-
 QString keyTip(const Key& key) {
-    if (const calculate_core::FunctionDescription* f = functionOf(key))
+    if (const calculate_core::FunctionDescription* f = functionOf(key.face))
         return functionTitle(*f) + QStringLiteral(" · ") + QString::fromStdString(f->example);
     QString name = spokenName(key);
     if (!name.isEmpty()) name[0] = name[0].toUpper();
@@ -368,6 +372,6 @@ QString keyTip(const Key& key) {
 }
 
 QString keyName(const Key& key) {
-    if (const calculate_core::FunctionDescription* f = functionOf(key)) return functionTitle(*f);
+    if (const calculate_core::FunctionDescription* f = functionOf(key.face)) return functionTitle(*f);
     return spokenName(key);
 }

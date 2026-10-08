@@ -1176,7 +1176,8 @@ TEST(MainWindow, CompletionsDropDownUnderTheName) {
     EXPECT_FALSE(list->isVisible());  // from the second letter
     QTest::keyClicks(lcd(window), "s");
     ASSERT_TRUE(list->isVisible());
-    EXPECT_EQ(list->currentItem()->text(), "asec");  // the first in alphabetical order
+    EXPECT_EQ(list->currentItem()->data(Qt::UserRole).toString(), "asec");  // the first in alphabetical order
+    EXPECT_EQ(list->currentItem()->text(), "asec — Inverse secant");
     EXPECT_GE(list->mapTo(&window, QPoint(0, 0)).y(),
               lcd(window)->mapTo(&window, lcd(window)->caretRectAt(lcd(window)->entry().position()).bottomLeft().toPoint()).y());
     EXPECT_TRUE(window.rect().contains(QRect(list->mapTo(&window, QPoint(0, 0)), list->size())));  // inside the window
@@ -1668,7 +1669,7 @@ TEST(MainWindow, TheSearchBoxFindsAKeyAndTypesIt) {
     EXPECT_TRUE(QRect(QPoint(0, 0), window.size()).contains(QRect(list->mapTo(&window, QPoint(0, 0)), list->size())));
     QTest::keyClicks(box, "acosh");
     ASSERT_EQ(entries().size(), 1);
-    EXPECT_EQ(entries().first()->text(), "acosh");
+    EXPECT_EQ(entries().first()->text(), "acosh  —  Inverse hyperbolic cosine");
     QTest::mouseClick(list->viewport(), Qt::LeftButton, {}, list->visualItemRect(entries().first()).center());
     EXPECT_EQ(lcd(window)->input(), "acosh(");
     EXPECT_FALSE(list->isVisible());
