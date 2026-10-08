@@ -209,7 +209,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     const std::pair<const char*, view::CopyForm> forms[] = {{"copy:value", view::CopyForm::Value},
                                                             {"copy:trusted", view::CopyForm::Trusted},
                                                             {"copy:bound", view::CopyForm::ValueAndBound},
-                                                            {"copy:details", view::CopyForm::Details}};
+                                                            {"copy:details", view::CopyForm::Details},
+                                                            {"copy:concise", view::CopyForm::Concise}};
     for (const auto& [name, form] : forms) {
         QAction* action = copyMenu_->addAction(QString());  // the texts: see retranslate
         action->setObjectName(QString::fromLatin1(name));
@@ -474,15 +475,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
         lcd_->setEntry(historyEntries_[static_cast<std::size_t>(history_->row(item))]);
         historyPanel_->hide();
     });
-    // A new type or angle: what is being typed is worked out again, else the last result.
-    auto reevaluate = [this] {
-        updateKeys();
-        if (settings::liveCalculation() && (previewShown_ || lcd_->input().trimmed() != lastExpression_)) requestPreview();
-        else if (!lastExpression_.isEmpty() && !last_.error) request(lastExpression_, false);
-        requestPercentages();
-    };
-    connect(type_, &QComboBox::currentIndexChanged, this, reevaluate);
-    connect(angle_, &QComboBox::currentIndexChanged, this, reevaluate);
+    connect(type_, &QComboBox::currentIndexChanged, this, &MainWindow::reevaluate);
+    connect(angle_, &QComboBox::currentIndexChanged, this, &MainWindow::reevaluate);
     retranslate();
     // Only the screen takes the keyboard; every other control is used with the mouse.
     for (QWidget* w : {static_cast<QWidget*>(modes_), static_cast<QWidget*>(panelToggle_), static_cast<QWidget*>(settingsButton_),
@@ -1058,6 +1052,19 @@ void MainWindow::buildSettings() {
     conventions_->addSeparator();
     addGroup({"percent:divide", "percent:ofvalue"}, static_cast<int>(settings::conventions().percent),
              [changeConvention](int i) { changeConvention([i](Conventions& c) { c.percent = static_cast<Conventions::Percent>(i); }); }, conventions_);
+    // How uncertain inputs combine, and whether typed numbers carry half a unit of their last digit.
+    uncertainty_ = settings_->addMenu(QString());
+    uncertainty_->setObjectName("uncertaintySettings");
+    uncertaintySection_ = uncertainty_->addSection(QString());
+    addGroup({"uncertainty:worst", "uncertainty:statistical"}, 0, [this](int i) {
+        rule_ = static_cast<calculate_core::UncertaintyRule>(i);
+        reevaluate();
+    }, uncertainty_);
+    readingSection_ = uncertainty_->addSection(QString());
+    addGroup({"readprecision:off", "readprecision:decimals", "readprecision:all"}, 0, [this](int i) {
+        reading_ = static_cast<calculate_core::ReadPrecision>(i);
+        reevaluate();
+    }, uncertainty_);
     inputSection_ = settings_->addSection(QString());
     QAction* live = settings_->addAction(QString());
     live->setObjectName("live");
@@ -1093,7 +1100,9 @@ const QStringList angleIds{"rad", "deg", "grad"};
 
 }  // namespace
 
-QList<QAction*> MainWindow::settingActions() const { return settings_->actions() + conventions_->actions(); }
+QList<QAction*> MainWindow::settingActions() const {
+    return settings_->actions() + conventions_->actions() + uncertainty_->actions();
+}
 
 QMap<QString, QStringList> MainWindow::settingKeys() const {
     QMap<QString, QStringList> keys;
@@ -1171,6 +1180,7 @@ void MainWindow::retranslate() {
     findChild<QAction*>("copy:trusted")->setText(tr("Trusted digits"));
     findChild<QAction*>("copy:bound")->setText(tr("Value ± bound"));
     findChild<QAction*>("copy:details")->setText(tr("Details as text"));
+    findChild<QAction*>("copy:concise")->setText(tr("Concise (1.23(4))"));
     findChild<QAction*>("copy:expression")->setText(tr("Expression"));
     findChild<QAction*>("history:copyExpression")->setText(tr("Copy expression"));
     findChild<QAction*>("history:copyValue")->setText(tr("Copy value"));
@@ -1211,6 +1221,14 @@ void MainWindow::retranslate() {
     findChild<QAction*>("percent:divide")->setText(tr("% divides by 100"));
     findChild<QAction*>("percent:ofvalue")->setText(tr("x + p% adds p% of x"));
     findChild<QAction*>("decimal:comma")->setText(tr("Comma"));
+    uncertainty_->setTitle(tr("Uncertainty"));
+    uncertaintySection_->setText(tr("Combination"));
+    findChild<QAction*>("uncertainty:worst")->setText(tr("Worst case (a limit)"));
+    findChild<QAction*>("uncertainty:statistical")->setText(tr("Statistical (an estimate)"));
+    readingSection_->setText(tr("Read precision"));
+    findChild<QAction*>("readprecision:off")->setText(tr("Off"));
+    findChild<QAction*>("readprecision:decimals")->setText(tr("Decimals"));
+    findChild<QAction*>("readprecision:all")->setText(tr("All numbers"));
     inputSection_->setText(tr("Input"));
     findChild<QAction*>("live")->setText(tr("Calculate as you type"));
     fileSection_->setText(tr("Settings file"));
@@ -1514,6 +1532,8 @@ Options MainWindow::options() const {
     o.type = type_->currentType();
     o.angle = static_cast<AngleUnit>(angle_->currentIndex());
     o.conventions = settings::conventions();
+    o.uncertaintyRule = rule_;
+    o.readPrecision = reading_;
     return o;
 }
 
@@ -1826,6 +1846,13 @@ void MainWindow::replay(int index) {
     historyIndex_ = index;
     lcd_->setEntry(historyEntries_[static_cast<std::size_t>(index)]);
     if (settings::liveCalculation()) liveTimer_.start();
+}
+
+void MainWindow::reevaluate() {
+    updateKeys();
+    if (settings::liveCalculation() && (previewShown_ || lcd_->input().trimmed() != lastExpression_)) requestPreview();
+    else if (!lastExpression_.isEmpty() && !last_.error) request(lastExpression_, false);
+    requestPercentages();
 }
 
 bool MainWindow::exactType() const { return type_->currentType() == NumberType::Exact; }

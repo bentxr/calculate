@@ -1,5 +1,6 @@
 #include "mainwindow.hpp"
 
+#include "constanttext.hpp"
 #include "detailscard.hpp"
 #include "formulatip.hpp"
 #include "keybutton.hpp"
@@ -2145,4 +2146,79 @@ TEST(MainWindow, TheHintFollowsTheCursor) {
     EXPECT_EQ(lcd(window)->hintCurrent(), "r");
     QTest::keyClicks(lcd(window), "2)");
     EXPECT_EQ(lcd(window)->hintText(), "");
+}
+
+TEST(MainWindow, TheUnitFollowsTheValueAndAMismatchIsANote) {
+    MainWindow window;
+    run(window, "c");
+    EXPECT_TRUE(lcd(window)->outputText().endsWith(" m·s⁻¹")) << lcd(window)->outputText().toStdString();
+    run(window, "c+1");
+    EXPECT_EQ(message(window)->text(), "The units of c and 1 differ");
+}
+
+TEST(MainWindow, UncertaintySettings) {
+    MainWindow window;
+    for (const char* name : {"uncertainty:worst", "uncertainty:statistical", "readprecision:off",
+                             "readprecision:decimals", "readprecision:all"})
+        ASSERT_NE(setting(window, name), nullptr) << name;
+    EXPECT_TRUE(setting(window, "uncertainty:worst")->isChecked());
+    EXPECT_TRUE(setting(window, "readprecision:off")->isChecked());
+    run(window, "(3±0.4)×(4±0.3)");
+    EXPECT_EQ(lcd(window)->outputText(), "|12 ± 2.5");
+    EXPECT_EQ(detail(window, "uncertainty"), "± 2.5e+0 worst case · ± 1.8e+0 statistical");
+    forget(window);
+    setting(window, "uncertainty:statistical")->trigger();
+    EXPECT_TRUE(answered(window));  // the last expression again
+    EXPECT_EQ(detail(window, "uncertainty"), "± 1.8e+0 statistical · ± 2.5e+0 worst case");
+    forget(window);
+    setting(window, "readprecision:decimals")->trigger();
+    EXPECT_TRUE(answered(window));
+    run(window, "1.1×3.20");
+    EXPECT_EQ(detail(window, "sources"), "1.1: 1.6e-1 · 3.20: 5.5e-3");
+    EXPECT_TRUE(window.exportSettings().contains("\"readprecision\": \"decimals\""));  // Plan 5's file takes them
+    setting(window, "uncertainty:worst")->trigger();
+    setting(window, "readprecision:off")->trigger();
+}
+
+TEST(MainWindow, TheUncertaintyIsInSpanishToo) {
+    settings::setLanguage(settings::Language::Spanish);
+    const QList<view::DetailRow> rows = view::details(calculate_core::evaluate("(3±0.4)*(4±0.3)"),
+                                                      calculate_core::numberTypes()[1]);
+    EXPECT_EQ(rows[5].label, "Incertidumbre");
+    EXPECT_EQ(rows[5].value, "± 2,5e+0 peor caso · ± 1,8e+0 estadística");  // Spanish brings the decimal comma
+    EXPECT_EQ(constantTitle("G"), "Constante de gravitación universal");
+    EXPECT_EQ(constantTitle("billion"), "un billón (10^12)");
+    settings::setLanguage(settings::Language::English);
+}
+
+TEST(MainWindow, ThePlusMinusKeyEntersAnUncertainty) {
+    MainWindow window;
+    QTest::mouseClick(child<QPushButton>(window, "key:5"), Qt::LeftButton);
+    openSection(window, "constants");
+    QTest::mouseClick(child<QPushButton>(window, "direct:plusMinus"), Qt::LeftButton);
+    for (const char* name : {"key:0", "key:point", "key:2"}) QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "5±0.2");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "5 ± 0.20");
+}
+
+TEST(MainWindow, ANameWithoutAKeyIsFoundBySearch) {
+    MainWindow window;
+    window.resize(640, 480);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    auto* box = child<QLineEdit>(window, "search");
+    auto* list = child<QListWidget>(window, "searchList");
+    QTest::mouseClick(box, Qt::LeftButton);
+    QTest::keyClicks(box, "googol");
+    EXPECT_TRUE(QRect(QPoint(0, 0), window.size()).contains(QRect(list->mapTo(&window, QPoint(0, 0)), list->size())));
+    QListWidgetItem* entry = nullptr;
+    for (int i = 0; i < list->count() && !entry; ++i)
+        if (!list->item(i)->isHidden() && list->item(i)->data(Qt::UserRole).isValid()) entry = list->item(i);
+    ASSERT_NE(entry, nullptr);
+    QTest::mouseClick(list->viewport(), Qt::LeftButton, {}, list->visualItemRect(entry).center());
+    EXPECT_EQ(lcd(window)->input(), "googol");
+    EXPECT_FALSE(list->isVisible());
 }

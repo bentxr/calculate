@@ -236,7 +236,7 @@ TEST(Typing, TypingOverASelectionReplacesOrWrapsIt) {
 }
 
 TEST(Typing, CompletionsListTheNamesThatStartWithWhatIsTyped) {
-    EXPECT_EQ(typing::completions("sq"), QStringList({"sq", "sqrt", "sqrtpi"}));  // in alphabetical order
+    EXPECT_EQ(typing::completions("sq"), QStringList({"sq", "sqrt", "sqrt2", "sqrtpi"}));  // in alphabetical order
     const QStringList as = typing::completions("as");
     EXPECT_TRUE(as.contains("asin"));
     EXPECT_TRUE(as.contains("asinh"));
@@ -328,4 +328,15 @@ TEST(Typing, ASumIsTheCallAroundItsArguments) {
     const typing::Call c = typing::callAround(e);
     EXPECT_EQ(c.name, "sum");  // the name its metadata has
     EXPECT_EQ(c.argument, 1);
+}
+
+TEST(Typing, PlusSlashMinusBecomesPlusMinus) {
+    EXPECT_EQ(typed("5+/-0.2").text(), "5±0.2");
+    EXPECT_EQ(typed("5+/2").text(), "5+÷2");  // only the whole sequence
+}
+
+TEST(Typing, PlusMinusIsAnOperator) {
+    EXPECT_EQ(typed("2^3+/-1").text(), "2^(3)±1");  // it ends the exponent, as × does: ± binds looser than ^
+    EXPECT_EQ(typed("2^3±1").text(), "2^(3)±1");    // typed as one character too
+    EXPECT_EQ(typed("2^±").text(), "2^(±)");        // first in the box: nothing to end yet
 }

@@ -373,3 +373,86 @@ TEST(Presenter, ArgumentHintsFollowTheSeparatorAndEndWithTheArguments) {
     EXPECT_EQ(view::argumentHint("nCr", 2).before, "");  // past the last argument: no hint
     EXPECT_EQ(view::argumentHint("sen", 0).before, "sen(");  // a spelling: its function's arguments
 }
+
+TEST(Presenter, UncertainInputsGetTheirOwnRows) {
+    const QList<view::DetailRow> rows = view::details(evaluated("(3±0.4)*(4±0.3)"), typeInfo(NumberType::Double));
+    QStringList keys;
+    for (const view::DetailRow& row : rows) keys << row.key;
+    EXPECT_EQ(keys, QStringList({"bound", "measured", "trusted", "condition", "input", "uncertainty", "sources",
+                                 "rounding", "library", "operations", "type", "evaluated", "reading"}));
+    EXPECT_EQ(rows[2].value, "2 by the bound, 2 by the measurement, 0 with the uncertainty");
+    EXPECT_EQ(rows[5].label, "Uncertainty");
+    EXPECT_EQ(rows[5].value, "± 2.5e+0 worst case · ± 1.8e+0 statistical");
+    EXPECT_EQ(rows[6].label, "Uncertain inputs");
+    EXPECT_EQ(rows[6].value, "3±0.4: 1.6e+0 · 4±0.3: 9e-1");
+    Options statistical;
+    statistical.uncertaintyRule = UncertaintyRule::Quadrature;
+    EXPECT_EQ(view::details(evaluate("(3±0.4)*(4±0.3)", statistical), typeInfo(NumberType::Double))[5].value,
+              "± 1.8e+0 statistical · ± 2.5e+0 worst case");
+}
+
+TEST(Presenter, AnUnreliableFirstOrderSaysSo) {
+    const auto row = [](const char* text) {
+        for (const view::DetailRow& r : view::details(evaluated(text), typeInfo(NumberType::Double)))
+            if (r.key == "firstorder") return r;
+        return view::DetailRow{};
+    };
+    EXPECT_EQ(row("(0±1)^2").label, "First order");
+    EXPECT_EQ(row("(0±1)^2").value, "unreliable: at the corners the result moved by 1e+0");
+    EXPECT_TRUE(row("sqrt(0.05±0.1)").key.isEmpty());  // refused: its limit reaches below 0
+    EXPECT_TRUE(row("5±0.2").key.isEmpty());  // reliable: no row
+}
+
+TEST(Presenter, ExactResultsWithAnUncertainty) {
+    QStringList keys;
+    for (const view::DetailRow& row : view::details(evaluated("1/3±0.1", NumberType::Exact), typeInfo(NumberType::Exact)))
+        keys << row.key;
+    EXPECT_EQ(keys, QStringList({"exact", "uncertainty", "sources", "type", "evaluated", "reading"}));
+}
+
+TEST(Presenter, TheUncertaintyRowsAreExplained) {
+    for (const char* key : {"uncertainty", "sources", "firstorder"}) EXPECT_FALSE(view::explanation(key).isEmpty()) << key;
+}
+
+TEST(Presenter, AnUnreliableFirstOrderIsANote) {
+    const Result r = evaluated("(0±1)^2");
+    ASSERT_EQ(r.warnings.size(), 1u);
+    EXPECT_EQ(view::warningText(r.warnings[0], "(0±1)^2"), "The uncertainty may be larger than shown: first order is unreliable here");
+}
+
+TEST(Presenter, TheValueCarriesItsUncertainty) {
+    view::ValueParts p = view::valueParts(evaluated("(3±0.4)*(4±0.3)"));
+    EXPECT_EQ(p.trusted, "");  // the bar moves to where the uncertainty starts
+    EXPECT_EQ(p.noise, "12");
+    EXPECT_EQ(p.uncertainty, "2.5");
+    EXPECT_EQ(p.uncertaintyExponent, "");
+    p = view::valueParts(evaluated("5±0.2"));
+    EXPECT_EQ(p.trusted, "5");
+    EXPECT_EQ(p.uncertainty, "0.20");
+    p = view::valueParts(evaluated("G"));
+    EXPECT_EQ(p.uncertainty, "4.5");  // three standard uncertainties
+    EXPECT_EQ(p.uncertaintyExponent, "−15");
+    EXPECT_EQ(view::valueParts(evaluated("0.1 + 0.2")).uncertainty, "");  // a computing error stays in Details
+    EXPECT_EQ(view::fractionParts(evaluated("1/3±0.1", NumberType::Exact)).uncertainty, "0.011");  // 1/(3±0.1)
+}
+
+TEST(Presenter, AResultShowsItsUnit) {
+    EXPECT_EQ(view::valueParts(evaluated("c")).unit, "m·s⁻¹");
+    EXPECT_EQ(view::valueParts(evaluated("2+2")).unit, "");
+    bool found = false;
+    for (const view::DetailRow& row : view::details(evaluated("h*c"), typeInfo(NumberType::Double)))
+        if (row.key == "unit") found = row.value == "J·m";
+    EXPECT_TRUE(found);
+    EXPECT_FALSE(view::explanation("unit").isEmpty());
+}
+
+TEST(Presenter, AFunctionGivenAUnitIsANote) {
+    const Result r = evaluated("sin(c)");
+    ASSERT_EQ(r.warnings.size(), 1u);
+    EXPECT_EQ(view::warningText(r.warnings[0], "sin(c)"), "sin needs a number without a unit");
+}
+
+TEST(Presenter, CopyTheConciseForm) {
+    EXPECT_EQ(view::copyText(evaluated("5±0.2"), view::CopyForm::Concise, typeInfo(NumberType::Double)), "5.00(20)");
+    EXPECT_EQ(view::copyText(evaluated("1/3", NumberType::Exact), view::CopyForm::Concise, typeInfo(NumberType::Exact)), "");
+}

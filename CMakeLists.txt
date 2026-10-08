@@ -22,6 +22,7 @@ qt_add_library(calculate-ui STATIC
     src/detailscard.cpp
     src/entry.cpp
     src/formulatip.cpp
+    src/constanttext.cpp
     src/functiontext.cpp
     src/icons.cpp
     src/keybutton.cpp

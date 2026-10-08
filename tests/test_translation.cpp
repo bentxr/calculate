@@ -1,3 +1,4 @@
+#include "constanttext.hpp"
 #include "functiontext.hpp"
 #include "keypad.hpp"
 #include "presenter.hpp"
@@ -49,4 +50,10 @@ TEST(Translation, FunctionTextsReadInSpanish) {
     for (const calculate_core::FunctionDescription& f : calculate_core::functions())
         if (f.name == "atan2") EXPECT_EQ(functionTitle(f), QStringLiteral("Ángulo de un punto"));
     QCoreApplication::removeTranslator(&spanish);
+}
+
+TEST(Translation, EveryConstantTitleIsMarkedForTranslation) {
+    const QStringList marked = constantTextsForTranslation();
+    for (const calculate_core::ConstantDescription& c : calculate_core::constants())
+        EXPECT_TRUE(marked.contains(QString::fromStdString(c.title))) << c.name;
 }

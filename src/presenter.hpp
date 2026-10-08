@@ -16,6 +16,9 @@ struct ValueParts {
     QString trusted;   // the sign and the trusted digits ("−1.000000000000000")
     QString noise;     // the digits beyond them; empty when every digit is trusted
     QString exponent;  // "30", "−7", or empty for positional values
+    QString uncertainty;          // "± U" when the result has uncertain inputs: U's two digits ("2.5", "0.20")
+    QString uncertaintyExponent;  // U's power of ten, when it has one ("−15")
+    QString unit;                 // the result's SI unit ("m·s⁻¹"); empty when it has none
 };
 
 // An exact result: the reduced fraction, and its decimal with the recurring block apart.
@@ -25,6 +28,9 @@ struct FractionParts {
     QString denominator;  // "1" for whole numbers
     QString decimal;      // "0.", "1.75"…; empty for whole numbers and for periods too long to show
     QString recurring;    // the repeating block, drawn overlined
+    QString uncertainty;          // as in ValueParts
+    QString uncertaintyExponent;
+    QString unit;
 };
 
 // One row of the Details card; `key` names it for its explanation().
@@ -65,7 +71,7 @@ QString offBy(const calculate_core::Result& result);  // how far an approximate 
 std::optional<ValueParts> conversionParts(const calculate_core::Result& result);
 QString valueText(const calculate_core::Result& result);       // the value on one line, as the screen shows it
 
-enum class CopyForm { Value, Trusted, ValueAndBound, Details };
+enum class CopyForm { Value, Trusted, ValueAndBound, Details, Concise };  // Concise: 5.00(20)
 // The result as plain text for the clipboard: ASCII signs ("-", "e30"), no bar; empty when the form has
 // nothing to give (an error, or no trusted digit).
 QString copyText(const calculate_core::Result& result, CopyForm form, const calculate_core::TypeInfo& type);
