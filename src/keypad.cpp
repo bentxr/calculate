@@ -1,5 +1,7 @@
 #include "keypad.hpp"
 
+#include "functiontext.hpp"
+
 #include <calculate-core/calculate-core.hpp>
 
 #include <QCoreApplication>
@@ -342,4 +344,30 @@ QString spokenName(const Key& key) {
         return QCoreApplication::translate("spoken", "convert to") + QLatin1Char(' ') + key.id.mid(3);
     const auto word = words.constFind(key.face.label);
     return word == words.constEnd() ? translated(key.face.label) : QCoreApplication::translate("spoken", *word);
+}
+
+namespace {
+
+// The engine's description of the function a key stands for; nullptr for a key without one.
+const calculate_core::FunctionDescription* functionOf(const Key& key) {
+    static const std::vector<calculate_core::FunctionDescription> list = calculate_core::functions();
+    if (key.face.function.isEmpty()) return nullptr;
+    for (const calculate_core::FunctionDescription& f : list)
+        if (QString::fromStdString(f.name) == key.face.function) return &f;
+    return nullptr;
+}
+
+}  // namespace
+
+QString keyTip(const Key& key) {
+    if (const calculate_core::FunctionDescription* f = functionOf(key))
+        return functionTitle(*f) + QStringLiteral(" · ") + QString::fromStdString(f->example);
+    QString name = spokenName(key);
+    if (!name.isEmpty()) name[0] = name[0].toUpper();
+    return name;
+}
+
+QString keyName(const Key& key) {
+    if (const calculate_core::FunctionDescription* f = functionOf(key)) return functionTitle(*f);
+    return spokenName(key);
 }

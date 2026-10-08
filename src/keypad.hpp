@@ -84,6 +84,12 @@ const QList<QPair<QString, QStringList>>& alternates();
 // other legend speaks as itself.
 QString spokenName(const Key& key);
 
+// What a key is, for its tooltip, in the user's language: a function's title and example ("Inverse sine ·
+// asin(0.5)"); any other key's spoken name, capitalised ("Reciprocal").
+QString keyTip(const Key& key);
+// The name a screen reader says: a function's title, any other key's spoken name.
+QString keyName(const Key& key);
+
 // A label or inserted text in the user's language (Spanish calculators print sen, Arcsen, MCD…).
 QString translated(const QString& text);
 // A key's legend as shown: translated, and with the decimal comma the point key shows "," and the separator ";".

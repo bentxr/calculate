@@ -1838,18 +1838,20 @@ void MainWindow::updateKeys() {
         auto* button = findChild<QPushButton*>(prefix + key.id);
         const bool on = available(key.face, exact);
         button->setEnabled(on);
-        button->setToolTip(on ? QString() : exactRefusal(key.face.label));
+        button->setToolTip(on ? keyTip(key) : exactRefusal(key.face.label));
+        button->setAccessibleName(keyName(key));
     }
-    // A key with more faces says which, and how to reach them.
+    // A key with more faces also says which, and how to reach them.
     for (const auto& [id, others] : alternates()) {
         auto* button = findChild<QPushButton*>("key:" + id);
         if (!button->isEnabled()) continue;
         QStringList legends;
         for (const QString& other : others) legends << legend(directKey(other).face, settings::decimalComma());
-        button->setToolTip(tr("Hold for: %1").arg(legends.join(QStringLiteral(", "))));
+        button->setToolTip(button->toolTip() + QLatin1Char('\n') + tr("Hold for: %1").arg(legends.join(QStringLiteral(", "))));
     }
     const bool natural = settings::conventions().log == calculate_core::Conventions::Log::Natural;
     for (const char* name : {"direct:log", "common:log"})
         if (auto* button = findChild<QPushButton*>(name); button && button->isEnabled())
-            button->setToolTip(natural ? tr("logarithm (natural)") : tr("logarithm (base 10)"));
+            button->setToolTip(button->toolTip() + QLatin1Char('\n')
+                               + (natural ? tr("logarithm (natural)") : tr("logarithm (base 10)")));
 }

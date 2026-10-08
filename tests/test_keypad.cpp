@@ -401,3 +401,8 @@ TEST(Keypad, TheSpecialFunctionsHaveKeys) {
                            "igamma", "gammainc", "betainc", "betaincinv"}));
     for (const char* name : {"gamma", "erfcinv", "gammainc", "betaincinv"}) EXPECT_EQ(directKey(name).face.function, name) << name;
 }
+
+TEST(Keypad, AKeyWithoutAFunctionIsDescribedByItsSpokenName) {
+    EXPECT_EQ(keyTip(directKey("undo")), "Undo");
+    EXPECT_EQ(keyName(directKey("undo")), "undo");
+}

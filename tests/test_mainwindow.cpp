@@ -1688,7 +1688,7 @@ TEST(MainWindow, KeysHaveNamesForScreenReaders) {
     EXPECT_EQ(child<QPushButton>(window, "key:reciprocal")->accessibleName(), "reciprocal");  // words, not symbols
     EXPECT_EQ(child<QPushButton>(window, "direct:undo")->accessibleName(), "undo");
     EXPECT_EQ(child<QPushButton>(window, "direct:space")->accessibleName(), "space");
-    EXPECT_EQ(child<QPushButton>(window, "common:cbrt")->accessibleName(), "cube root");
+    EXPECT_EQ(child<QPushButton>(window, "common:cbrt")->accessibleName(), "Cube root");  // a function's title
     EXPECT_EQ(child<QToolButton>(window, "section:statistics")->accessibleName(), "Statistics");
     EXPECT_EQ(child<QLineEdit>(window, "search")->accessibleName(), "Search");
     EXPECT_EQ(child<QPushButton>(window, "drawerToggle")->accessibleName(), "More");
@@ -1916,9 +1916,9 @@ TEST(MainWindow, TheConventionsAreSettings) {
 
 TEST(MainWindow, TheLogKeySaysWhichLogarithm) {
     MainWindow window;
-    EXPECT_EQ(child<QPushButton>(window, "direct:log")->toolTip(), "logarithm (base 10)");
+    EXPECT_TRUE(child<QPushButton>(window, "direct:log")->toolTip().endsWith("\nlogarithm (base 10)"));
     setting(window, "log:e")->trigger();
-    EXPECT_EQ(child<QPushButton>(window, "direct:log")->toolTip(), "logarithm (natural)");
+    EXPECT_TRUE(child<QPushButton>(window, "direct:log")->toolTip().endsWith("\nlogarithm (natural)"));
     setting(window, "log:10")->trigger();
 }
 
@@ -2118,4 +2118,21 @@ TEST(MainWindow, SpecialFunctionKeysTypeTheirNames) {
     QTest::keyClick(lcd(window), Qt::Key_Return);
     EXPECT_TRUE(answered(window));
     EXPECT_EQ(lcd(window)->outputText(), "24");
+}
+
+TEST(MainWindow, EveryKeySaysWhatItIs) {
+    MainWindow window;
+    QList<QPair<QString, Key>> keys;
+    for (const QList<Key>& row : keypad())
+        for (const Key& key : row) keys.append({"key:", key});
+    for (const Key& key : everyDirectKey()) keys.append({"direct:", key});
+    for (const QString& id : window.common()) keys.append({"common:", directKey(id)});
+    for (const auto& [prefix, key] : keys) {
+        auto* button = child<QPushButton>(window, (prefix + key.id).toUtf8().constData());
+        EXPECT_FALSE(keyTip(key).isEmpty()) << key.id.toStdString();
+        EXPECT_TRUE(button->toolTip().startsWith(keyTip(key))) << key.id.toStdString();  // then, on some, how to reach more
+    }
+    EXPECT_EQ(keyTip(directKey("asin")), "Inverse sine · asin(0.5)");  // the title, then the example
+    child<TypeChooser>(window, "type")->setCurrentType(calculate_core::NumberType::Exact);
+    EXPECT_TRUE(child<QPushButton>(window, "key:sin")->toolTip().startsWith("Exact arithmetic cannot represent"));
 }
