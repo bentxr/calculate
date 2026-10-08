@@ -312,6 +312,31 @@ QStringList completions(const QString& prefix) {
     return list;
 }
 
+Call callAround(const Entry& e) {
+    const Row& row = e.currentRow();
+    int separators = 0;
+    for (int end = e.cursor();;) {
+        const int o = openOpener(row, end);
+        if (o < 0) return {};
+        int depth = 0;  // the separators of this opener's own level, between it and the cursor
+        separators = 0;
+        for (int i = o + 1; i < e.cursor(); ++i) {
+            const Item& item = row[static_cast<std::size_t>(i)];
+            if (opener(item)) ++depth;
+            else if (closer(item)) --depth;
+            else if (depth == 0 && textIs(row, i, ", ")) ++separators;
+        }
+        const QString text = row[static_cast<std::size_t>(o)].text;
+        if (text == "(") {  // a plain parenthesis: the call is further out
+            end = o;
+            continue;
+        }
+        if (text == QStringLiteral("Σ(")) return {QStringLiteral("sum"), separators};
+        if (text == QStringLiteral("Π(")) return {QStringLiteral("product"), separators};
+        return {text.chopped(1), separators};
+    }
+}
+
 QString completionTitle(const QString& name) {
     for (const calculate_core::FunctionDescription& f : calculate_core::functions()) {
         bool named = QString::fromStdString(f.name) == name;

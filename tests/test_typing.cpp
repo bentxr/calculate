@@ -306,3 +306,26 @@ TEST(Typing, CompletionsCarryTheirTitles) {
     EXPECT_EQ(typing::completionTitle("arcsen"), "Inverse sine");  // a spelling shows its function's title
     EXPECT_EQ(typing::completionTitle("Ans"), "");
 }
+
+TEST(Typing, TheCallAroundTheCursorAndItsArgument) {
+    typing::Call c = typing::callAround(typed("2+nCr(5,"));
+    EXPECT_EQ(c.name, "nCr");
+    EXPECT_EQ(c.argument, 1);
+    EXPECT_EQ(typing::callAround(typed("sin(1)")).name, "");  // closed: no call around the cursor
+    c = typing::callAround(typed("mean(1,(2"));  // inside plain parentheses, still mean's second argument
+    EXPECT_EQ(c.name, "mean");
+    EXPECT_EQ(c.argument, 1);
+    c = typing::callAround(typed("betainc(2;3;"));
+    EXPECT_EQ(c.name, "betainc");
+    EXPECT_EQ(c.argument, 2);
+}
+
+TEST(Typing, ASumIsTheCallAroundItsArguments) {
+    Entry e;
+    e.insert(QStringLiteral("Σ("));
+    e.insert("x");
+    e.insert(", ");
+    const typing::Call c = typing::callAround(e);
+    EXPECT_EQ(c.name, "sum");  // the name its metadata has
+    EXPECT_EQ(c.argument, 1);
+}
