@@ -345,6 +345,7 @@ Box value(const view::ValueParts& parts, const QFont& font, qreal maxWidth) {
     if (!parts.exponent.isEmpty())
         append(b, superscript(text(QStringLiteral("×10"), font), text(parts.exponent, smaller(font))), font, maxWidth);
     if (!parts.uncertainty.isEmpty()) append(b, plusMinus(parts.uncertainty, parts.uncertaintyExponent, font), font, maxWidth);
+    if (!parts.unit.isEmpty()) append(b, text(QStringLiteral("\u2009") + parts.unit, font), font, maxWidth);  // a thin space before it
     return b;
 }
 
@@ -375,6 +376,7 @@ Box exactValue(const view::FractionParts& parts, const QFont& font, qreal maxWid
 Box exact(const view::FractionParts& parts, const QFont& font, qreal maxWidth) {
     Box b = exactValue(parts, font, maxWidth);
     if (!parts.uncertainty.isEmpty()) append(b, plusMinus(parts.uncertainty, parts.uncertaintyExponent, font), font, maxWidth);
+    if (!parts.unit.isEmpty()) append(b, text(QStringLiteral("\u2009") + parts.unit, font), font, maxWidth);  // a thin space before it
     return b;
 }
 

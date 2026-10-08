@@ -18,6 +18,7 @@ struct ValueParts {
     QString exponent;  // "30", "−7", or empty for positional values
     QString uncertainty;          // "± U" when the result has uncertain inputs: U's two digits ("2.5", "0.20")
     QString uncertaintyExponent;  // U's power of ten, when it has one ("−15")
+    QString unit;                 // the result's SI unit ("m·s⁻¹"); empty when it has none
 };
 
 // An exact result: the reduced fraction, and its decimal with the recurring block apart.
@@ -29,6 +30,7 @@ struct FractionParts {
     QString recurring;    // the repeating block, drawn overlined
     QString uncertainty;          // as in ValueParts
     QString uncertaintyExponent;
+    QString unit;
 };
 
 // One row of the Details card; `key` names it for its explanation().

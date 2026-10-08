@@ -435,3 +435,19 @@ TEST(Presenter, TheValueCarriesItsUncertainty) {
     EXPECT_EQ(view::valueParts(evaluated("0.1 + 0.2")).uncertainty, "");  // a computing error stays in Details
     EXPECT_EQ(view::fractionParts(evaluated("1/3±0.1", NumberType::Exact)).uncertainty, "0.011");  // 1/(3±0.1)
 }
+
+TEST(Presenter, AResultShowsItsUnit) {
+    EXPECT_EQ(view::valueParts(evaluated("c")).unit, "m·s⁻¹");
+    EXPECT_EQ(view::valueParts(evaluated("2+2")).unit, "");
+    bool found = false;
+    for (const view::DetailRow& row : view::details(evaluated("h*c"), typeInfo(NumberType::Double)))
+        if (row.key == "unit") found = row.value == "J·m";
+    EXPECT_TRUE(found);
+    EXPECT_FALSE(view::explanation("unit").isEmpty());
+}
+
+TEST(Presenter, AFunctionGivenAUnitIsANote) {
+    const Result r = evaluated("sin(c)");
+    ASSERT_EQ(r.warnings.size(), 1u);
+    EXPECT_EQ(view::warningText(r.warnings[0], "sin(c)"), "sin needs a number without a unit");
+}

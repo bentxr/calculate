@@ -124,6 +124,7 @@ ValueParts valueParts(const Result& r) {
     if (r.error || r.exact || r.commentOnly) return {};
     ValueParts p = split(r.value, r.trustedDigitsWithUncertainty);  // the bar where the uncertainty starts
     addUncertainty(r, p.uncertainty, p.uncertaintyExponent);
+    p.unit = fromStd(r.unit);
     return p;
 }
 
@@ -139,6 +140,7 @@ FractionParts fractionParts(const Result& r) {
         p.recurring = fromStd(f.repeatingDigits);
     }
     addUncertainty(r, p.uncertainty, p.uncertaintyExponent);
+    p.unit = fromStd(r.unit);
     return p;
 }
 
@@ -213,13 +215,16 @@ QList<DetailRow> details(const Result& r, const TypeInfo& t) {
                                     ? QCoreApplication::translate("view", "unreliable: an input shifted by its limit leaves a function's domain")
                                     : QCoreApplication::translate("view", "unreliable: at the corners the result moved by %1").arg(number(r.firstOrderObserved))});
     }
+    QList<DetailRow> unit;
+    if (!r.unit.empty()) unit.append({"unit", QCoreApplication::translate("view", "Unit"), fromStd(r.unit)});
     if (r.exact)
         return converted
                + QList<DetailRow>{{"exact", QCoreApplication::translate("view", "Error"), QCoreApplication::translate("view", "exact · no rounding error")}}
                + uncertainty
                + QList<DetailRow>{{"type", QCoreApplication::translate("view", "Number type"),
                                    QCoreApplication::translate("view", "%1, exact fractions").arg(fromStd(t.cppName))},
-                                  evaluated} + reading;
+                                  evaluated}
+               + unit + reading;
     QString measured = r.measuredAvailable ? number(r.measured) : QCoreApplication::translate("view", "unavailable");
     if (r.measuredAvailable && !r.measurementReliable) measured += QStringLiteral(" (") + QCoreApplication::translate("view", "unreliable") + QStringLiteral(")");
     QList<DetailRow> rows{
@@ -243,6 +248,7 @@ QList<DetailRow> details(const Result& r, const TypeInfo& t) {
         rows.append({"incomplete", QCoreApplication::translate("view", "Incomplete"),
                      QCoreApplication::translate("view", "an uncertain argument was accepted")});
     rows.append(evaluated);
+    rows += unit;
     rows += reading;
     return converted + rows;
 }
@@ -268,6 +274,9 @@ QString explanation(const QString& key) {
     if (key == "input")
         return QCoreApplication::translate("view", "The error of storing the numbers you typed in this type: "
                                                    "0.1, for example, has no exact binary form.");
+    if (key == "unit")
+        return QCoreApplication::translate("view", "The SI unit of the result, followed from the units of the constants in it. "
+                                                   "Plain numbers have none.");
     if (key == "uncertainty")
         return QCoreApplication::translate("view", "How far the result can move because of the uncertainty of your inputs (values written "
                                                    "with ±, whose ± is a limit, and measured constants, given three standard uncertainties). "
@@ -360,7 +369,16 @@ QString warningText(const Warning& w, const QString& expression) {
     case WarningCode::EmptyRange: return QCoreApplication::translate("view", "%1 has no terms").arg(part);
     case WarningCode::FirstOrderUnreliable:
         return QCoreApplication::translate("view", "The uncertainty may be larger than shown: first order is unreliable here");
-    case WarningCode::UnitsDiffer: return fromStd(w.message);
+    case WarningCode::UnitsDiffer: {  // the engine's note names the operands: "the units of c (m·s⁻¹) and 1 (none) differ"
+        const QString message = fromStd(w.message);
+        static const QRegularExpression differ(QStringLiteral("^the units of (.*) \\([^()]*\\) and (.*) \\([^()]*\\) differ$"));
+        static const QRegularExpression needs(QStringLiteral("^(.*) needs a number without a unit; "));
+        if (const QRegularExpressionMatch m = differ.match(message); m.hasMatch())
+            return QCoreApplication::translate("view", "The units of %1 and %2 differ").arg(m.captured(1), m.captured(2));
+        if (const QRegularExpressionMatch m = needs.match(message); m.hasMatch())
+            return QCoreApplication::translate("view", "%1 needs a number without a unit").arg(m.captured(1));
+        return message;
+    }
     }
     return {};
 }
@@ -433,6 +451,7 @@ QString oneLine(const ValueParts& parts) {
     if (!parts.exponent.isEmpty()) s += "×10^" + parts.exponent;
     if (!parts.uncertainty.isEmpty()) s += " ± " + parts.uncertainty;
     if (!parts.uncertaintyExponent.isEmpty()) s += "×10^" + parts.uncertaintyExponent;
+    if (!parts.unit.isEmpty()) s += " " + parts.unit;
     return s;
 }
 
@@ -443,6 +462,7 @@ QString oneLine(const FractionParts& parts) {
     if (!parts.recurring.isEmpty()) s += "(" + parts.recurring + ")";
     if (!parts.uncertainty.isEmpty()) s += " ± " + parts.uncertainty;
     if (!parts.uncertaintyExponent.isEmpty()) s += "×10^" + parts.uncertaintyExponent;
+    if (!parts.unit.isEmpty()) s += " " + parts.unit;
     return s;
 }
 

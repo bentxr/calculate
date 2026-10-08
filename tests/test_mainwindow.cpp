@@ -2146,3 +2146,11 @@ TEST(MainWindow, TheHintFollowsTheCursor) {
     QTest::keyClicks(lcd(window), "2)");
     EXPECT_EQ(lcd(window)->hintText(), "");
 }
+
+TEST(MainWindow, TheUnitFollowsTheValueAndAMismatchIsANote) {
+    MainWindow window;
+    run(window, "c");
+    EXPECT_TRUE(lcd(window)->outputText().endsWith(" m·s⁻¹")) << lcd(window)->outputText().toStdString();
+    run(window, "c+1");
+    EXPECT_EQ(message(window)->text(), "The units of c and 1 differ");
+}
