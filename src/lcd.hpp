@@ -74,7 +74,8 @@ public:
     // The status line, as on the calculator: M while the memory holds something.
     void setMemory(const QString& memory);  // empty when cleared; its value is the screen's tooltip
     QString memory() const { return memory_; }
-    QString statusText() const;
+    QString statusText() const;  // the marks in the corner: "STO" while storing, "M" while the memory holds something
+    void setStoring(bool on);
 
     static QString fontFamily();  // the bundled screen typeface
     QColor background() const;    // an LCD panel: pale grey-green, or dark in a dark theme
@@ -145,6 +146,7 @@ private:
     bool completing_ = false;
     bool provisional_ = false;
     Entry marked_;  // a copy of the input whose selection is the marked part; none when nothing is marked
+    bool storing_ = false;
     QString text_;  // Shown::Text: a conversion
     Shown shown_ = Shown::Nothing;
     view::ValueParts value_;

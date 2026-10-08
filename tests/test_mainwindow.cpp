@@ -2005,3 +2005,34 @@ TEST(MainWindow, ANoteShowsDimmedUnderTheScreen) {
     run(window, "1+1");
     EXPECT_EQ(message(window)->text(), "");
 }
+
+TEST(MainWindow, StoreKeepsAnExpressionInAVariable) {
+    MainWindow window;
+    const auto click = [&](const char* name) { QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton); };
+    openSection(window, "variables");
+    lcd(window)->setInput("0.1+0.2");
+    forget(window);
+    click("direct:store");
+    EXPECT_EQ(lcd(window)->statusText(), "STO");
+    click("direct:varA");  // with STO armed, the letter stores instead of typing
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->statusText(), "");
+    EXPECT_EQ(child<QListWidget>(window, "history")->item(0)->data(Qt::UserRole).toString(), "A := 0.1+0.2");
+    lcd(window)->clear();
+    click("direct:varA");
+    EXPECT_EQ(lcd(window)->input(), "A");
+}
+
+TEST(MainWindow, AnyNameCanBeAssignedWithTheLetters) {
+    MainWindow window;
+    openSection(window, "letters");
+    for (const char* name : {"direct:letterR", "direct:letterA", "direct:letterT", "direct:letterE"})
+        QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    openSection(window, "variables");
+    for (const char* name : {"direct:assign", "key:2", "key:1"}) QTest::mouseClick(child<QPushButton>(window, name), Qt::LeftButton);
+    EXPECT_EQ(lcd(window)->input(), "rate:=21");
+    forget(window);
+    QTest::keyClick(lcd(window), Qt::Key_Return);
+    EXPECT_TRUE(answered(window));
+    EXPECT_EQ(lcd(window)->outputText(), "21");
+}

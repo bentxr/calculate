@@ -158,6 +158,7 @@ private:
     bool narrow_ = false;  // the phone arrangement
     int arranged_ = -1;    // the arrangement the widgets are in: -1 none yet, 0 wide, 1 narrow
     bool shifted_ = false;  // ⇧ was pressed: the next letter is a capital
+    bool storing_ = false;  // STO was pressed: the next variable letter stores the input
     QSize designScreen_;   // the screen the keys were laid out for
     QToolButton* panelToggle_ = nullptr;
     QToolButton* settingsButton_ = nullptr;

@@ -121,8 +121,8 @@ TEST(Keypad, EveryOtherKeyHasAHomeSection) {
         ids << s.id;
         titles << s.title;
     }
-    EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "constants", "statistics", "showAs", "letters"}));
-    EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Constants", "Statistics", "Show as", "Letters"}));
+    EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "constants", "statistics", "showAs", "variables", "letters"}));
+    EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Constants", "Statistics", "Show as", "Variables", "Letters"}));
     EXPECT_EQ(sectionLabels("numbers"), QStringList({"x!", "abs", "%", "%…", "mod", "rem", "floormod", "nPr", "nCr", "gcd", "lcm", ","}));
     EXPECT_EQ(sectionLabels("hyperbolic"), QStringList({"sinh", "cosh", "tanh", "asinh", "acosh", "atanh"}));
     EXPECT_EQ(sectionLabels("trigonometry"), QStringList({"asin", "acos", "atan"}));
@@ -257,7 +257,7 @@ TEST(Keypad, EverySyntaxElementHasAKey) {
     for (const Key& key : everyKey())
         if (key.face.action == KeyAction::Insert || key.face.action == KeyAction::Type) entered.insert(key.face.insert);
     QStringList syntax{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "e", "+", "−", "×", "÷", "(", ")",
-                       ", ", "!", "%", "-", "π", "Ans", "M", "_", " ", "#", "→"};
+                       ", ", "!", "%", "-", "π", "Ans", "M", "_", " ", "#", "→", ":="};
     for (char c = 'a'; c <= 'z'; ++c) syntax << QString(QChar(c));  // capitals through ⇧
     for (const QString& piece : syntax) EXPECT_TRUE(entered.contains(piece)) << piece.toStdString();
     QSet<Template> shapes;
@@ -268,7 +268,7 @@ TEST(Keypad, EverySyntaxElementHasAKey) {
     QSet<KeyAction> actions;
     for (const Key& key : everyKey()) actions.insert(key.face.action);
     for (KeyAction a : {KeyAction::Clear, KeyAction::Backspace, KeyAction::Evaluate, KeyAction::Left, KeyAction::Right,
-                        KeyAction::Up, KeyAction::Down, KeyAction::Undo, KeyAction::Redo, KeyAction::Shift})
+                        KeyAction::Up, KeyAction::Down, KeyAction::Undo, KeyAction::Redo, KeyAction::Shift, KeyAction::Store})
         EXPECT_TRUE(actions.contains(a)) << static_cast<int>(a);
 }
 
@@ -357,4 +357,12 @@ TEST(Keypad, SumsAndProductsHaveKeys) {
 TEST(Keypad, SumAndProductKeysHaveSpokenNames) {
     EXPECT_EQ(spokenName(directKey("sum")), "sum");  // not the bare sign
     EXPECT_EQ(spokenName(directKey("product")), "product");
+}
+
+TEST(Keypad, TheVariablesSection) {
+    EXPECT_EQ(section("variables").title, "Variables");
+    EXPECT_EQ(sectionLabels("variables"), QStringList({"A", "B", "C", "D", "E", "F", "y", "STO", ":="}));
+    EXPECT_EQ(directKey("store").face.action, KeyAction::Store);
+    EXPECT_EQ(directKey("assign").face.insert, ":=");
+    EXPECT_EQ(directKey("varA").face.insert, "A");
 }

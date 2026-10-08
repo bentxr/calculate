@@ -140,6 +140,10 @@ const QList<KeySection>& keySections() {
         {"constants", QT_TRANSLATE_NOOP("keypad", "Constants"), {{"pi", put("π", "π", "pi")}, {"e", put("e", "e", "e")}}},
         {"statistics", QT_TRANSLATE_NOOP("keypad", "Statistics"), statisticsKeys()},
         {"showAs", QT_TRANSLATE_NOOP("keypad", "Show as"), QList<Key>{{"to", put("→", "→")}} + conversionKeys(showAsTargets())},
+        {"variables", QT_TRANSLATE_NOOP("keypad", "Variables"),
+         {{"varA", type("A", "A")}, {"varB", type("B", "B")}, {"varC", type("C", "C")}, {"varD", type("D", "D")},
+          {"varE", type("E", "E")}, {"varF", type("F", "F")}, {"varY", type("y", "y")},
+          {"store", act("STO", KeyAction::Store)}, {"assign", type(":=", ":=")}}},
         {"letters", QT_TRANSLATE_NOOP("keypad", "Letters"), letterKeys()},
     };
     return sections;
@@ -283,6 +287,8 @@ QString spokenName(const Key& key) {
         {"_", QT_TRANSLATE_NOOP("spoken", "underscore")},
         {"→", QT_TRANSLATE_NOOP("spoken", "convert to")},
         {"Σ", QT_TRANSLATE_NOOP("spoken", "sum")},
+        {"STO", QT_TRANSLATE_NOOP("spoken", "store")},
+        {":=", QT_TRANSLATE_NOOP("spoken", "assign")},
         {"Π", QT_TRANSLATE_NOOP("spoken", "product")},
     };
     if (key.id.startsWith("to:"))  // a one-tap conversion: "convert to fraction"

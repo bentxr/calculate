@@ -1722,7 +1722,20 @@ void MainWindow::present() {
 
 void MainWindow::apply(const Face& f) {
     // A key pressed in the phone's drawer brings back the pad; the letters keep it open, to type a whole name.
-    if (f.action != KeyAction::Type && f.action != KeyAction::Shift) drawerToggle_->setChecked(false);
+    if (f.action != KeyAction::Type && f.action != KeyAction::Shift && f.action != KeyAction::Store) drawerToggle_->setChecked(false);
+    // STO armed: a variable letter stores what is on the screen under its name; any other key disarms it first.
+    if (storing_) {
+        storing_ = false;
+        lcd_->setStoring(false);
+        static const QStringList variables{"A", "B", "C", "D", "E", "F", "x", "y"};
+        if (f.action == KeyAction::Type && variables.contains(f.insert)) {
+            drawerToggle_->setChecked(false);
+            const QString input = lcd_->input().trimmed();
+            if (!input.isEmpty()) request(f.insert + " := " + input, false);
+            lcd_->setFocus();
+            return;
+        }
+    }
     switch (f.action) {
     case KeyAction::Insert: lcd_->insert(translated(f.insert)); break;
     case KeyAction::Type:
@@ -1751,6 +1764,10 @@ void MainWindow::apply(const Face& f) {
         break;
     case KeyAction::Down:
         if (!lcd_->down()) replay(historyIndex_ - 1);
+        break;
+    case KeyAction::Store:
+        storing_ = true;
+        lcd_->setStoring(true);
         break;
     case KeyAction::Tool:
         if (f.opens == "percentages") {

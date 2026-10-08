@@ -317,6 +317,7 @@ QString errorText(const Error& e, const QString& expression) {
     case ErrorCode::Cancelled: return QCoreApplication::translate("view", "Cancelled");
     case ErrorCode::UnknownTarget: return QCoreApplication::translate("view", "Unknown conversion “%1”").arg(part);
     case ErrorCode::TooManyTerms: return QCoreApplication::translate("view", "%1 has too many terms").arg(part);
+    case ErrorCode::ReservedName: return QCoreApplication::translate("view", "“%1” is a reserved name").arg(part);
     }
     return {};
 }

@@ -350,7 +350,17 @@ void Lcd::setMemory(const QString& memory) {
     update();
 }
 
-QString Lcd::statusText() const { return memory_.isEmpty() ? QString() : QStringLiteral("M"); }
+QString Lcd::statusText() const {
+    QStringList marks;
+    if (storing_) marks << QStringLiteral("STO");
+    if (!memory_.isEmpty()) marks << QStringLiteral("M");
+    return marks.join(' ');
+}
+
+void Lcd::setStoring(bool on) {
+    storing_ = on;
+    update();
+}
 
 // JetBrains Mono, loaded once from the resources; the system's fixed font if that ever fails.
 QString Lcd::fontFamily() {
