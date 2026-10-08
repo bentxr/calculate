@@ -4,6 +4,7 @@
 
 #include <QList>
 #include <QString>
+#include <QHash>
 #include <QStringList>
 
 enum class KeyAction { Insert, Template, Clear, Backspace, Evaluate, MemoryAdd, MemorySubtract, MemoryClear, MemoryStore, Left, Right, Up, Down,
@@ -74,6 +75,12 @@ QList<SearchEntry> extraSearchEntries();
 // Whether an entry matches the search box's text: its legend (as written or translated), what it types, its
 // function, its description or its heading, ignoring case. An empty text matches everything.
 bool searchMatches(const SearchEntry& entry, const QString& text);
+
+// The conversion targets kept for the Programming section, synonyms included; Show as has every other one.
+QStringList programmingTargets();
+
+// A target's synonym → the name its key carries (binary32 → fp32): one key per format.
+const QHash<QString, QString>& targetTwins();
 
 // Whether the face works in the Exact type when `exact` (Exact refuses irrational functions).
 bool available(const Face& face, bool exact);

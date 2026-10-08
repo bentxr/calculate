@@ -122,8 +122,8 @@ TEST(Keypad, EveryOtherKeyHasAHomeSection) {
         ids << s.id;
         titles << s.title;
     }
-    EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "rounding", "constants", "statistics", "showAs", "special", "variables", "letters"}));
-    EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Rounding and parts", "Constants", "Statistics", "Show as", "Special functions", "Variables", "Letters"}));
+    EXPECT_EQ(ids, QStringList({"numbers", "hyperbolic", "trigonometry", "powers", "rounding", "constants", "statistics", "showAs", "programming", "special", "variables", "letters"}));
+    EXPECT_EQ(titles, QStringList({"Numbers", "Hyperbolic", "Trigonometry", "Powers, roots and logs", "Rounding and parts", "Constants", "Statistics", "Show as", "Programming", "Special functions", "Variables", "Letters"}));
     EXPECT_EQ(sectionLabels("numbers"), QStringList({"x!", "abs", "%", "%…", "mod", "rem", "floormod", "nPr", "nCr", "gcd", "lcm", ","}));
     EXPECT_EQ(sectionLabels("hyperbolic"), QStringList({"sinh", "cosh", "tanh", "asinh", "acosh", "atanh", "sech", "csch",
                                                         "coth", "asech", "acsch", "acoth"}));
@@ -343,7 +343,9 @@ TEST(Keypad, TheConversionKeys) {
 // Every target of → has a one-tap key; it is generated, so a new target needs no new line.
 TEST(Keypad, EveryConversionTargetHasAKey) {
     for (const calculate_core::TargetDescription& target : calculate_core::conversionTargets()) {
-        const Key key = directKey("to:" + QString::fromStdString(target.name));
+        const QString name = QString::fromStdString(target.name);
+        const QString twin = targetTwins().value(name, name);  // binary32 → fp32
+        const Key key = find("to:" + twin);
         EXPECT_FALSE(key.id.isEmpty()) << target.name;
         EXPECT_TRUE(key.face.insert.startsWith("→")) << target.name;
     }
@@ -453,4 +455,16 @@ TEST(Keypad, EveryEngineConstantIsReachable) {
         if (reachable.contains(symbol)) reachable.insert(name);  // their keys type the symbol, which reads as the name
     for (const calculate_core::ConstantDescription& c : calculate_core::constants())
         EXPECT_TRUE(reachable.contains(QString::fromStdString(c.name))) << c.name;
+}
+
+TEST(Keypad, TheProgrammingSectionHasTheFloatingPointKeys) {
+    EXPECT_EQ(section("programming").title, "Programming");
+    EXPECT_EQ(sectionLabels("programming").mid(0, 15),  // 4.51 adds the integer keys after these
+              QStringList({"fromBits", "floatBits", "floatParts", "floatValue", "floatError", "fp", "→fp16", "→bf16", "→fp32",
+                           "→fp64", "→fp80", "→fp128", "→fp256", "→fp512", "→bits"}));
+    EXPECT_EQ(find("floatBits").face.insert, "floatBits(");
+    EXPECT_EQ(find("fp").face.action, KeyAction::Tool);
+    EXPECT_EQ(find("fp").face.opens, "ieee");
+    for (const char* name : {"fp32", "binary32", "bits"}) EXPECT_TRUE(programmingTargets().contains(name)) << name;
+    EXPECT_TRUE(find("to:binary32").id.isEmpty());  // a synonym gets no key of its own: fp32's covers it
 }

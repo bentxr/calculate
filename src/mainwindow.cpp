@@ -1837,6 +1837,13 @@ void MainWindow::apply(const Face& f) {
             percentFirst_->setFocus();
             return;
         }
+        if (f.opens == "ieee") {  // the last result's bits, or the tool as it was left
+            if (hasResult_ && !last_.error)
+                inspectResult();
+            else
+                showInspector();
+            return;
+        }
         break;
     }
     lcd_->setFocus();

@@ -2308,3 +2308,12 @@ TEST(MainWindow, TheInspectorFitsAPhone) {
     auto* binary = inspector->findChild<QPlainTextEdit*>("inspectorBinary");
     EXPECT_GT(binary->document()->firstBlock().layout()->lineCount(), 1);  // 512 bits wrap
 }
+
+TEST(MainWindow, TheFpKeyOpensTheInspector) {
+    MainWindow window;
+    run(window, "0.1");
+    openSection(window, "programming");
+    QTest::mouseClick(child<QPushButton>(window, "direct:fp"), Qt::LeftButton);
+    EXPECT_EQ(child<QListWidget>(window, "modes")->currentRow(), 3);  // the IEEE 754 page of the rail
+    EXPECT_EQ(child<Inspector>(window, "inspector")->findChild<QPlainTextEdit*>("inspectorHex")->toPlainText(), "3FB9 9999 9999 999A");
+}

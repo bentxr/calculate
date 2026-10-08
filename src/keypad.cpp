@@ -91,11 +91,21 @@ const QList<Key>& memoryKeys() {
     return keys;
 }
 
-namespace {
+const QHash<QString, QString>& targetTwins() {
+    static const QHash<QString, QString> twins{{"binary16", "fp16"},   {"bfloat16", "bf16"},   {"binary32", "fp32"},
+                                               {"binary64", "fp64"},   {"x87", "fp80"},        {"binary128", "fp128"},
+                                               {"binary256", "fp256"}, {"binary512", "fp512"}};
+    return twins;
+}
 
-// a to z, then ⇧, _ and the space: names, comments and anything else typed without a keyboard.
-// The targets kept for the Programming section (none yet); every other target is in Show as.
-QStringList programmingTargets() { return {}; }
+// The targets kept for the Programming section, synonyms too; every other target is in Show as.
+QStringList programmingTargets() {
+    QStringList names{"fp16", "bf16", "fp32", "fp64", "fp80", "fp128", "fp256", "fp512", "bits"};
+    for (auto it = targetTwins().cbegin(); it != targetTwins().cend(); ++it) names << it.key();
+    return names;
+}
+
+namespace {
 
 // A one-tap key per target named, in the engine's order: "→fraction". A target that takes a number after it ("1/n")
 // inserts its fixed part, leaving the number to the keys.
@@ -118,6 +128,7 @@ QStringList showAsTargets() {
     return names;
 }
 
+// a to z, then ⇧, _ and the space: names, comments and anything else typed without a keyboard.
 QList<Key> letterKeys() {
     QList<Key> keys;
     for (char c = 'a'; c <= 'z'; ++c) {
@@ -199,6 +210,14 @@ const QList<KeySection>& keySections() {
           {"perMille", put("‰", "‰")}, {"perMyriad", put("‱", "‱")}}},
         {"statistics", QT_TRANSLATE_NOOP("keypad", "Statistics"), statisticsKeys()},
         {"showAs", QT_TRANSLATE_NOOP("keypad", "Show as"), QList<Key>{{"to", put("→", "→")}} + conversionKeys(showAsTargets())},
+        {"programming", QT_TRANSLATE_NOOP("keypad", "Programming"),
+         QList<Key>{{"fromBits", put("fromBits", "fromBits(", "fromBits")},
+                    {"floatBits", put("floatBits", "floatBits(", "floatBits")},
+                    {"floatParts", put("floatParts", "floatParts(", "floatParts")},
+                    {"floatValue", put("floatValue", "floatValue(", "floatValue")},
+                    {"floatError", put("floatError", "floatError(", "floatError")},
+                    {"fp", tool("fp", "ieee")}}
+             + conversionKeys({"fp16", "bf16", "fp32", "fp64", "fp80", "fp128", "fp256", "fp512", "bits"})},
         {"special", QT_TRANSLATE_NOOP("keypad", "Special functions"),
          {{"gamma", put("gamma", "gamma(", "gamma")},
           {"lgamma", put("lgamma", "lgamma(", "lgamma")},
@@ -377,6 +396,7 @@ QString spokenName(const Key& key) {
         {"x!", QT_TRANSLATE_NOOP("spoken", "factorial")},
         {"%", QT_TRANSLATE_NOOP("spoken", "percent")},
         {"%…", QT_TRANSLATE_NOOP("spoken", "percentages")},
+        {"fp", QT_TRANSLATE_NOOP("spoken", "IEEE 754 tool")},
         {",", QT_TRANSLATE_NOOP("spoken", "separator")},
         {"π", QT_TRANSLATE_NOOP("spoken", "pi")},
         {"M+", QT_TRANSLATE_NOOP("spoken", "memory plus")},
