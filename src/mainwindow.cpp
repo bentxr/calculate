@@ -209,7 +209,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     const std::pair<const char*, view::CopyForm> forms[] = {{"copy:value", view::CopyForm::Value},
                                                             {"copy:trusted", view::CopyForm::Trusted},
                                                             {"copy:bound", view::CopyForm::ValueAndBound},
-                                                            {"copy:details", view::CopyForm::Details}};
+                                                            {"copy:details", view::CopyForm::Details},
+                                                            {"copy:concise", view::CopyForm::Concise}};
     for (const auto& [name, form] : forms) {
         QAction* action = copyMenu_->addAction(QString());  // the texts: see retranslate
         action->setObjectName(QString::fromLatin1(name));
@@ -1179,6 +1180,7 @@ void MainWindow::retranslate() {
     findChild<QAction*>("copy:trusted")->setText(tr("Trusted digits"));
     findChild<QAction*>("copy:bound")->setText(tr("Value ± bound"));
     findChild<QAction*>("copy:details")->setText(tr("Details as text"));
+    findChild<QAction*>("copy:concise")->setText(tr("Concise (1.23(4))"));
     findChild<QAction*>("copy:expression")->setText(tr("Expression"));
     findChild<QAction*>("history:copyExpression")->setText(tr("Copy expression"));
     findChild<QAction*>("history:copyValue")->setText(tr("Copy value"));

@@ -329,3 +329,14 @@ TEST(Typing, ASumIsTheCallAroundItsArguments) {
     EXPECT_EQ(c.name, "sum");  // the name its metadata has
     EXPECT_EQ(c.argument, 1);
 }
+
+TEST(Typing, PlusSlashMinusBecomesPlusMinus) {
+    EXPECT_EQ(typed("5+/-0.2").text(), "5±0.2");
+    EXPECT_EQ(typed("5+/2").text(), "5+÷2");  // only the whole sequence
+}
+
+TEST(Typing, PlusMinusIsAnOperator) {
+    EXPECT_EQ(typed("2^3+/-1").text(), "2^(3)±1");  // it ends the exponent, as × does: ± binds looser than ^
+    EXPECT_EQ(typed("2^3±1").text(), "2^(3)±1");    // typed as one character too
+    EXPECT_EQ(typed("2^±").text(), "2^(±)");        // first in the box: nothing to end yet
+}

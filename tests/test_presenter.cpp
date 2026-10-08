@@ -451,3 +451,8 @@ TEST(Presenter, AFunctionGivenAUnitIsANote) {
     ASSERT_EQ(r.warnings.size(), 1u);
     EXPECT_EQ(view::warningText(r.warnings[0], "sin(c)"), "sin needs a number without a unit");
 }
+
+TEST(Presenter, CopyTheConciseForm) {
+    EXPECT_EQ(view::copyText(evaluated("5±0.2"), view::CopyForm::Concise, typeInfo(NumberType::Double)), "5.00(20)");
+    EXPECT_EQ(view::copyText(evaluated("1/3", NumberType::Exact), view::CopyForm::Concise, typeInfo(NumberType::Exact)), "");
+}

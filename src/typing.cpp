@@ -181,7 +181,7 @@ bool endsOperand(const Entry& e, const QString& piece) {
         if ((last.text == "e" || last.text == "E") && afterNumber) return false;  // a number's exponent sign
         return true;
     }
-    return piece == QStringLiteral("×") || piece == QStringLiteral("÷") || piece == ", " || piece == ")";
+    return piece == QStringLiteral("×") || piece == QStringLiteral("÷") || piece == QStringLiteral("±") || piece == ", " || piece == ")";
 }
 
 // The ")" that closes the opener at `open`, or -1.
@@ -384,9 +384,19 @@ bool typeCharacter(Entry& e, QChar c) {
         }
         break;
     case '/': insertPiece(e, QStringLiteral("÷")); break;
-    case '-': insertPiece(e, QStringLiteral("−")); break;
+    case '-':
+        if (before && before->text == QStringLiteral("÷") && e.cursor() >= 2
+            && row[static_cast<std::size_t>(e.cursor() - 2)].text == "+") {  // +/- is ±
+            e.backspace();
+            e.backspace();
+            insertPiece(e, QStringLiteral("±"));
+        } else {
+            insertPiece(e, QStringLiteral("−"));
+        }
+        break;
     case '+': insertPiece(e, "+"); break;
     case ';': insertPiece(e, ", "); break;
+    case 0x00B1: insertPiece(e, QStringLiteral("±")); break;  // binds looser than ^: it ends an exponent being typed
     case ',':  // with a decimal comma, always the decimal point; `;` separates
         insertPiece(e, !settings::decimalComma() && separatesArguments(e) ? QStringLiteral(", ") : QStringLiteral("."));
         break;

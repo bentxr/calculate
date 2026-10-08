@@ -315,6 +315,7 @@ QString explanation(const QString& key) {
 
 QString copyText(const Result& r, CopyForm form, const TypeInfo& t) {
     if (r.error) return {};
+    if (form == CopyForm::Concise) return decimal(fromStd(r.concise));  // empty without an error or an uncertainty
     QString value;
     if (r.exact) {
         const Fraction& f = *r.exact;

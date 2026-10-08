@@ -71,7 +71,7 @@ QString offBy(const calculate_core::Result& result);  // how far an approximate 
 std::optional<ValueParts> conversionParts(const calculate_core::Result& result);
 QString valueText(const calculate_core::Result& result);       // the value on one line, as the screen shows it
 
-enum class CopyForm { Value, Trusted, ValueAndBound, Details };
+enum class CopyForm { Value, Trusted, ValueAndBound, Details, Concise };  // Concise: 5.00(20)
 // The result as plain text for the clipboard: ASCII signs ("-", "e30"), no bar; empty when the form has
 // nothing to give (an error, or no trusted digit).
 QString copyText(const calculate_core::Result& result, CopyForm form, const calculate_core::TypeInfo& type);
