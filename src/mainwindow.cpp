@@ -1,6 +1,7 @@
 #include "mainwindow.hpp"
 
 #include "detailscard.hpp"
+#include "devicekeyboard.hpp"
 #include "formulatip.hpp"
 #include "icons.hpp"
 #include "inspector.hpp"
@@ -235,13 +236,14 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     editButton_->setObjectName("editButton");
     editButton_->setAutoRaise(true);
     lcd_->addToBar(editButton_);
-    // The system keyboard on request: a phone shows it only when asked, so the keypad stays in view. On the
-    // desktop the keyboard is always there, so the button is only in the browser.
+    // The device's keyboard on request: a phone shows it only while this button is on, so the keys stay in
+    // view. On the desktop the keyboard is always there, so the button is only in the browser.
+    deviceKeyboard_ = new DeviceKeyboard(this);
     keyboardButton_ = new QToolButton(lcd_);
     keyboardButton_->setObjectName("keyboardButton");
     keyboardButton_->setAutoRaise(true);
     keyboardButton_->setCheckable(true);
-    keyboardButton_->setChecked(lcd_->testAttribute(Qt::WA_InputMethodEnabled));
+    keyboardButton_->setChecked(deviceKeyboard_->allowed());
     lcd_->addToBar(keyboardButton_);
 #ifndef Q_OS_WASM
     keyboardButton_->hide();
@@ -369,7 +371,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     searchList_->hide();
     QScroller::grabGesture(searchList_->viewport(), QScroller::TouchGesture);
     connect(search_, &QLineEdit::textEdited, this, &MainWindow::filterSearch);
-    connect(keyboardButton_, &QToolButton::toggled, search_, [this](bool on) { search_->setAttribute(Qt::WA_InputMethodEnabled, on); });
     connect(searchList_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) {
         const QVariant index = item->data(Qt::UserRole);
         if (!index.isValid()) return;  // a heading
@@ -447,7 +448,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(equals_, &QPushButton::clicked, this, &MainWindow::evaluate);
     connect(proceed_, &QPushButton::clicked, this, [this] { request(lastExpression_, true); });
     connect(detailsButton_, &QToolButton::clicked, this, [this] { card_->popUp(lcd_); });
-    connect(keyboardButton_, &QToolButton::toggled, lcd_, &Lcd::setSystemKeyboard);
+    connect(keyboardButton_, &QToolButton::toggled, deviceKeyboard_, &DeviceKeyboard::setAllowed);
     connect(copyButton_, &QToolButton::clicked, this, &MainWindow::popUpCopyMenu);
     connect(lcd_, &Lcd::copyMenuRequested, this, &MainWindow::popUpCopyMenu);
     connect(lcd_, &Lcd::copyRequested, findChild<QAction*>("copy:value"), &QAction::trigger);
@@ -675,7 +676,6 @@ QWidget* MainWindow::buildDirectKeys() {
     search_->setObjectName("search");
     search_->setClearButtonEnabled(true);
     search_->setFocusPolicy(Qt::ClickFocus);
-    search_->setAttribute(Qt::WA_InputMethodEnabled, lcd_->testAttribute(Qt::WA_InputMethodEnabled));
     search_->addAction(QIcon(), QLineEdit::LeadingPosition)->setObjectName("searchIcon");  // drawn: see drawIcons
     search_->installEventFilter(this);
     layout->addWidget(search_);

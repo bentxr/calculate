@@ -10,6 +10,7 @@
 
 class Inspector;
 class DetailsCard;
+class DeviceKeyboard;
 class FormulaTip;
 class Lcd;
 class QAction;
@@ -201,6 +202,7 @@ private:
     QMenu* copyAsMenu_ = nullptr;  // the same forms in the edit menu, where "Value" alone would be unclear
     QToolButton* editButton_ = nullptr;
     QToolButton* keyboardButton_ = nullptr;
+    DeviceKeyboard* deviceKeyboard_ = nullptr;  // whether any box may bring the device's keyboard up
     DetailsCard* card_ = nullptr;
     FormulaTip* formulaTip_ = nullptr;
     QLabel* message_ = nullptr;

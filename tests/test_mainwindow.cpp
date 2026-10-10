@@ -2,6 +2,7 @@
 
 #include "constanttext.hpp"
 #include "detailscard.hpp"
+#include "devicekeyboard.hpp"
 #include "formulatip.hpp"
 #include "inspector.hpp"
 #include "keybutton.hpp"
@@ -21,6 +22,7 @@
 #include <QDialog>
 #include <QHelpEvent>
 #include <QImage>
+#include <QInputMethodQueryEvent>
 #include <QLabel>
 #include <QLayout>
 #include <QLineEdit>
@@ -857,17 +859,30 @@ TEST(MainWindow, TypedFunctionsEvaluate) {
     EXPECT_EQ(lcd(window)->outputText(), "4");
 }
 
-TEST(MainWindow, AKeyboardButtonTurnsTheSystemKeyboardOnAndOff) {
+TEST(MainWindow, TheKeyboardButtonDecidesForEveryBox) {
     MainWindow window;
     auto* button = child<QToolButton>(window, "keyboardButton");
     EXPECT_TRUE(button->isCheckable());
     EXPECT_EQ(button->focusPolicy(), Qt::NoFocus);
     EXPECT_FALSE(button->accessibleName().isEmpty());
-    EXPECT_EQ(button->isChecked(), lcd(window)->testAttribute(Qt::WA_InputMethodEnabled));
-    button->click();
-    EXPECT_EQ(button->isChecked(), lcd(window)->testAttribute(Qt::WA_InputMethodEnabled));
-    button->click();
-    EXPECT_EQ(button->isChecked(), lcd(window)->testAttribute(Qt::WA_InputMethodEnabled));
+    EXPECT_EQ(button->isChecked(), DeviceKeyboard::startAllowed);
+    const auto takesAnInputMethod = [](QWidget* widget) {  // what the platform asks before it brings the keyboard up
+        QInputMethodQueryEvent query(Qt::ImEnabled);
+        QCoreApplication::sendEvent(widget, &query);
+        return query.value(Qt::ImEnabled).toBool();
+    };
+    const QList<QWidget*> all = window.findChildren<QWidget*>();
+    for (int press = 1; press <= 4; ++press) {  // off, on, off, on: the second press undoes the first, every time
+        button->click();
+        const bool on = button->isChecked();
+        EXPECT_EQ(on, (press % 2 == 0) == DeviceKeyboard::startAllowed);
+        for (const char* name : {"lcd", "search", "statisticsValues", "percentFirst", "percentSecond", "inspectorDecimal",
+                                 "inspectorBinary", "inspectorHex"})
+            EXPECT_EQ(takesAnInputMethod(child<QWidget>(window, name)), on) << name << " at press " << press;
+        if (on) continue;
+        for (QWidget* widget : all)  // nothing in the window, whatever it is, can bring the keyboard up
+            EXPECT_FALSE(takesAnInputMethod(widget)) << widget->metaObject()->className() << " " << widget->objectName().toStdString();
+    }
 }
 
 TEST(MainWindow, TheEditButtonReachesEveryEditAction) {

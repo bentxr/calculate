@@ -21,6 +21,7 @@ endif()
 qt_add_library(calculate-ui STATIC
     src/constanttext.cpp
     src/detailscard.cpp
+    src/devicekeyboard.cpp
     src/entry.cpp
     src/formulatip.cpp
     src/functiontext.cpp

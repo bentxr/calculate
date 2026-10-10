@@ -13,7 +13,6 @@
 #include <QFontDatabase>
 #include <QFontMetricsF>
 #include <QGuiApplication>
-#include <QInputMethod>
 #include <QInputMethodEvent>
 #include <QHBoxLayout>
 #include <QKeyEvent>
@@ -82,11 +81,7 @@ Lcd::Lcd(QWidget* parent) : QWidget(parent) {
     Q_UNUSED(accessible)
     setFocusPolicy(Qt::StrongFocus);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);  // never shorter than sizeHint()
-#ifdef Q_OS_WASM
-    setAttribute(Qt::WA_InputMethodEnabled, false);  // a phone's keyboard would cover the keypad
-#else
     setAttribute(Qt::WA_InputMethodEnabled, true);
-#endif
     scroll_ = new QScrollBar(Qt::Vertical, this);
     scroll_->hide();
     bar_ = new QWidget(this);
@@ -198,16 +193,6 @@ void Lcd::setInput(const QString& text) {
 void Lcd::finishName() {
     typing::finishName(entry_);
     changed();
-}
-
-void Lcd::setSystemKeyboard(bool on) {
-    setAttribute(Qt::WA_InputMethodEnabled, on);
-    if (on) {
-        setFocus();
-        QGuiApplication::inputMethod()->show();
-    } else {
-        QGuiApplication::inputMethod()->hide();
-    }
 }
 
 void Lcd::selectAll() {
