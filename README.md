@@ -57,6 +57,7 @@ export QT_WASM=/path/to/Qt/6.11.2/wasm_multithread
 export QT_HOST=/path/to/Qt/6.11.2/gcc_64
 cmake --preset wasm-ci && cmake --build --preset wasm-ci
 tools/serve.py build/wasm-ci      # http://127.0.0.1:8765/calculate.html
+tests/browser/device_keyboard.py build/wasm-ci   # the browser's own test; needs chromedriver
 ```
 
 </details>
