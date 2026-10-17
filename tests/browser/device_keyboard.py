@@ -5,8 +5,8 @@ Keyboard button is on.
 A browser offers that keyboard when an editable element that does not decline it (inputmode "none")
 takes the focus, so the checks are about the page's focus. Whatever is tapped, nothing of the kind takes
 it, except at one place, the Keyboard button, and a second tap there takes it away again. A physical
-keyboard types in both states. The button is found by tapping, not by coordinates, so the layout is free
-to change.
+keyboard types in both states. The button is found by tapping (the page swept from the top, then from the
+bottom), not by coordinates, so the layout is free to change.
 
 Usage: tests/browser/device_keyboard.py build/wasm   (needs chromedriver and its browser)"""
 import json, os, socket, subprocess, sys, time, urllib.request
@@ -142,21 +142,27 @@ def check(name, page):
     expect(not focus["invites"], f"at start the focus invites the device keyboard: {focus['is']}")
 
     # Whatever is tapped, nothing invites the keyboard, except at one place: there a second tap undoes the first.
-    places, invitations = [], page.focus()["invitations"]
+    # The page is swept from the top and, fresh again, from the bottom: a tap may change the mode (Plot hides the
+    # screen and its Keyboard button), so each sweep sees the modes its earlier taps chose.
+    places = []
     width, height = page.size
-    for x, y in [(x, y) for y in range(STEP // 2, height, STEP) for x in range(STEP // 2, width, STEP)]:
-        page.press(x, y)
-        focus = page.focus()
-        if not focus["invites"] and focus["invitations"] == invitations:
-            page.escape()  # whatever else the tap opened
-            continue
-        places.append((x, y))
-        page.press(x, y)
-        again = page.focus()
-        invitations = again["invitations"]
-        if not expect(not again["invites"],
-                      f"a tap at {x},{y} gave the focus to {focus['is']}, which invites the device keyboard, and a second tap did not take it away"):
-            return failures
+    grid = [(x, y) for y in range(STEP // 2, height, STEP) for x in range(STEP // 2, width, STEP)]
+    for order in (grid, grid[::-1]):
+        page.load()
+        invitations = page.focus()["invitations"]
+        for x, y in order:
+            page.press(x, y)
+            focus = page.focus()
+            if not focus["invites"] and focus["invitations"] == invitations:
+                page.escape()  # whatever else the tap opened
+                continue
+            places.append((x, y))
+            page.press(x, y)
+            again = page.focus()
+            invitations = again["invitations"]
+            if not expect(not again["invites"],
+                          f"a tap at {x},{y} gave the focus to {focus['is']}, which invites the device keyboard, and a second tap did not take it away"):
+                return failures
     if not expect(places, "no tap anywhere invited the device keyboard: the Keyboard button was not found"):
         return failures
     xs, ys = [x for x, _ in places], [y for _, y in places]
