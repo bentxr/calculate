@@ -117,6 +117,7 @@ TEST(PlotCanvas, IsThePlotPagesCanvas) {
     ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
     window.layOutKeys(QSize(1280, 800));
     window.findChild<QListWidget*>("modes")->setCurrentRow(4);
+    QTest::qWait(50);  // (the page's scroll area lays it out)
     auto* canvas = window.findChild<PlotCanvas*>("plotCanvas");
     ASSERT_NE(canvas, nullptr);
     EXPECT_TRUE(canvas->isVisible());

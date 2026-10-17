@@ -2,8 +2,14 @@
 
 #include <QWidget>
 
+#include "icons.hpp"
+
+#include <QList>
+#include <utility>
+
 class PlotCanvas;
 class QHBoxLayout;
+class QLabel;
 class QToolButton;
 
 // The Plot section's page. Wide: a line across the top (the canvas' tools, then the calculation's context: the angle
@@ -25,7 +31,14 @@ public:
     void setNarrow(bool narrow);
     void retranslate();
 
+protected:
+    void changeEvent(QEvent* event) override;
+
 private:
+    void drawIcons();  // in the theme's text colour
+
+    QList<std::pair<QToolButton*, icons::Kind>> tools_;
+    QLabel* coordinates_ = nullptr;
     QWidget* contextBar_ = nullptr;
     QHBoxLayout* context_ = nullptr;
     QToolButton* details_ = nullptr;

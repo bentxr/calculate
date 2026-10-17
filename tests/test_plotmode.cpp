@@ -46,7 +46,7 @@ void showPhone(MainWindow& window) {
 
 void choose(MainWindow& window, int mode) {
     child<QListWidget>(window, "modes")->setCurrentRow(mode);
-    QApplication::processEvents();
+    QTest::qWait(50);  // (the layouts settle; the plot page's scroll area lays it out)
 }
 
 // The widget's rectangle in the window's coordinates.
@@ -61,7 +61,7 @@ TEST(PlotMode, IsTheFifthMode) {
     EXPECT_EQ(modes->item(plotMode)->text(), "Plot");
     EXPECT_EQ(child<QAction>(window, "mode:4")->text(), "Plot");
     choose(window, plotMode);
-    EXPECT_EQ(child<QStackedWidget>(window, "pages")->currentWidget()->objectName(), "plotPage");
+    EXPECT_TRUE(child<QStackedWidget>(window, "pages")->currentWidget()->isAncestorOf(child<QWidget>(window, "plotPage")));
 }
 
 // The plot section has no calculator screen: the screen, = and the message strip give their room to the plot, and
@@ -144,6 +144,7 @@ TEST(PlotMode, OnAPhoneDetailsTakesThePlaceOfEquals) {
     choose(window, 0);
     EXPECT_TRUE(equals->isVisible());
     EXPECT_FALSE(details->isVisible());
+    EXPECT_EQ(window.width(), width);  // (nothing widened the window on the way back)
     EXPECT_EQ(placed(equals), equalsPlace);
 }
 

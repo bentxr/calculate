@@ -404,8 +404,13 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     inspector_->setObjectName("inspector");
     inspection->setWidget(inspector_);
     pages_->addWidget(inspection);
-    plotPage_ = new PlotPage(pages_);
-    pages_->addWidget(plotPage_);
+    auto* plotting = new QScrollArea(pages_);  // (as the other pages: no minimum width for the window)
+    plotting->setObjectName("plotScroll");
+    plotting->setFrameShape(QFrame::NoFrame);
+    plotting->setWidgetResizable(true);
+    plotPage_ = new PlotPage;
+    plotting->setWidget(plotPage_);
+    pages_->addWidget(plotting);
     main->addWidget(pages_, 1);
     setCentralWidget(central);
     modes_->setCurrentRow(0);
@@ -925,11 +930,12 @@ void MainWindow::sidePolicy(QWidget* w) {
 }
 
 void MainWindow::placeContext() {
-    const bool plot = pages_->currentWidget() == plotPage_;
+    const bool plot = pages_->currentIndex() == 4;
+    QToolButton* details = plotPage_->details();
+    if (!plot) details->hide();  // first: = and Details side by side would widen the phone's top row for a moment
     lcd_->setVisible(!plot);
     messageStrip_->setVisible(!plot);
     equals_->setVisible(!plot);
-    QToolButton* details = plotPage_->details();
     QHBoxLayout* context = plotPage_->context();
     const QList<QWidget*> lent{angle_, type_};
     if (plot && !narrow_) {  // one line over the editor, each at its own height

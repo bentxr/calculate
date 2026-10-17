@@ -8,6 +8,8 @@
 
 #include <mutex>
 
+#include <mutex>
+
 namespace {
 
 // Every embedded font by file name, read on the first call and never changed after: the drawing thread reads the
@@ -31,6 +33,11 @@ const QByteArray* plotFontBytes(const QString& fileName) {
     const auto& all = fonts();
     const auto found = all.constFind(fileName);
     return found == all.constEnd() ? nullptr : &found.value();
+}
+
+void ensurePlotFonts() {
+    static std::once_flag once;
+    std::call_once(once, installPlotFonts);
 }
 
 void installPlotFonts() {

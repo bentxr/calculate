@@ -3,6 +3,7 @@
 #include <QGuiApplication>
 #include <QPainter>
 #include <QPixmap>
+#include <QPolygonF>
 #include <QtMath>
 
 namespace icons {
@@ -50,6 +51,53 @@ QIcon drawn(Kind kind, const QColor& ink, int side) {
         painter.drawEllipse(centre, r, r);
         const QPointF rim = centre + QPointF(r, r) / qSqrt(2.0);
         painter.drawLine(rim, QPointF(0.86 * s, 0.86 * s));
+        break;
+    }
+    case Kind::Home: {  // a house: the roof and the walls with a door
+        painter.drawPolyline(QPolygonF({QPointF(0.12 * s, 0.5 * s), QPointF(0.5 * s, 0.16 * s), QPointF(0.88 * s, 0.5 * s)}));
+        painter.drawPolyline(QPolygonF({QPointF(0.24 * s, 0.42 * s), QPointF(0.24 * s, 0.84 * s), QPointF(0.76 * s, 0.84 * s),
+                                        QPointF(0.76 * s, 0.42 * s)}));
+        painter.drawPolyline(QPolygonF({QPointF(0.42 * s, 0.84 * s), QPointF(0.42 * s, 0.62 * s), QPointF(0.58 * s, 0.62 * s),
+                                        QPointF(0.58 * s, 0.84 * s)}));
+        break;
+    }
+    case Kind::Back:
+    case Kind::Forward: {  // an arrow: its shaft and head, pointing left or right
+        const qreal d = kind == Kind::Back ? 1.0 : -1.0;
+        const auto at = [&](qreal x, qreal y) { return QPointF((0.5 + d * (x - 0.5)) * s, y * s); };
+        painter.drawLine(at(0.16, 0.5), at(0.84, 0.5));
+        painter.drawPolyline(QPolygonF({at(0.44, 0.22), at(0.16, 0.5), at(0.44, 0.78)}));
+        break;
+    }
+    case Kind::Pan: {  // four arrows from the centre: the cross of a move
+        painter.drawLine(QPointF(0.5 * s, 0.1 * s), QPointF(0.5 * s, 0.9 * s));
+        painter.drawLine(QPointF(0.1 * s, 0.5 * s), QPointF(0.9 * s, 0.5 * s));
+        const qreal h = 0.14 * s;
+        for (const QPointF& tip : {QPointF(0.5 * s, 0.1 * s), QPointF(0.5 * s, 0.9 * s), QPointF(0.1 * s, 0.5 * s), QPointF(0.9 * s, 0.5 * s)}) {
+            const QPointF back = (QPointF(0.5 * s, 0.5 * s) - tip) / (0.4 * s) * h;  // towards the centre
+            const QPointF side(back.y(), -back.x());
+            painter.drawPolyline(QPolygonF({tip + back + side, tip, tip + back - side}));
+        }
+        break;
+    }
+    case Kind::Zoom: {  // a magnifier over a dashed rectangle: the zoom to a rectangle
+        QPen dashed = pen;
+        dashed.setWidthF(s / 16.0);
+        dashed.setStyle(Qt::DashLine);
+        painter.setPen(dashed);
+        painter.drawRect(QRectF(0.1 * s, 0.1 * s, 0.5 * s, 0.4 * s));
+        painter.setPen(pen);
+        const QPointF centre(0.5 * s, 0.5 * s);
+        const qreal r = 0.2 * s;
+        painter.drawEllipse(centre, r, r);
+        painter.drawLine(centre + QPointF(r, r) / qSqrt(2.0), QPointF(0.88 * s, 0.88 * s));
+        break;
+    }
+    case Kind::Save: {  // a tray and an arrow down into it
+        painter.drawLine(QPointF(0.5 * s, 0.12 * s), QPointF(0.5 * s, 0.64 * s));
+        painter.drawPolyline(QPolygonF({QPointF(0.28 * s, 0.42 * s), QPointF(0.5 * s, 0.64 * s), QPointF(0.72 * s, 0.42 * s)}));
+        painter.drawPolyline(QPolygonF({QPointF(0.14 * s, 0.62 * s), QPointF(0.14 * s, 0.86 * s), QPointF(0.86 * s, 0.86 * s),
+                                        QPointF(0.86 * s, 0.62 * s)}));
         break;
     }
     }

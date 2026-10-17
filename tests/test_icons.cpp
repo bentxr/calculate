@@ -14,7 +14,8 @@ QImage image(icons::Kind kind, const QColor& ink) {
 
 TEST(Icons, EveryKindIsLineArtInTheInk) {
     QList<QImage> images;
-    for (icons::Kind kind : {icons::Kind::Settings, icons::Kind::Keyboard, icons::Kind::Search}) {
+    for (icons::Kind kind : {icons::Kind::Settings, icons::Kind::Keyboard, icons::Kind::Search, icons::Kind::Home, icons::Kind::Back,
+                             icons::Kind::Forward, icons::Kind::Pan, icons::Kind::Zoom, icons::Kind::Save}) {
         const QImage drawn = image(kind, Qt::red);
         ASSERT_EQ(drawn.size(), QSize(32, 32));
         int painted = 0;
@@ -29,7 +30,6 @@ TEST(Icons, EveryKindIsLineArtInTheInk) {
         EXPECT_LT(painted, 32 * 32 / 2) << static_cast<int>(kind);   // … as lines, not a filled square
         images << drawn;
     }
-    EXPECT_NE(images[0], images[1]);  // three different pictures
-    EXPECT_NE(images[1], images[2]);
-    EXPECT_NE(images[0], images[2]);
+    for (int i = 0; i < images.size(); ++i)  // all different pictures
+        for (int j = i + 1; j < images.size(); ++j) EXPECT_NE(images[i], images[j]) << i << " " << j;
 }

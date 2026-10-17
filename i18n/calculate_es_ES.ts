@@ -607,9 +607,39 @@
 <context>
     <name>PlotPage</name>
     <message>
-        <location filename="../src/plotpage.cpp" line="41"/>
+        <location filename="../src/plotpage.cpp" line="108"/>
         <source>Details</source>
         <translation>Detalles</translation>
+    </message>
+    <message>
+        <location filename="../src/plotpage.cpp" line="110"/>
+        <source>Home: the first view</source>
+        <translation>Inicio: la primera vista</translation>
+    </message>
+    <message>
+        <location filename="../src/plotpage.cpp" line="111"/>
+        <source>Back: the previous view</source>
+        <translation>Atrás: la vista anterior</translation>
+    </message>
+    <message>
+        <location filename="../src/plotpage.cpp" line="112"/>
+        <source>Forward: the next view</source>
+        <translation>Adelante: la vista siguiente</translation>
+    </message>
+    <message>
+        <location filename="../src/plotpage.cpp" line="113"/>
+        <source>Pan: the left button moves the view, the right button zooms it</source>
+        <translation>Desplazar: el botón izquierdo mueve la vista, el derecho la amplía o reduce</translation>
+    </message>
+    <message>
+        <location filename="../src/plotpage.cpp" line="114"/>
+        <source>Zoom to a rectangle: the left button zooms in, the right button out</source>
+        <translation>Zoom a un rectángulo: el botón izquierdo acerca, el derecho aleja</translation>
+    </message>
+    <message>
+        <location filename="../src/plotpage.cpp" line="115"/>
+        <source>Save the figure as PNG</source>
+        <translation>Guardar la figura como PNG</translation>
     </message>
 </context>
 <context>
