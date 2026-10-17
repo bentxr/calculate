@@ -936,6 +936,9 @@ void MainWindow::placeContext() {
     lcd_->setVisible(!plot);
     messageStrip_->setVisible(!plot);
     equals_->setVisible(!plot);
+    // Plot has no keys for the device keyboard to cover, and its fields need typing: allowed there; elsewhere the
+    // Keyboard button decides
+    deviceKeyboard_->setAllowed(plot || keyboardButton_->isChecked());
     QHBoxLayout* context = plotPage_->context();
     const QList<QWidget*> lent{angle_, type_};
     if (plot && !narrow_) {  // one line over the editor, each at its own height

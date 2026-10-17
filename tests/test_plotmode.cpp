@@ -5,6 +5,7 @@
 
 #include <QAction>
 #include <QComboBox>
+#include <QInputMethodQueryEvent>
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
@@ -245,4 +246,38 @@ TEST(PlotMode, EveryTextOfThePlotPageReadsInSpanish) {
         EXPECT_NE(inSpanish.value(it.key()), it.value()) << it.key().toStdString() << ": \"" << it.value().toStdString() << "\"";
     }
     EXPECT_GT(checked, 40);
+}
+
+namespace {
+
+// What the platform asks a box before it brings the device's keyboard up.
+bool takesAnInputMethod(QWidget* widget) {
+    QInputMethodQueryEvent query(Qt::ImEnabled);
+    QCoreApplication::sendEvent(widget, &query);
+    return query.value(Qt::ImEnabled).toBool();
+}
+
+}  // namespace
+
+// In the browser the device keyboard waits for the Keyboard button, so that it does not cover the keys. Plot has no
+// keys, and its fields (titles, labels, the search, the data) need typing: while Plot is the mode the device keyboard
+// is allowed; back in another mode the button decides again.
+TEST(PlotMode, AllowsTheDeviceKeyboardForItsFields) {
+    MainWindow window;
+    showPhone(window);
+    auto* button = child<QToolButton>(window, "keyboardButton");
+    button->setChecked(false);  // the browser's start
+    auto* title = child<QLineEdit>(window, "edit:title");
+    auto* entry = child<Lcd>(window, "lcd");
+    EXPECT_FALSE(takesAnInputMethod(entry));
+    choose(window, plotMode);
+    EXPECT_TRUE(takesAnInputMethod(title));
+    EXPECT_TRUE(takesAnInputMethod(child<QLineEdit>(window, "plotSearch")));
+    choose(window, 0);
+    EXPECT_FALSE(takesAnInputMethod(entry));
+    EXPECT_FALSE(button->isChecked());
+    button->setChecked(true);
+    choose(window, plotMode);
+    choose(window, 0);
+    EXPECT_TRUE(takesAnInputMethod(entry));  // the button's choice, kept
 }

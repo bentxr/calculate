@@ -8,6 +8,10 @@ it, except at one place, the Keyboard button, and a second tap there takes it aw
 keyboard types in both states. The button is found by tapping (the page swept from the top, then from the
 bottom), not by coordinates, so the layout is free to change.
 
+In Plot there are no keys to cover and its fields need typing, so there the app allows the keyboard: a tap on
+a field brings it up and a second tap keeps it. Such a place must be one of Plot's: tapped again on a fresh page
+(which starts in the calculator) it brings nothing up.
+
 Usage: tests/browser/device_keyboard.py build/wasm   (needs chromedriver and its browser)"""
 import json, os, socket, subprocess, sys, time, urllib.request
 
@@ -144,7 +148,7 @@ def check(name, page):
     # Whatever is tapped, nothing invites the keyboard, except at one place: there a second tap undoes the first.
     # The page is swept from the top and, fresh again, from the bottom: a tap may change the mode (Plot hides the
     # screen and its Keyboard button), so each sweep sees the modes its earlier taps chose.
-    places = []
+    places, fields = [], []
     width, height = page.size
     grid = [(x, y) for y in range(STEP // 2, height, STEP) for x in range(STEP // 2, width, STEP)]
     for order in (grid, grid[::-1]):
@@ -156,13 +160,23 @@ def check(name, page):
             if not focus["invites"] and focus["invitations"] == invitations:
                 page.escape()  # whatever else the tap opened
                 continue
-            places.append((x, y))
             page.press(x, y)
             again = page.focus()
             invitations = again["invitations"]
-            if not expect(not again["invites"],
-                          f"a tap at {x},{y} gave the focus to {focus['is']}, which invites the device keyboard, and a second tap did not take it away"):
-                return failures
+            if again["invites"]:  # a field: kept on a second tap (Plot's, checked below)
+                fields.append((x, y))
+                page.escape()
+                continue
+            places.append((x, y))
+    # A field that took the keyboard is one of Plot's: on a fresh page, in the calculator, the same tap brings
+    # nothing up (a few places, spread over those found).
+    for x, y in fields[:: max(1, len(fields) // 6)][:6]:
+        page.load()
+        page.press(x, y)
+        focus = page.focus()
+        if not expect(not focus["invites"],
+                      f"a tap at {x},{y} on a fresh page gave the focus to {focus['is']}, which invites the device keyboard"):
+            return failures
     if not expect(places, "no tap anywhere invited the device keyboard: the Keyboard button was not found"):
         return failures
     xs, ys = [x for x, _ in places], [y for _, y in places]
@@ -188,6 +202,10 @@ def check(name, page):
         page.clipboard("52")
         page.keys("v", control=True)
         typed("3", "523", "with the keyboard off again, after pasting 52")
+    print(f"{name}: {len(fields)} taps on Plot's fields brought the keyboard up", flush=True)
+    # where the sweep reaches Plot (the desktop's rail; a phone's modes are in its menu) its fields take the keyboard
+    if name == "desktop":
+        expect(fields, "no tap on Plot's fields brought the device keyboard up")
     return failures
 
 
