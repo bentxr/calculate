@@ -2,6 +2,7 @@
 
 #include <QWidget>
 
+class PlotCanvas;
 class QHBoxLayout;
 class QToolButton;
 
@@ -19,6 +20,7 @@ public:
     // Details of the plotted series' calculations: their errors and cautions. The window places it (wide: in the
     // context bar; phone: in its top row, where = was).
     QToolButton* details() const { return details_; }
+    PlotCanvas* canvas() const { return canvas_; }
     // The phone's arrangement has no context bar and no editor beside the canvas.
     void setNarrow(bool narrow);
     void retranslate();
@@ -27,5 +29,6 @@ private:
     QWidget* contextBar_ = nullptr;
     QHBoxLayout* context_ = nullptr;
     QToolButton* details_ = nullptr;
+    PlotCanvas* canvas_ = nullptr;
     QWidget* editor_ = nullptr;
 };

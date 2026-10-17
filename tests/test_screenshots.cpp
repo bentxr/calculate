@@ -77,7 +77,7 @@ TEST(Screenshots, Plot) {
             ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
             window.layOutKeys(size);
             window.findChild<QListWidget*>("modes")->setCurrentRow(4);
-            QTest::qWait(100);
+            QTest::qWait(1500);  // the canvas' first drawing (the fonts are read once)
             const bool phone = size.width() < size.height();
             const QString name = QStringLiteral("/plot-%1-%2.png").arg(dark ? "dark" : "light", phone ? "phone" : "desktop");
             EXPECT_TRUE(window.grab().save(directory + name));

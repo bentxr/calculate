@@ -43,8 +43,10 @@ qt_add_library(calculate-ui STATIC
     src/licences.cpp
     src/longpress.cpp
     src/mainwindow.cpp
+    src/plotcanvas.cpp
     src/plotfonts.cpp
     src/plotpage.cpp
+    src/plotworker.cpp
     src/popupplacement.cpp
     src/presenter.cpp
     src/settings.cpp
