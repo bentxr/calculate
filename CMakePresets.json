@@ -8,7 +8,8 @@
       "binaryDir": "${sourceDir}/build/desktop",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "FETCHCONTENT_SOURCE_DIR_CALCULATE-CORE": "${sourceDir}/../calculate-core"
+        "FETCHCONTENT_SOURCE_DIR_CALCULATE-CORE": "${sourceDir}/../calculate-core",
+        "FETCHCONTENT_SOURCE_DIR_CALCULATE-PLOT": "${sourceDir}/../calculate-plot"
       }
     },
     {
@@ -27,7 +28,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "QT_HOST_PATH": "$env{QT_HOST}",
-        "FETCHCONTENT_SOURCE_DIR_CALCULATE-CORE": "${sourceDir}/../calculate-core"
+        "FETCHCONTENT_SOURCE_DIR_CALCULATE-CORE": "${sourceDir}/../calculate-core",
+        "FETCHCONTENT_SOURCE_DIR_CALCULATE-PLOT": "${sourceDir}/../calculate-plot"
       }
     },
     {

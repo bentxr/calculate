@@ -18,6 +18,15 @@ if(EMSCRIPTEN)  # the multithread Qt kit links a shared-memory module: every obj
     target_compile_options(calculate-core PRIVATE -pthread)
 endif()
 
+# The plots: figures drawn as matplotlib draws them (FreeType and HarfBuzz of its own, linked before Qt so that
+# the browser build holds one copy of each; the desktop executables keep theirs private: --exclude-libs).
+set(CALCULATE_PLOT_THREADS ON CACHE BOOL "" FORCE)
+FetchContent_Declare(calculate-plot
+    GIT_REPOSITORY https://github.com/bentxr/calculate-plot.git
+    GIT_TAG        release-staging
+    EXCLUDE_FROM_ALL)
+FetchContent_MakeAvailable(calculate-plot)
+
 qt_add_library(calculate-ui STATIC
     src/constanttext.cpp
     src/detailscard.cpp
@@ -33,6 +42,7 @@ qt_add_library(calculate-ui STATIC
     src/lcd.cpp
     src/longpress.cpp
     src/mainwindow.cpp
+    src/plotfonts.cpp
     src/popupplacement.cpp
     src/presenter.cpp
     src/settings.cpp
@@ -47,7 +57,7 @@ if(EMSCRIPTEN)  # the browser's asynchronous clipboard
     target_sources(calculate-ui PRIVATE src/webclipboard.cpp)
 endif()
 target_include_directories(calculate-ui PUBLIC ${PROJECT_SOURCE_DIR}/src)
-target_link_libraries(calculate-ui PUBLIC Qt6::Widgets calculate-core)
+target_link_libraries(calculate-ui PUBLIC calculate-plot Qt6::Widgets calculate-core)  # (calculate-plot first: see above)
 target_compile_options(calculate-ui PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
 # The screen's typeface: JetBrains Mono, SIL Open Font License 1.1 (its licence ships with it).
@@ -60,11 +70,17 @@ set(font_files ${jetbrainsmono_SOURCE_DIR}/fonts/ttf/JetBrainsMono-Regular.ttf $
 set_source_files_properties(${jetbrainsmono_SOURCE_DIR}/fonts/ttf/JetBrainsMono-Regular.ttf PROPERTIES QT_RESOURCE_ALIAS JetBrainsMono-Regular.ttf)
 set_source_files_properties(${jetbrainsmono_SOURCE_DIR}/OFL.txt PROPERTIES QT_RESOURCE_ALIAS JetBrainsMono-OFL.txt)
 qt_add_resources(calculate-ui fonts PREFIX /fonts FILES ${font_files})
+# matplotlib's fonts, which the plots are drawn with: given to calculate-plot as bytes (calculate_plot::useFontBytes)
+file(GLOB plot_fonts ${calculate-plot_SOURCE_DIR}/fonts/ttf/*.ttf)
+qt_add_resources(calculate-ui plotfonts PREFIX /plotfonts BASE ${calculate-plot_SOURCE_DIR}/fonts/ttf FILES ${plot_fonts})
 qt_add_translations(TARGETS calculate-ui TS_FILE_DIR i18n NO_GENERATE_PLURALS_TS_FILE
     LUPDATE_OPTIONS -no-obsolete)
 
 qt_add_executable(calculate src/main.cpp)
 target_link_libraries(calculate PRIVATE calculate-ui)
+if(NOT EMSCRIPTEN AND NOT APPLE)
+    target_link_options(calculate PRIVATE -Wl,--exclude-libs,ALL)
+endif()
 set_target_properties(calculate PROPERTIES WIN32_EXECUTABLE ON MACOSX_BUNDLE ON)
 
 include(CTest)
