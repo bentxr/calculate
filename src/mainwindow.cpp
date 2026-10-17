@@ -10,6 +10,7 @@
 #include "keysizing.hpp"
 #include "lcd.hpp"
 #include "longpress.hpp"
+#include "plotpage.hpp"
 #include "popupplacement.hpp"
 #include "presenter.hpp"
 #include "settings.hpp"
@@ -123,7 +124,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     panelToggle_->setAutoRaise(true);
     modes_ = new QListWidget(rail_);
     modes_->setObjectName("modes");
-    modes_->addItems({QString(), QString(), QString(), QString()});  // Calculator, Statistics, Percentages, IEEE 754 (see retranslate)
+    modes_->addItems({QString(), QString(), QString(), QString(), QString()});  // Calculator, Statistics, Percentages, IEEE 754, Plot (see retranslate)
     modes_->setFixedWidth(140);
     settingsButton_ = new QToolButton(rail_);
     settingsButton_->setObjectName("settingsButton");
@@ -188,11 +189,12 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     proceed_->setVisible(false);
     strip->addWidget(message_, 1);
     strip->addWidget(proceed_, 0, Qt::AlignTop);
-    auto* stripHolder = new QWidget(central);
-    stripHolder->setLayout(strip);
+    messageStrip_ = new QWidget(central);
+    messageStrip_->setObjectName("messageStrip");
+    messageStrip_->setLayout(strip);
     strip->setContentsMargins(0, 0, 0, 0);
-    stripHolder->setFixedHeight(qMax(2 * fontMetrics().lineSpacing(), proceed_->sizeHint().height()) + 4);
-    main->addWidget(stripHolder);
+    messageStrip_->setFixedHeight(qMax(2 * fontMetrics().lineSpacing(), proceed_->sizeHint().height()) + 4);
+    main->addWidget(messageStrip_);
 
     // Along the screen's bottom edge: Details, and the messages that need an answer.
     detailsButton_ = new QToolButton(lcd_);
@@ -401,6 +403,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     inspector_->setObjectName("inspector");
     inspection->setWidget(inspector_);
     pages_->addWidget(inspection);
+    plotPage_ = new PlotPage(pages_);
+    pages_->addWidget(plotPage_);
     main->addWidget(pages_, 1);
     setCentralWidget(central);
     modes_->setCurrentRow(0);
@@ -443,6 +447,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
         if (settings::liveCalculation()) liveTimer_.start();
     });
     connect(modes_, &QListWidget::currentRowChanged, pages_, &QStackedWidget::setCurrentIndex);
+    connect(modes_, &QListWidget::currentRowChanged, this, &MainWindow::placeContext);
     connect(lcd_, &Lcd::evaluateRequested, this, &MainWindow::evaluate);
     connect(lcd_, &Lcd::historyRequested, this, [this](int step) { replay(historyIndex_ + step); });
     connect(equals_, &QPushButton::clicked, this, &MainWindow::evaluate);
@@ -857,12 +862,8 @@ void MainWindow::arrange() {
         }
         screenRow_->setDirection(QBoxLayout::TopToBottom);
         side_->setDirection(QBoxLayout::LeftToRight);
-        for (QWidget* w : side) {
-            w->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-            w->setMinimumWidth(0);
-            w->setMaximumWidth(QWIDGETSIZE_MAX);
-        }
-        for (QWidget* w : side + QList<QWidget*>{panelToggle_, settingsButton_}) w->setFixedHeight(touchTarget);
+        for (QWidget* w : side) sidePolicy(w);
+        for (QWidget* w : QList<QWidget*>{panelToggle_, settingsButton_}) w->setFixedHeight(touchTarget);
         column->removeWidget(commonBlock_);
         keyboards_->setDirection(QBoxLayout::TopToBottom);
         keyboards_->addStretch();
@@ -889,12 +890,7 @@ void MainWindow::arrange() {
         }
         screenRow_->setDirection(QBoxLayout::LeftToRight);
         side_->setDirection(QBoxLayout::TopToBottom);
-        for (QWidget* w : side) {
-            w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);  // as wide as the widest: see retranslate
-            w->setMinimumHeight(0);
-            w->setMaximumHeight(QWIDGETSIZE_MAX);
-            if (sideWidth_ > 0) w->setFixedWidth(sideWidth_);
-        }
+        for (QWidget* w : side) sidePolicy(w);
         if (drawerLayout->indexOf(commonHeader_) >= 0) {
             drawerLayout->removeWidget(commonHeader_);
             static_cast<QVBoxLayout*>(commonBlock_->layout())->insertWidget(0, commonHeader_);
@@ -909,6 +905,62 @@ void MainWindow::arrange() {
         keyboards_->addStretch();
     }
     placeCommon();
+    plotPage_->setNarrow(narrow_);
+    placeContext();
+}
+
+void MainWindow::sidePolicy(QWidget* w) {
+    if (narrow_) {
+        w->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        w->setMinimumWidth(0);
+        w->setMaximumWidth(QWIDGETSIZE_MAX);
+        w->setFixedHeight(touchTarget);
+    } else {
+        w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);  // as wide as the widest: see retranslate
+        w->setMinimumHeight(0);
+        w->setMaximumHeight(QWIDGETSIZE_MAX);
+        if (sideWidth_ > 0) w->setFixedWidth(sideWidth_);
+    }
+}
+
+void MainWindow::placeContext() {
+    const bool plot = pages_->currentWidget() == plotPage_;
+    lcd_->setVisible(!plot);
+    messageStrip_->setVisible(!plot);
+    equals_->setVisible(!plot);
+    QToolButton* details = plotPage_->details();
+    QHBoxLayout* context = plotPage_->context();
+    const QList<QWidget*> lent{angle_, type_};
+    if (plot && !narrow_) {  // one line over the editor, each at its own height
+        for (QWidget* w : lent) {
+            side_->removeWidget(w);
+            if (context->indexOf(w) < 0) context->insertWidget(context->indexOf(details), w);
+        }
+        if (side_->indexOf(details) >= 0) {
+            side_->removeWidget(details);
+            context->addWidget(details);
+        }
+        const int height = angle_->sizeHint().height();
+        for (QWidget* w : lent + QList<QWidget*>{details}) {
+            w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+            w->setFixedHeight(height);
+        }
+    } else {  // beside the screen (wide) or in the top row (phone), in their order, with Details where = is
+        for (QWidget* w : lent)
+            if (side_->indexOf(w) < 0) {
+                context->removeWidget(w);
+                side_->insertWidget(side_->indexOf(equals_), w);
+            }
+        if (plot && side_->indexOf(details) < 0) {
+            context->removeWidget(details);
+            side_->insertWidget(side_->indexOf(equals_) + 1, details);
+        } else if (!plot && side_->indexOf(details) >= 0) {
+            side_->removeWidget(details);
+            context->addWidget(details);
+        }
+        for (QWidget* w : lent + QList<QWidget*>{details}) sidePolicy(w);
+    }
+    details->setVisible(plot);
 }
 
 void MainWindow::relabelLetters() {
@@ -1170,7 +1222,7 @@ void MainWindow::retranslate() {
     setWindowTitle(tr("calculate"));
     panelToggle_->setToolTip(tr("Show or hide the panel"));
     settingsButton_->setToolTip(tr("Settings"));
-    const QStringList modes{tr("Calculator"), tr("Statistics"), tr("Percentages"), tr("IEEE 754")};
+    const QStringList modes{tr("Calculator"), tr("Statistics"), tr("Percentages"), tr("IEEE 754"), tr("Plot")};
     for (int i = 0; i < modes.size(); ++i) modes_->item(i)->setText(modes[i]);
     for (int i = 0; i < modes_->count(); ++i) findChild<QAction*>(QStringLiteral("mode:%1").arg(i))->setText(modes_->item(i)->text());
     drawerToggle_->setText(tr("More") + QStringLiteral(" ▾"));
@@ -1184,6 +1236,7 @@ void MainWindow::retranslate() {
     type_->retranslate();
     equals_->setText(tr("="));
     detailsButton_->setText(tr("Details"));
+    plotPage_->retranslate();
     copyButton_->setText(tr("Copy"));
     copyButton_->setAccessibleName(copyButton_->text());
     copyAsMenu_->setTitle(tr("Copy as"));

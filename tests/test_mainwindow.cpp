@@ -1833,7 +1833,7 @@ TEST(MainWindow, ARightClickOffersTheKeysOtherFaces) {
 TEST(MainWindow, ThePercentagesModeAnswersWithTheirBounds) {
     MainWindow window;
     auto* modes = child<QListWidget>(window, "modes");
-    ASSERT_EQ(modes->count(), 4);  // with the IEEE 754 tool
+    ASSERT_EQ(modes->count(), 5);  // with the IEEE 754 tool and Plot
     modes->setCurrentRow(2);
     child<QLineEdit>(window, "percentFirst")->setText("80");
     child<QLineEdit>(window, "percentSecond")->setText("10");
@@ -2260,7 +2260,7 @@ TEST(MainWindow, TheCardShowsHowTheResultIsStored) {
 TEST(MainWindow, TheInspectorIsAPageOfTheRail) {
     MainWindow window;
     auto* modes = child<QListWidget>(window, "modes");
-    ASSERT_EQ(modes->count(), 4);  // Calculator, Statistics, Percentages, IEEE 754
+    ASSERT_EQ(modes->count(), 5);  // Calculator, Statistics, Percentages, IEEE 754, Plot
     EXPECT_EQ(modes->item(3)->text(), "IEEE 754");
     modes->setCurrentRow(3);
     EXPECT_EQ(child<QStackedWidget>(window, "pages")->currentIndex(), 3);

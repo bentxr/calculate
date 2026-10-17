@@ -18,6 +18,7 @@ add_executable(calculate-tests
     test_lcd.cpp
     test_mainwindow.cpp
     test_plot.cpp
+    test_plotmode.cpp
     test_popupplacement.cpp
     test_presenter.cpp
     test_screenshots.cpp

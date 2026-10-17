@@ -6,6 +6,7 @@
 
 #include <QDir>
 #include <QLabel>
+#include <QListWidget>
 #include <QTest>
 #include <QToolButton>
 
@@ -60,5 +61,26 @@ TEST(Screenshots, Inspector) {
                 EXPECT_TRUE(window.grab().save(directory + name));
             }
     settings::setLanguage(settings::Language::English);
+    settings::setTheme(settings::Theme::System);
+}
+
+TEST(Screenshots, Plot) {
+    const QString directory = qEnvironmentVariable("CALCULATE_SCREENSHOTS");
+    if (directory.isEmpty()) GTEST_SKIP() << "set CALCULATE_SCREENSHOTS to a directory";
+    QDir().mkpath(directory);
+    for (const bool dark : {false, true})
+        for (const QSize size : {QSize(1280, 800), QSize(390, 844)}) {
+            settings::setTheme(dark ? settings::Theme::Dark : settings::Theme::Light);
+            MainWindow window;
+            window.resize(size);
+            window.show();
+            ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+            window.layOutKeys(size);
+            window.findChild<QListWidget*>("modes")->setCurrentRow(4);
+            QTest::qWait(100);
+            const bool phone = size.width() < size.height();
+            const QString name = QStringLiteral("/plot-%1-%2.png").arg(dark ? "dark" : "light", phone ? "phone" : "desktop");
+            EXPECT_TRUE(window.grab().save(directory + name));
+        }
     settings::setTheme(settings::Theme::System);
 }
