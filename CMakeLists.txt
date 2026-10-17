@@ -44,6 +44,7 @@ qt_add_library(calculate-ui STATIC
     src/longpress.cpp
     src/mainwindow.cpp
     src/plotcanvas.cpp
+    src/plotdata.cpp
     src/ploteditor.cpp
     src/plotfonts.cpp
     src/plotpage.cpp

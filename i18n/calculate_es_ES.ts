@@ -605,135 +605,184 @@
     </message>
 </context>
 <context>
-    <name>PlotEditor</name>
+    <name>PlotData</name>
     <message>
-        <location filename="../src/ploteditor.cpp" line="150"/>
-        <source>Title</source>
-        <translation>Título</translation>
+        <location filename="../src/plotdata.cpp" line="269"/>
+        <location filename="../src/plotdata.cpp" line="273"/>
+        <source>The data of %1 are not a list of numbers: they cannot be shown as a table.</source>
+        <translation>Los datos de %1 no son una lista de números: no se pueden mostrar como tabla.</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="151"/>
-        <source>x label</source>
-        <translation>Etiqueta x</translation>
+        <location filename="../src/plotdata.cpp" line="292"/>
+        <source>This series&apos; data cannot be shown as a table.</source>
+        <translation>Los datos de esta serie no se pueden mostrar como tabla.</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="152"/>
-        <source>y label</source>
-        <translation>Etiqueta y</translation>
+        <location filename="../src/plotdata.cpp" line="341"/>
+        <source>Not a number: %1</source>
+        <translation>No es un número: %1</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="161"/>
-        <source>Series</source>
-        <translation>Serie</translation>
+        <location filename="../src/plotdata.cpp" line="390"/>
+        <source>No columns of numbers to import: each row needs two numbers, separated by tabs, semicolons or commas.</source>
+        <translation>No hay columnas de números que importar: cada fila necesita dos números, separados por tabuladores, puntos y coma o comas.</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="195"/>
-        <source>Colour</source>
-        <translation>Color</translation>
+        <location filename="../src/plotdata.cpp" line="407"/>
+        <source>Add series</source>
+        <translation>Añadir serie</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="196"/>
-        <source>Width</source>
-        <translation>Grosor</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="197"/>
-        <source>Label</source>
-        <translation>Etiqueta</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="204"/>
+        <location filename="../src/plotdata.cpp" line="408"/>
         <source>Line</source>
         <translation>Línea</translation>
     </message>
     <message>
+        <location filename="../src/plotdata.cpp" line="409"/>
+        <source>Points</source>
+        <translation>Puntos</translation>
+    </message>
+    <message>
+        <location filename="../src/plotdata.cpp" line="410"/>
+        <source>Bars</source>
+        <translation>Barras</translation>
+    </message>
+    <message>
+        <location filename="../src/plotdata.cpp" line="411"/>
+        <source>Remove</source>
+        <translation>Quitar</translation>
+    </message>
+</context>
+<context>
+    <name>PlotEditor</name>
+    <message>
+        <location filename="../src/ploteditor.cpp" line="151"/>
+        <source>Title</source>
+        <translation>Título</translation>
+    </message>
+    <message>
+        <location filename="../src/ploteditor.cpp" line="152"/>
+        <source>x label</source>
+        <translation>Etiqueta x</translation>
+    </message>
+    <message>
+        <location filename="../src/ploteditor.cpp" line="153"/>
+        <source>y label</source>
+        <translation>Etiqueta y</translation>
+    </message>
+    <message>
+        <location filename="../src/ploteditor.cpp" line="162"/>
+        <source>Series</source>
+        <translation>Serie</translation>
+    </message>
+    <message>
+        <location filename="../src/ploteditor.cpp" line="196"/>
+        <source>Colour</source>
+        <translation>Color</translation>
+    </message>
+    <message>
+        <location filename="../src/ploteditor.cpp" line="197"/>
+        <source>Width</source>
+        <translation>Grosor</translation>
+    </message>
+    <message>
+        <location filename="../src/ploteditor.cpp" line="198"/>
+        <source>Label</source>
+        <translation>Etiqueta</translation>
+    </message>
+    <message>
         <location filename="../src/ploteditor.cpp" line="205"/>
+        <source>Line</source>
+        <translation>Línea</translation>
+    </message>
+    <message>
+        <location filename="../src/ploteditor.cpp" line="206"/>
         <source>Marker</source>
         <translation>Marcador</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="222"/>
+        <location filename="../src/ploteditor.cpp" line="223"/>
         <source>x scale</source>
         <translation>Escala x</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="222"/>
+        <location filename="../src/ploteditor.cpp" line="223"/>
         <source>y scale</source>
         <translation>Escala y</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="259"/>
-        <location filename="../src/ploteditor.cpp" line="265"/>
+        <location filename="../src/ploteditor.cpp" line="260"/>
+        <location filename="../src/ploteditor.cpp" line="266"/>
         <source>Show</source>
         <translation>Mostrar</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="271"/>
+        <location filename="../src/ploteditor.cpp" line="272"/>
         <source>Figure title</source>
         <translation>Título de la figura</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="385"/>
+        <location filename="../src/ploteditor.cpp" line="386"/>
         <source>Not a colour: %1</source>
         <translation>No es un color: %1</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="389"/>
+        <location filename="../src/ploteditor.cpp" line="390"/>
         <source>Not a value a figure file can hold: %1</source>
         <translation>No es un valor que pueda guardar un archivo de figura: %1</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="654"/>
+        <location filename="../src/ploteditor.cpp" line="661"/>
         <source>Data</source>
         <translation>Datos</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="655"/>
+        <location filename="../src/ploteditor.cpp" line="662"/>
         <source>Style</source>
         <translation>Estilo</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="656"/>
+        <location filename="../src/ploteditor.cpp" line="663"/>
         <source>Find a property</source>
         <translation>Buscar una propiedad</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="657"/>
+        <location filename="../src/ploteditor.cpp" line="664"/>
         <source>Titles and labels</source>
         <translation>Títulos y etiquetas</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="657"/>
+        <location filename="../src/ploteditor.cpp" line="664"/>
         <source>Lines and markers</source>
         <translation>Líneas y marcadores</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="658"/>
+        <location filename="../src/ploteditor.cpp" line="665"/>
         <source>Axes and ticks</source>
         <translation>Ejes y marcas</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="658"/>
+        <location filename="../src/ploteditor.cpp" line="665"/>
         <source>Legend</source>
         <translation>Leyenda</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="659"/>
+        <location filename="../src/ploteditor.cpp" line="666"/>
         <source>Grid</source>
         <translation>Cuadrícula</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="659"/>
+        <location filename="../src/ploteditor.cpp" line="666"/>
         <source>Figure</source>
         <translation>Figura</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="663"/>
+        <location filename="../src/ploteditor.cpp" line="670"/>
         <source>Fewer properties</source>
         <translation>Menos propiedades</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="663"/>
+        <location filename="../src/ploteditor.cpp" line="670"/>
         <source>More: every property</source>
         <translation>Más: todas las propiedades</translation>
     </message>

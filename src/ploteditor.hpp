@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+class PlotData;
 class QComboBox;
 class QFormLayout;
 class QLabel;
@@ -78,7 +79,8 @@ private:
     void showPanels(Section& s);
     Field field(const QJsonObject& property, const QString& objectName);
     void refresh();   // the controls from the document
-    void apply(const std::string& edited, const std::string& error);  // an edit: checked, then given out
+    void apply(const std::string& edited, const std::string& error);  // an edit: checked, then given out, else the message
+    QString tryApply(const std::string& edited, const std::string& error);  // the same; "" when taken, else why not
     void filter(const QString& text);
     void retranslate();
 
@@ -106,6 +108,7 @@ private:
     bool refreshing_ = false;
 
     QTabWidget* tabs_ = nullptr;
+    PlotData* data_ = nullptr;
     QLineEdit* search_ = nullptr;
     QComboBox* axesChooser_ = nullptr;
     QLabel* message_ = nullptr;

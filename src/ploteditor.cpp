@@ -1,5 +1,6 @@
 #include "ploteditor.hpp"
 
+#include "plotdata.hpp"
 #include "plotfonts.hpp"
 
 #include <calculate-plot/calculate-plot.hpp>
@@ -82,9 +83,9 @@ PlotEditor::PlotEditor(QWidget* parent) : QWidget(parent) {
     tabs_ = new QTabWidget(this);
     tabs_->setObjectName("plotTabs");
     layout->addWidget(tabs_);
-    auto* data = new QWidget;  // the series' tables (9.09)
-    data->setObjectName("plotDataTab");
-    tabs_->addTab(data, QString());
+    data_ = new PlotData;  // the series' tables
+    data_->setApply([this](const std::string& edited, const std::string& error) { return tryApply(edited, error); });
+    tabs_->addTab(data_, QString());
     auto* style = new QWidget;
     style->setObjectName("plotStyleTab");
     tabs_->addTab(style, QString());
@@ -505,11 +506,18 @@ void PlotEditor::refresh() {
     axesChooser_->setVisible(axesNames_.size() > 1);
     for (const auto& r : refreshers_) r();
     for (Section& s : sections_) showPanels(s);
+    data_->setDocument(figure_, axes());
     refreshing_ = false;
     if (!search_->text().isEmpty()) filter(search_->text());
 }
 
 void PlotEditor::apply(const std::string& edited, const std::string& error) {
+    const QString why = tryApply(edited, error);
+    message_->setText(why);
+    message_->setVisible(!why.isEmpty());
+}
+
+QString PlotEditor::tryApply(const std::string& edited, const std::string& error) {
     std::string why = error;
     if (why.empty() && edited.empty()) why = "nothing to change";
     if (why.empty()) {
@@ -517,15 +525,14 @@ void PlotEditor::apply(const std::string& edited, const std::string& error) {
         why = calculate_plot::checkFigure(edited, std::string());
     }
     if (!why.empty()) {
-        message_->setText(QString::fromStdString(why));
-        message_->show();
         refresh();  // the controls say what the file says again
-        return;
+        return QString::fromStdString(why);
     }
     message_->hide();
     figure_ = QByteArray::fromStdString(edited);
     refresh();
     emit figureEdited(figure_);
+    return QString();
 }
 
 QString PlotEditor::axes() const { return axesChooser_->currentIndex() >= 0 ? axesNames_.value(axesChooser_->currentIndex()) : QString(); }
