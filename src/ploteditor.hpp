@@ -111,6 +111,9 @@ private:
     PlotData* data_ = nullptr;
     QLineEdit* search_ = nullptr;
     QComboBox* axesChooser_ = nullptr;
+    QComboBox* styleChooser_ = nullptr;
+    int styleCount_ = 0;  // default and the bundled styles (a list of styles is one more entry after them)
+    QLabel* styleLabel_ = nullptr;
     QLabel* message_ = nullptr;
     std::vector<Section> sections_;
     QList<Row> rows_;

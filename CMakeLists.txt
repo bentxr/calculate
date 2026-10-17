@@ -48,6 +48,7 @@ qt_add_library(calculate-ui STATIC
     src/ploteditor.cpp
     src/plotfonts.cpp
     src/plotpage.cpp
+    src/plotstyles.cpp
     src/plotworker.cpp
     src/popupplacement.cpp
     src/presenter.cpp

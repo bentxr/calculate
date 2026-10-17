@@ -2,6 +2,7 @@
 #include "inspector.hpp"
 #include "lcd.hpp"
 #include "mainwindow.hpp"
+#include "plotstyles.hpp"
 #include "settings.hpp"
 
 #include <QDir>
@@ -81,6 +82,15 @@ TEST(Screenshots, Plot) {
             const bool phone = size.width() < size.height();
             const QString name = QStringLiteral("/plot-%1-%2.png").arg(dark ? "dark" : "light", phone ? "phone" : "desktop");
             EXPECT_TRUE(window.grab().save(directory + name));
+            if (!phone && dark) {  // the style chooser, its thumbnails drawn
+                PlotStylesDialog styles(QByteArray(R"({"version": 1, "calls": [{"call": "subplots", "as": ["fig", "ax"]},)"
+                                                   R"( {"on": "ax", "call": "plot", "args": [[0, 1, 2, 3], [0, 1, 4, 9]], "kwargs": {"marker": "o"}},)"
+                                                   R"( {"on": "ax", "call": "set_title", "args": ["Squares"]}]})"),
+                                        &window);
+                styles.show();
+                ASSERT_TRUE(QTest::qWaitFor([&] { return styles.finished(); }, 60000));
+                EXPECT_TRUE(styles.grab().save(directory + "/plot-styles.png"));
+            }
         }
     settings::setTheme(settings::Theme::System);
 }

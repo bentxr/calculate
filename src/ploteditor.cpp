@@ -2,6 +2,7 @@
 
 #include "plotdata.hpp"
 #include "plotfonts.hpp"
+#include "plotstyles.hpp"
 
 #include <calculate-plot/calculate-plot.hpp>
 
@@ -14,6 +15,7 @@
 #include <QJsonDocument>
 #include <QLabel>
 #include <QLineEdit>
+#include <QPushButton>
 #include <QRegularExpression>
 #include <QRegularExpressionValidator>
 #include <QScrollArea>
@@ -95,6 +97,31 @@ PlotEditor::PlotEditor(QWidget* parent) : QWidget(parent) {
     search_->setObjectName("plotSearch");
     search_->setClearButtonEnabled(true);
     styleLayout->addWidget(search_);
+    // the figure's style: default or one of matplotlib's, by name or from thumbnails (D9.8)
+    auto* styleRow = new QHBoxLayout;
+    styleLabel_ = new QLabel(style);
+    styleRow->addWidget(styleLabel_);
+    styleChooser_ = new QComboBox(style);
+    styleChooser_->setObjectName("plotStyle");
+    styleChooser_->addItem(QStringLiteral("default"));
+    for (const std::string& name : calculate_plot::styleNames()) styleChooser_->addItem(QString::fromStdString(name));
+    styleCount_ = styleChooser_->count();
+    styleRow->addWidget(styleChooser_, 1);
+    auto* chooseStyle = new QPushButton(style);
+    chooseStyle->setObjectName("plotChooseStyle");
+    styleRow->addWidget(chooseStyle);
+    styleLayout->addLayout(styleRow);
+    const auto setStyle = [this](const QString& name) {
+        std::string error;
+        apply(calculate_plot::setStyle(text(figure_), name == "default" ? std::string() : text(jsonString(name)), &error), error);
+    };
+    connect(styleChooser_, &QComboBox::activated, this, [this, setStyle](int index) {
+        if (!refreshing_ && index >= 0 && index < styleCount_) setStyle(styleChooser_->itemText(index));
+    });
+    connect(chooseStyle, &QPushButton::clicked, this, [this, setStyle] {
+        PlotStylesDialog dialog(figure_, this);
+        if (dialog.exec() == QDialog::Accepted && !dialog.chosen().isEmpty()) setStyle(dialog.chosen());
+    });
     axesChooser_ = new QComboBox(style);
     axesChooser_->setObjectName("plotAxes");
     styleLayout->addWidget(axesChooser_);
@@ -507,6 +534,20 @@ void PlotEditor::refresh() {
     for (const auto& r : refreshers_) r();
     for (Section& s : sections_) showPanels(s);
     data_->setDocument(figure_, axes());
+    {  // the file's style: a name, a list of names (shown joined, as one more entry) or none
+        while (styleChooser_->count() > styleCount_) styleChooser_->removeItem(styleCount_);
+        const QJsonValue style = QJsonDocument::fromJson(figure_).object().value("style");
+        if (style.isString()) {
+            styleChooser_->setCurrentIndex(std::max(0, styleChooser_->findText(style.toString())));
+        } else if (style.isArray()) {
+            QStringList names;
+            for (const QJsonValue& v : style.toArray()) names << v.toString();
+            styleChooser_->addItem(names.join(QStringLiteral(" + ")));
+            styleChooser_->setCurrentIndex(styleCount_);
+        } else {
+            styleChooser_->setCurrentIndex(0);
+        }
+    }
     refreshing_ = false;
     if (!search_->text().isEmpty()) filter(search_->text());
 }
@@ -661,6 +702,8 @@ void PlotEditor::retranslate() {
     tabs_->setTabText(0, tr("Data"));
     tabs_->setTabText(1, tr("Style"));
     search_->setPlaceholderText(tr("Find a property"));
+    styleLabel_->setText(tr("Style"));
+    findChild<QPushButton*>("plotChooseStyle")->setText(tr("Choose…"));
     const std::pair<const char*, QString> titles[] = {{"titles", tr("Titles and labels")}, {"lines", tr("Lines and markers")},
                                                       {"axes", tr("Axes and ticks")},      {"legend", tr("Legend")},
                                                       {"grid", tr("Grid")},                {"figure", tr("Figure")}};

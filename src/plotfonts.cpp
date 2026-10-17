@@ -8,8 +8,6 @@
 
 #include <mutex>
 
-#include <mutex>
-
 namespace {
 
 // Every embedded font by file name, read on the first call and never changed after: the drawing thread reads the
