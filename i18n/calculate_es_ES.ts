@@ -607,50 +607,60 @@
 <context>
     <name>PlotData</name>
     <message>
-        <location filename="../src/plotdata.cpp" line="269"/>
-        <location filename="../src/plotdata.cpp" line="273"/>
+        <location filename="../src/plotdata.cpp" line="160"/>
+        <source>Data (*.csv *.tsv *.txt)</source>
+        <translation>Datos (*.csv *.tsv *.txt)</translation>
+    </message>
+    <message>
+        <location filename="../src/plotdata.cpp" line="287"/>
+        <location filename="../src/plotdata.cpp" line="291"/>
         <source>The data of %1 are not a list of numbers: they cannot be shown as a table.</source>
         <translation>Los datos de %1 no son una lista de números: no se pueden mostrar como tabla.</translation>
     </message>
     <message>
-        <location filename="../src/plotdata.cpp" line="292"/>
+        <location filename="../src/plotdata.cpp" line="310"/>
         <source>This series&apos; data cannot be shown as a table.</source>
         <translation>Los datos de esta serie no se pueden mostrar como tabla.</translation>
     </message>
     <message>
-        <location filename="../src/plotdata.cpp" line="341"/>
+        <location filename="../src/plotdata.cpp" line="359"/>
         <source>Not a number: %1</source>
         <translation>No es un número: %1</translation>
     </message>
     <message>
-        <location filename="../src/plotdata.cpp" line="390"/>
+        <location filename="../src/plotdata.cpp" line="408"/>
         <source>No columns of numbers to import: each row needs two numbers, separated by tabs, semicolons or commas.</source>
         <translation>No hay columnas de números que importar: cada fila necesita dos números, separados por tabuladores, puntos y coma o comas.</translation>
     </message>
     <message>
-        <location filename="../src/plotdata.cpp" line="407"/>
+        <location filename="../src/plotdata.cpp" line="425"/>
         <source>Add series</source>
         <translation>Añadir serie</translation>
     </message>
     <message>
-        <location filename="../src/plotdata.cpp" line="408"/>
+        <location filename="../src/plotdata.cpp" line="426"/>
         <source>Line</source>
         <translation>Línea</translation>
     </message>
     <message>
-        <location filename="../src/plotdata.cpp" line="409"/>
+        <location filename="../src/plotdata.cpp" line="427"/>
         <source>Points</source>
         <translation>Puntos</translation>
     </message>
     <message>
-        <location filename="../src/plotdata.cpp" line="410"/>
+        <location filename="../src/plotdata.cpp" line="428"/>
         <source>Bars</source>
         <translation>Barras</translation>
     </message>
     <message>
-        <location filename="../src/plotdata.cpp" line="411"/>
+        <location filename="../src/plotdata.cpp" line="429"/>
         <source>Remove</source>
         <translation>Quitar</translation>
+    </message>
+    <message>
+        <location filename="../src/plotdata.cpp" line="430"/>
+        <source>Import…</source>
+        <translation>Importar…</translation>
     </message>
 </context>
 <context>
@@ -796,39 +806,74 @@
 <context>
     <name>PlotPage</name>
     <message>
-        <location filename="../src/plotpage.cpp" line="114"/>
+        <location filename="../src/plotpage.cpp" line="125"/>
+        <source>Figure files (*.json)</source>
+        <translation>Archivos de gráfica (*.json)</translation>
+    </message>
+    <message>
+        <location filename="../src/plotpage.cpp" line="129"/>
+        <source>%1 was not opened: %2</source>
+        <translation>%1 no se abrió: %2</translation>
+    </message>
+    <message>
+        <location filename="../src/plotpage.cpp" line="172"/>
         <source>Details</source>
         <translation>Detalles</translation>
     </message>
     <message>
-        <location filename="../src/plotpage.cpp" line="116"/>
+        <location filename="../src/plotpage.cpp" line="174"/>
         <source>Home: the first view</source>
         <translation>Inicio: la primera vista</translation>
     </message>
     <message>
-        <location filename="../src/plotpage.cpp" line="117"/>
+        <location filename="../src/plotpage.cpp" line="175"/>
         <source>Back: the previous view</source>
         <translation>Atrás: la vista anterior</translation>
     </message>
     <message>
-        <location filename="../src/plotpage.cpp" line="118"/>
+        <location filename="../src/plotpage.cpp" line="176"/>
         <source>Forward: the next view</source>
         <translation>Adelante: la vista siguiente</translation>
     </message>
     <message>
-        <location filename="../src/plotpage.cpp" line="119"/>
+        <location filename="../src/plotpage.cpp" line="177"/>
         <source>Pan: the left button moves the view, the right button zooms it</source>
         <translation>Desplazar: el botón izquierdo mueve la vista, el derecho la amplía o reduce</translation>
     </message>
     <message>
-        <location filename="../src/plotpage.cpp" line="120"/>
+        <location filename="../src/plotpage.cpp" line="178"/>
         <source>Zoom to a rectangle: the left button zooms in, the right button out</source>
         <translation>Zoom a un rectángulo: el botón izquierdo acerca, el derecho aleja</translation>
     </message>
     <message>
-        <location filename="../src/plotpage.cpp" line="121"/>
-        <source>Save the figure as PNG</source>
-        <translation>Guardar la figura como PNG</translation>
+        <location filename="../src/plotpage.cpp" line="179"/>
+        <source>Open a figure file</source>
+        <translation>Abrir un archivo de gráfica</translation>
+    </message>
+    <message>
+        <location filename="../src/plotpage.cpp" line="180"/>
+        <source>Save the figure: as an image, a Python script or a figure file</source>
+        <translation>Guardar la gráfica: como imagen, script de Python o archivo de gráfica</translation>
+    </message>
+    <message>
+        <location filename="../src/plotpage.cpp" line="188"/>
+        <source>PNG image</source>
+        <translation>Imagen PNG</translation>
+    </message>
+    <message>
+        <location filename="../src/plotpage.cpp" line="188"/>
+        <source>SVG image</source>
+        <translation>Imagen SVG</translation>
+    </message>
+    <message>
+        <location filename="../src/plotpage.cpp" line="188"/>
+        <source>Python script</source>
+        <translation>Script de Python</translation>
+    </message>
+    <message>
+        <location filename="../src/plotpage.cpp" line="188"/>
+        <source>Figure file</source>
+        <translation>Archivo de gráfica</translation>
     </message>
 </context>
 <context>

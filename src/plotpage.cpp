@@ -1,22 +1,34 @@
 #include "plotpage.hpp"
 
+#include "filedialogs.hpp"
 #include "plotcanvas.hpp"
 #include "ploteditor.hpp"
+#include "plotfonts.hpp"
 
 #include "icons.hpp"
 
+#include <calculate-plot/calculate-plot.hpp>
+
+#include <QAction>
 #include <QEvent>
-#include <QFileDialog>
 #include <QGridLayout>
 #include <QLabel>
 #include <QHBoxLayout>
+#include <QMenu>
+#include <QShortcut>
 #include <QToolButton>
+
+namespace {
+
+std::string text(const QByteArray& b) { return std::string(b.constData(), std::size_t(b.size())); }
+
+}  // namespace
 
 PlotPage::PlotPage(QWidget* parent) : QWidget(parent) {
     setObjectName("plotPage");
     auto* grid = new QGridLayout(this);
     grid->setContentsMargins(0, 0, 0, 0);
-    // The canvas' toolbar: matplotlib's navigation (Home, Back, Forward, Pan, Zoom, Save) and the pointer's
+    // The canvas' toolbar: matplotlib's navigation (Home, Back, Forward, Pan, Zoom), Open and Save, and the pointer's
     // coordinates
     auto* tools = new QWidget(this);
     tools->setObjectName("plotTools");
@@ -39,6 +51,7 @@ PlotPage::PlotPage(QWidget* parent) : QWidget(parent) {
     QToolButton* panButton = button("plotPan", icons::Kind::Pan, true);
     QToolButton* zoomButton = button("plotZoom", icons::Kind::Zoom, true);
     toolRow->addSpacing(8);
+    QToolButton* openButton = button("plotOpen", icons::Kind::Open, false);
     QToolButton* saveButton = button("plotSave", icons::Kind::Save, false);
     toolRow->addStretch(1);
     coordinates_ = new QLabel(tools);
@@ -74,9 +87,54 @@ PlotPage::PlotPage(QWidget* parent) : QWidget(parent) {
     connect(canvas_, &PlotCanvas::viewsChanged, this, views);
     views();
     connect(canvas_, &PlotCanvas::coordinatesChanged, coordinates_, &QLabel::setText);
-    const auto save = [this] { QFileDialog::saveFileContent(canvas_->pngBytes(), QStringLiteral("figure.png"), this); };
-    connect(saveButton, &QToolButton::clicked, this, save);
-    connect(canvas_, &PlotCanvas::saveRequested, this, save);
+    // Save: the figure as savefig writes a PNG or an SVG, as a Python script, or the figure file itself (D9.9)
+    auto* saveMenu = new QMenu(saveButton);
+    saveMenu->setObjectName("plotSaveMenu");
+    const auto format = [this, saveMenu](const char* name, const QString& file, std::function<QByteArray(QString*)> bytes) {
+        QAction* a = saveMenu->addAction(QString());
+        a->setObjectName(name);
+        connect(a, &QAction::triggered, this, [this, file, bytes] {
+            ensurePlotFonts();
+            QString error;
+            const QByteArray content = bytes(&error);
+            if (!error.isEmpty()) return coordinates_->setText(error);
+            filedialogs::save(content, file, this);
+        });
+    };
+    format("save:png", QStringLiteral("figure.png"), [this](QString* why) { return canvas_->pngBytes(why); });
+    format("save:svg", QStringLiteral("figure.svg"), [this](QString* why) {
+        std::string error;
+        const std::string svg = calculate_plot::drawSvg(text(canvas_->figure()), std::string(), &error);
+        *why = QString::fromStdString(error);
+        return QByteArray::fromStdString(svg);
+    });
+    format("save:py", QStringLiteral("figure.py"), [this](QString* why) {
+        std::string error;
+        const std::string py = calculate_plot::exportPython(text(canvas_->figure()), &error);
+        *why = QString::fromStdString(error);
+        return QByteArray::fromStdString(py);
+    });
+    format("save:figure", QStringLiteral("figure.json"), [this](QString*) { return canvas_->figure(); });
+    saveButton->setMenu(saveMenu);
+    saveButton->setPopupMode(QToolButton::InstantPopup);
+    connect(canvas_, &PlotCanvas::saveRequested, this,
+            [saveButton, saveMenu] { saveMenu->popup(saveButton->mapToGlobal(QPoint(0, saveButton->height()))); });
+    // Open: a figure file becomes the document; one the library refuses is not taken (with why, by the file's name)
+    const auto open = [this] {
+        filedialogs::open(
+            tr("Figure files (*.json)"),
+            [this](const QString& name, const QByteArray& content) {
+                if (name.isEmpty()) return;  // cancelled
+                const std::string refused = calculate_plot::checkFigure(text(content), std::string());
+                if (!refused.empty()) return coordinates_->setText(tr("%1 was not opened: %2").arg(name, QString::fromStdString(refused)));
+                canvas_->setFigure(content);
+                editor_->setFigure(content);
+            },
+            this);
+    };
+    connect(openButton, &QToolButton::clicked, this, open);
+    auto* openKey = new QShortcut(QKeySequence::Open, this, open);
+    openKey->setContext(Qt::WidgetWithChildrenShortcut);
     auto* editor = new PlotEditor(this);
     editor->setFixedWidth(340);
     editor_ = editor;
@@ -118,11 +176,15 @@ void PlotPage::retranslate() {
         {"plotForward", tr("Forward: the next view")},
         {"plotPan", tr("Pan: the left button moves the view, the right button zooms it")},
         {"plotZoom", tr("Zoom to a rectangle: the left button zooms in, the right button out")},
-        {"plotSave", tr("Save the figure as PNG")},
+        {"plotOpen", tr("Open a figure file")},
+        {"plotSave", tr("Save the figure: as an image, a Python script or a figure file")},
     };
     for (const auto& [name, tip] : tips) {
         auto* b = findChild<QToolButton*>(QString::fromLatin1(name));
         b->setToolTip(tip);
         b->setAccessibleName(tip.section(QLatin1Char(':'), 0, 0));
     }
+    const std::pair<const char*, QString> formats[] = {
+        {"save:png", tr("PNG image")}, {"save:svg", tr("SVG image")}, {"save:py", tr("Python script")}, {"save:figure", tr("Figure file")}};
+    for (const auto& [name, label] : formats) findChild<QAction*>(QString::fromLatin1(name))->setText(label);
 }

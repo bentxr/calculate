@@ -100,6 +100,12 @@ QIcon drawn(Kind kind, const QColor& ink, int side) {
                                         QPointF(0.86 * s, 0.62 * s)}));
         break;
     }
+    case Kind::Open: {  // a folder: its tab on the left of the top
+        painter.drawPolygon(QPolygonF({QPointF(0.1 * s, 0.22 * s), QPointF(0.4 * s, 0.22 * s), QPointF(0.48 * s, 0.32 * s),
+                                       QPointF(0.9 * s, 0.32 * s), QPointF(0.9 * s, 0.82 * s), QPointF(0.1 * s, 0.82 * s)}));
+        painter.drawLine(QPointF(0.1 * s, 0.42 * s), QPointF(0.9 * s, 0.42 * s));
+        break;
+    }
     }
     return QIcon(pixmap);
 }

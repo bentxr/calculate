@@ -8,6 +8,7 @@
 #include <utility>
 
 class PlotCanvas;
+class PlotEditor;
 class QHBoxLayout;
 class QLabel;
 class QToolButton;
@@ -43,5 +44,5 @@ private:
     QHBoxLayout* context_ = nullptr;
     QToolButton* details_ = nullptr;
     PlotCanvas* canvas_ = nullptr;
-    QWidget* editor_ = nullptr;
+    PlotEditor* editor_ = nullptr;
 };

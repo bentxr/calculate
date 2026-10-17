@@ -1,5 +1,7 @@
 #include "plotdata.hpp"
 
+#include "filedialogs.hpp"
+
 #include <calculate-plot/calculate-plot.hpp>
 
 #include <QAction>
@@ -14,6 +16,7 @@
 #include <QKeyEvent>
 #include <QLabel>
 #include <QMenu>
+#include <QPushButton>
 #include <QRegularExpression>
 #include <QTableWidget>
 #include <QTimer>
@@ -149,6 +152,21 @@ PlotData::PlotData(QWidget* parent) : QWidget(parent) {
     table_->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     table_->installEventFilter(this);
     layout->addWidget(table_, 1);
+    // a file of rows (CSV, TSV) as a new series
+    auto* import = new QPushButton(this);
+    import->setObjectName("plotImport");
+    connect(import, &QPushButton::clicked, this, [this] {
+        filedialogs::open(
+            tr("Data (*.csv *.tsv *.txt)"),
+            [this](const QString& name, const QByteArray& content) {
+                if (!name.isEmpty()) importText(QString::fromUtf8(content));
+            },
+            this);
+    });
+    auto* bottom = new QHBoxLayout;
+    bottom->addWidget(import);
+    bottom->addStretch(1);
+    layout->addLayout(bottom);
     connect(series_, &QComboBox::currentIndexChanged, this, [this] {
         if (!filling_) fill();
     });
@@ -409,4 +427,5 @@ void PlotData::retranslate() {
     findChild<QAction*>("add:scatter")->setText(tr("Points"));
     findChild<QAction*>("add:bar")->setText(tr("Bars"));
     findChild<QAction*>("plotRemoveSeries")->setText(tr("Remove"));
+    findChild<QPushButton*>("plotImport")->setText(tr("Import…"));
 }

@@ -22,6 +22,7 @@ add_executable(calculate-tests
     test_plotcanvas.cpp
     test_plotdata.cpp
     test_ploteditor.cpp
+    test_plotfiles.cpp
     test_plotmode.cpp
     test_plotnav.cpp
     test_plotstyles.cpp

@@ -43,11 +43,13 @@ void PlotCanvas::setFigure(const QByteArray& figure) {
     ask();
 }
 
-QByteArray PlotCanvas::pngBytes() const {
+QByteArray PlotCanvas::pngBytes(QString* why) const {
     ensurePlotFonts();
     std::string error;
-    return QByteArray::fromStdString(
-        calculate_plot::drawPng(std::string_view(figure_.constData(), static_cast<std::size_t>(figure_.size())), std::string(), &error));
+    const std::string png =
+        calculate_plot::drawPng(std::string_view(figure_.constData(), static_cast<std::size_t>(figure_.size())), std::string(), &error);
+    if (why) *why = QString::fromStdString(error);
+    return QByteArray::fromStdString(png);
 }
 
 void PlotCanvas::ask() {

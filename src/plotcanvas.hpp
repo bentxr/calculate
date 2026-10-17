@@ -32,7 +32,7 @@ public:
     QString error() const { return error_; }  // why the figure cannot be drawn, or empty
     bool busy() const { return asked_ != shown_; }  // an image is on its way
     QString coordinates() const { return coordinates_; }  // the toolbar's text for the pointer
-    QByteArray pngBytes() const;                          // the figure as savefig writes a PNG
+    QByteArray pngBytes(QString* why = nullptr) const;    // the figure as savefig writes a PNG (empty: why not)
 
     Tool tool() const { return tool_; }
     void setTool(Tool tool);  // the tool, or none when it is the one in use (as the toolbar's buttons)

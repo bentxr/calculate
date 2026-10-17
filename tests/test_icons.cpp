@@ -15,7 +15,7 @@ QImage image(icons::Kind kind, const QColor& ink) {
 TEST(Icons, EveryKindIsLineArtInTheInk) {
     QList<QImage> images;
     for (icons::Kind kind : {icons::Kind::Settings, icons::Kind::Keyboard, icons::Kind::Search, icons::Kind::Home, icons::Kind::Back,
-                             icons::Kind::Forward, icons::Kind::Pan, icons::Kind::Zoom, icons::Kind::Save}) {
+                             icons::Kind::Forward, icons::Kind::Pan, icons::Kind::Zoom, icons::Kind::Save, icons::Kind::Open}) {
         const QImage drawn = image(kind, Qt::red);
         ASSERT_EQ(drawn.size(), QSize(32, 32));
         int painted = 0;
