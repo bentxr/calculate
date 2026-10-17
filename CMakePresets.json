@@ -17,7 +17,7 @@
       "inherits": "desktop",
       "displayName": "Desktop, engine from GitHub",
       "binaryDir": "${sourceDir}/build/desktop-ci",
-      "cacheVariables": { "FETCHCONTENT_SOURCE_DIR_CALCULATE-CORE": "" }
+      "cacheVariables": { "FETCHCONTENT_SOURCE_DIR_CALCULATE-CORE": "", "FETCHCONTENT_SOURCE_DIR_CALCULATE-PLOT": "" }
     },
     {
       "name": "wasm",
@@ -37,7 +37,7 @@
       "inherits": "wasm",
       "displayName": "Browser, engine from GitHub",
       "binaryDir": "${sourceDir}/build/wasm-ci",
-      "cacheVariables": { "FETCHCONTENT_SOURCE_DIR_CALCULATE-CORE": "" }
+      "cacheVariables": { "FETCHCONTENT_SOURCE_DIR_CALCULATE-CORE": "", "FETCHCONTENT_SOURCE_DIR_CALCULATE-PLOT": "" }
     }
   ],
   "buildPresets": [
