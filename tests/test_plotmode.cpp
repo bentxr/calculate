@@ -6,9 +6,11 @@
 #include <QAction>
 #include <QComboBox>
 #include <QLabel>
+#include <QLineEdit>
 #include <QListWidget>
 #include <QPushButton>
 #include <QStackedWidget>
+#include <QTabWidget>
 #include <QTest>
 #include <QToolButton>
 #include <QTranslator>
@@ -184,4 +186,63 @@ TEST(PlotMode, ReadsInSpanish) {
     EXPECT_EQ(child<QAction>(window, "mode:4")->text(), QStringLiteral("Gráficas"));
     EXPECT_EQ(child<QToolButton>(window, "plotDetails")->text(), "Detalles");
     QCoreApplication::removeTranslator(&spanish);
+}
+
+namespace {
+
+// Every text the plot page shows a person, by the widget (or action) that shows it: names, tooltips, placeholders,
+// tab titles. Values from the figure (its titles, the series' labels, numbers) and the library's own names (style
+// names; the keywords of a call, labelled "name:...", and matplotlib's description of their values) are not
+// interface text.
+QMap<QString, QString> pageTexts(QWidget* page) {
+    QMap<QString, QString> texts;
+    const auto put = [&texts](const QObject* o, const QString& what, const QString& text) {
+        if (!text.trimmed().isEmpty()) texts.insert(o->objectName() + "/" + what + "@" + QString::number(quintptr(o), 16), text);
+    };
+    for (QObject* o : page->findChildren<QObject*>()) {
+        if (o->objectName().startsWith("name:")) continue;
+        // Qt's own buttons of a tab bar (their texts are Qt's translations, not the app's)
+        if (o->objectName() == "ScrollLeftButton" || o->objectName() == "ScrollRightButton") continue;
+        if (auto* w = qobject_cast<QWidget*>(o)) {
+            put(w, "tip", w->toolTip());
+            put(w, "accessible", w->accessibleName());
+        }
+        if (auto* b = qobject_cast<QAbstractButton*>(o)) put(b, "text", b->text());
+        if (auto* l = qobject_cast<QLabel*>(o)) put(l, "text", l->text());
+        if (auto* e = qobject_cast<QLineEdit*>(o)) put(e, "placeholder", e->placeholderText());
+        if (auto* a = qobject_cast<QAction*>(o)) put(a, "text", a->text());
+        if (auto* t = qobject_cast<QTabWidget*>(o))
+            for (int i = 0; i < t->count(); ++i) put(t, "tab" + QString::number(i), t->tabText(i));
+    }
+    return texts;
+}
+
+}  // namespace
+
+// In Spanish every interface text of the plot page changes (all are translated, and all are set again on a change
+// of language), except words that are the same in both languages.
+TEST(PlotMode, EveryTextOfThePlotPageReadsInSpanish) {
+    MainWindow window;
+    showWide(window);
+    choose(window, plotMode);
+    auto* page = child<QWidget>(window, "plotPage");
+    // open what is made on first use: every section and its More panel
+    for (QToolButton* b : page->findChildren<QToolButton*>())
+        if (b->objectName().startsWith("section:") || b->objectName().startsWith("more:")) b->click();
+    QApplication::processEvents();
+    const QMap<QString, QString> english = pageTexts(page);
+    QTranslator spanish;
+    ASSERT_TRUE(spanish.load(QLocale(QLocale::Spanish, QLocale::Spain), "calculate", "_", ":/i18n"));
+    QCoreApplication::installTranslator(&spanish);
+    QApplication::processEvents();
+    const QMap<QString, QString> inSpanish = pageTexts(page);
+    QCoreApplication::removeTranslator(&spanish);
+    const QStringList same{"RAD", "DEG", "GRAD", "Double", "Float", "Long double", "Exact", "default", "…", "..."};
+    int checked = 0;
+    for (auto it = english.begin(); it != english.end(); ++it) {
+        if (same.contains(it.value())) continue;
+        ++checked;
+        EXPECT_NE(inSpanish.value(it.key()), it.value()) << it.key().toStdString() << ": \"" << it.value().toStdString() << "\"";
+    }
+    EXPECT_GT(checked, 40);
 }

@@ -98,5 +98,22 @@ TEST(Screenshots, Plot) {
                 EXPECT_TRUE(styles.grab().save(directory + "/plot-styles.png"));
             }
         }
+    // in Spanish: the wide page with every section open, the phone with the sheet open
+    settings::setLanguage(settings::Language::Spanish);
+    settings::setTheme(settings::Theme::Light);
+    for (const QSize size : {QSize(1280, 800), QSize(390, 844)}) {
+        MainWindow window;
+        window.resize(size);
+        window.show();
+        ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+        window.layOutKeys(size);
+        window.findChild<QListWidget*>("modes")->setCurrentRow(4);
+        QTest::qWait(1500);
+        const bool phone = size.width() < size.height();
+        if (phone) window.findChild<QPushButton*>("sheet:style")->click();
+        QTest::qWait(200);
+        EXPECT_TRUE(window.grab().save(directory + (phone ? "/plot-es-phone-sheet.png" : "/plot-es-desktop.png")));
+    }
+    settings::setLanguage(settings::Language::English);
     settings::setTheme(settings::Theme::System);
 }

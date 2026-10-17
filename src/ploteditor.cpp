@@ -458,7 +458,8 @@ QWidget* PlotEditor::panel(Section& s, const QString& method) {
             QStringList aliases;
             for (const QJsonValue& a : property.value("aliases").toArray()) aliases << a.toString();
             Field f = field(property, QStringLiteral("prop:%1:%2").arg(method, name));
-            auto* label = new QLabel(name);
+            auto* label = new QLabel(name);  // matplotlib's name, as the .py export writes it (not translated)
+            label->setObjectName(QStringLiteral("name:%1:%2").arg(method, name));
             label->setToolTip(property.value("valid").toString() + (aliases.isEmpty() ? QString() : "\n" + aliases.join(", ")));
             form->addRow(label, f.widget);
             rows_.append({label, f.widget, name + " " + aliases.join(" "), s.id, p});
