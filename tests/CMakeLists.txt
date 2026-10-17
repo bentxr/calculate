@@ -25,6 +25,7 @@ add_executable(calculate-tests
     test_plotfiles.cpp
     test_plotmode.cpp
     test_plotnav.cpp
+    test_plotphone.cpp
     test_plotstyles.cpp
     test_popupplacement.cpp
     test_presenter.cpp

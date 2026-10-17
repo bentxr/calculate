@@ -35,6 +35,10 @@ public:
     // The document shown (no figureEdited).
     void setFigure(const QByteArray& figure);
     QByteArray figure() const { return figure_; }
+    // The Data or the Style tab in front; findProperty: the Style tab with the cursor in the search box.
+    void showData();
+    void showStyle();
+    void findProperty();
 
 signals:
     void figureEdited(const QByteArray& figure);

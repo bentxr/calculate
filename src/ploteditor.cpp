@@ -510,6 +510,16 @@ void PlotEditor::setFigure(const QByteArray& figure) {
     refresh();
 }
 
+void PlotEditor::showData() { tabs_->setCurrentIndex(0); }
+
+void PlotEditor::showStyle() { tabs_->setCurrentIndex(1); }
+
+void PlotEditor::findProperty() {
+    showStyle();
+    search_->setFocus(Qt::ShortcutFocusReason);
+    search_->selectAll();
+}
+
 void PlotEditor::refresh() {
     refreshing_ = true;
     std::string error;

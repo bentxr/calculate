@@ -9,18 +9,46 @@
 
 #include <calculate-plot/calculate-plot.hpp>
 
+#include <cmath>
+
+#include <QAbstractButton>
 #include <QAction>
 #include <QEvent>
 #include <QGridLayout>
 #include <QLabel>
 #include <QHBoxLayout>
 #include <QMenu>
+#include <QPainter>
+#include <QPushButton>
 #include <QShortcut>
 #include <QToolButton>
+#include <QVBoxLayout>
 
 namespace {
 
 std::string text(const QByteArray& b) { return std::string(b.constData(), std::size_t(b.size())); }
+
+// The sheet's handle: a short rounded bar across its top; a click (or Space) closes the sheet.
+class SheetHandle : public QAbstractButton {
+public:
+    explicit SheetHandle(QWidget* parent) : QAbstractButton(parent) {
+        setFocusPolicy(Qt::StrongFocus);
+        setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    }
+    QSize sizeHint() const override { return QSize(80, 20); }
+
+protected:
+    void paintEvent(QPaintEvent*) override {
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(palette().color(hasFocus() ? QPalette::Highlight : QPalette::Mid));
+        painter.drawRoundedRect(QRectF(width() / 2.0 - 18, height() / 2.0 - 2, 36, 4), 2, 2);
+    }
+};
+
+// Where the open sheet starts: this part of the page's height, from the top (D9.14).
+constexpr double kSheetTop = 0.45;
 
 }  // namespace
 
@@ -41,7 +69,7 @@ PlotPage::PlotPage(QWidget* parent) : QWidget(parent) {
         b->setCheckable(checkable);
         b->setFocusPolicy(Qt::NoFocus);  // the keys stay with the canvas
         toolRow->addWidget(b);
-        tools_.append({b, kind});
+        toolButtons_.append({b, kind});
         return b;
     };
     QToolButton* homeButton = button("plotHome", icons::Kind::Home, false);
@@ -136,17 +164,41 @@ PlotPage::PlotPage(QWidget* parent) : QWidget(parent) {
     auto* openKey = new QShortcut(QKeySequence::Open, this, open);
     openKey->setContext(Qt::WidgetWithChildrenShortcut);
     auto* editor = new PlotEditor(this);
-    editor->setFixedWidth(340);
     editor_ = editor;
     editor->setFigure(canvas_->figure());
     connect(editor, &PlotEditor::figureEdited, canvas_, &PlotCanvas::setFigure);  // an edit is the new document
     connect(canvas_, &PlotCanvas::viewsChanged, editor, [this, editor] { editor->setFigure(canvas_->figure()); });
-    grid->addWidget(tools, 0, 0);
-    grid->addWidget(contextBar_, 0, 1);
-    grid->addWidget(canvas_, 1, 0);
-    grid->addWidget(editor_, 1, 1);
+    // The phone's editor: a sheet over the lower part of the canvas, opened from a bar under the navigation row
+    sheet_ = new QWidget(this);
+    sheet_->setObjectName("plotSheet");
+    sheet_->setAutoFillBackground(true);
+    auto* sheetLayout = new QVBoxLayout(sheet_);
+    sheetLayout->setContentsMargins(0, 0, 0, 0);
+    sheetLayout->setSpacing(0);
+    auto* handle = new SheetHandle(sheet_);
+    handle->setObjectName("plotSheetHandle");
+    sheetLayout->addWidget(handle);
+    connect(handle, &QAbstractButton::clicked, this, &PlotPage::closeSheet);
+    auto* escape = new QShortcut(QKeySequence(Qt::Key_Escape), sheet_, this, &PlotPage::closeSheet);
+    escape->setContext(Qt::WidgetWithChildrenShortcut);
+    sheet_->hide();
+    sheetBar_ = new QWidget(this);
+    sheetBar_->setObjectName("plotSheetBar");
+    auto* barRow = new QHBoxLayout(sheetBar_);
+    barRow->setContentsMargins(0, 0, 0, 0);
+    const auto opener = [this, barRow](const char* name, void (PlotEditor::*show)()) {
+        auto* b = new QPushButton(sheetBar_);
+        b->setObjectName(name);
+        barRow->addWidget(b, 1);
+        connect(b, &QPushButton::clicked, this, [this, show] { openSheet(show); });
+    };
+    opener("sheet:data", &PlotEditor::showData);
+    opener("sheet:style", &PlotEditor::showStyle);
+    opener("sheet:find", &PlotEditor::findProperty);
+    tools_ = tools;
     grid->setColumnStretch(0, 1);
-    grid->setRowStretch(1, 1);
+    narrow_ = true;  // (so that the first arrangement is made)
+    setNarrow(false);
     details_->hide();  // shown by the window while Plot is the mode
     drawIcons();
     retranslate();
@@ -154,7 +206,7 @@ PlotPage::PlotPage(QWidget* parent) : QWidget(parent) {
 
 void PlotPage::drawIcons() {
     const QColor ink = palette().color(QPalette::ButtonText);
-    for (const auto& [b, kind] : tools_) b->setIcon(icons::drawn(kind, ink, 20));
+    for (const auto& [b, kind] : toolButtons_) b->setIcon(icons::drawn(kind, ink, 20));
 }
 
 void PlotPage::changeEvent(QEvent* event) {
@@ -164,8 +216,56 @@ void PlotPage::changeEvent(QEvent* event) {
 }
 
 void PlotPage::setNarrow(bool narrow) {
+    if (narrow == narrow_) return;
+    narrow_ = narrow;
+    auto* grid = static_cast<QGridLayout*>(layout());
+    for (QWidget* w : std::initializer_list<QWidget*>{tools_, contextBar_, canvas_, sheetBar_, editor_}) grid->removeWidget(w);
+    sheet_->hide();
+    if (narrow) {  // the canvas, the navigation row under it, the bar that opens the sheet
+        grid->addWidget(canvas_, 0, 0);
+        grid->addWidget(tools_, 1, 0);
+        grid->addWidget(sheetBar_, 2, 0);
+        grid->setRowStretch(0, 1);
+        grid->setRowStretch(1, 0);
+        editor_->setMinimumWidth(0);
+        editor_->setMaximumWidth(QWIDGETSIZE_MAX);
+        sheet_->layout()->addWidget(editor_);
+        static_cast<QVBoxLayout*>(sheet_->layout())->setStretchFactor(editor_, 1);
+    } else {  // the tools and the context above, the canvas beside the editor
+        grid->addWidget(tools_, 0, 0);
+        grid->addWidget(contextBar_, 0, 1);
+        grid->addWidget(canvas_, 1, 0);
+        grid->addWidget(editor_, 1, 1);
+        grid->setRowStretch(0, 0);
+        grid->setRowStretch(1, 1);
+        editor_->setFixedWidth(340);
+    }
     contextBar_->setVisible(!narrow);
-    editor_->setVisible(!narrow);
+    sheetBar_->setVisible(narrow);
+    editor_->setVisible(true);
+}
+
+void PlotPage::openSheet(void (PlotEditor::*show)()) {
+    placeSheet();
+    sheet_->show();
+    sheet_->raise();
+    findChild<QAbstractButton*>("plotSheetHandle")->setFocus(Qt::OtherFocusReason);
+    (editor_->*show)();
+}
+
+void PlotPage::closeSheet() {
+    sheet_->hide();
+    canvas_->setFocus(Qt::OtherFocusReason);
+}
+
+void PlotPage::placeSheet() {
+    const int top = int(std::lround(kSheetTop * height()));
+    sheet_->setGeometry(0, top, width(), height() - top);
+}
+
+void PlotPage::resizeEvent(QResizeEvent* event) {
+    QWidget::resizeEvent(event);
+    if (sheet_->isVisible()) placeSheet();
 }
 
 void PlotPage::retranslate() {
@@ -187,4 +287,9 @@ void PlotPage::retranslate() {
     const std::pair<const char*, QString> formats[] = {
         {"save:png", tr("PNG image")}, {"save:svg", tr("SVG image")}, {"save:py", tr("Python script")}, {"save:figure", tr("Figure file")}};
     for (const auto& [name, label] : formats) findChild<QAction*>(QString::fromLatin1(name))->setText(label);
+    const std::pair<const char*, QString> sheet[] = {{"sheet:data", tr("Data")}, {"sheet:style", tr("Style")}, {"sheet:find", tr("Find…")}};
+    for (const auto& [name, label] : sheet) findChild<QPushButton*>(QString::fromLatin1(name))->setText(label);
+    auto* handle = findChild<QAbstractButton*>("plotSheetHandle");
+    handle->setToolTip(tr("Close the editor"));
+    handle->setAccessibleName(handle->toolTip());
 }

@@ -34,15 +34,24 @@ public:
 
 protected:
     void changeEvent(QEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
 
 private:
     void drawIcons();  // in the theme's text colour
+    // The phone's editor sheet: opened with a tab (or the search) in front, closed, placed over the canvas
+    void openSheet(void (PlotEditor::*show)());
+    void closeSheet();
+    void placeSheet();
 
-    QList<std::pair<QToolButton*, icons::Kind>> tools_;
+    QList<std::pair<QToolButton*, icons::Kind>> toolButtons_;
+    QWidget* tools_ = nullptr;
     QLabel* coordinates_ = nullptr;
     QWidget* contextBar_ = nullptr;
     QHBoxLayout* context_ = nullptr;
     QToolButton* details_ = nullptr;
     PlotCanvas* canvas_ = nullptr;
     PlotEditor* editor_ = nullptr;
+    QWidget* sheet_ = nullptr;
+    QWidget* sheetBar_ = nullptr;
+    bool narrow_ = false;
 };

@@ -742,63 +742,63 @@
         <translation>No es un valor que pueda guardar un archivo de figura: %1</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="702"/>
+        <location filename="../src/ploteditor.cpp" line="712"/>
         <source>Data</source>
         <translation>Datos</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="703"/>
-        <location filename="../src/ploteditor.cpp" line="705"/>
+        <location filename="../src/ploteditor.cpp" line="713"/>
+        <location filename="../src/ploteditor.cpp" line="715"/>
         <source>Style</source>
         <translation>Estilo</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="704"/>
+        <location filename="../src/ploteditor.cpp" line="714"/>
         <source>Find a property</source>
         <translation>Buscar una propiedad</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="706"/>
+        <location filename="../src/ploteditor.cpp" line="716"/>
         <source>Choose…</source>
         <translation>Elegir…</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="707"/>
+        <location filename="../src/ploteditor.cpp" line="717"/>
         <source>Titles and labels</source>
         <translation>Títulos y etiquetas</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="707"/>
+        <location filename="../src/ploteditor.cpp" line="717"/>
         <source>Lines and markers</source>
         <translation>Líneas y marcadores</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="708"/>
+        <location filename="../src/ploteditor.cpp" line="718"/>
         <source>Axes and ticks</source>
         <translation>Ejes y marcas</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="708"/>
+        <location filename="../src/ploteditor.cpp" line="718"/>
         <source>Legend</source>
         <translation>Leyenda</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="709"/>
+        <location filename="../src/ploteditor.cpp" line="719"/>
         <source>Grid</source>
         <translation>Cuadrícula</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="709"/>
+        <location filename="../src/ploteditor.cpp" line="719"/>
         <source>Figure</source>
         <translation>Figura</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="713"/>
+        <location filename="../src/ploteditor.cpp" line="723"/>
         <source>Fewer properties</source>
         <translation>Menos propiedades</translation>
     </message>
     <message>
-        <location filename="../src/ploteditor.cpp" line="713"/>
+        <location filename="../src/ploteditor.cpp" line="723"/>
         <source>More: every property</source>
         <translation>Más: todas las propiedades</translation>
     </message>
@@ -806,74 +806,94 @@
 <context>
     <name>PlotPage</name>
     <message>
-        <location filename="../src/plotpage.cpp" line="125"/>
+        <location filename="../src/plotpage.cpp" line="153"/>
         <source>Figure files (*.json)</source>
         <translation>Archivos de gráfica (*.json)</translation>
     </message>
     <message>
-        <location filename="../src/plotpage.cpp" line="129"/>
+        <location filename="../src/plotpage.cpp" line="157"/>
         <source>%1 was not opened: %2</source>
         <translation>%1 no se abrió: %2</translation>
     </message>
     <message>
-        <location filename="../src/plotpage.cpp" line="172"/>
+        <location filename="../src/plotpage.cpp" line="272"/>
         <source>Details</source>
         <translation>Detalles</translation>
     </message>
     <message>
-        <location filename="../src/plotpage.cpp" line="174"/>
+        <location filename="../src/plotpage.cpp" line="274"/>
         <source>Home: the first view</source>
         <translation>Inicio: la primera vista</translation>
     </message>
     <message>
-        <location filename="../src/plotpage.cpp" line="175"/>
+        <location filename="../src/plotpage.cpp" line="275"/>
         <source>Back: the previous view</source>
         <translation>Atrás: la vista anterior</translation>
     </message>
     <message>
-        <location filename="../src/plotpage.cpp" line="176"/>
+        <location filename="../src/plotpage.cpp" line="276"/>
         <source>Forward: the next view</source>
         <translation>Adelante: la vista siguiente</translation>
     </message>
     <message>
-        <location filename="../src/plotpage.cpp" line="177"/>
+        <location filename="../src/plotpage.cpp" line="277"/>
         <source>Pan: the left button moves the view, the right button zooms it</source>
         <translation>Desplazar: el botón izquierdo mueve la vista, el derecho la amplía o reduce</translation>
     </message>
     <message>
-        <location filename="../src/plotpage.cpp" line="178"/>
+        <location filename="../src/plotpage.cpp" line="278"/>
         <source>Zoom to a rectangle: the left button zooms in, the right button out</source>
         <translation>Zoom a un rectángulo: el botón izquierdo acerca, el derecho aleja</translation>
     </message>
     <message>
-        <location filename="../src/plotpage.cpp" line="179"/>
+        <location filename="../src/plotpage.cpp" line="279"/>
         <source>Open a figure file</source>
         <translation>Abrir un archivo de gráfica</translation>
     </message>
     <message>
-        <location filename="../src/plotpage.cpp" line="180"/>
+        <location filename="../src/plotpage.cpp" line="280"/>
         <source>Save the figure: as an image, a Python script or a figure file</source>
         <translation>Guardar la gráfica: como imagen, script de Python o archivo de gráfica</translation>
     </message>
     <message>
-        <location filename="../src/plotpage.cpp" line="188"/>
+        <location filename="../src/plotpage.cpp" line="288"/>
         <source>PNG image</source>
         <translation>Imagen PNG</translation>
     </message>
     <message>
-        <location filename="../src/plotpage.cpp" line="188"/>
+        <location filename="../src/plotpage.cpp" line="288"/>
         <source>SVG image</source>
         <translation>Imagen SVG</translation>
     </message>
     <message>
-        <location filename="../src/plotpage.cpp" line="188"/>
+        <location filename="../src/plotpage.cpp" line="288"/>
         <source>Python script</source>
         <translation>Script de Python</translation>
     </message>
     <message>
-        <location filename="../src/plotpage.cpp" line="188"/>
+        <location filename="../src/plotpage.cpp" line="288"/>
         <source>Figure file</source>
         <translation>Archivo de gráfica</translation>
+    </message>
+    <message>
+        <location filename="../src/plotpage.cpp" line="290"/>
+        <source>Data</source>
+        <translation>Datos</translation>
+    </message>
+    <message>
+        <location filename="../src/plotpage.cpp" line="290"/>
+        <source>Style</source>
+        <translation>Estilo</translation>
+    </message>
+    <message>
+        <location filename="../src/plotpage.cpp" line="290"/>
+        <source>Find…</source>
+        <translation>Buscar…</translation>
+    </message>
+    <message>
+        <location filename="../src/plotpage.cpp" line="293"/>
+        <source>Close the editor</source>
+        <translation>Cerrar el editor</translation>
     </message>
 </context>
 <context>

@@ -6,6 +6,7 @@
 #include "settings.hpp"
 
 #include <QDir>
+#include <QPushButton>
 #include <QLabel>
 #include <QListWidget>
 #include <QTest>
@@ -82,6 +83,11 @@ TEST(Screenshots, Plot) {
             const bool phone = size.width() < size.height();
             const QString name = QStringLiteral("/plot-%1-%2.png").arg(dark ? "dark" : "light", phone ? "phone" : "desktop");
             EXPECT_TRUE(window.grab().save(directory + name));
+            if (phone) {  // the editor's sheet open over the canvas
+                window.findChild<QPushButton*>("sheet:style")->click();
+                QTest::qWait(200);
+                EXPECT_TRUE(window.grab().save(directory + QStringLiteral("/plot-%1-phone-sheet.png").arg(dark ? "dark" : "light")));
+            }
             if (!phone && dark) {  // the style chooser, its thumbnails drawn
                 PlotStylesDialog styles(QByteArray(R"({"version": 1, "calls": [{"call": "subplots", "as": ["fig", "ax"]},)"
                                                    R"( {"on": "ax", "call": "plot", "args": [[0, 1, 2, 3], [0, 1, 4, 9]], "kwargs": {"marker": "o"}},)"
