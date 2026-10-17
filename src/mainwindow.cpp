@@ -9,6 +9,7 @@
 #include "keypad.hpp"
 #include "keysizing.hpp"
 #include "lcd.hpp"
+#include "licences.hpp"
 #include "longpress.hpp"
 #include "plotpage.hpp"
 #include "popupplacement.hpp"
@@ -1153,6 +1154,11 @@ void MainWindow::buildSettings() {
             },
             this);
     });
+    // The notices and licences of the code and fonts that come from others.
+    settings_->addSeparator();
+    QAction* licences = settings_->addAction(QString());
+    licences->setObjectName("licences");
+    connect(licences, &QAction::triggered, this, [this] { (new LicencesDialog(this))->show(); });
 }
 
 namespace {
@@ -1298,6 +1304,7 @@ void MainWindow::retranslate() {
     fileSection_->setText(tr("Settings file"));
     findChild<QAction*>("settings:export")->setText(tr("Export settings…"));
     findChild<QAction*>("settings:import")->setText(tr("Import settings…"));
+    findChild<QAction*>("licences")->setText(tr("Third-party licences…"));
 
     QList<Key> keys = cursorPad();
     for (const QList<Key>& row : keypad()) keys += row;

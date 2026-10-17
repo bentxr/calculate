@@ -16,6 +16,7 @@ add_executable(calculate-tests
     test_keypad.cpp
     test_keysizing.cpp
     test_lcd.cpp
+    test_licences.cpp
     test_mainwindow.cpp
     test_plot.cpp
     test_plotmode.cpp
