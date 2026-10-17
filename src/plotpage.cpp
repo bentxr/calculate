@@ -1,6 +1,7 @@
 #include "plotpage.hpp"
 
 #include "plotcanvas.hpp"
+#include "ploteditor.hpp"
 
 #include "icons.hpp"
 
@@ -76,9 +77,12 @@ PlotPage::PlotPage(QWidget* parent) : QWidget(parent) {
     const auto save = [this] { QFileDialog::saveFileContent(canvas_->pngBytes(), QStringLiteral("figure.png"), this); };
     connect(saveButton, &QToolButton::clicked, this, save);
     connect(canvas_, &PlotCanvas::saveRequested, this, save);
-    editor_ = new QWidget(this);
-    editor_->setObjectName("plotEditor");
-    editor_->setFixedWidth(340);
+    auto* editor = new PlotEditor(this);
+    editor->setFixedWidth(340);
+    editor_ = editor;
+    editor->setFigure(canvas_->figure());
+    connect(editor, &PlotEditor::figureEdited, canvas_, &PlotCanvas::setFigure);  // an edit is the new document
+    connect(canvas_, &PlotCanvas::viewsChanged, editor, [this, editor] { editor->setFigure(canvas_->figure()); });
     grid->addWidget(tools, 0, 0);
     grid->addWidget(contextBar_, 0, 1);
     grid->addWidget(canvas_, 1, 0);

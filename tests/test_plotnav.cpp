@@ -1,10 +1,12 @@
 #include "plotcanvas.hpp"
+#include "ploteditor.hpp"
 #include "plotpage.hpp"
 
 #include <calculate-plot/calculate-plot.hpp>
 
 #include <QApplication>
 #include <QLabel>
+#include <QLineEdit>
 #include <QMouseEvent>
 #include <QTest>
 #include <QToolButton>
@@ -236,4 +238,24 @@ TEST(PlotNavigation, SaveWritesThePng) {
                                                     std::string(CALCULATE_PLOT_FONTS), &error);
     ASSERT_EQ(error, "");
     EXPECT_EQ(p.canvas->pngBytes(), QByteArray::fromStdString(png));
+}
+
+// The editor beside the canvas edits the canvas' figure: an edit is the new document, and a view a pan leaves is
+// what the editor then shows.
+TEST(PlotNavigation, TheEditorAndTheCanvasShareTheDocument) {
+    Page p;
+    auto* title = p.page.findChild<QLineEdit*>("edit:title");
+    ASSERT_NE(title, nullptr);
+    EXPECT_TRUE(title->isVisible());
+    title->setFocus();
+    QTest::keyClicks(title, "Squares");
+    QTest::keyClick(title, Qt::Key_Return);
+    EXPECT_NE(p.canvas->figure().indexOf(R"("call":"set_title","args":["Squares"])"), -1) << p.canvas->figure().toStdString();
+    ASSERT_TRUE(p.settle());
+    p.button("plotPan")->click();
+    drag(p.canvas, QPointF(300, 250), QPointF(340, 230), Qt::LeftButton);
+    ASSERT_TRUE(QTest::qWaitFor([&] { return !p.canvas->busy() && p.canvas->canGoBack(); }, 10000));
+    auto* editor = p.page.findChild<PlotEditor*>("plotEditor");
+    ASSERT_NE(editor, nullptr);
+    EXPECT_EQ(editor->figure(), p.canvas->figure());
 }
