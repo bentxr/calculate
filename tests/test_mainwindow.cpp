@@ -126,7 +126,7 @@ TEST(MainWindow, TheTypeMenuComesFromTheEngine) {
 
 TEST(MainWindow, AngleTypeAndEqualsStackBesideTheScreen) {
     MainWindow window;
-    window.resize(900, 700);
+    window.resize(1200, 700);  // wide enough for the keys side by side with any font
     window.show();
     ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
     const QRect angle = child<QWidget>(window, "angle")->geometry();
@@ -563,7 +563,7 @@ TEST(MainWindow, TheHistoryDropsDownUnderTheScreen) {
 
 TEST(MainWindow, KeysKeepTheirSizeAndScrollWhenTheWindowIsSmall) {
     MainWindow window;
-    window.resize(900, 700);
+    window.resize(1200, 700);  // wide enough for the keys side by side with any font
     window.show();
     ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
     const QSize sin = child<QPushButton>(window, "key:sin")->size();
@@ -577,7 +577,7 @@ TEST(MainWindow, KeysKeepTheirSizeAndScrollWhenTheWindowIsSmall) {
     EXPECT_EQ(child<QPushButton>(window, "key:7")->size(), seven);
     auto* keys = child<QScrollArea>(window, "keys");
     EXPECT_FALSE(keys->horizontalScrollBar()->isVisible());
-    window.resize(1000, 260);  // a shorter window: they scroll instead (a narrower one: see the next test)
+    window.resize(1600, 260);  // a shorter window: they scroll instead (a narrower one: see the next test)
     QTest::qWait(50);
     EXPECT_EQ(child<QPushButton>(window, "key:sin")->size(), sin);
     EXPECT_TRUE(keys->verticalScrollBar()->isVisible());
@@ -634,7 +634,7 @@ TEST(MainWindow, DirectKeysSitLeftOfTheMainPadAtTheSameSize) {
 
 TEST(MainWindow, TheLeftPanelCollapsesToARail) {
     MainWindow window;
-    window.resize(900, 700);
+    window.resize(1200, 700);  // wide enough for the keys side by side with any font
     window.show();
     ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
     auto* rail = child<QWidget>(window, "rail");
