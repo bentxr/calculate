@@ -57,13 +57,29 @@ FetchContent_Declare(jetbrainsmono
     URL_HASH SHA256=6f6376c6ed2960ea8a963cd7387ec9d76e3f629125bc33d1fdcd7eb7012f7bbf
     SOURCE_SUBDIR no-cmake)
 FetchContent_MakeAvailable(jetbrainsmono)
-set(font_files ${jetbrainsmono_SOURCE_DIR}/fonts/ttf/JetBrainsMono-Regular.ttf ${jetbrainsmono_SOURCE_DIR}/OFL.txt)
+set(font_files ${jetbrainsmono_SOURCE_DIR}/fonts/ttf/JetBrainsMono-Regular.ttf)
 set_source_files_properties(${jetbrainsmono_SOURCE_DIR}/fonts/ttf/JetBrainsMono-Regular.ttf PROPERTIES QT_RESOURCE_ALIAS JetBrainsMono-Regular.ttf)
-set_source_files_properties(${jetbrainsmono_SOURCE_DIR}/OFL.txt PROPERTIES QT_RESOURCE_ALIAS JetBrainsMono-OFL.txt)
 qt_add_resources(calculate-ui fonts PREFIX /fonts FILES ${font_files})
-# Qt's licence (the program links Qt under the LGPL-3.0, which is the GPL-3.0 with additional permissions)
-qt_add_resources(calculate-ui licences PREFIX /licences BASE ${PROJECT_SOURCE_DIR}/LICENSES
-    FILES ${PROJECT_SOURCE_DIR}/LICENSES/LGPL-3.0-only.txt ${PROJECT_SOURCE_DIR}/LICENSES/GPL-3.0-only.txt)
+# The program's notices: NOTICE and the licence files of every component it ships, as licensing/manifest.json lists
+# them (Qt under the LGPL-3.0, the third-party code inside Qt, the typeface, Boost; test-only components left out).
+file(READ ${PROJECT_SOURCE_DIR}/licensing/manifest.json manifest)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/licensing/manifest.json)
+set(shipped_licences ${PROJECT_SOURCE_DIR}/NOTICE)
+string(JSON components LENGTH "${manifest}" components)
+math(EXPR last "${components} - 1")
+foreach(i RANGE ${last})
+    string(JSON use GET "${manifest}" components ${i} use)
+    if(use STREQUAL "runtime")
+        string(JSON files LENGTH "${manifest}" components ${i} licenceFiles)
+        math(EXPR last_file "${files} - 1")
+        foreach(j RANGE ${last_file})
+            string(JSON path GET "${manifest}" components ${i} licenceFiles ${j} path)
+            list(APPEND shipped_licences ${PROJECT_SOURCE_DIR}/${path})
+        endforeach()
+    endif()
+endforeach()
+list(REMOVE_DUPLICATES shipped_licences)
+qt_add_resources(calculate-ui licences PREFIX /licences BASE ${PROJECT_SOURCE_DIR} FILES ${shipped_licences})
 qt_add_translations(TARGETS calculate-ui TS_FILE_DIR i18n NO_GENERATE_PLURALS_TS_FILE
     LUPDATE_OPTIONS -no-obsolete)
 

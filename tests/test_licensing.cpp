@@ -6,6 +6,7 @@
 #include <atomic>
 #include <chrono>
 #include <random>
+#include <set>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -349,4 +350,31 @@ TEST(Licensing, ThisRepositoryIsCompliant) {
     EXPECT_FALSE(tree.fetchedSources.empty());
     const Problems problems = lic::checkAll(tree);
     EXPECT_TRUE(problems.empty()) << joined(problems);
+}
+
+// The browser build links Qt statically, and with it the third-party code inside Qt: each piece that Qt
+// 6.11.2's qt_attribution.json files name for Qt Core, GUI, Widgets, SVG and the WebAssembly platform (those of
+// other platforms and of the build tools left out) is a runtime component, so that NOTICE carries its notices and
+// the licences view its licence.
+TEST(Licensing, QtsThirdPartyCodeIsDeclared) {
+    const auto text = [] {
+        std::ifstream in(fs::path(CALCULATE_SOURCE_DIR) / "licensing/manifest.json", std::ios::binary);
+        std::ostringstream all;
+        all << in.rdbuf();
+        return all.str();
+    }();
+    const auto manifest = calculate::support::parseJson(text, nullptr);
+    ASSERT_TRUE(manifest.has_value());
+    std::set<std::string> runtime;
+    for (const auto& component : manifest->find("components")->items())
+        if (component.find("use")->asString() == "runtime") runtime.insert(component.find("id")->asString());
+    for (const char* id :
+         {"qt-aglfn", "qt-blake2", "qt-dejavu", "qt-doubleconversion", "qt-easing", "qt-emoji-segmenter", "qt-freetype",
+          "qt-freetype-bdf", "qt-freetype-pcf", "qt-freetype-zlib", "qt-grayraster", "qt-harfbuzz-ng",
+          "qt-icc-srgb-color-profile", "qt-libjpeg", "qt-libpng", "qt-md4", "qt-md4c", "qt-md5", "qt-pcre2",
+          "qt-pcre2-sljit", "qt-rfc6234", "qt-sha1", "qt-sha3_endian", "qt-sha3_keccak", "qt-siphash",
+          "qt-smooth-scaling-algorithm", "qt-tika-mimetypes", "qt-tinycbor", "qt-tlexpected",
+          "qt-unicode-character-database", "qt-unicode-cldr", "qt-webgradients", "qt-xserverhelper", "qt-xsvg",
+          "qt-zlib"})
+        EXPECT_TRUE(runtime.count(id)) << id;
 }

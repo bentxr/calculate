@@ -2,6 +2,7 @@
 
 #include <QBoxLayout>
 #include <QDialogButtonBox>
+#include <QDirIterator>
 #include <QFile>
 #include <QFontDatabase>
 #include <QListWidget>
@@ -18,17 +19,18 @@ LicencesDialog::LicencesDialog(QWidget* parent) : QDialog(parent) {
     text->setObjectName("licenceText");
     text->setReadOnly(true);
     text->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    // NOTICE first (it names every component), then each licence it names, in path order
+    const QString root = QStringLiteral(":/licences/");
+    QStringList paths;
+    for (QDirIterator it(root, QDir::Files, QDirIterator::Subdirectories); it.hasNext();) paths << it.next().mid(root.size());
+    paths.sort();
+    paths.removeAll(QStringLiteral("NOTICE"));
+    paths.prepend(QStringLiteral("NOTICE"));
     QStringList texts;
-    QFile ofl(QStringLiteral(":/fonts/JetBrainsMono-OFL.txt"));
-    if (ofl.open(QIODevice::ReadOnly)) {
-        list->addItem(QStringLiteral("JetBrains Mono: OFL.txt"));
-        texts << QString::fromUtf8(ofl.readAll());
-    }
-    // Qt, which the program links under the LGPL-3.0 (the GPL-3.0 with additional permissions)
-    for (const char* name : {"LGPL-3.0-only.txt", "GPL-3.0-only.txt"}) {
-        QFile file(QStringLiteral(":/licences/") + QLatin1String(name));
+    for (const QString& path : paths) {
+        QFile file(root + path);
         if (!file.open(QIODevice::ReadOnly)) continue;
-        list->addItem(QStringLiteral("Qt: ") + QLatin1String(name));
+        list->addItem(path);
         texts << QString::fromUtf8(file.readAll());
     }
     connect(list, &QListWidget::currentRowChanged, text, [text, texts](int row) {

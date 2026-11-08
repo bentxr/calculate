@@ -18,6 +18,307 @@ and qtsvg-everywhere-src-6.11.2.tar.xz). The desktop build uses the Qt libraries
 system; the browser build contains them, linked statically.
 
 
+Third-party code inside Qt 6.11.2
+=================================
+
+The browser build contains, inside Qt, the third-party code below, as Qt names it in the
+qt_attribution.json files of Qt Core, Qt GUI, Qt SVG and the WebAssembly platform. The desktop build
+uses the system's Qt, which carries its own notices.
+
+
+Adobe Glyph List For New Fonts 1.7
+----------------------------------
+Copyright 2002, 2003, 2005, 2006, 2008, 2010, 2015 Adobe Systems
+Licence: BSD-3-Clause (LICENSES/Qt/aglfn/LICENSE.AGLFN.txt).
+
+
+Anti-aliasing rasterizer from FreeType 2 (as in Qt 6.11.2)
+----------------------------------------------------------
+Copyright 2000-2016 by David Turner, Robert Wilhelm, and Werner Lemberg.
+Licence: FTL OR GPL-2.0-only (LICENSES/Qt/freetype/LICENSE.txt, LICENSES/Qt/FTL.txt).
+
+
+Apache Tika MimeType Definitions c29724782854bb5a319f4a1940d0828a58ace3f9
+-------------------------------------------------------------------------
+Copyright 2026 The Apache Software Foundation
+Licence: Apache-2.0 (LICENSES/Qt/Apache-2.0.txt).
+
+
+BLAKE2 (reference implementation) ed1974ea83433eba7b2d95c5dcd9ac33cb847913
+--------------------------------------------------------------------------
+Copyright 2012, Samuel Neves <sneves@dei.uc.pt>
+Licence: CC0-1.0 OR Apache-2.0 (LICENSES/Qt/blake2/COPYING).
+
+
+Data Compression Library (zlib) 1.3.2
+-------------------------------------
+(C) 1995-2026 Jean-loup Gailly and Mark Adler
+Licence: Zlib (LICENSES/Qt/zlib/LICENSE).
+
+
+DejaVu Fonts 2.37
+-----------------
+Copyright (c) 2003 by Bitstream, Inc
+Copyright (c) 2006 by Tavmjong Bah
+(c) American Mathematical Society
+Licence: Bitstream-Vera (LICENSES/Qt/dejavu/DEJAVU-LICENSE).
+
+
+Easing Equations by Robert Penner (as in Qt 6.11.2)
+---------------------------------------------------
+Copyright (c) 2001 Robert Penner
+Licence: BSD-3-Clause (LICENSES/Qt/easing/LICENSE).
+
+
+Efficient Binary-Decimal and Decimal-Binary Conversion Routines for IEEE Doubles 3.4.0
+--------------------------------------------------------------------------------------
+Copyright 2006-2012, the V8 project authors
+Licence: BSD-3-Clause (LICENSES/Qt/double-conversion/LICENSE).
+
+
+Emoji Segmenter 0.4.0
+---------------------
+Copyright 2019 Google LLC
+Licence: Apache-2.0 (LICENSES/Qt/Apache-2.0.txt).
+
+
+Freetype 2 2.14.3
+-----------------
+Copyright (c) 2007-2014 Adobe Systems Incorporated
+Copyright (c) 2004-2026 Albert Chin-A-Young
+Copyright (c) 2018-2026 Armin Hasitzka, David Turner, Robert Wilhelm, and Werner Lemberg
+Copyright (c) 2000 Computing Research Labs, New Mexico State University
+Copyright (c) 1996-2026 David Turner, Robert Wilhelm, Dominik Röttsches, and Werner Lemberg
+Copyright (c) 2004-2026 David Turner, Robert Wilhelm, Werner Lemberg and George Williams
+Copyright (c) 2022-2026 David Turner, Robert Wilhelm, Werner Lemberg, and Moazin Khatti
+Copyright (c) 2008-2026 David Turner, Robert Wilhelm, Werner Lemberg, and suzuki toshiya
+Copyright (c) 2003-2026 David Turner, Robert Wilhelm, and Werner Lemberg
+Copyright (c) 2005-2026 David Turner
+Copyright (c) 2007-2026 Derek Clegg and Michael Toftdal
+Copyright (c) 2007 Dmitry Timoshkov for Codeweavers
+Copyright (c) 2001-2015 Francesco Zappa Nardelli
+Copyright (c) 2005, 2007, 2008, 2013 George Williams
+Copyright (c) 2013-2026 Google, Inc. Google Author(s) Behdad Esfahbod and Stuart Gill
+Copyright (c) 2013-2022 Google, Inc.
+Copyright (c) 2003 Huw D M Davies for Codeweavers
+Copyright (c) 2010-2026 Joel Klinghed
+Copyright (c) 1996-2026 Just van Rossum, David Turner, Robert Wilhelm, and Werner Lemberg
+Copyright (c) 2003-2026 Masatake YAMATO and Redhat K.K.
+Copyright (c) 2004-2026 Masatake YAMATO, Redhat K.K, David Turner, Robert Wilhelm, and Werner Lemberg
+Copyright (c) 2019-2026 Nikhil Ramakrishnan, David Turner, Robert Wilhelm, and Werner Lemberg
+Copyright (c) 2009-2026 Oran Agra and Mickey Gabel
+Copyright (c) 2007-2026 Rahul Bhalerao <rahul.bhalerao@redhat.com>
+Copyright (c) 2002-2026 Roberto Alameda
+Copyright (c) 2015-2026 Werner Lemberg
+Copyright (c) 2004-2026 suzuki toshiya, Masatake YAMATO, Red Hat K.K., David Turner, Robert Wilhelm, and Werner Lemberg
+Copyright (c) 2019 nyorain
+Copyright (c) 2022-2026 David Turner, Robert Wilhelm, Werner Lemberg, George Williams, and Dominik Röttsches
+Copyright (C) 2009, 2023  Red Hat, Inc.
+Portions of this software are copyright (C) The FreeType Project (https://freetype.org).
+All rights reserved.
+Licence: FTL OR GPL-2.0-only (LICENSES/Qt/freetype/LICENSE.txt, LICENSES/Qt/FTL.txt).
+
+
+Freetype 2 - Bitmap Distribution Format (BDF) support (as in Qt 6.11.2)
+-----------------------------------------------------------------------
+Copyright (c) 2000 Computing Research Labs, New Mexico State University
+Copyright (c) 2001-2014 Francesco Zappa Nardelli
+Licence: MIT (LICENSES/Qt/freetype/BDF-LICENSE.txt).
+
+
+Freetype 2 - Portable Compiled Format (PCF) support (as in Qt 6.11.2)
+---------------------------------------------------------------------
+Copyright (c) 2001, 2012 David Turner, Robert Wilhelm, and Werner Lemberg
+Copyright (c) 2000-2014 Francesco Zappa Nardelli
+Copyright (c) 1990, 1994, 1998 The Open Group
+Licence: MIT AND MIT-open-group (LICENSES/Qt/freetype/PCF-LICENSE.txt).
+
+
+Freetype 2 - zlib (as in Qt 6.11.2)
+-----------------------------------
+Copyright (C) 1995-2024 Jean-loup Gailly and Mark Adler
+Licence: Zlib (LICENSES/Qt/freetype/ZLIB-LICENSE.txt).
+
+
+HarfBuzz-NG 14.3.0
+------------------
+Copyright (C) 2010-2022  Google, Inc.
+Copyright (C) 2015-2020  Ebrahim Byagowi
+Copyright (C) 2019,2020  Facebook, Inc.
+Copyright (C) 2012,2015  Mozilla Foundation
+Copyright (C) 2011  Codethink Limited
+Copyright (C) 2008,2010  Nokia Corporation and/or its subsidiary(-ies)
+Copyright (C) 2009  Keith Stribley
+Copyright (C) 2011  Martin Hosken and SIL International
+Copyright (C) 2007  Chris Wilson
+Copyright (C) 2005,2006,2020,2021,2022,2023  Behdad Esfahbod
+Copyright (C) 2004,2007,2008,2009,2010,2013,2021,2022,2023  Red Hat, Inc.
+Copyright (C) 1998-2005  David Turner and Werner Lemberg
+Copyright (C) 2016  Igalia S.L.
+Copyright (C) 2022  Matthias Clasen
+Copyright (C) 2018,2021  Khaled Hosny
+Copyright (C) 2018,2019,2020  Adobe, Inc
+Copyright (C) 2013-2015  Alexei Podtelezhnikov
+Licence: MIT (LICENSES/Qt/harfbuzz-ng/COPYING).
+
+
+LibJPEG-turbo 3.2.0
+-------------------
+This software is based in part on the work of the Independent JPEG Group.
+Licence: IJG AND BSD-3-Clause (LICENSES/Qt/libjpeg/LICENSE, LICENSES/Qt/libjpeg/ijg-license.txt).
+
+
+LibPNG 1.6.58
+-------------
+Copyright (c) 1995-2026 The PNG Reference Library Authors
+Copyright (c) 2000-2026 Cosmin Truta
+Copyright (c) 1998-2018 Glenn Randers-Pehrson
+Copyright (c) 1996-1997 Andreas Dilger
+Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.
+Copyright (c) 2000-2017 Simon-Pierre Cadieux
+Copyright (c) 2000-2017 Eric S. Raymond
+Copyright (c) 2000-2017 Mans Rullgard
+Copyright (c) 2000-2017 Gilles Vollant
+Copyright (c) 2000-2017 James Yu
+Copyright (c) 2000-2017 Mandar Sahastrabuddhe
+Copyright (c) 1998-2000 Tom Lane
+Copyright (c) 1998-2000 Willem van Schaik
+Copyright (c) 1996-1997 John Bowler
+Copyright (c) 1996-1997 Kevin Bracey
+Copyright (c) 1996-1997 Sam Bushell
+Copyright (c) 1996-1997 Magnus Holmgren
+Copyright (c) 1996-1997 Greg Roelofs
+Copyright (c) 1996-1997 Tom Tanner
+Copyright (c) 1995-1996 Dave Martindale
+Copyright (c) 1995-1996 Paul Schmidt
+Copyright (c) 1995-1996 Tim Wegner
+Licence: Libpng AND libpng-2.0 (LICENSES/Qt/libpng/LICENSE).
+
+
+MD4 (as in Qt 6.11.2)
+---------------------
+Written by Alexander Peslyak - better known as Solar Designer <solar@openwall.com> - in 2001, and placed in the public domain. There's absolutely no warranty.
+Licence: CC0-1.0 (LICENSES/Qt/CC0-1.0.txt).
+
+
+MD4C 0.5.3
+----------
+Copyright (C) 2016-2024 Martin Mitáš
+Licence: MIT (LICENSES/Qt/md4c/LICENSE.md).
+
+
+MD5 (as in Qt 6.11.2)
+---------------------
+Written by Colin Plumb in 1993, no copyright is claimed. Ian Jackson <ian@chiark.greenend.org.uk>.
+Licence: CC0-1.0 (LICENSES/Qt/CC0-1.0.txt).
+
+
+PCRE2 10.47
+-----------
+Copyright (c) 1997-2007 University of Cambridge
+Copyright (c) 2007-2024 Philip Hazel
+Copyright (c) 2010-2024 Zoltan Herczeg
+Licence: LicenseRef-BSD-3-Clause-with-PCRE2-Binary-Like-Packages-Exception (LICENSES/Qt/pcre2/LICENCE.md).
+
+
+PCRE2 - Stack-less Just-In-Time Compiler 10.47
+----------------------------------------------
+Copyright Zoltan Herczeg
+Licence: BSD-2-Clause (LICENSES/Qt/pcre2/LICENSE-SLJIT).
+
+
+Secure Hash Algorithm SHA-1 (as in Qt 6.11.2)
+---------------------------------------------
+Copyright (C) Dominik Reichl <dominik.reichl@t-online.de>
+Copyright (C) 2016 The Qt Company Ltd
+Licence: LicenseRef-SHA1-Public-Domain (LICENSES/Qt/LicenseRef-SHA1-Public-Domain.txt).
+
+
+Secure Hash Algorithm SHA-3 - brg_endian 1.0.0
+----------------------------------------------
+Copyright (c) 1998-2013, Brian Gladman, Worcester, UK. All rights reserved.
+Licence: BSD-2-Clause (LICENSES/Qt/sha3/BRG_ENDIAN_LICENSE).
+
+
+Secure Hash Algorithm SHA-3 - Keccak 3.2
+----------------------------------------
+Guido Bertoni, Joan Daemen, Michaël Peeters and Gilles Van Assche.
+To the extent possible under law, the implementers have waived all copyright
+and related or neighboring rights to the source code in this file.
+Licence: CC0-1.0 (LICENSES/Qt/sha3/CC0_LICENSE).
+
+
+Secure Hash Algorithms SHA-384 and SHA-512 (as in Qt 6.11.2)
+------------------------------------------------------------
+Copyright (c) 2011 IETF Trust and the persons identified as authors of the code.
+Licence: BSD-3-Clause (LICENSES/Qt/rfc6234/LICENSE).
+
+
+SipHash Algorithm (as in Qt 6.11.2)
+-----------------------------------
+Copyright (C) 2012-2014 Jean-Philippe Aumasson
+Copyright (C) 2012-2014 Daniel J. Bernstein <djb@cr.yp.to>
+Copyright (C) 2016 Intel Corporation
+Licence: CC0-1.0 (LICENSES/Qt/CC0-1.0.txt).
+
+
+Smooth Scaling Algorithm (as in Qt 6.11.2)
+------------------------------------------
+Copyright (C) 2004, 2005 Daniel M. Duley.
+(C) Carsten Haitzler and various contributors.
+(C) Willem Monsuwe <willem@stack.nl>
+Licence: BSD-2-Clause AND Imlib2 (LICENSES/Qt/smooth-scaling-algorithm/LICENSE.QIMAGETRANSFORM.txt).
+
+
+sRGB color profile icc file (as in Qt 6.11.2)
+---------------------------------------------
+Copyright International Color Consortium, 2015
+Licence: LicenseRef-ICC-License (LICENSES/Qt/icc/LICENSE.txt).
+
+
+TinyCBOR 7.0
+------------
+Copyright (C) 2015-2025 Intel Corporation
+Licence: MIT (LICENSES/Qt/tinycbor/LICENSE).
+
+
+tl::expected 41d3e1f48d682992a2230b2a715bca38b848b269
+-----------------------------------------------------
+To the extent possible under law, Sy Brand has waived all copyright and related or neighboring rights to the expected library. This work is published from: United Kingdom.
+Licence: CC0-1.0 (LICENSES/Qt/CC0-1.0.txt).
+
+
+Unicode Character Database (UCD) 36
+-----------------------------------
+Copyright (C) 1991-2025 Unicode, Inc.
+Licence: Unicode-3.0 (LICENSES/Qt/Unicode-3.0.txt).
+
+
+Unicode Common Locale Data Repository (CLDR) v48.2
+--------------------------------------------------
+Copyright (C) 2004-2025 Unicode, Inc.
+Licence: Unicode-3.0 (LICENSES/Qt/Unicode-3.0.txt).
+
+
+WebGradients (as in Qt 6.11.2)
+------------------------------
+Copyright (c) 2017 itmeo
+Licence: MIT (LICENSES/Qt/webgradients/LICENSE.WEBGRADIENTS.txt).
+
+
+X Server helper (as in Qt 6.11.2)
+---------------------------------
+Copyright (c) 1987, 1988 X Consortium
+Copyright 1987, 1988 by Digital Equipment Corporation, Maynard, Massachusetts.
+Licence: X11 AND HPND (LICENSES/Qt/xserverhelper/LICENSE.XCONSORTIUM.txt).
+
+
+XSVG (as in Qt 6.11.2)
+----------------------
+Copyright 2002 USC/Information Sciences Institute
+Licence: HPND-sell-variant (LICENSES/Qt/xsvg/LICENSE.XSVG.txt).
+
+
 JetBrains Mono 2.304
 --------------------
 Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono)
