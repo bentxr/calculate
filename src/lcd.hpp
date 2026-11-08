@@ -53,9 +53,6 @@ public:
     // While completions are offered, ▲ ▼ Tab Enter Esc are theirs: emitted as completionKey, not handled here.
     void setCompleting(bool completing) { completing_ = completing; }
     void complete(const QString& name);  // replaces the name being typed with `name`
-    // The phone's on-screen keyboard (an input method): off in the browser, where it would cover the
-    // keypad, until asked for. A physical keyboard types either way.
-    void setSystemKeyboard(bool on);
     void clear();  // the input and the result, like AC
 
     void showValue(const view::ValueParts& parts);

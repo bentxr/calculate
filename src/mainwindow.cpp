@@ -1,6 +1,7 @@
 #include "mainwindow.hpp"
 
 #include "detailscard.hpp"
+#include "devicekeyboard.hpp"
 #include "formulatip.hpp"
 #include "icons.hpp"
 #include "inspector.hpp"
@@ -8,6 +9,7 @@
 #include "keypad.hpp"
 #include "keysizing.hpp"
 #include "lcd.hpp"
+#include "licences.hpp"
 #include "longpress.hpp"
 #include "popupplacement.hpp"
 #include "presenter.hpp"
@@ -187,11 +189,12 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     proceed_->setVisible(false);
     strip->addWidget(message_, 1);
     strip->addWidget(proceed_, 0, Qt::AlignTop);
-    auto* stripHolder = new QWidget(central);
-    stripHolder->setLayout(strip);
+    messageStrip_ = new QWidget(central);
+    messageStrip_->setObjectName("messageStrip");
+    messageStrip_->setLayout(strip);
     strip->setContentsMargins(0, 0, 0, 0);
-    stripHolder->setFixedHeight(qMax(2 * fontMetrics().lineSpacing(), proceed_->sizeHint().height()) + 4);
-    main->addWidget(stripHolder);
+    messageStrip_->setFixedHeight(qMax(2 * fontMetrics().lineSpacing(), proceed_->sizeHint().height()) + 4);
+    main->addWidget(messageStrip_);
 
     // Along the screen's bottom edge: Details, and the messages that need an answer.
     detailsButton_ = new QToolButton(lcd_);
@@ -235,13 +238,14 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     editButton_->setObjectName("editButton");
     editButton_->setAutoRaise(true);
     lcd_->addToBar(editButton_);
-    // The system keyboard on request: a phone shows it only when asked, so the keypad stays in view. On the
-    // desktop the keyboard is always there, so the button is only in the browser.
+    // The device's keyboard on request: a phone shows it only while this button is on, so the keys stay in
+    // view. On the desktop the keyboard is always there, so the button is only in the browser.
+    deviceKeyboard_ = new DeviceKeyboard(this);
     keyboardButton_ = new QToolButton(lcd_);
     keyboardButton_->setObjectName("keyboardButton");
     keyboardButton_->setAutoRaise(true);
     keyboardButton_->setCheckable(true);
-    keyboardButton_->setChecked(lcd_->testAttribute(Qt::WA_InputMethodEnabled));
+    keyboardButton_->setChecked(deviceKeyboard_->allowed());
     lcd_->addToBar(keyboardButton_);
 #ifndef Q_OS_WASM
     keyboardButton_->hide();
@@ -369,7 +373,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     searchList_->hide();
     QScroller::grabGesture(searchList_->viewport(), QScroller::TouchGesture);
     connect(search_, &QLineEdit::textEdited, this, &MainWindow::filterSearch);
-    connect(keyboardButton_, &QToolButton::toggled, search_, [this](bool on) { search_->setAttribute(Qt::WA_InputMethodEnabled, on); });
     connect(searchList_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) {
         const QVariant index = item->data(Qt::UserRole);
         if (!index.isValid()) return;  // a heading
@@ -447,7 +450,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), types_(numberType
     connect(equals_, &QPushButton::clicked, this, &MainWindow::evaluate);
     connect(proceed_, &QPushButton::clicked, this, [this] { request(lastExpression_, true); });
     connect(detailsButton_, &QToolButton::clicked, this, [this] { card_->popUp(lcd_); });
-    connect(keyboardButton_, &QToolButton::toggled, lcd_, &Lcd::setSystemKeyboard);
+    connect(keyboardButton_, &QToolButton::toggled, deviceKeyboard_, &DeviceKeyboard::setAllowed);
     connect(copyButton_, &QToolButton::clicked, this, &MainWindow::popUpCopyMenu);
     connect(lcd_, &Lcd::copyMenuRequested, this, &MainWindow::popUpCopyMenu);
     connect(lcd_, &Lcd::copyRequested, findChild<QAction*>("copy:value"), &QAction::trigger);
@@ -675,7 +678,6 @@ QWidget* MainWindow::buildDirectKeys() {
     search_->setObjectName("search");
     search_->setClearButtonEnabled(true);
     search_->setFocusPolicy(Qt::ClickFocus);
-    search_->setAttribute(Qt::WA_InputMethodEnabled, lcd_->testAttribute(Qt::WA_InputMethodEnabled));
     search_->addAction(QIcon(), QLineEdit::LeadingPosition)->setObjectName("searchIcon");  // drawn: see drawIcons
     search_->installEventFilter(this);
     layout->addWidget(search_);
@@ -857,12 +859,8 @@ void MainWindow::arrange() {
         }
         screenRow_->setDirection(QBoxLayout::TopToBottom);
         side_->setDirection(QBoxLayout::LeftToRight);
-        for (QWidget* w : side) {
-            w->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-            w->setMinimumWidth(0);
-            w->setMaximumWidth(QWIDGETSIZE_MAX);
-        }
-        for (QWidget* w : side + QList<QWidget*>{panelToggle_, settingsButton_}) w->setFixedHeight(touchTarget);
+        for (QWidget* w : side) sidePolicy(w);
+        for (QWidget* w : QList<QWidget*>{panelToggle_, settingsButton_}) w->setFixedHeight(touchTarget);
         column->removeWidget(commonBlock_);
         keyboards_->setDirection(QBoxLayout::TopToBottom);
         keyboards_->addStretch();
@@ -889,12 +887,7 @@ void MainWindow::arrange() {
         }
         screenRow_->setDirection(QBoxLayout::LeftToRight);
         side_->setDirection(QBoxLayout::TopToBottom);
-        for (QWidget* w : side) {
-            w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);  // as wide as the widest: see retranslate
-            w->setMinimumHeight(0);
-            w->setMaximumHeight(QWIDGETSIZE_MAX);
-            if (sideWidth_ > 0) w->setFixedWidth(sideWidth_);
-        }
+        for (QWidget* w : side) sidePolicy(w);
         if (drawerLayout->indexOf(commonHeader_) >= 0) {
             drawerLayout->removeWidget(commonHeader_);
             static_cast<QVBoxLayout*>(commonBlock_->layout())->insertWidget(0, commonHeader_);
@@ -909,6 +902,20 @@ void MainWindow::arrange() {
         keyboards_->addStretch();
     }
     placeCommon();
+}
+
+void MainWindow::sidePolicy(QWidget* w) {
+    if (narrow_) {
+        w->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        w->setMinimumWidth(0);
+        w->setMaximumWidth(QWIDGETSIZE_MAX);
+        w->setFixedHeight(touchTarget);
+    } else {
+        w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);  // as wide as the widest: see retranslate
+        w->setMinimumHeight(0);
+        w->setMaximumHeight(QWIDGETSIZE_MAX);
+        if (sideWidth_ > 0) w->setFixedWidth(sideWidth_);
+    }
 }
 
 void MainWindow::relabelLetters() {
@@ -1101,6 +1108,11 @@ void MainWindow::buildSettings() {
             },
             this);
     });
+    // The notices and licences of the code and fonts that come from others.
+    settings_->addSeparator();
+    QAction* licences = settings_->addAction(QString());
+    licences->setObjectName("licences");
+    connect(licences, &QAction::triggered, this, [this] { (new LicencesDialog(this))->show(); });
 }
 
 namespace {
@@ -1245,6 +1257,7 @@ void MainWindow::retranslate() {
     fileSection_->setText(tr("Settings file"));
     findChild<QAction*>("settings:export")->setText(tr("Export settings…"));
     findChild<QAction*>("settings:import")->setText(tr("Import settings…"));
+    findChild<QAction*>("licences")->setText(tr("Third-party licences…"));
 
     QList<Key> keys = cursorPad();
     for (const QList<Key>& row : keypad()) keys += row;

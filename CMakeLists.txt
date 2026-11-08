@@ -21,6 +21,7 @@ endif()
 qt_add_library(calculate-ui STATIC
     src/constanttext.cpp
     src/detailscard.cpp
+    src/devicekeyboard.cpp
     src/entry.cpp
     src/formulatip.cpp
     src/functiontext.cpp
@@ -30,6 +31,7 @@ qt_add_library(calculate-ui STATIC
     src/keypad.cpp
     src/keysizing.cpp
     src/lcd.cpp
+    src/licences.cpp
     src/longpress.cpp
     src/mainwindow.cpp
     src/popupplacement.cpp
@@ -59,11 +61,17 @@ set(font_files ${jetbrainsmono_SOURCE_DIR}/fonts/ttf/JetBrainsMono-Regular.ttf $
 set_source_files_properties(${jetbrainsmono_SOURCE_DIR}/fonts/ttf/JetBrainsMono-Regular.ttf PROPERTIES QT_RESOURCE_ALIAS JetBrainsMono-Regular.ttf)
 set_source_files_properties(${jetbrainsmono_SOURCE_DIR}/OFL.txt PROPERTIES QT_RESOURCE_ALIAS JetBrainsMono-OFL.txt)
 qt_add_resources(calculate-ui fonts PREFIX /fonts FILES ${font_files})
+# Qt's licence (the program links Qt under the LGPL-3.0, which is the GPL-3.0 with additional permissions)
+qt_add_resources(calculate-ui licences PREFIX /licences BASE ${PROJECT_SOURCE_DIR}/LICENSES
+    FILES ${PROJECT_SOURCE_DIR}/LICENSES/LGPL-3.0-only.txt ${PROJECT_SOURCE_DIR}/LICENSES/GPL-3.0-only.txt)
 qt_add_translations(TARGETS calculate-ui TS_FILE_DIR i18n NO_GENERATE_PLURALS_TS_FILE
     LUPDATE_OPTIONS -no-obsolete)
 
 qt_add_executable(calculate src/main.cpp)
 target_link_libraries(calculate PRIVATE calculate-ui)
+if(NOT EMSCRIPTEN AND NOT APPLE)
+    target_link_options(calculate PRIVATE -Wl,--exclude-libs,ALL)
+endif()
 set_target_properties(calculate PROPERTIES WIN32_EXECUTABLE ON MACOSX_BUNDLE ON)
 
 include(CTest)

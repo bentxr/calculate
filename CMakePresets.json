@@ -16,7 +16,9 @@
       "inherits": "desktop",
       "displayName": "Desktop, engine from GitHub",
       "binaryDir": "${sourceDir}/build/desktop-ci",
-      "cacheVariables": { "FETCHCONTENT_SOURCE_DIR_CALCULATE-CORE": "" }
+      "cacheVariables": {
+        "FETCHCONTENT_SOURCE_DIR_CALCULATE-CORE": ""
+      }
     },
     {
       "name": "wasm",
@@ -35,17 +37,43 @@
       "inherits": "wasm",
       "displayName": "Browser, engine from GitHub",
       "binaryDir": "${sourceDir}/build/wasm-ci",
-      "cacheVariables": { "FETCHCONTENT_SOURCE_DIR_CALCULATE-CORE": "" }
+      "cacheVariables": {
+        "FETCHCONTENT_SOURCE_DIR_CALCULATE-CORE": ""
+      }
     }
   ],
   "buildPresets": [
-    { "name": "desktop", "configurePreset": "desktop" },
-    { "name": "desktop-ci", "configurePreset": "desktop-ci" },
-    { "name": "wasm", "configurePreset": "wasm" },
-    { "name": "wasm-ci", "configurePreset": "wasm-ci" }
+    {
+      "name": "desktop",
+      "configurePreset": "desktop"
+    },
+    {
+      "name": "desktop-ci",
+      "configurePreset": "desktop-ci"
+    },
+    {
+      "name": "wasm",
+      "configurePreset": "wasm"
+    },
+    {
+      "name": "wasm-ci",
+      "configurePreset": "wasm-ci"
+    }
   ],
   "testPresets": [
-    { "name": "desktop", "configurePreset": "desktop", "output": { "outputOnFailure": true } },
-    { "name": "desktop-ci", "configurePreset": "desktop-ci", "output": { "outputOnFailure": true } }
+    {
+      "name": "desktop",
+      "configurePreset": "desktop",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "desktop-ci",
+      "configurePreset": "desktop-ci",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
   ]
 }

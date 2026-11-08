@@ -53,3 +53,5 @@ jobs:
           export QT_HOST="$(dirname "$QT_ROOT_DIR")/gcc_64"
           ls "$QT_HOST/bin/qmake"
           cmake --preset wasm-ci && cmake --build --preset wasm-ci
+      - name: Check the device keyboard in a headless browser
+        run: tests/browser/device_keyboard.py build/wasm-ci

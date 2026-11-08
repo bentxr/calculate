@@ -136,16 +136,6 @@ TEST(Lcd, EnterEndsANameBeingTyped) {
     EXPECT_EQ(lcd.input(), "2×π:=");
 }
 
-TEST(Lcd, TheSystemKeyboardCanBeTurnedOnAndOff) {
-    Lcd lcd;
-    lcd.setSystemKeyboard(false);
-    EXPECT_FALSE(lcd.testAttribute(Qt::WA_InputMethodEnabled));
-    QTest::keyClicks(&lcd, "12");  // a physical keyboard types either way
-    EXPECT_EQ(lcd.input(), "12");
-    lcd.setSystemKeyboard(true);
-    EXPECT_TRUE(lcd.testAttribute(Qt::WA_InputMethodEnabled));
-}
-
 TEST(Lcd, ShiftMovesAndCtrlASelect) {
     Lcd lcd;
     QTest::keyClicks(&lcd, "1+2");

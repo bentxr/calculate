@@ -10,6 +10,7 @@
 
 class Inspector;
 class DetailsCard;
+class DeviceKeyboard;
 class FormulaTip;
 class Lcd;
 class QAction;
@@ -112,6 +113,7 @@ private:
     void reevaluate();
     QString exactRefusal(const QString& label) const;  // why Exact greys out a key
     void arrange();
+    void sidePolicy(QWidget* w);  // the side's size rules in the arrangement in use
     bool editCommon(const Key& key, const QString& prefix);
     void setCommon(const QStringList& ids);
     void placeCommon();
@@ -186,6 +188,7 @@ private:
     QAction* fileSection_ = nullptr;
     QMap<QString, QString> defaults_;  // settingValues() as the window started
     QPushButton* equals_ = nullptr;
+    QWidget* messageStrip_ = nullptr;
     QLabel* statisticsLabel_ = nullptr;
     bool hasResult_ = false;  // whether last_ holds a result to present
     QStackedWidget* pages_ = nullptr;
@@ -201,6 +204,7 @@ private:
     QMenu* copyAsMenu_ = nullptr;  // the same forms in the edit menu, where "Value" alone would be unclear
     QToolButton* editButton_ = nullptr;
     QToolButton* keyboardButton_ = nullptr;
+    DeviceKeyboard* deviceKeyboard_ = nullptr;  // whether any box may bring the device's keyboard up
     DetailsCard* card_ = nullptr;
     FormulaTip* formulaTip_ = nullptr;
     QLabel* message_ = nullptr;
