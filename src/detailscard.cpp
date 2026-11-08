@@ -5,6 +5,14 @@
 #include <QEvent>
 #include <QGridLayout>
 #include <QLabel>
+#include <QAbstractTextDocumentLayout>
+#include <QAction>
+#include <QClipboard>
+#include <QCoreApplication>
+#include <QGuiApplication>
+#include <QTextDocument>
+#include <QtMath>
+#include <memory>
 #include <QPainter>
 #include <QPushButton>
 #include <QScrollArea>
@@ -40,6 +48,52 @@ protected:
         painter.setBrush(ink);
         painter.drawEllipse(QPointF(x, circle.top() + d * 0.28), stroke * 0.6, stroke * 0.6);
         painter.drawRoundedRect(QRectF(x - stroke / 2, circle.top() + d * 0.42, stroke, d * 0.36), stroke / 2, stroke / 2);
+    }
+};
+
+// A figure's value, which may have no space to break at (hundreds of digits, the stored bits): laid out to break
+// anywhere, words kept whole when they fit, so the card fits any width. It paints itself, so its text is copied
+// from a context menu.
+class ValueLabel : public QLabel {
+public:
+    ValueLabel(const QString& text, bool rich, QWidget* parent) : QLabel(text, parent) {
+        setTextFormat(rich ? Qt::RichText : Qt::PlainText);
+        setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        setContextMenuPolicy(Qt::ActionsContextMenu);
+        auto* copy = new QAction(QCoreApplication::translate("DetailsCard", "Copy"), this);
+        copy->setObjectName("copyValue");
+        connect(copy, &QAction::triggered, this, [this] { QGuiApplication::clipboard()->setText(document(-1)->toPlainText()); });
+        addAction(copy);
+    }
+    // Narrow, one line: the height comes from heightForWidth at the width the card gives
+    QSize minimumSizeHint() const override { return {fontMetrics().averageCharWidth() * 8, fontMetrics().height()}; }
+    QSize sizeHint() const override {
+        const auto whole = document(-1);  // on one line
+        return {qCeil(whole->idealWidth()), qCeil(whole->size().height())};
+    }
+    bool hasHeightForWidth() const override { return true; }
+    int heightForWidth(int width) const override { return qCeil(document(width)->size().height()); }
+
+protected:
+    void paintEvent(QPaintEvent*) override {
+        QPainter painter(this);
+        QAbstractTextDocumentLayout::PaintContext context;
+        context.palette.setColor(QPalette::Text, palette().color(QPalette::WindowText));
+        document(width())->documentLayout()->draw(&painter, context);
+    }
+
+private:
+    std::unique_ptr<QTextDocument> document(int width) const {
+        auto doc = std::make_unique<QTextDocument>();
+        doc->setDefaultFont(font());
+        doc->setDocumentMargin(0);
+        QTextOption option;
+        option.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+        doc->setDefaultTextOption(option);
+        if (textFormat() == Qt::RichText) doc->setHtml(text());
+        else doc->setPlainText(text());
+        doc->setTextWidth(width);
+        return doc;
     }
 };
 
@@ -81,11 +135,8 @@ void DetailsCard::setRows(const QList<view::DetailRow>& rows) {
         QFont bold = label->font();
         bold.setBold(true);
         label->setFont(bold);
-        auto* value = new QLabel(row.value, rows_);
-        value->setTextFormat(row.rich ? Qt::RichText : Qt::PlainText);  // coloured bits; everything else as written
+        auto* value = new ValueLabel(row.value, row.rich, rows_);  // coloured bits; everything else as written
         value->setObjectName("value:" + row.key);
-        value->setWordWrap(true);
-        value->setTextInteractionFlags(Qt::TextSelectableByMouse);
         auto* info = new InfoButton(rows_);
         info->setObjectName("info:" + row.key);
         info->setToolTip(tr("What does this mean?"));

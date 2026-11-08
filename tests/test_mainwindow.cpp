@@ -17,7 +17,9 @@
 #include <QJsonObject>
 #include <QAbstractItemView>
 #include <QApplication>
+#include <QAction>
 #include <QClipboard>
+#include <QGuiApplication>
 #include <QComboBox>
 #include <QDialog>
 #include <QHelpEvent>
@@ -306,6 +308,40 @@ TEST(MainWindow, TheScreenShowsOnlyTheValueAndTheCardTheRest) {
     EXPECT_EQ(child<QWidget>(window, "keypad")->geometry(), keypad);  // an overlay: nothing moves
     EXPECT_EQ(lcd(window)->geometry(), screen);
     card->hide();
+}
+
+// A value has no spaces to break at (hundreds of digits, the stored bits): it wraps anywhere, so every row stays
+// inside the card at any width, the phone's included; each still copies whole from its context menu.
+TEST(MainWindow, TheCardsValuesWrapAtAnyWidth) {
+    QWidget host;
+    host.resize(320, 700);
+    host.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&host));
+    auto* under = new QWidget(&host);
+    under->setGeometry(0, 0, 320, 10);
+    under->show();
+    DetailsCard card(&host);
+    const QString digits = QStringLiteral("0.1000000000000000055511151231257827021181583404541015625");
+    const QString bits = QStringLiteral("<span style=\"color:#c00\">0</span><span style=\"color:#00c\">01111111011</span>"
+                                        "<span style=\"color:#0a0\">1001100110011001100110011001100110011001100110011010</span>");
+    card.setRows({{"value", "Value", digits, false}, {"bits", "Stored bits", bits, true}, {"type", "Type", "Double", false}});
+    card.popUp(under);
+    QTest::qWait(50);
+    for (const char* key : {"value", "bits", "type"}) {
+        auto* label = card.findChild<QLabel*>(QString("value:") + key);
+        ASSERT_NE(label, nullptr) << key;
+        EXPECT_LE(label->mapTo(&card, QPoint(label->width(), 0)).x(), card.width()) << key;  // nothing cut at the edge
+    }
+    for (const char* key : {"value", "bits"}) {
+        auto* label = card.findChild<QLabel*>(QString("value:") + key);
+        EXPECT_GT(label->height(), 2 * label->fontMetrics().height()) << key;  // on several lines
+        auto* copy = label->findChild<QAction*>("copyValue");
+        ASSERT_NE(copy, nullptr) << key;
+        copy->trigger();
+        EXPECT_EQ(QGuiApplication::clipboard()->text().remove(' '), std::string(key) == "value" ? digits :
+                  QStringLiteral("0011111110111001100110011001100110011001100110011001100110011010")) << key;
+    }
+    card.hide();
 }
 
 TEST(MainWindow, EveryRowOfTheCardExplainsItselfInAPopup) {
