@@ -1,0 +1,37 @@
+calculate: third-party notices
+==============================
+
+calculate is built from the third-party components listed below. Their licence texts are in the
+LICENSES directory and are shown in the program (Settings, Third-party licences). The machine-readable
+list of every third-party file, its origin and its licence is licensing/manifest.json; an automated
+test fails the build if anything listed there is missing.
+
+
+Qt 6.11.2
+---------
+Copyright (C) The Qt Company Ltd. and other contributors.
+Used under the GNU Lesser General Public License version 3 (LICENSES/LGPL-3.0-only.txt, which adds
+its permissions to LICENSES/GPL-3.0-only.txt). The modules used are Qt Core, Qt GUI and Qt Widgets,
+and in the browser build also Qt SVG (through Qt's image plugins). Their source code is at
+https://download.qt.io/official_releases/qt/6.11/6.11.2/submodules/ (qtbase-everywhere-src-6.11.2.tar.xz
+and qtsvg-everywhere-src-6.11.2.tar.xz). The desktop build uses the Qt libraries installed on the
+system; the browser build contains them, linked statically.
+
+
+JetBrains Mono 2.304
+--------------------
+Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono)
+The font is embedded in the program under the SIL Open Font License, Version 1.1
+(LICENSES/JetBrainsMono-OFL.txt).
+
+
+Boost 1.92.0 (Boost.Config and Boost.Multiprecision)
+----------------------------------------------------
+Compiled into the calculation engine, calculate-core, under the Boost Software License, Version 1.0
+(LICENSES/BSL-1.0.txt).
+
+
+Physical constants
+------------------
+The values and uncertainties of the physical constants are the CODATA 2022 recommended values
+published by the National Institute of Standards and Technology (https://physics.nist.gov/constants).

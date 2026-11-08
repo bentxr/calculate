@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "ignore": ["build/**", ".git/**", "**/.qtcreator/**", "**/*.user", "**/*.AppImage"],
+  "own": [".github/**", ".gitignore", "CMakeLists.txt", "CMakePresets.json", "NOTICE", "README.md", "docs/**",
+          "i18n/**", "licensing/**", "packaging/**", "src/**", "tests/**", "tools/**"],
+  "ownRepositories": ["https://github.com/bentxr/calculate-core.git"],
+  "forbidden": [],
+  "mayMentionCopyright": ["NOTICE", "licensing/**", "tests/licensing/**", "tests/test_licensing.cpp"],
+  "notice": "NOTICE",
+  "components": [
+    {"id": "qt", "name": "Qt", "version": "6.11.2", "homepage": "https://www.qt.io",
+     "use": "runtime", "licence": "LGPL-3.0-only",
+     "licenceFiles": [
+       {"path": "LICENSES/LGPL-3.0-only.txt",
+        "upstream": "https://raw.githubusercontent.com/qt/qtbase/v6.11.2/LICENSES/LGPL-3.0-only.txt",
+        "sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768"},
+       {"path": "LICENSES/GPL-3.0-only.txt",
+        "upstream": "https://raw.githubusercontent.com/qt/qtbase/v6.11.2/LICENSES/GPL-3.0-only.txt",
+        "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"}],
+     "fetch": [], "vendored": [], "derived": [], "header": [],
+     "notices": ["Copyright (C) The Qt Company Ltd. and other contributors."],
+     "changes": null},
+    {"id": "jetbrainsmono", "name": "JetBrains Mono", "version": "2.304",
+     "homepage": "https://github.com/JetBrains/JetBrainsMono",
+     "use": "runtime", "licence": "OFL-1.1",
+     "licenceFiles": [
+       {"path": "LICENSES/JetBrainsMono-OFL.txt",
+        "upstream": "https://raw.githubusercontent.com/JetBrains/JetBrainsMono/v2.304/OFL.txt",
+        "sha256": "30f0c136e3c88e422d0791acd97238870f9054a9729bc34cf2ff0d4ed8cac4ad"}],
+     "fetch": [{"url": "https://github.com/JetBrains/JetBrainsMono/releases/download/v2.304/JetBrainsMono-2.304.zip",
+                "sha256": "6f6376c6ed2960ea8a963cd7387ec9d76e3f629125bc33d1fdcd7eb7012f7bbf"}],
+     "vendored": [], "derived": [], "header": [],
+     "notices": ["Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono)"],
+     "changes": null},
+    {"id": "boost", "name": "Boost", "version": "1.92.0", "homepage": "https://www.boost.org",
+     "use": "runtime", "licence": "BSL-1.0",
+     "licenceFiles": [
+       {"path": "LICENSES/BSL-1.0.txt",
+        "upstream": "https://raw.githubusercontent.com/boostorg/multiprecision/boost-1.92.0/LICENSE",
+        "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"}],
+     "fetch": [], "vendored": [], "derived": [], "header": [], "notices": [], "changes": null},
+    {"id": "googletest", "name": "GoogleTest", "version": "1.18.0", "homepage": "https://github.com/google/googletest",
+     "use": "test", "licence": "BSD-3-Clause",
+     "licenceFiles": [
+       {"path": "LICENSES/GoogleTest.txt",
+        "upstream": "https://raw.githubusercontent.com/google/googletest/v1.18.0/LICENSE",
+        "sha256": "9702de7e4117a8e2b20dafab11ffda58c198aede066406496bef670d40a22138"}],
+     "fetch": [{"url": "https://github.com/google/googletest/archive/refs/tags/v1.18.0.tar.gz",
+                "sha256": "6e3191c1455468b3fc35a417fb565c1c5071aee1b7e7f85e30cf48a98d37d8b5"}],
+     "vendored": [], "derived": [], "header": [], "notices": [], "changes": null}
+  ]
+}
