@@ -104,3 +104,14 @@ TEST(Licences, ReadInSpanish) {
     dialog->close();
     QCoreApplication::removeTranslator(&spanish);
 }
+
+// The browser build links Qt statically, so the LGPL-3.0 asks that a user can rebuild it against a modified Qt and
+// may debug such a change: NOTICE (shown in the view) says how and grants it, and the README points to it.
+TEST(Licences, TheNoticeSaysHowToUseAModifiedQt) {
+    const QString notice = fileText(QStringLiteral(CALCULATE_SOURCE_DIR "/NOTICE"));
+    EXPECT_TRUE(notice.contains(QStringLiteral("Using a modified Qt")));
+    EXPECT_TRUE(notice.contains(QStringLiteral("https://github.com/bentxr/calculate")));
+    EXPECT_TRUE(notice.contains(QStringLiteral("cmake --preset wasm-ci && cmake --build --preset wasm-ci")));
+    EXPECT_TRUE(notice.contains(QStringLiteral("reverse engineering")));
+    EXPECT_TRUE(fileText(QStringLiteral(CALCULATE_SOURCE_DIR "/README.md")).contains(QStringLiteral("NOTICE")));
+}

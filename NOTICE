@@ -18,6 +18,19 @@ and qtsvg-everywhere-src-6.11.2.tar.xz). The desktop build uses the Qt libraries
 system; the browser build contains them, linked statically.
 
 
+Using a modified Qt
+-------------------
+The browser build contains Qt, linked statically. To run it with a modified Qt, build that Qt for
+WebAssembly (Qt 6.11.2's wasm_multithread configuration, with Emscripten 4.0.7) and rebuild this
+program against it from its source, which is public at https://github.com/bentxr/calculate:
+
+  export QT_WASM=/path/to/the/modified/Qt QT_HOST=/path/to/a/desktop/Qt-6.11.2
+  cmake --preset wasm-ci && cmake --build --preset wasm-ci
+
+The desktop build uses the Qt libraries installed on the system, which can be replaced directly.
+Whatever the terms of calculate's own code, you may modify the Qt contained in this program for your
+own use and use reverse engineering to debug such modifications.
+
 Third-party code inside Qt 6.11.2
 =================================
 

@@ -73,3 +73,6 @@ Early development.
 ## License
 
 Not chosen yet. Until one is added, all rights are reserved.
+
+The third-party components and their licences are listed in [NOTICE](NOTICE), which also says how to
+rebuild the browser build against a modified Qt.
