@@ -55,7 +55,8 @@ TEST(Typing, SpacesAreKeptOnce) {
     EXPECT_EQ(typed("1 + 2").text(), "1 + 2");
     EXPECT_EQ(typed("1  +2").text(), "1 +2");
     EXPECT_EQ(typed("1 000").text(), "1000");  // a thin space groups digits: ignored
-    EXPECT_FALSE(typing::typeCharacter(*new Entry, QChar('\n')));
+    Entry entry;
+    EXPECT_FALSE(typing::typeCharacter(entry, QChar('\n')));
 }
 
 TEST(Typing, TheCommaSeparatesArgumentsOnlyInACallThatTakesSeveral) {

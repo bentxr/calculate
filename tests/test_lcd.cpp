@@ -3,6 +3,7 @@
 #include "printers.hpp"
 #include "settings.hpp"
 
+#include <memory>
 #include <QAccessible>
 #include <QClipboard>
 #include <QGuiApplication>
@@ -169,10 +170,10 @@ TEST(Lcd, ATapPlacesTheCursor) {
     lcd.show();
     ASSERT_TRUE(QTest::qWaitForWindowExposed(&lcd));
     lcd.setInput("1234");
-    QPointingDevice* finger = QTest::createTouchDevice();
+    const std::unique_ptr<QPointingDevice> finger(QTest::createTouchDevice());  // the caller owns it
     const QPoint one = lcd.caretRectAt(Position{{}, 1}).center().toPoint();
-    QTest::touchEvent(&lcd, finger).press(0, one, &lcd);
-    QTest::touchEvent(&lcd, finger).release(0, one, &lcd);
+    QTest::touchEvent(&lcd, finger.get()).press(0, one, &lcd);
+    QTest::touchEvent(&lcd, finger.get()).release(0, one, &lcd);
     EXPECT_TRUE(QTest::qWaitFor([&] { return lcd.entry().cursor() == 1; }, 1000));
 }
 
