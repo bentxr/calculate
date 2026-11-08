@@ -80,6 +80,21 @@ foreach(i RANGE ${last})
 endforeach()
 list(REMOVE_DUPLICATES shipped_licences)
 qt_add_resources(calculate-ui licences PREFIX /licences BASE ${PROJECT_SOURCE_DIR} FILES ${shipped_licences})
+# Qt's own texts in Spanish (a text field's menu, the standard buttons): Qt's translation, beside the program's
+# (where Qt's package says, or where Qt's own qtpaths says, for a Qt found through a linked folder)
+set(qt_translations ${QT6_INSTALL_PREFIX}/${QT6_INSTALL_TRANSLATIONS})
+if(TARGET Qt6::qtpaths)
+    get_target_property(qtpaths Qt6::qtpaths IMPORTED_LOCATION)
+    execute_process(COMMAND ${qtpaths} --query QT_INSTALL_TRANSLATIONS OUTPUT_VARIABLE host_translations
+                    OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+    list(APPEND qt_translations ${host_translations})
+endif()
+find_file(qt_spanish qtbase_es.qm PATHS ${qt_translations} NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+if(NOT qt_spanish)
+    message(FATAL_ERROR "Qt's Spanish translation (qtbase_es.qm) is not in ${qt_translations}")
+endif()
+set_source_files_properties(${qt_spanish} PROPERTIES QT_RESOURCE_ALIAS qtbase_es.qm)
+qt_add_resources(calculate-ui qttranslations PREFIX /i18n FILES ${qt_spanish})
 qt_add_translations(TARGETS calculate-ui TS_FILE_DIR i18n NO_GENERATE_PLURALS_TS_FILE
     LUPDATE_OPTIONS -no-obsolete)
 

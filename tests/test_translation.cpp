@@ -3,13 +3,18 @@
 #include "keypad.hpp"
 #include "presenter.hpp"
 #include "printers.hpp"
+#include "settings.hpp"
 
 #include <QCoreApplication>
 #include <QFile>
+#include <QLineEdit>
+#include <QMenu>
 #include <QLocale>
 #include <QTranslator>
 
 #include <gtest/gtest.h>
+
+#include <memory>
 
 using namespace calculate_core;
 
@@ -67,4 +72,18 @@ TEST(Translation, TheInspectorInSpanish) {
     EXPECT_EQ(rows[0].label, "Bits almacenados");
     EXPECT_EQ(rows[4].label, "Anterior representable");
     QCoreApplication::removeTranslator(&spanish);
+}
+
+// Qt's own texts (a text field's context menu, the standard buttons of dialogs) follow the language too: the app
+// carries Qt's Spanish translation and installs it beside its own.
+TEST(Translation, QtsOwnTextsFollowTheLanguage) {
+    settings::setLanguage(settings::Language::Spanish);
+    QLineEdit field;
+    std::unique_ptr<QMenu> menu(field.createStandardContextMenu());
+    EXPECT_TRUE(menu->actions().first()->text().startsWith(QStringLiteral("&Deshacer"))) << menu->actions().first()->text().toStdString();
+    EXPECT_EQ(QCoreApplication::translate("QPlatformTheme", "Cancel"), QStringLiteral("Cancelar"));
+    settings::setLanguage(settings::Language::English);
+    std::unique_ptr<QMenu> english(field.createStandardContextMenu());
+    EXPECT_TRUE(english->actions().first()->text().startsWith(QStringLiteral("&Undo")));
+    EXPECT_EQ(QCoreApplication::translate("QPlatformTheme", "Cancel"), QStringLiteral("Cancel"));
 }
