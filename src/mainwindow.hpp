@@ -13,7 +13,6 @@ class DetailsCard;
 class DeviceKeyboard;
 class FormulaTip;
 class Lcd;
-class PlotPage;
 class QAction;
 class QBoxLayout;
 class QComboBox;
@@ -114,9 +113,6 @@ private:
     void reevaluate();
     QString exactRefusal(const QString& label) const;  // why Exact greys out a key
     void arrange();
-    // Where the angle, the type and the plot's Details sit, and what Plot hides (the screen, =, the message strip):
-    // after a change of mode or of arrangement.
-    void placeContext();
     void sidePolicy(QWidget* w);  // the side's size rules in the arrangement in use
     bool editCommon(const Key& key, const QString& prefix);
     void setCommon(const QStringList& ids);
@@ -193,7 +189,6 @@ private:
     QMap<QString, QString> defaults_;  // settingValues() as the window started
     QPushButton* equals_ = nullptr;
     QWidget* messageStrip_ = nullptr;
-    PlotPage* plotPage_ = nullptr;
     QLabel* statisticsLabel_ = nullptr;
     bool hasResult_ = false;  // whether last_ holds a result to present
     QStackedWidget* pages_ = nullptr;

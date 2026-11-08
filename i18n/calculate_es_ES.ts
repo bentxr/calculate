@@ -182,7 +182,7 @@
 <context>
     <name>LicencesDialog</name>
     <message>
-        <location filename="../src/licences.cpp" line="20"/>
+        <location filename="../src/licences.cpp" line="12"/>
         <source>Third-party licences</source>
         <translation>Licencias de terceros</translation>
     </message>
@@ -190,718 +190,413 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1234"/>
+        <location filename="../src/mainwindow.cpp" line="1182"/>
         <source>calculate</source>
         <translation>calculate</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1235"/>
+        <location filename="../src/mainwindow.cpp" line="1183"/>
         <source>Show or hide the panel</source>
         <translation>Mostrar u ocultar el panel</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1237"/>
+        <location filename="../src/mainwindow.cpp" line="1185"/>
         <source>Calculator</source>
         <translation>Calculadora</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1237"/>
+        <location filename="../src/mainwindow.cpp" line="1185"/>
         <source>Statistics</source>
         <translation>Estadística</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1236"/>
+        <location filename="../src/mainwindow.cpp" line="1184"/>
         <source>Settings</source>
         <translation>Ajustes</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="450"/>
+        <location filename="../src/mainwindow.cpp" line="442"/>
         <source>Too long to work out while typing: press = to calculate it</source>
         <translation>Demasiado largo para calcularlo al escribir: pulsa = para calcularlo</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="489"/>
+        <location filename="../src/mainwindow.cpp" line="480"/>
         <source>Pasted the first of %1 lines</source>
         <translation>Se ha pegado la primera de %1 líneas</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="491"/>
+        <location filename="../src/mainwindow.cpp" line="482"/>
         <source>The browser did not allow reading the clipboard: paste with Ctrl+V</source>
         <translation>El navegador no ha permitido leer el portapapeles: pega con Ctrl+V</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="611"/>
+        <location filename="../src/mainwindow.cpp" line="602"/>
         <source>Common holds at most %1 keys</source>
         <translation>Habituales admite como mucho %1 teclas</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="720"/>
+        <location filename="../src/mainwindow.cpp" line="711"/>
         <source>Click a key to add it to Common, or a key of Common to remove it</source>
         <translation>Pulsa una tecla para añadirla a Habituales, o una de Habituales para quitarla</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1159"/>
+        <location filename="../src/mainwindow.cpp" line="1107"/>
         <source>Some settings were not imported: %1</source>
         <translation>No se importaron algunos ajustes: %1</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1217"/>
+        <location filename="../src/mainwindow.cpp" line="1165"/>
         <source>“%1” cannot be the common keys</source>
         <translation>“%1” no puede ser las teclas habituales</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1237"/>
+        <location filename="../src/mainwindow.cpp" line="1185"/>
         <source>Percentages</source>
         <translation>Porcentajes</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1237"/>
+        <location filename="../src/mainwindow.cpp" line="1185"/>
         <source>IEEE 754</source>
         <translation>IEEE 754</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1237"/>
-        <source>Plot</source>
-        <translation>Gráficas</translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.cpp" line="1240"/>
-        <location filename="../src/mainwindow.cpp" line="1241"/>
+        <location filename="../src/mainwindow.cpp" line="1188"/>
+        <location filename="../src/mainwindow.cpp" line="1189"/>
         <source>More</source>
         <translation>Más</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1242"/>
+        <location filename="../src/mainwindow.cpp" line="1190"/>
         <source>Search every function and constant…</source>
         <translation>Buscar entre todas las funciones y constantes…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1243"/>
+        <location filename="../src/mainwindow.cpp" line="1191"/>
         <source>Search</source>
         <translation>Buscar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1245"/>
+        <location filename="../src/mainwindow.cpp" line="1193"/>
         <source>Back to the keypad</source>
         <translation>Volver al teclado</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1246"/>
+        <location filename="../src/mainwindow.cpp" line="1194"/>
         <source>RAD</source>
         <translation>RAD</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1246"/>
+        <location filename="../src/mainwindow.cpp" line="1194"/>
         <source>DEG</source>
         <translation>DEG</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1246"/>
+        <location filename="../src/mainwindow.cpp" line="1194"/>
         <source>GRAD</source>
         <translation>GRAD</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1249"/>
+        <location filename="../src/mainwindow.cpp" line="1197"/>
         <source>=</source>
         <translation>=</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1250"/>
+        <location filename="../src/mainwindow.cpp" line="1198"/>
         <source>Details</source>
         <translation>Detalles</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1252"/>
+        <location filename="../src/mainwindow.cpp" line="1199"/>
         <source>Copy</source>
         <translation>Copiar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1254"/>
+        <location filename="../src/mainwindow.cpp" line="1201"/>
         <source>Copy as</source>
         <translation>Copiar como</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1255"/>
+        <location filename="../src/mainwindow.cpp" line="1202"/>
         <source>Value</source>
         <translation>Valor</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1256"/>
+        <location filename="../src/mainwindow.cpp" line="1203"/>
         <source>Trusted digits</source>
         <translation>Dígitos fiables</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1257"/>
+        <location filename="../src/mainwindow.cpp" line="1204"/>
         <source>Value ± bound</source>
         <translation>Valor ± cota</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1258"/>
+        <location filename="../src/mainwindow.cpp" line="1205"/>
         <source>Details as text</source>
         <translation>Detalles como texto</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1259"/>
+        <location filename="../src/mainwindow.cpp" line="1206"/>
         <source>Concise (1.23(4))</source>
         <translation>Concisa (1.23(4))</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1260"/>
+        <location filename="../src/mainwindow.cpp" line="1207"/>
         <source>Expression</source>
         <translation>Expresión</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1261"/>
+        <location filename="../src/mainwindow.cpp" line="1208"/>
         <source>Copy expression</source>
         <translation>Copiar expresión</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1262"/>
+        <location filename="../src/mainwindow.cpp" line="1209"/>
         <source>Copy value</source>
         <translation>Copiar valor</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1263"/>
+        <location filename="../src/mainwindow.cpp" line="1210"/>
         <source>Copy value ± bound</source>
         <translation>Copiar valor ± cota</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1264"/>
-        <location filename="../src/mainwindow.cpp" line="1334"/>
+        <location filename="../src/mainwindow.cpp" line="1211"/>
+        <location filename="../src/mainwindow.cpp" line="1281"/>
         <source>Edit</source>
         <translation>Editar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1266"/>
+        <location filename="../src/mainwindow.cpp" line="1213"/>
         <source>Keyboard</source>
         <translation>Teclado</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1268"/>
+        <location filename="../src/mainwindow.cpp" line="1215"/>
         <source>Proceed anyway</source>
         <translation>Continuar de todos modos</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1269"/>
+        <location filename="../src/mainwindow.cpp" line="1216"/>
         <source>Computing…</source>
         <translation>Calculando…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1270"/>
+        <location filename="../src/mainwindow.cpp" line="1217"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1271"/>
+        <location filename="../src/mainwindow.cpp" line="1218"/>
         <source>History</source>
         <translation>Historial</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1292"/>
+        <location filename="../src/mainwindow.cpp" line="1239"/>
         <source>Conventions</source>
         <translation>Convenciones</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1293"/>
+        <location filename="../src/mainwindow.cpp" line="1240"/>
         <source>log is base 10</source>
         <translation>log es en base 10</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1294"/>
+        <location filename="../src/mainwindow.cpp" line="1241"/>
         <source>log is natural</source>
         <translation>log es natural</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1295"/>
+        <location filename="../src/mainwindow.cpp" line="1242"/>
         <source>mod keeps the dividend&apos;s sign</source>
         <translation>mod conserva el signo del dividendo</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1296"/>
+        <location filename="../src/mainwindow.cpp" line="1243"/>
         <source>mod keeps the divisor&apos;s sign</source>
         <translation>mod conserva el signo del divisor</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1297"/>
+        <location filename="../src/mainwindow.cpp" line="1244"/>
         <source>% divides by 100</source>
         <translation>% divide entre 100</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1298"/>
+        <location filename="../src/mainwindow.cpp" line="1245"/>
         <source>x + p% adds p% of x</source>
         <translation>x + p% suma el p% de x</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1300"/>
+        <location filename="../src/mainwindow.cpp" line="1247"/>
         <source>Uncertainty</source>
         <translation>Incertidumbre</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1301"/>
+        <location filename="../src/mainwindow.cpp" line="1248"/>
         <source>Combination</source>
         <translation>Combinación</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1302"/>
+        <location filename="../src/mainwindow.cpp" line="1249"/>
         <source>Worst case (a limit)</source>
         <translation>Peor caso (un límite)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1303"/>
+        <location filename="../src/mainwindow.cpp" line="1250"/>
         <source>Statistical (an estimate)</source>
         <translation>Estadística (una estimación)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1304"/>
+        <location filename="../src/mainwindow.cpp" line="1251"/>
         <source>Read precision</source>
         <translation>Precisión de lectura</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1305"/>
+        <location filename="../src/mainwindow.cpp" line="1252"/>
         <source>Off</source>
         <translation>Desactivada</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1306"/>
+        <location filename="../src/mainwindow.cpp" line="1253"/>
         <source>Decimals</source>
         <translation>Con decimales</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1307"/>
+        <location filename="../src/mainwindow.cpp" line="1254"/>
         <source>All numbers</source>
         <translation>Todos los números</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1313"/>
+        <location filename="../src/mainwindow.cpp" line="1260"/>
         <source>Third-party licences…</source>
         <translation>Licencias de terceros…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1990"/>
+        <location filename="../src/mainwindow.cpp" line="1937"/>
         <source>Hold for: %1</source>
         <translation>Mantén pulsado para: %1</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1996"/>
+        <location filename="../src/mainwindow.cpp" line="1943"/>
         <source>logarithm (natural)</source>
         <translation>logaritmo (natural)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1996"/>
+        <location filename="../src/mainwindow.cpp" line="1943"/>
         <source>logarithm (base 10)</source>
         <translation>logaritmo (base 10)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="433"/>
+        <location filename="../src/mainwindow.cpp" line="425"/>
         <source>The memory needs a previous result</source>
         <translation>La memoria necesita un resultado anterior</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1274"/>
+        <location filename="../src/mainwindow.cpp" line="1221"/>
         <source>Values (one per line, or separated by commas):</source>
         <translation>Valores (uno por línea, o separados por comas):</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1275"/>
-        <location filename="../src/mainwindow.cpp" line="1276"/>
+        <location filename="../src/mainwindow.cpp" line="1222"/>
+        <location filename="../src/mainwindow.cpp" line="1223"/>
         <source>Show or hide the keypad</source>
         <translation>Mostrar u ocultar el teclado numérico</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1281"/>
+        <location filename="../src/mainwindow.cpp" line="1228"/>
         <source>Language</source>
         <translation>Idioma</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1282"/>
+        <location filename="../src/mainwindow.cpp" line="1229"/>
         <source>Theme</source>
         <translation>Tema</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1283"/>
-        <location filename="../src/mainwindow.cpp" line="1286"/>
+        <location filename="../src/mainwindow.cpp" line="1230"/>
+        <location filename="../src/mainwindow.cpp" line="1233"/>
         <source>System</source>
         <translation>Sistema</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1287"/>
+        <location filename="../src/mainwindow.cpp" line="1234"/>
         <source>Light</source>
         <translation>Claro</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1288"/>
+        <location filename="../src/mainwindow.cpp" line="1235"/>
         <source>Dark</source>
         <translation>Oscuro</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1289"/>
+        <location filename="../src/mainwindow.cpp" line="1236"/>
         <source>Decimal separator</source>
         <translation>Separador decimal</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1290"/>
+        <location filename="../src/mainwindow.cpp" line="1237"/>
         <source>As the language</source>
         <translation>Según el idioma</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1291"/>
+        <location filename="../src/mainwindow.cpp" line="1238"/>
         <source>Point</source>
         <translation>Punto</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1299"/>
+        <location filename="../src/mainwindow.cpp" line="1246"/>
         <source>Comma</source>
         <translation>Coma</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1308"/>
+        <location filename="../src/mainwindow.cpp" line="1255"/>
         <source>Input</source>
         <translation>Entrada</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1309"/>
+        <location filename="../src/mainwindow.cpp" line="1256"/>
         <source>Calculate as you type</source>
         <translation>Calcular al escribir</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1310"/>
+        <location filename="../src/mainwindow.cpp" line="1257"/>
         <source>Settings file</source>
         <translation>Archivo de ajustes</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1311"/>
+        <location filename="../src/mainwindow.cpp" line="1258"/>
         <source>Export settings…</source>
         <translation>Exportar ajustes…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1312"/>
+        <location filename="../src/mainwindow.cpp" line="1259"/>
         <source>Import settings…</source>
         <translation>Importar ajustes…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1322"/>
+        <location filename="../src/mainwindow.cpp" line="1269"/>
         <source>Common</source>
         <translation>Habituales</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1323"/>
+        <location filename="../src/mainwindow.cpp" line="1270"/>
         <source>Memory and editing</source>
         <translation>Memoria y edición</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1335"/>
+        <location filename="../src/mainwindow.cpp" line="1282"/>
         <source>Reset</source>
         <translation>Restablecer</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1721"/>
+        <location filename="../src/mainwindow.cpp" line="1668"/>
         <source>No digit is trusted</source>
         <translation>Ningún dígito es fiable</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1965"/>
+        <location filename="../src/mainwindow.cpp" line="1912"/>
         <source>Exact arithmetic cannot represent %1: its result is irrational. Switch to a floating type to compute it.</source>
         <translation>La aritmética exacta no puede representar %1: su resultado es irracional. Cambia a un tipo de coma flotante para calcularlo.</translation>
-    </message>
-</context>
-<context>
-    <name>PlotData</name>
-    <message>
-        <location filename="../src/plotdata.cpp" line="160"/>
-        <source>Data (*.csv *.tsv *.txt)</source>
-        <translation>Datos (*.csv *.tsv *.txt)</translation>
-    </message>
-    <message>
-        <location filename="../src/plotdata.cpp" line="287"/>
-        <location filename="../src/plotdata.cpp" line="291"/>
-        <source>The data of %1 are not a list of numbers: they cannot be shown as a table.</source>
-        <translation>Los datos de %1 no son una lista de números: no se pueden mostrar como tabla.</translation>
-    </message>
-    <message>
-        <location filename="../src/plotdata.cpp" line="310"/>
-        <source>This series&apos; data cannot be shown as a table.</source>
-        <translation>Los datos de esta serie no se pueden mostrar como tabla.</translation>
-    </message>
-    <message>
-        <location filename="../src/plotdata.cpp" line="359"/>
-        <source>Not a number: %1</source>
-        <translation>No es un número: %1</translation>
-    </message>
-    <message>
-        <location filename="../src/plotdata.cpp" line="408"/>
-        <source>No columns of numbers to import: each row needs two numbers, separated by tabs, semicolons or commas.</source>
-        <translation>No hay columnas de números que importar: cada fila necesita dos números, separados por tabuladores, puntos y coma o comas.</translation>
-    </message>
-    <message>
-        <location filename="../src/plotdata.cpp" line="425"/>
-        <source>Add series</source>
-        <translation>Añadir serie</translation>
-    </message>
-    <message>
-        <location filename="../src/plotdata.cpp" line="426"/>
-        <source>Line</source>
-        <translation>Línea</translation>
-    </message>
-    <message>
-        <location filename="../src/plotdata.cpp" line="427"/>
-        <source>Points</source>
-        <translation>Puntos</translation>
-    </message>
-    <message>
-        <location filename="../src/plotdata.cpp" line="428"/>
-        <source>Bars</source>
-        <translation>Barras</translation>
-    </message>
-    <message>
-        <location filename="../src/plotdata.cpp" line="429"/>
-        <source>Remove</source>
-        <translation>Quitar</translation>
-    </message>
-    <message>
-        <location filename="../src/plotdata.cpp" line="430"/>
-        <source>Import…</source>
-        <translation>Importar…</translation>
-    </message>
-</context>
-<context>
-    <name>PlotEditor</name>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="178"/>
-        <source>Title</source>
-        <translation>Título</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="179"/>
-        <source>x label</source>
-        <translation>Etiqueta x</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="180"/>
-        <source>y label</source>
-        <translation>Etiqueta y</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="189"/>
-        <source>Series</source>
-        <translation>Serie</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="223"/>
-        <source>Colour</source>
-        <translation>Color</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="224"/>
-        <source>Width</source>
-        <translation>Grosor</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="225"/>
-        <source>Label</source>
-        <translation>Etiqueta</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="232"/>
-        <source>Line</source>
-        <translation>Línea</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="233"/>
-        <source>Marker</source>
-        <translation>Marcador</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="250"/>
-        <source>x scale</source>
-        <translation>Escala x</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="250"/>
-        <source>y scale</source>
-        <translation>Escala y</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="287"/>
-        <location filename="../src/ploteditor.cpp" line="293"/>
-        <source>Show</source>
-        <translation>Mostrar</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="299"/>
-        <source>Figure title</source>
-        <translation>Título de la figura</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="413"/>
-        <source>Not a colour: %1</source>
-        <translation>No es un color: %1</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="417"/>
-        <source>Not a value a figure file can hold: %1</source>
-        <translation>No es un valor que pueda guardar un archivo de figura: %1</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="712"/>
-        <source>Data</source>
-        <translation>Datos</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="713"/>
-        <location filename="../src/ploteditor.cpp" line="715"/>
-        <source>Style</source>
-        <translation>Estilo</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="714"/>
-        <source>Find a property</source>
-        <translation>Buscar una propiedad</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="716"/>
-        <source>Choose…</source>
-        <translation>Elegir…</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="717"/>
-        <source>Titles and labels</source>
-        <translation>Títulos y etiquetas</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="717"/>
-        <source>Lines and markers</source>
-        <translation>Líneas y marcadores</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="718"/>
-        <source>Axes and ticks</source>
-        <translation>Ejes y marcas</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="718"/>
-        <source>Legend</source>
-        <translation>Leyenda</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="719"/>
-        <source>Grid</source>
-        <translation>Cuadrícula</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="719"/>
-        <source>Figure</source>
-        <translation>Figura</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="723"/>
-        <source>Fewer properties</source>
-        <translation>Menos propiedades</translation>
-    </message>
-    <message>
-        <location filename="../src/ploteditor.cpp" line="723"/>
-        <source>More: every property</source>
-        <translation>Más: todas las propiedades</translation>
-    </message>
-</context>
-<context>
-    <name>PlotPage</name>
-    <message>
-        <location filename="../src/plotpage.cpp" line="153"/>
-        <source>Figure files (*.json)</source>
-        <translation>Archivos de gráfica (*.json)</translation>
-    </message>
-    <message>
-        <location filename="../src/plotpage.cpp" line="157"/>
-        <source>%1 was not opened: %2</source>
-        <translation>%1 no se abrió: %2</translation>
-    </message>
-    <message>
-        <location filename="../src/plotpage.cpp" line="272"/>
-        <source>Details</source>
-        <translation>Detalles</translation>
-    </message>
-    <message>
-        <location filename="../src/plotpage.cpp" line="274"/>
-        <source>Home: the first view</source>
-        <translation>Inicio: la primera vista</translation>
-    </message>
-    <message>
-        <location filename="../src/plotpage.cpp" line="275"/>
-        <source>Back: the previous view</source>
-        <translation>Atrás: la vista anterior</translation>
-    </message>
-    <message>
-        <location filename="../src/plotpage.cpp" line="276"/>
-        <source>Forward: the next view</source>
-        <translation>Adelante: la vista siguiente</translation>
-    </message>
-    <message>
-        <location filename="../src/plotpage.cpp" line="277"/>
-        <source>Pan: the left button moves the view, the right button zooms it</source>
-        <translation>Desplazar: el botón izquierdo mueve la vista, el derecho la amplía o reduce</translation>
-    </message>
-    <message>
-        <location filename="../src/plotpage.cpp" line="278"/>
-        <source>Zoom to a rectangle: the left button zooms in, the right button out</source>
-        <translation>Zoom a un rectángulo: el botón izquierdo acerca, el derecho aleja</translation>
-    </message>
-    <message>
-        <location filename="../src/plotpage.cpp" line="279"/>
-        <source>Open a figure file</source>
-        <translation>Abrir un archivo de gráfica</translation>
-    </message>
-    <message>
-        <location filename="../src/plotpage.cpp" line="280"/>
-        <source>Save the figure: as an image, a Python script or a figure file</source>
-        <translation>Guardar la gráfica: como imagen, script de Python o archivo de gráfica</translation>
-    </message>
-    <message>
-        <location filename="../src/plotpage.cpp" line="288"/>
-        <source>PNG image</source>
-        <translation>Imagen PNG</translation>
-    </message>
-    <message>
-        <location filename="../src/plotpage.cpp" line="288"/>
-        <source>SVG image</source>
-        <translation>Imagen SVG</translation>
-    </message>
-    <message>
-        <location filename="../src/plotpage.cpp" line="288"/>
-        <source>Python script</source>
-        <translation>Script de Python</translation>
-    </message>
-    <message>
-        <location filename="../src/plotpage.cpp" line="288"/>
-        <source>Figure file</source>
-        <translation>Archivo de gráfica</translation>
-    </message>
-    <message>
-        <location filename="../src/plotpage.cpp" line="290"/>
-        <source>Data</source>
-        <translation>Datos</translation>
-    </message>
-    <message>
-        <location filename="../src/plotpage.cpp" line="290"/>
-        <source>Style</source>
-        <translation>Estilo</translation>
-    </message>
-    <message>
-        <location filename="../src/plotpage.cpp" line="290"/>
-        <source>Find…</source>
-        <translation>Buscar…</translation>
-    </message>
-    <message>
-        <location filename="../src/plotpage.cpp" line="293"/>
-        <source>Close the editor</source>
-        <translation>Cerrar el editor</translation>
-    </message>
-</context>
-<context>
-    <name>PlotStylesDialog</name>
-    <message>
-        <location filename="../src/plotstyles.cpp" line="72"/>
-        <source>Styles</source>
-        <translation>Estilos</translation>
     </message>
 </context>
 <context>
@@ -3856,7 +3551,7 @@
         <translation>Nota</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1817"/>
+        <location filename="../src/mainwindow.cpp" line="1764"/>
         <source>≈: off by %1</source>
         <translation>≈: desviación de %1</translation>
     </message>

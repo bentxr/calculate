@@ -1,19 +1,11 @@
 #include "licences.hpp"
 
-#include <calculate-plot/calculate-plot.hpp>
-
 #include <QBoxLayout>
 #include <QDialogButtonBox>
 #include <QFile>
 #include <QFontDatabase>
 #include <QListWidget>
 #include <QPlainTextEdit>
-
-namespace {
-
-QString fromView(std::string_view text) { return QString::fromUtf8(text.data(), static_cast<qsizetype>(text.size())); }
-
-}  // namespace
 
 LicencesDialog::LicencesDialog(QWidget* parent) : QDialog(parent) {
     setObjectName("licencesDialog");
@@ -27,14 +19,17 @@ LicencesDialog::LicencesDialog(QWidget* parent) : QDialog(parent) {
     text->setReadOnly(true);
     text->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
     QStringList texts;
-    for (const calculate_plot::LicenceText& licence : calculate_plot::licenceTexts()) {
-        list->addItem(QStringLiteral("calculate-plot: ") + fromView(licence.path));
-        texts << fromView(licence.text);
-    }
     QFile ofl(QStringLiteral(":/fonts/JetBrainsMono-OFL.txt"));
     if (ofl.open(QIODevice::ReadOnly)) {
         list->addItem(QStringLiteral("JetBrains Mono: OFL.txt"));
         texts << QString::fromUtf8(ofl.readAll());
+    }
+    // Qt, which the program links under the LGPL-3.0 (the GPL-3.0 with additional permissions)
+    for (const char* name : {"LGPL-3.0-only.txt", "GPL-3.0-only.txt"}) {
+        QFile file(QStringLiteral(":/licences/") + QLatin1String(name));
+        if (!file.open(QIODevice::ReadOnly)) continue;
+        list->addItem(QStringLiteral("Qt: ") + QLatin1String(name));
+        texts << QString::fromUtf8(file.readAll());
     }
     connect(list, &QListWidget::currentRowChanged, text, [text, texts](int row) {
         text->setPlainText(row >= 0 && row < texts.size() ? texts[row] : QString());

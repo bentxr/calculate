@@ -1,7 +1,5 @@
 #include "mainwindow.hpp"
 
-#include <calculate-plot/calculate-plot.hpp>
-
 #include <QAction>
 #include <QApplication>
 #include <QDialog>
@@ -28,8 +26,18 @@ QDialog* openLicences(MainWindow& window) {
 
 }  // namespace
 
-// Every third-party notice and licence that travels with the program can be read in it: the plotting library's
-// (its NOTICE, then each component's licence) and the screen typeface's.
+namespace {
+
+QString fileText(const QString& path) {
+    QFile file(path);
+    EXPECT_TRUE(file.open(QIODevice::ReadOnly)) << path.toStdString();
+    return QString::fromUtf8(file.readAll());
+}
+
+}  // namespace
+
+// Every third-party notice and licence that travels with the program can be read in it: the screen typeface's, then
+// Qt's (the LGPL-3.0 and the GPL-3.0 it adds its permissions to).
 TEST(Licences, TheViewShowsEveryThirdPartyText) {
     MainWindow window;
     window.show();
@@ -42,21 +50,19 @@ TEST(Licences, TheViewShowsEveryThirdPartyText) {
     ASSERT_NE(list, nullptr);
     ASSERT_NE(text, nullptr);
     EXPECT_TRUE(text->isReadOnly());
-    const std::vector<calculate_plot::LicenceText> plot = calculate_plot::licenceTexts();
-    ASSERT_GT(plot.size(), 10u);
-    ASSERT_EQ(list->count(), static_cast<int>(plot.size()) + 1);
-    EXPECT_EQ(list->currentRow(), 0);  // the plotting library's NOTICE first
-    for (std::size_t i = 0; i < plot.size(); ++i) {
-        list->setCurrentRow(static_cast<int>(i));
-        EXPECT_EQ(list->item(static_cast<int>(i))->text(),
-                  QStringLiteral("calculate-plot: ") + QString::fromUtf8(plot[i].path.data(), static_cast<qsizetype>(plot[i].path.size())));
-        EXPECT_EQ(text->toPlainText(), QString::fromUtf8(plot[i].text.data(), static_cast<qsizetype>(plot[i].text.size())));
-    }
+    ASSERT_EQ(list->count(), 3);
+    EXPECT_EQ(list->currentRow(), 0);
     QFile ofl(QStringLiteral(":/fonts/JetBrainsMono-OFL.txt"));
     ASSERT_TRUE(ofl.open(QIODevice::ReadOnly));
-    list->setCurrentRow(list->count() - 1);
     EXPECT_EQ(list->currentItem()->text(), "JetBrains Mono: OFL.txt");
     EXPECT_EQ(text->toPlainText(), QString::fromUtf8(ofl.readAll()));
+    list->setCurrentRow(1);
+    EXPECT_EQ(list->currentItem()->text(), "Qt: LGPL-3.0-only.txt");
+    EXPECT_EQ(text->toPlainText(), fileText(QStringLiteral(CALCULATE_LICENSES_DIR "/LGPL-3.0-only.txt")));
+    EXPECT_TRUE(text->toPlainText().startsWith(QStringLiteral("                   GNU LESSER GENERAL PUBLIC LICENSE")));
+    list->setCurrentRow(2);
+    EXPECT_EQ(list->currentItem()->text(), "Qt: GPL-3.0-only.txt");
+    EXPECT_EQ(text->toPlainText(), fileText(QStringLiteral(CALCULATE_LICENSES_DIR "/GPL-3.0-only.txt")));
     EXPECT_TRUE(window.geometry().contains(dialog->geometry()));
     dialog->close();
 }

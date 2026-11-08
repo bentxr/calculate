@@ -18,15 +18,6 @@ add_executable(calculate-tests
     test_lcd.cpp
     test_licences.cpp
     test_mainwindow.cpp
-    test_plot.cpp
-    test_plotcanvas.cpp
-    test_plotdata.cpp
-    test_ploteditor.cpp
-    test_plotfiles.cpp
-    test_plotmode.cpp
-    test_plotnav.cpp
-    test_plotphone.cpp
-    test_plotstyles.cpp
     test_popupplacement.cpp
     test_presenter.cpp
     test_screenshots.cpp
@@ -43,7 +34,7 @@ if(NOT APPLE)
     target_link_options(calculate-tests PRIVATE -Wl,--exclude-libs,ALL)
 endif()
 target_compile_definitions(calculate-tests PRIVATE CALCULATE_TS_FILE="${PROJECT_SOURCE_DIR}/i18n/calculate_es_ES.ts"
-    CALCULATE_PLOT_FONTS="${calculate-plot_SOURCE_DIR}/fonts/ttf")
+    CALCULATE_LICENSES_DIR="${PROJECT_SOURCE_DIR}/LICENSES")
 
 include(GoogleTest)
 gtest_discover_tests(calculate-tests DISCOVERY_MODE PRE_TEST PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")

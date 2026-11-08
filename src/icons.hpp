@@ -7,7 +7,7 @@
 // uses no emoji).
 namespace icons {
 
-enum class Kind { Settings, Keyboard, Search, Home, Back, Forward, Pan, Zoom, Save, Open };
+enum class Kind { Settings, Keyboard, Search };
 
 // A square icon of `side` logical pixels in `ink`, transparent elsewhere, sharp at the screen's pixel ratio.
 QIcon drawn(Kind kind, const QColor& ink, int side);

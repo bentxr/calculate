@@ -18,21 +18,11 @@ if(EMSCRIPTEN)  # the multithread Qt kit links a shared-memory module: every obj
     target_compile_options(calculate-core PRIVATE -pthread)
 endif()
 
-# The plots: figures drawn as matplotlib draws them (FreeType and HarfBuzz of its own, linked before Qt so that
-# the browser build holds one copy of each; the desktop executables keep theirs private: --exclude-libs).
-set(CALCULATE_PLOT_THREADS ON CACHE BOOL "" FORCE)
-FetchContent_Declare(calculate-plot
-    GIT_REPOSITORY https://github.com/bentxr/calculate-plot.git
-    GIT_TAG        release-staging
-    EXCLUDE_FROM_ALL)
-FetchContent_MakeAvailable(calculate-plot)
-
 qt_add_library(calculate-ui STATIC
     src/constanttext.cpp
     src/detailscard.cpp
     src/devicekeyboard.cpp
     src/entry.cpp
-    src/filedialogs.cpp
     src/formulatip.cpp
     src/functiontext.cpp
     src/icons.cpp
@@ -44,13 +34,6 @@ qt_add_library(calculate-ui STATIC
     src/licences.cpp
     src/longpress.cpp
     src/mainwindow.cpp
-    src/plotcanvas.cpp
-    src/plotdata.cpp
-    src/ploteditor.cpp
-    src/plotfonts.cpp
-    src/plotpage.cpp
-    src/plotstyles.cpp
-    src/plotworker.cpp
     src/popupplacement.cpp
     src/presenter.cpp
     src/settings.cpp
@@ -65,7 +48,7 @@ if(EMSCRIPTEN)  # the browser's asynchronous clipboard
     target_sources(calculate-ui PRIVATE src/webclipboard.cpp)
 endif()
 target_include_directories(calculate-ui PUBLIC ${PROJECT_SOURCE_DIR}/src)
-target_link_libraries(calculate-ui PUBLIC calculate-plot Qt6::Widgets calculate-core)  # (calculate-plot first: see above)
+target_link_libraries(calculate-ui PUBLIC Qt6::Widgets calculate-core)
 target_compile_options(calculate-ui PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
 # The screen's typeface: JetBrains Mono, SIL Open Font License 1.1 (its licence ships with it).
@@ -78,9 +61,9 @@ set(font_files ${jetbrainsmono_SOURCE_DIR}/fonts/ttf/JetBrainsMono-Regular.ttf $
 set_source_files_properties(${jetbrainsmono_SOURCE_DIR}/fonts/ttf/JetBrainsMono-Regular.ttf PROPERTIES QT_RESOURCE_ALIAS JetBrainsMono-Regular.ttf)
 set_source_files_properties(${jetbrainsmono_SOURCE_DIR}/OFL.txt PROPERTIES QT_RESOURCE_ALIAS JetBrainsMono-OFL.txt)
 qt_add_resources(calculate-ui fonts PREFIX /fonts FILES ${font_files})
-# matplotlib's fonts, which the plots are drawn with: given to calculate-plot as bytes (calculate_plot::useFontBytes)
-file(GLOB plot_fonts ${calculate-plot_SOURCE_DIR}/fonts/ttf/*.ttf)
-qt_add_resources(calculate-ui plotfonts PREFIX /plotfonts BASE ${calculate-plot_SOURCE_DIR}/fonts/ttf FILES ${plot_fonts})
+# Qt's licence (the program links Qt under the LGPL-3.0, which is the GPL-3.0 with additional permissions)
+qt_add_resources(calculate-ui licences PREFIX /licences BASE ${PROJECT_SOURCE_DIR}/LICENSES
+    FILES ${PROJECT_SOURCE_DIR}/LICENSES/LGPL-3.0-only.txt ${PROJECT_SOURCE_DIR}/LICENSES/GPL-3.0-only.txt)
 qt_add_translations(TARGETS calculate-ui TS_FILE_DIR i18n NO_GENERATE_PLURALS_TS_FILE
     LUPDATE_OPTIONS -no-obsolete)
 
