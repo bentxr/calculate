@@ -276,6 +276,25 @@ TEST(Presenter, WithADecimalCommaErrorsQuoteTheInputAsShown) {
     EXPECT_EQ(view::errorText(unexpected, "3.5, "), "Unexpected “,”");
 }
 
+// A missing operator says what was probably meant: a remainder after %, a product before a name or a parenthesis,
+// and, with a decimal comma, arguments separated with "," (which there is the decimal point).
+TEST(Presenter, AMissingOperatorSaysWhatWasMeant) {
+    const auto text = [](const char* expression) {
+        const Result r = evaluated(expression);
+        EXPECT_TRUE(r.error) << expression;
+        return r.error ? view::errorText(*r.error, QString::fromUtf8(expression)) : QString();
+    };
+    EXPECT_EQ(text("2π"), "Missing operator before “π” (write 2×π, not 2π)");
+    EXPECT_EQ(text("2 3"), "Missing operator before “3”");
+    EXPECT_EQ(text("3%2"), "Missing operator after “%” (for a remainder write rem(3, 2))");
+    settings::setDecimalComma(true);
+    EXPECT_EQ(text("2.5%2"), "Missing operator after “%” (for a remainder write rem(2,5; 2))");
+    EXPECT_EQ(text("betainc(2. 5. 0.3)"),  // typed as betainc(2, 5, 0,3)
+              "Missing operator before “5,”: separate the arguments with “;” (here “,” is the decimal point)");
+    EXPECT_EQ(text("2π"), "Missing operator before “π” (write 2×π, not 2π)");
+    settings::setDecimalComma(false);
+}
+
 TEST(Presenter, ThePercentageQuestionsAreExpressions) {
     const QList<view::PercentageRow> rows = view::percentageRows(QStringLiteral("80"), QStringLiteral("100"));
     QStringList keys, expressions;

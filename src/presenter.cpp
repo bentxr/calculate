@@ -425,7 +425,19 @@ QString errorText(const Error& e, const QString& expression) {
     case ErrorCode::UnexpectedToken: return QCoreApplication::translate("view", "Unexpected “%1”").arg(part);
     case ErrorCode::UnexpectedEnd: return QCoreApplication::translate("view", "The expression ends too early");
     case ErrorCode::MissingClosingParenthesis: return QCoreApplication::translate("view", "Missing “)”");
-    case ErrorCode::MissingOperator: return QCoreApplication::translate("view", "Missing operator before “%1” (write 2×π, not 2π)").arg(part);
+    case ErrorCode::MissingOperator: {
+        static const QRegularExpression remainder(QStringLiteral("for a remainder write (rem\\(.*\\))\\)$"));
+        if (const QRegularExpressionMatch m = remainder.match(QString::fromStdString(e.message)); m.hasMatch()) {
+            const QString meant = settings::decimalComma() ? withDecimalComma(m.captured(1)) : m.captured(1);
+            return QCoreApplication::translate("view", "Missing operator after “%” (for a remainder write %1)").arg(meant);
+        }
+        // With a decimal comma, "," typed between arguments became the decimal point of the number before
+        if (settings::decimalComma() && QString::fromUtf8(bytes.left(static_cast<int>(e.begin))).trimmed().endsWith('.'))
+            return QCoreApplication::translate("view", "Missing operator before “%1”: separate the arguments with “;” (here “,” is the decimal point)").arg(part);
+        if (e.message.find("2×π") != std::string::npos)  // the engine's guess: a product without its sign
+            return QCoreApplication::translate("view", "Missing operator before “%1” (write 2×π, not 2π)").arg(part);
+        return QCoreApplication::translate("view", "Missing operator before “%1”").arg(part);
+    }
     case ErrorCode::UnknownName:
         if (part == "Ans") return QCoreApplication::translate("view", "There is no previous result yet");
         if (part == "M") return QCoreApplication::translate("view", "The memory is empty");
