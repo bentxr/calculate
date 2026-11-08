@@ -69,9 +69,6 @@ qt_add_translations(TARGETS calculate-ui TS_FILE_DIR i18n NO_GENERATE_PLURALS_TS
 
 qt_add_executable(calculate src/main.cpp)
 target_link_libraries(calculate PRIVATE calculate-ui)
-if(NOT EMSCRIPTEN AND NOT APPLE)
-    target_link_options(calculate PRIVATE -Wl,--exclude-libs,ALL)
-endif()
 set_target_properties(calculate PROPERTIES WIN32_EXECUTABLE ON MACOSX_BUNDLE ON)
 
 include(CTest)

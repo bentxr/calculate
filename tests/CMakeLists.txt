@@ -30,9 +30,6 @@ add_executable(calculate-tests
     test_worker.cpp
 )
 target_link_libraries(calculate-tests PRIVATE calculate-ui Qt6::Test GTest::gtest)
-if(NOT APPLE)
-    target_link_options(calculate-tests PRIVATE -Wl,--exclude-libs,ALL)
-endif()
 target_compile_definitions(calculate-tests PRIVATE CALCULATE_TS_FILE="${PROJECT_SOURCE_DIR}/i18n/calculate_es_ES.ts"
     CALCULATE_LICENSES_DIR="${PROJECT_SOURCE_DIR}/LICENSES")
 
