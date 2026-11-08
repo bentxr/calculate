@@ -541,10 +541,33 @@ TEST(MainWindow, KeysKeepTheirSizeAndScrollWhenTheWindowIsSmall) {
     EXPECT_EQ(child<QPushButton>(window, "key:7")->size(), seven);
     auto* keys = child<QScrollArea>(window, "keys");
     EXPECT_FALSE(keys->horizontalScrollBar()->isVisible());
-    window.resize(260, 400);
+    window.resize(1000, 260);  // a shorter window: they scroll instead (a narrower one: see the next test)
     QTest::qWait(50);
-    EXPECT_EQ(child<QPushButton>(window, "key:sin")->size(), sin);  // smaller window: they scroll instead
-    EXPECT_TRUE(keys->horizontalScrollBar()->isVisible());
+    EXPECT_EQ(child<QPushButton>(window, "key:sin")->size(), sin);
+    EXPECT_TRUE(keys->verticalScrollBar()->isVisible());
+}
+
+// The keys side by side need a certain width; a window narrower than that (half of a laptop's landscape screen)
+// takes the phone arrangement instead of scrolling sideways, and goes back when it is wide enough again.
+TEST(MainWindow, AWindowTooNarrowForTheKeysSideBySideGetsThePhoneArrangement) {
+    MainWindow window;
+    window.resize(1396, 868);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    window.layOutKeys(QSize(1396, 868));  // a laptop's landscape screen
+    QTest::qWait(50);
+    EXPECT_TRUE(child<QWidget>(window, "rail")->isVisible());
+    auto* keys = child<QScrollArea>(window, "keys");
+    window.resize(698, 868);  // half of it
+    QTest::qWait(50);
+    EXPECT_FALSE(child<QWidget>(window, "rail")->isVisible());
+    EXPECT_TRUE(child<QPushButton>(window, "drawerToggle")->isVisible());
+    EXPECT_FALSE(keys->horizontalScrollBar()->isVisible());
+    for (const char* name : {"key:7", "common:asin"}) EXPECT_GE(child<QWidget>(window, name)->height(), touchTarget) << name;
+    window.resize(1396, 868);
+    QTest::qWait(50);
+    EXPECT_TRUE(child<QWidget>(window, "rail")->isVisible());
+    EXPECT_FALSE(child<QPushButton>(window, "drawerToggle")->isVisible());
 }
 
 TEST(MainWindow, DirectKeysInsertTheirFunctions) {
@@ -598,6 +621,7 @@ TEST(MainWindow, TheLeftPanelCollapsesToARail) {
 
 TEST(MainWindow, TheSettingsOpenAsAMenuFromTheGear) {
     MainWindow window;
+    window.resize(1000, 700);  // the keys side by side, the gear at the rail's foot
     window.show();
     ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
     auto* gear = child<QToolButton>(window, "settingsButton");
@@ -1574,7 +1598,8 @@ TEST(MainWindow, OnAPhoneThePadSitsAtTheBottomWithCommonAboveIt) {
     EXPECT_EQ(toggle->size(), child<QPushButton>(window, "common:asin")->size());
     EXPECT_FALSE(child<QPushButton>(window, "common:abs")->isVisible());  // its place holds More; abs is in Numbers
     EXPECT_FALSE(child<QWidget>(window, "drawer")->isVisible());
-    window.layOutKeys(QSize(1920, 1200));  // and back, side by side
+    window.resize(1200, 844);  // and back, side by side, in a window wide enough for it
+    window.layOutKeys(QSize(1920, 1200));
     QTest::qWait(50);
     EXPECT_TRUE(child<QWidget>(window, "rail")->isVisible());
     EXPECT_FALSE(toggle->isVisible());
@@ -1811,6 +1836,7 @@ TEST(MainWindow, OnAPhoneCommonIsEditedFromTheDrawer) {
     EXPECT_FALSE(window.common().contains("asin"));
     EXPECT_TRUE(drawer->isVisible());  // editing keeps the drawer open
     QTest::mouseClick(child<QToolButton>(window, "editCommon"), Qt::LeftButton);
+    window.resize(1200, 844);
     window.layOutKeys(QSize(1920, 1200));
     EXPECT_FALSE(drawer->isAncestorOf(child<QWidget>(window, "editCommon")));  // back on Common's title row
 }
@@ -2224,7 +2250,7 @@ TEST(MainWindow, ThePlusMinusKeyEntersAnUncertainty) {
 
 TEST(MainWindow, ANameWithoutAKeyIsFoundBySearch) {
     MainWindow window;
-    window.resize(640, 480);
+    window.resize(1000, 480);  // wide enough for the keys side by side
     window.show();
     ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
     auto* box = child<QLineEdit>(window, "search");

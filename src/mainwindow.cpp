@@ -757,13 +757,12 @@ QWidget* MainWindow::buildDirectKeys() {
 }
 
 // Lays the keys out for a screen of this size: side by side on a landscape screen, in the phone arrangement on a
-// portrait one; then gives every key the size derived from the screen. Called when the window is first shown,
-// whenever it moves to another screen, and after a change of language. What the window reserves for everything but
-// the keys is measured from its own layouts, so it holds for any style, font and language.
+// portrait one or in a window too narrow for them side by side; then gives every key the size derived from the
+// screen. Called when the window is first shown, whenever it moves to another screen, after a change of language,
+// and when a resize crosses the width the keys need side by side. What the window reserves for everything but the
+// keys is measured from its own layouts, so it holds for any style, font and language.
 void MainWindow::layOutKeys(QSize screen) {
     designScreen_ = screen;
-    narrow_ = keysLayout(screen) == KeysLayout::Narrow;
-    arrange();
     QWidget* area = keys_->widget();
     QWidget* pad = findChild<QWidget*>("keypad");
     QWidget* direct = findChild<QWidget*>("directKeys");
@@ -780,24 +779,30 @@ void MainWindow::layOutKeys(QSize screen) {
     const QMargins inner = pad->layout()->contentsMargins();
     const QMargins left = direct->layout()->contentsMargins();
     const int scrollBar = style()->pixelMetric(QStyle::PM_ScrollBarExtent);
-    QSize size;
+    const int columns = 12;
+    const int rows = 7;
+    const QSize reserved(outer.left() + outer.right() + centralWidget()->layout()->spacing() + modes_->width()
+                             + inner.left() + inner.right() + left.left() + left.right() + area->layout()->spacing()
+                             + 2 * keys_->frameWidth() + 2 * scrollBar,  // the window's bar and the column's
+                         outer.top() + outer.bottom() + lcd_->minimumSizeHint().height() + 2 * keySpacing
+                             + inner.top() + inner.bottom() + keypadGap
+                             + style()->pixelMetric(QStyle::PM_TitleBarHeight));
+    const QSize wide = keySize(screen, reserved, QSize(columns, rows), keySpacing, minimum);
+    // Side by side without scrolling sideways: the reserved room less the window's own bar, which shows only when
+    // the window is too short.
+    wideWidth_ = reserved.width() - scrollBar + columns * wide.width() + (columns - 1) * keySpacing;
+    narrow_ = keysLayout(screen) == KeysLayout::Narrow || width() < wideWidth_;
+    arrange();
+    QSize size = wide;
     if (narrow_) {
-        // The phone's keys share the screen's width, and stay large enough for a finger. Six keys fit both under the
-        // screen (beside the main pad's margins) and in the drawer (beside the column's margins and its scroll bar).
+        // The phone's keys share the width (the screen's, or the window's when that is narrower), and stay large
+        // enough for a finger. Six keys fit both under the screen (beside the main pad's margins) and in the drawer
+        // (beside the column's margins and its scroll bar).
         const int besidePad = outer.left() + outer.right() + inner.left() + inner.right() + 2 * keys_->frameWidth();
         const int inDrawer = 2 * drawer_->frameWidth() + left.left() + left.right() + scrollBar;
         const int reservedWidth = qMax(besidePad, inDrawer);
-        size = phoneKeySize(screen, reservedWidth, 6, keySpacing,
+        size = phoneKeySize(QSize(qMin(screen.width(), width()), screen.height()), reservedWidth, 6, keySpacing,
                             QSize(2 * fontMetrics().height(), qMax(touchTarget, minimum.height())));
-    } else {
-        const int rows = 7;
-        const QSize reserved(outer.left() + outer.right() + centralWidget()->layout()->spacing() + modes_->width()
-                                 + inner.left() + inner.right() + left.left() + left.right() + area->layout()->spacing()
-                                 + 2 * keys_->frameWidth() + 2 * scrollBar,  // the window's bar and the column's
-                             outer.top() + outer.bottom() + lcd_->minimumSizeHint().height() + 2 * keySpacing
-                                 + inner.top() + inner.bottom() + keypadGap
-                                 + style()->pixelMetric(QStyle::PM_TitleBarHeight));
-        size = keySize(screen, reserved, QSize(12, rows), keySpacing, minimum);
     }
     const QSize numberSize((6 * size.width() + keySpacing) / 5, size.height());  // five span six
 
@@ -1002,6 +1007,14 @@ void MainWindow::updatePreviews() {
         const int room = common->sizeHint().width() - header->sizeHint().width() - keySpacing;
         preview->setText(preview->fontMetrics().elidedText(text, Qt::ElideRight, qMax(0, room)));
     }
+}
+
+// Crossing the width the keys need side by side changes the arrangement (on a landscape screen; a portrait one
+// always has the phone's).
+void MainWindow::resizeEvent(QResizeEvent* event) {
+    QMainWindow::resizeEvent(event);
+    if (keysSized_ && keysLayout(designScreen_) == KeysLayout::Wide && (width() < wideWidth_) != narrow_)
+        layOutKeys(designScreen_);
 }
 
 void MainWindow::showEvent(QShowEvent* event) {

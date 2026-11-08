@@ -58,6 +58,7 @@ public slots:
 
 protected:
     void showEvent(QShowEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
     void changeEvent(QEvent* event) override;
     bool eventFilter(QObject* watched, QEvent* event) override;
 
@@ -170,6 +171,7 @@ private:
     bool shifted_ = false;  // ⇧ was pressed: the next letter is a capital
     bool storing_ = false;  // STO was pressed: the next variable letter stores the input
     QSize designScreen_;   // the screen the keys were laid out for
+    int wideWidth_ = 0;    // the window width the keys need side by side
     QToolButton* panelToggle_ = nullptr;
     QToolButton* settingsButton_ = nullptr;
     QMenu* settings_ = nullptr;
