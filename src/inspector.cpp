@@ -2,6 +2,7 @@
 
 #include "icons.hpp"
 #include "presenter.hpp"
+#include "settings.hpp"
 
 #include <QAction>
 #include <QClipboard>
@@ -30,7 +31,9 @@ namespace {
 // (typed or pasted); never Enter.
 class FieldEdit : public QPlainTextEdit {
 public:
-    FieldEdit(QWidget* parent, QString allowed) : QPlainTextEdit(parent), allowed_(std::move(allowed)) {
+    // A decimal field takes a point or a comma as its separator, and writes the one in use.
+    FieldEdit(QWidget* parent, QString allowed, bool decimal = false)
+        : QPlainTextEdit(parent), allowed_(std::move(allowed)), decimal_(decimal) {
         setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);  // groups of bits stay whole when they fit
         setTabChangesFocus(true);
         setFixedHeight(fontMetrics().lineSpacing() * 3 + 2 * frameWidth() + 8);
@@ -40,7 +43,10 @@ protected:
     void keyPressEvent(QKeyEvent* event) override {
         const QString typed = event->text();
         if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) return;
-        if (!typed.isEmpty() && typed[0].isPrint() && filtered(typed) != typed) return;
+        if (!typed.isEmpty() && typed[0].isPrint() && filtered(typed) != typed) {
+            insertPlainText(filtered(typed));  // nothing, or the separator in use
+            return;
+        }
         QPlainTextEdit::keyPressEvent(event);
     }
     void insertFromMimeData(const QMimeData* source) override { insertPlainText(filtered(source->text())); }
@@ -52,10 +58,12 @@ private:
     QString filtered(const QString& text) const {
         QString s;
         for (const QChar c : text)
-            if (allowed_.contains(c)) s += c;
+            if (decimal_ && (c == '.' || c == ',')) s += settings::decimalComma() ? ',' : '.';
+            else if (allowed_.contains(c)) s += c;
         return s;
     }
     QString allowed_;
+    bool decimal_;
 };
 
 // A value that wraps anywhere (a binary512 value has hundreds of digits and no spaces), so the page fits a phone.
@@ -229,7 +237,7 @@ Inspector::Inspector(QWidget* parent) : QWidget(parent), formats_(floatFormats()
     format_->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
     format_->setMinimumContentsLength(10);
     for (std::size_t i = 0; i < formats_.size(); ++i) format_->addItem(QString());
-    decimal_ = new FieldEdit(this, QStringLiteral("0123456789.eE+-\u2212infaINFA\u221E "));
+    decimal_ = new FieldEdit(this, QStringLiteral("0123456789eE+-\u2212infaINFA\u221E "), true);
     decimal_->setObjectName("inspectorDecimal");
     binary_ = new FieldEdit(this, QStringLiteral("01 "));
     binary_->setObjectName("inspectorBinary");
@@ -271,7 +279,7 @@ Inspector::Inspector(QWidget* parent) : QWidget(parent), formats_(floatFormats()
         connect(key, &QPushButton::clicked, this, [this, label] {
             auto* field = static_cast<FieldEdit*>(lastField_);
             if (label == QStringLiteral("⌫")) field->textCursor().deletePreviousChar();
-            else field->type(label == QStringLiteral("−") ? QStringLiteral("-") : label);
+            else field->type(label == QStringLiteral("−") ? QStringLiteral("-") : label);  // "." types the separator in use
         });
     }
     layout->addWidget(keys);
@@ -351,6 +359,13 @@ const FloatFormatInfo& Inspector::format() const { return formats_[static_cast<s
 
 void Inspector::setDecimal(const QString& text) { decimal_->setPlainText(text); }  // textChanged converts it
 
+void Inspector::showSeparator() {
+    findChild<QPushButton*>(QStringLiteral("inspectorKey:."))->setText(settings::decimalComma() ? QStringLiteral(",") : QStringLiteral("."));
+    updating_ = true;  // the same number
+    decimal_->setPlainText(view::withSeparatorInUse(decimal_->toPlainText()));
+    updating_ = false;
+}
+
 void Inspector::loadBits(int index, const QString& hex) {
     updating_ = true;
     format_->setCurrentIndex(index);  // without converting: the bits come next
@@ -386,7 +401,7 @@ void Inspector::recolour() {
 }
 
 void Inspector::convertDecimal() {
-    const QString text = decimal_->toPlainText().trimmed();
+    const QString text = decimal_->toPlainText().trimmed().replace(',', '.');  // the engine reads a point
     if (text.isEmpty()) {
         clearOutputs(decimal_);
         return;
@@ -444,7 +459,7 @@ void Inspector::display(const FloatInspection& inspection, QWidget* typedIn) {
         binary_->setPlainText(QString::fromStdString(b.sign) + QStringLiteral("  ") + groupsOf4(QString::fromStdString(b.exponent))
                               + QStringLiteral("  ") + groupsOf4(QString::fromStdString(b.fraction)));
     if (typedIn != hex_) hex_->setPlainText(groupsOf4(QString::fromStdString(b.hex)));
-    if (typedIn != decimal_) decimal_->setPlainText(view::decimalText(b));
+    if (typedIn != decimal_) decimal_->setPlainText(view::withSeparatorInUse(view::decimalText(b)));
     updating_ = false;
     message_->setText(inspection.note.empty() ? QString() : QCoreApplication::translate("view", inspection.note.c_str()));
     QString kind = view::floatClassName(b.valueClass);
@@ -497,6 +512,7 @@ void Inspector::retranslate() {
     captions_["ulp"]->setText(tr("ulp"));
     captions_["below"]->setText(tr("Next below"));
     captions_["above"]->setText(tr("Next above"));
+    showSeparator();  // the language can choose it
 }
 
 bool Inspector::eventFilter(QObject* watched, QEvent* event) {

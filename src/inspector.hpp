@@ -57,6 +57,7 @@ public:
     void setDecimal(const QString& text);                    // as if typed in the decimal field
     void loadBits(int formatIndex, const QString& hex);      // a stored pattern, e.g. a result's or a neighbour
     void retranslate();
+    void showSeparator();  // the decimal separator in use, on the point key and in the decimal field
 
 protected:
     void changeEvent(QEvent* event) override;  // LanguageChange → retranslate; PaletteChange → recolour

@@ -1958,6 +1958,27 @@ TEST(MainWindow, ThePercentagesKeypadMovesToTheSecondValue) {
     EXPECT_EQ(child<QLineEdit>(window, "percentFirst")->text(), "");
 }
 
+// A box holds one number, so a typed point or comma is its decimal separator: shown as the one in use, read by the
+// engine as a point, and rewritten when the setting changes.
+TEST(MainWindow, ThePercentagesBoxesUseTheDecimalSeparatorInUse) {
+    MainWindow window;
+    setting(window, "decimal:comma")->trigger();
+    child<QListWidget>(window, "modes")->setCurrentRow(2);
+    auto* first = child<QLineEdit>(window, "percentFirst");
+    auto* second = child<QLineEdit>(window, "percentSecond");
+    QTest::keyClicks(first, "80");
+    QTest::keyClicks(second, "2.5");
+    EXPECT_EQ(second->text(), "2,5");
+    QLabel* share = child<QLabel>(window, "percent:secondOfFirst");
+    ASSERT_TRUE(QTest::qWaitFor([&] { return !share->text().isEmpty(); }, 10000));
+    EXPECT_EQ(share->text(), "3,125");
+    setting(window, "decimal:point")->trigger();
+    EXPECT_EQ(second->text(), "2.5");
+    QTest::keyClicks(first, ",5");
+    EXPECT_EQ(first->text(), "80.5");
+    setting(window, "decimal:language")->trigger();
+}
+
 TEST(MainWindow, TheKeysShowTheSeparatorsInUse) {
     MainWindow window;
     setting(window, "decimal:comma")->trigger();

@@ -1235,6 +1235,8 @@ void MainWindow::retranslate() {
     statisticsKeysToggle_->setToolTip(tr("Show or hide the keypad"));
     percentKeysToggle_->setToolTip(tr("Show or hide the keypad"));
     findChild<QPushButton*>("percentKey:point")->setText(settings::decimalComma() ? QStringLiteral(",") : QStringLiteral("."));
+    for (QLineEdit* box : {percentFirst_, percentSecond_}) box->setText(view::withSeparatorInUse(box->text()));
+    if (inspector_) inspector_->showSeparator();
     for (const view::PercentageRow& row : view::percentageRows(QStringLiteral("1"), QStringLiteral("2")))
         findChild<QLabel*>("percentTitle:" + row.key)->setText(row.title);
     requestPercentages();  // error texts are in the language too
@@ -1439,12 +1441,17 @@ QWidget* MainWindow::buildPercentages() {
     auto* page = new QWidget;
     auto* layout = new QVBoxLayout(page);
     auto* entry = new QGridLayout;
-    // Only what a number is made of, typed or pasted (as in the statistics box).
+    // Only what a number is made of, typed or pasted (as in the statistics box). A box holds one number, so a point or
+    // a comma is its decimal separator, written as the one in use.
     auto numeric = [this](QLineEdit* edit) {
         connect(edit, &QLineEdit::textChanged, edit, [edit](const QString& text) {
             QString kept = text;
             kept.remove(QRegularExpression(QStringLiteral("[^0-9.,eE-]")));
-            if (kept != text) edit->setText(kept);
+            kept = view::withSeparatorInUse(kept);
+            if (kept == text) return;
+            const int cursor = edit->cursorPosition();
+            edit->setText(kept);
+            edit->setCursorPosition(qMin(cursor, int(kept.size())));
         });
         connect(edit, &QLineEdit::textChanged, this, [this] { percentTimer_.start(); });
         edit->installEventFilter(this);  // a box that takes the focus becomes the keypad's (see eventFilter)
@@ -1527,10 +1534,8 @@ QWidget* MainWindow::buildPercentages() {
         worker_->answerGeneration() = ++percentSerial_;
         worker_->answerCancelFlag() = true;
         QString first = percentFirst_->text(), second = percentSecond_->text();
-        if (settings::decimalComma()) {  // the engine reads a point
-            first.replace(',', '.');
-            second.replace(',', '.');
-        }
+        first.replace(',', '.');  // the engine reads a point
+        second.replace(',', '.');
         const QList<view::PercentageRow> rows = view::percentageRows(first, second);
         for (const view::PercentageRow& row : view::percentageRows(QStringLiteral("1"), QStringLiteral("2"))) {
             static_cast<ShortenedLabel*>(findChild<QLabel*>("percent:" + row.key))->setAnswer({});

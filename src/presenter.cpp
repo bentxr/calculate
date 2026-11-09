@@ -383,6 +383,10 @@ FractionParts withDecimalComma(FractionParts p) {
     return p;
 }
 
+QString withSeparatorInUse(QString number) {
+    return number.replace(QRegularExpression(QStringLiteral("[.,]")), settings::decimalComma() ? QStringLiteral(",") : QStringLiteral("."));
+}
+
 QString withDecimalComma(const QString& expression) {
     QString s = expression;
     s.replace(',', ';');  // in the engine's text a comma only ever separates arguments
