@@ -470,8 +470,11 @@ QString errorText(const Error& e, const QString& expression) {
 }
 
 QString statisticsExpression(const QString& function, const QString& values) {
-    const QStringList list = values.split(QRegularExpression(QStringLiteral("[\\s,;]+")), Qt::SkipEmptyParts);
+    // With the decimal comma, a comma belongs to its value and ";" separates them.
+    const bool comma = settings::decimalComma();
+    QStringList list = values.split(QRegularExpression(comma ? QStringLiteral("[\\s;]+") : QStringLiteral("[\\s,;]+")), Qt::SkipEmptyParts);
     if (list.isEmpty()) return {};
+    if (comma) list.replaceInStrings(QStringLiteral(","), QStringLiteral("."));
     return function + "(" + list.join(", ") + ")";
 }
 
@@ -574,21 +577,23 @@ QString grouped(const QString& text) {
     return s;
 }
 
-// A finite stored value written out: positional for −7 <= exponent < 21, else d.ddd…e−N; `ascii` uses - for minus.
+// A finite stored value written out: positional for −7 <= exponent < 21, else d.ddd…e−N. `ascii` uses - for minus
+// and the point (a field's text, read back by the engine); otherwise − and the decimal separator in use.
 QString writtenOut(const calculate_core::Digits& d, bool ascii) {
     const QString minusSign = ascii ? QStringLiteral("-") : minus();
+    const QString point = !ascii && settings::decimalComma() ? QStringLiteral(",") : QStringLiteral(".");
     const QString digits = fromStd(d.digits);
     const long long e = d.exponent10;
     QString s = d.negative ? minusSign : QString();
     if (e >= -7 && e < 21) {
-        if (e < 0) return s + QStringLiteral("0.") + QString(static_cast<int>(-e - 1), QChar('0')) + digits;
+        if (e < 0) return s + QStringLiteral("0") + point + QString(static_cast<int>(-e - 1), QChar('0')) + digits;
         QString whole = digits.left(static_cast<int>(e) + 1);
         whole += QString(qMax(0, static_cast<int>(e) + 1 - static_cast<int>(digits.size())), QChar('0'));
         const QString rest = digits.mid(static_cast<int>(e) + 1);
-        return s + whole + (rest.isEmpty() ? QString() : QStringLiteral(".") + rest);
+        return s + whole + (rest.isEmpty() ? QString() : point + rest);
     }
     s += digits.left(1);
-    if (digits.size() > 1) s += QStringLiteral(".") + digits.mid(1);
+    if (digits.size() > 1) s += point + digits.mid(1);
     return s + QStringLiteral("e") + (e < 0 ? minusSign + QString::number(-e) : QString::number(e));
 }
 
@@ -660,7 +665,7 @@ QList<DetailRow> conversionRows(const Result& r) {
         QString shown = label;  // unknown labels as they are
         for (const auto& [key, text] : labels)
             if (key == label) shown = QCoreApplication::translate("view", text);
-        rows.append({QStringLiteral("field:") + label, shown, fromStd(f.value), false});
+        rows.append({QStringLiteral("field:") + label, shown, label == "note" ? fromStd(f.value) : number(f.value), false});
     }
     return rows;
 }

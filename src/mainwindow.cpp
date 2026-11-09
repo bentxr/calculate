@@ -1216,7 +1216,7 @@ void MainWindow::retranslate() {
     findChild<QAction*>("copy:trusted")->setText(tr("Trusted digits"));
     findChild<QAction*>("copy:bound")->setText(tr("Value ± bound"));
     findChild<QAction*>("copy:details")->setText(tr("Details as text"));
-    findChild<QAction*>("copy:concise")->setText(tr("Concise (1.23(4))"));
+    findChild<QAction*>("copy:concise")->setText(tr("Concise (%1)").arg(settings::decimalComma() ? QStringLiteral("1,23(4)") : QStringLiteral("1.23(4)")));
     findChild<QAction*>("copy:expression")->setText(tr("Expression"));
     findChild<QAction*>("history:copyExpression")->setText(tr("Copy expression"));
     findChild<QAction*>("history:copyValue")->setText(tr("Copy value"));
@@ -1231,7 +1231,17 @@ void MainWindow::retranslate() {
     historyToggle_->setToolTip(tr("History"));
     // The symbol buttons (☰, the gear, ▾) are spoken by their tooltips.
     for (QToolButton* button : {panelToggle_, settingsButton_, historyToggle_}) button->setAccessibleName(button->toolTip());
-    statisticsLabel_->setText(tr("Values (one per line, or separated by commas):"));
+    const bool comma = settings::decimalComma();
+    statisticsLabel_->setText(comma ? tr("Values (one per line, or separated by semicolons):") : tr("Values (one per line, or separated by commas):"));
+    findChild<QPushButton*>("statKey:point")->setText(comma ? QStringLiteral(",") : QStringLiteral("."));
+    findChild<QPushButton*>("statKey:comma")->setText(comma ? QStringLiteral(";") : QStringLiteral(","));
+    if (comma != statisticsComma_) {  // the values rewritten for the other separators
+        QString values = statisticsValues_->toPlainText();
+        if (comma) values.replace(',', ';').replace('.', ',');
+        else values.replace(',', '.').replace(';', ',');
+        statisticsValues_->setPlainText(values);
+        statisticsComma_ = comma;
+    }
     statisticsKeysToggle_->setToolTip(tr("Show or hide the keypad"));
     percentKeysToggle_->setToolTip(tr("Show or hide the keypad"));
     findChild<QPushButton*>("percentKey:point")->setText(settings::decimalComma() ? QStringLiteral(",") : QStringLiteral("."));
@@ -1369,6 +1379,7 @@ QWidget* MainWindow::buildStatistics() {
     auto* layout = new QVBoxLayout(page);
     auto* header = new QHBoxLayout;
     statisticsLabel_ = new QLabel(page);
+    statisticsLabel_->setObjectName("statisticsLabel");
     statisticsKeysToggle_ = new QToolButton(page);
     statisticsKeysToggle_->setObjectName("statisticsKeysToggle");
     statisticsKeysToggle_->setCheckable(true);
@@ -1423,7 +1434,10 @@ QWidget* MainWindow::buildStatistics() {
         button->setFocusPolicy(Qt::NoFocus);
         const QString insert = QString::fromUtf8(pad[i].insert);
         connect(button, &QPushButton::clicked, this, [this, insert] {
+            const bool comma = settings::decimalComma();  // then "," is a value's own and ";" separates values
             if (insert.isEmpty()) statisticsValues_->textCursor().deletePreviousChar();
+            else if (insert == ".") statisticsValues_->insertPlainText(comma ? QStringLiteral(",") : insert);
+            else if (insert == ", ") statisticsValues_->insertPlainText(comma ? QStringLiteral("; ") : insert);
             else statisticsValues_->insertPlainText(insert);
         });
         grid->addWidget(button, i / 4, i % 4);

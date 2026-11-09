@@ -192,6 +192,7 @@ private:
     QPushButton* equals_ = nullptr;
     QWidget* messageStrip_ = nullptr;
     QLabel* statisticsLabel_ = nullptr;
+    bool statisticsComma_ = false;  // the decimal separator the statistics values are written with
     bool hasResult_ = false;  // whether last_ holds a result to present
     QStackedWidget* pages_ = nullptr;
     QScrollArea* keys_ = nullptr;

@@ -1979,6 +1979,29 @@ TEST(MainWindow, ThePercentagesBoxesUseTheDecimalSeparatorInUse) {
     setting(window, "decimal:language")->trigger();
 }
 
+// In comma mode the statistics box takes the comma as the decimal separator and ";" between values: its keys, its
+// prompt and the concise copy's example say so, and a change of the setting rewrites the box.
+TEST(MainWindow, StatisticsTakeTheDecimalCommaInCommaMode) {
+    MainWindow window;
+    setting(window, "decimal:comma")->trigger();
+    child<QListWidget>(window, "modes")->setCurrentRow(1);
+    EXPECT_EQ(child<QPushButton>(window, "statKey:point")->text(), ",");
+    EXPECT_EQ(child<QPushButton>(window, "statKey:comma")->text(), ";");
+    EXPECT_EQ(child<QLabel>(window, "statisticsLabel")->text(), "Values (one per line, or separated by semicolons):");
+    EXPECT_EQ(child<QAction>(window, "copy:concise")->text(), "Concise (1,23(4))");
+    for (const char* key : {"statKey:1", "statKey:point", "statKey:5", "statKey:comma", "statKey:2"})
+        QTest::mouseClick(child<QPushButton>(window, key), Qt::LeftButton);
+    auto* values = child<QPlainTextEdit>(window, "statisticsValues");
+    EXPECT_EQ(values->toPlainText(), "1,5; 2");
+    setting(window, "decimal:point")->trigger();
+    EXPECT_EQ(values->toPlainText(), "1.5, 2");
+    EXPECT_EQ(child<QPushButton>(window, "statKey:point")->text(), ".");
+    EXPECT_EQ(child<QPushButton>(window, "statKey:comma")->text(), ",");
+    EXPECT_EQ(child<QLabel>(window, "statisticsLabel")->text(), "Values (one per line, or separated by commas):");
+    EXPECT_EQ(child<QAction>(window, "copy:concise")->text(), "Concise (1.23(4))");
+    setting(window, "decimal:language")->trigger();
+}
+
 TEST(MainWindow, TheKeysShowTheSeparatorsInUse) {
     MainWindow window;
     setting(window, "decimal:comma")->trigger();
