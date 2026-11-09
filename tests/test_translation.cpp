@@ -67,6 +67,35 @@ TEST(Translation, FunctionTextsReadInSpanish) {
     QCoreApplication::removeTranslator(&spanish);
 }
 
+// The Spanish texts as the review settled them: every constant's title capitalized and without a raw "_"; the inverse
+// functions "El x tal que"; floor and ceil said plainly; division said "entre", never "dividida por"; no backticks.
+TEST(Translation, SpanishTextsReadWell) {
+    QTranslator spanish;
+    ASSERT_TRUE(spanish.load(QLocale(QLocale::Spanish, QLocale::Spain), "calculate", "_", ":/i18n"));
+    QCoreApplication::installTranslator(&spanish);
+    for (const calculate_core::ConstantDescription& c : calculate_core::constants()) {
+        const QString title = constantTitle(QString::fromStdString(c.name));
+        ASSERT_FALSE(title.isEmpty()) << c.name;
+        EXPECT_FALSE(title[0].isLower()) << c.name << ": " << title.toStdString();
+        EXPECT_FALSE(title.contains('_')) << c.name << ": " << title.toStdString();
+    }
+    for (const calculate_core::FunctionDescription& f : calculate_core::functions()) {
+        const QString text = functionDescription(f);
+        EXPECT_FALSE(text.contains("dividida por") || text.contains("dividido por")) << f.name;
+        EXPECT_FALSE(text.contains('`')) << f.name;
+        if (f.name == "erfinv" || f.name == "erfcinv" || f.name == "betaincinv") {
+            EXPECT_TRUE(text.startsWith("El x tal que ")) << text.toStdString();
+        }
+        if (f.name == "floor") {
+            EXPECT_EQ(text, "El mayor entero menor o igual que x.");
+        }
+        if (f.name == "ceil") {
+            EXPECT_EQ(text, "El menor entero mayor o igual que x.");
+        }
+    }
+    QCoreApplication::removeTranslator(&spanish);
+}
+
 TEST(Translation, EveryConstantTitleIsMarkedForTranslation) {
     const QStringList marked = constantTextsForTranslation();
     for (const calculate_core::ConstantDescription& c : calculate_core::constants())

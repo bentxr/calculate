@@ -2383,7 +2383,7 @@ TEST(MainWindow, TheUncertaintyIsInSpanishToo) {
     EXPECT_EQ(rows[5].label, "Incertidumbre");
     EXPECT_EQ(rows[5].value, "± 2,5e+0 peor caso · ± 1,8e+0 estadística");  // Spanish brings the decimal comma
     EXPECT_EQ(constantTitle("G"), "Constante de gravitación universal");
-    EXPECT_EQ(constantTitle("billion"), "un billón (10^12)");
+    EXPECT_EQ(constantTitle("billion"), "Un billón (10^12)");  // every title capitalized
     settings::setLanguage(settings::Language::English);
 }
 

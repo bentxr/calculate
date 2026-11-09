@@ -195,27 +195,27 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1195"/>
+        <location filename="../src/mainwindow.cpp" line="1220"/>
         <source>calculate</source>
         <translation>calculate</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1196"/>
+        <location filename="../src/mainwindow.cpp" line="1221"/>
         <source>Show or hide the panel</source>
         <translation>Mostrar u ocultar el panel</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1198"/>
+        <location filename="../src/mainwindow.cpp" line="1223"/>
         <source>Calculator</source>
         <translation>Calculadora</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1198"/>
+        <location filename="../src/mainwindow.cpp" line="1223"/>
         <source>Statistics</source>
         <translation>Estadística</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1197"/>
+        <location filename="../src/mainwindow.cpp" line="1222"/>
         <source>Settings</source>
         <translation>Ajustes</translation>
     </message>
@@ -240,254 +240,254 @@
         <translation>Habituales admite como mucho %1 teclas</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="711"/>
+        <location filename="../src/mainwindow.cpp" line="734"/>
         <source>Click a key to add it to Common, or a key of Common to remove it</source>
         <translation>Pulsa una tecla para añadirla a Habituales, o una de Habituales para quitarla</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1120"/>
+        <location filename="../src/mainwindow.cpp" line="1145"/>
         <source>Some settings were not imported: %1</source>
         <translation>No se importaron algunos ajustes: %1</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1178"/>
+        <location filename="../src/mainwindow.cpp" line="1203"/>
         <source>“%1” cannot be the common keys</source>
         <translation>«%1» no es una lista válida de teclas habituales</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1198"/>
+        <location filename="../src/mainwindow.cpp" line="1223"/>
         <source>Percentages</source>
         <translation>Porcentajes</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1198"/>
+        <location filename="../src/mainwindow.cpp" line="1223"/>
         <source>IEEE 754</source>
         <translation>IEEE 754</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1201"/>
-        <location filename="../src/mainwindow.cpp" line="1202"/>
+        <location filename="../src/mainwindow.cpp" line="1226"/>
+        <location filename="../src/mainwindow.cpp" line="1227"/>
         <source>More</source>
         <translation>Más</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1203"/>
+        <location filename="../src/mainwindow.cpp" line="1228"/>
         <source>Search every function and constant…</source>
         <translation>Buscar entre todas las funciones y constantes…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1204"/>
+        <location filename="../src/mainwindow.cpp" line="1229"/>
         <source>Search</source>
         <translation>Buscar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1206"/>
+        <location filename="../src/mainwindow.cpp" line="1231"/>
         <source>Back to the keypad</source>
         <translation>Volver al teclado</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1207"/>
+        <location filename="../src/mainwindow.cpp" line="1232"/>
         <source>RAD</source>
         <translation>RAD</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1207"/>
+        <location filename="../src/mainwindow.cpp" line="1232"/>
         <source>DEG</source>
         <translation>DEG</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1207"/>
+        <location filename="../src/mainwindow.cpp" line="1232"/>
         <source>GRAD</source>
         <translation>GRAD</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1210"/>
+        <location filename="../src/mainwindow.cpp" line="1235"/>
         <source>=</source>
         <translation>=</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1211"/>
+        <location filename="../src/mainwindow.cpp" line="1236"/>
         <source>Details</source>
         <translation>Detalles</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1212"/>
+        <location filename="../src/mainwindow.cpp" line="1237"/>
         <source>Copy</source>
         <translation>Copiar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1214"/>
+        <location filename="../src/mainwindow.cpp" line="1239"/>
         <source>Copy as</source>
         <translation>Copiar como</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1215"/>
+        <location filename="../src/mainwindow.cpp" line="1240"/>
         <source>Value</source>
         <translation>Valor</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1216"/>
+        <location filename="../src/mainwindow.cpp" line="1241"/>
         <source>Trusted digits</source>
         <translation>Dígitos fiables</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1217"/>
+        <location filename="../src/mainwindow.cpp" line="1242"/>
         <source>Value ± bound</source>
         <translation>Valor ± cota</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1218"/>
+        <location filename="../src/mainwindow.cpp" line="1243"/>
         <source>Details as text</source>
         <translation>Detalles como texto</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1220"/>
+        <location filename="../src/mainwindow.cpp" line="1245"/>
         <source>Expression</source>
         <translation>Expresión</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1221"/>
+        <location filename="../src/mainwindow.cpp" line="1246"/>
         <source>Copy expression</source>
         <translation>Copiar expresión</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1222"/>
+        <location filename="../src/mainwindow.cpp" line="1247"/>
         <source>Copy value</source>
         <translation>Copiar valor</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1223"/>
+        <location filename="../src/mainwindow.cpp" line="1248"/>
         <source>Copy value ± bound</source>
         <translation>Copiar valor ± cota</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1224"/>
-        <location filename="../src/mainwindow.cpp" line="1306"/>
+        <location filename="../src/mainwindow.cpp" line="1249"/>
+        <location filename="../src/mainwindow.cpp" line="1331"/>
         <source>Edit</source>
         <translation>Editar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1226"/>
+        <location filename="../src/mainwindow.cpp" line="1251"/>
         <source>Keyboard</source>
         <translation>Teclado</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1228"/>
+        <location filename="../src/mainwindow.cpp" line="1253"/>
         <source>Proceed anyway</source>
         <translation>Continuar de todos modos</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1229"/>
+        <location filename="../src/mainwindow.cpp" line="1254"/>
         <source>Computing…</source>
         <translation>Calculando…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1230"/>
+        <location filename="../src/mainwindow.cpp" line="1255"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1231"/>
+        <location filename="../src/mainwindow.cpp" line="1256"/>
         <source>History</source>
         <translation>Historial</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1235"/>
+        <location filename="../src/mainwindow.cpp" line="1260"/>
         <source>Values (one per line, or separated by semicolons):</source>
         <translation>Valores (uno por línea, o separados por punto y coma):</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1264"/>
+        <location filename="../src/mainwindow.cpp" line="1289"/>
         <source>Conventions</source>
         <translation>Convenciones</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1265"/>
+        <location filename="../src/mainwindow.cpp" line="1290"/>
         <source>log is base 10</source>
         <translation>log es en base 10</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1266"/>
+        <location filename="../src/mainwindow.cpp" line="1291"/>
         <source>log is natural</source>
         <translation>log es natural</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1267"/>
+        <location filename="../src/mainwindow.cpp" line="1292"/>
         <source>mod keeps the dividend&apos;s sign</source>
         <translation>mod conserva el signo del dividendo</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1268"/>
+        <location filename="../src/mainwindow.cpp" line="1293"/>
         <source>mod keeps the divisor&apos;s sign</source>
         <translation>mod conserva el signo del divisor</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1269"/>
+        <location filename="../src/mainwindow.cpp" line="1294"/>
         <source>% divides by 100</source>
         <translation>% divide entre 100</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1270"/>
+        <location filename="../src/mainwindow.cpp" line="1295"/>
         <source>x + p% adds p% of x</source>
         <translation>x + p% suma el p% de x</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1272"/>
+        <location filename="../src/mainwindow.cpp" line="1297"/>
         <source>Uncertainty</source>
         <translation>Incertidumbre</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1273"/>
+        <location filename="../src/mainwindow.cpp" line="1298"/>
         <source>Combination</source>
         <translation>Combinación</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1274"/>
+        <location filename="../src/mainwindow.cpp" line="1299"/>
         <source>Worst case (a limit)</source>
         <translation>Peor caso (un límite)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1275"/>
+        <location filename="../src/mainwindow.cpp" line="1300"/>
         <source>Statistical (an estimate)</source>
         <translation>Estadística (una estimación)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1276"/>
+        <location filename="../src/mainwindow.cpp" line="1301"/>
         <source>Read precision</source>
         <translation>Precisión de lectura</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1277"/>
+        <location filename="../src/mainwindow.cpp" line="1302"/>
         <source>Off</source>
         <translation>Desactivada</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1278"/>
+        <location filename="../src/mainwindow.cpp" line="1303"/>
         <source>Decimals</source>
         <translation>Con decimales</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1279"/>
+        <location filename="../src/mainwindow.cpp" line="1304"/>
         <source>All numbers</source>
         <translation>Todos los números</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1285"/>
+        <location filename="../src/mainwindow.cpp" line="1310"/>
         <source>Third-party licences…</source>
         <translation>Licencias de terceros…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1969"/>
+        <location filename="../src/mainwindow.cpp" line="1994"/>
         <source>Hold for: %1</source>
         <translation>Mantén pulsado para: %1</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1975"/>
+        <location filename="../src/mainwindow.cpp" line="2000"/>
         <source>logarithm (natural)</source>
         <translation>logaritmo (natural)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1975"/>
+        <location filename="../src/mainwindow.cpp" line="2000"/>
         <source>logarithm (base 10)</source>
         <translation>logaritmo (base 10)</translation>
     </message>
@@ -497,114 +497,114 @@
         <translation>La memoria necesita un resultado anterior</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1219"/>
+        <location filename="../src/mainwindow.cpp" line="1244"/>
         <source>Concise (%1)</source>
         <translation>Concisa (%1)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1235"/>
+        <location filename="../src/mainwindow.cpp" line="1260"/>
         <source>Values (one per line, or separated by commas):</source>
         <translation>Valores (uno por línea, o separados por comas):</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1245"/>
-        <location filename="../src/mainwindow.cpp" line="1246"/>
+        <location filename="../src/mainwindow.cpp" line="1270"/>
+        <location filename="../src/mainwindow.cpp" line="1271"/>
         <source>Show or hide the keypad</source>
         <translation>Mostrar u ocultar el teclado numérico</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1253"/>
+        <location filename="../src/mainwindow.cpp" line="1278"/>
         <source>Language</source>
         <translation>Idioma</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1254"/>
+        <location filename="../src/mainwindow.cpp" line="1279"/>
         <source>Theme</source>
         <translation>Tema</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1255"/>
-        <location filename="../src/mainwindow.cpp" line="1258"/>
+        <location filename="../src/mainwindow.cpp" line="1280"/>
+        <location filename="../src/mainwindow.cpp" line="1283"/>
         <source>System</source>
         <translation>Sistema</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1259"/>
+        <location filename="../src/mainwindow.cpp" line="1284"/>
         <source>Light</source>
         <translation>Claro</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1260"/>
+        <location filename="../src/mainwindow.cpp" line="1285"/>
         <source>Dark</source>
         <translation>Oscuro</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1261"/>
+        <location filename="../src/mainwindow.cpp" line="1286"/>
         <source>Decimal separator</source>
         <translation>Separador decimal</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1262"/>
+        <location filename="../src/mainwindow.cpp" line="1287"/>
         <source>As the language</source>
         <translation>Según el idioma</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1263"/>
+        <location filename="../src/mainwindow.cpp" line="1288"/>
         <source>Point</source>
         <translation>Punto</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1271"/>
+        <location filename="../src/mainwindow.cpp" line="1296"/>
         <source>Comma</source>
         <translation>Coma</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1280"/>
+        <location filename="../src/mainwindow.cpp" line="1305"/>
         <source>Input</source>
         <translation>Entrada</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1281"/>
+        <location filename="../src/mainwindow.cpp" line="1306"/>
         <source>Calculate as you type</source>
         <translation>Calcular al escribir</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1282"/>
+        <location filename="../src/mainwindow.cpp" line="1307"/>
         <source>Settings file</source>
         <translation>Archivo de ajustes</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1283"/>
+        <location filename="../src/mainwindow.cpp" line="1308"/>
         <source>Export settings…</source>
         <translation>Exportar ajustes…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1284"/>
+        <location filename="../src/mainwindow.cpp" line="1309"/>
         <source>Import settings…</source>
         <translation>Importar ajustes…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1294"/>
+        <location filename="../src/mainwindow.cpp" line="1319"/>
         <source>Common</source>
         <translation>Habituales</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1295"/>
+        <location filename="../src/mainwindow.cpp" line="1320"/>
         <source>Memory and editing</source>
         <translation>Memoria y edición</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1307"/>
+        <location filename="../src/mainwindow.cpp" line="1332"/>
         <source>Reset</source>
         <translation>Restablecer</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1700"/>
+        <location filename="../src/mainwindow.cpp" line="1725"/>
         <source>No digit is trusted</source>
         <translation>Ningún dígito es fiable</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1944"/>
+        <location filename="../src/mainwindow.cpp" line="1969"/>
         <source>Exact arithmetic cannot represent %1: its result is irrational. Switch to a floating type to compute it.</source>
         <translation>La aritmética exacta no puede representar %1: su resultado es irracional. Cambia a un tipo de coma flotante para calcularlo.</translation>
     </message>
@@ -614,27 +614,27 @@
     <message>
         <location filename="../src/constanttext.cpp" line="16"/>
         <source>pi</source>
-        <translation>pi</translation>
+        <translation>Pi</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="17"/>
         <source>Euler&apos;s number</source>
-        <translation>número de Euler</translation>
+        <translation>Número de Euler</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="18"/>
         <source>tau, 2π</source>
-        <translation>tau, 2π</translation>
+        <translation>Tau, 2π</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="19"/>
         <source>square root of 2</source>
-        <translation>raíz cuadrada de 2</translation>
+        <translation>Raíz cuadrada de 2</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="20"/>
         <source>golden ratio</source>
-        <translation>número áureo</translation>
+        <translation>Número áureo</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="21"/>
@@ -649,187 +649,187 @@
     <message>
         <location filename="../src/constanttext.cpp" line="23"/>
         <source>Apéry&apos;s constant, ζ(3)</source>
-        <translation>constante de Apéry, ζ(3)</translation>
+        <translation>Constante de Apéry, ζ(3)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="24"/>
         <source>plastic ratio</source>
-        <translation>número plástico</translation>
+        <translation>Número plástico</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="25"/>
         <source>omega constant, W(1)</source>
-        <translation>constante omega, W(1)</translation>
+        <translation>Constante omega, W(1)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="26"/>
         <source>one million (10^6)</source>
-        <translation>un millón (10^6)</translation>
+        <translation>Un millón (10^6)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="27"/>
         <source>one milliard (10^9)</source>
-        <translation>mil millones (10^9)</translation>
+        <translation>Mil millones (10^9)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="28"/>
         <source>one billion (10^12)</source>
-        <translation>un billón (10^12)</translation>
+        <translation>Un billón (10^12)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="29"/>
         <source>one billiard (10^15)</source>
-        <translation>mil billones (10^15)</translation>
+        <translation>Mil billones (10^15)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="30"/>
         <source>one trillion (10^18)</source>
-        <translation>un trillón (10^18)</translation>
+        <translation>Un trillón (10^18)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="31"/>
         <source>one trilliard (10^21)</source>
-        <translation>mil trillones (10^21)</translation>
+        <translation>Mil trillones (10^21)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="32"/>
         <source>one quadrillion (10^24)</source>
-        <translation>un cuatrillón (10^24)</translation>
+        <translation>Un cuatrillón (10^24)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="33"/>
         <source>one quintillion (10^30)</source>
-        <translation>un quintillón (10^30)</translation>
+        <translation>Un quintillón (10^30)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="34"/>
         <source>one sextillion (10^36)</source>
-        <translation>un sextillón (10^36)</translation>
+        <translation>Un sextillón (10^36)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="35"/>
         <source>one septillion (10^42)</source>
-        <translation>un septillón (10^42)</translation>
+        <translation>Un septillón (10^42)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="36"/>
         <source>one octillion (10^48)</source>
-        <translation>un octillón (10^48)</translation>
+        <translation>Un octillón (10^48)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="37"/>
         <source>one nonillion (10^54)</source>
-        <translation>un nonillón (10^54)</translation>
+        <translation>Un nonillón (10^54)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="38"/>
         <source>one decillion (10^60)</source>
-        <translation>un decillón (10^60)</translation>
+        <translation>Un decillón (10^60)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="39"/>
         <source>one googol (10^100)</source>
-        <translation>un gúgol (10^100)</translation>
+        <translation>Un gúgol (10^100)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="40"/>
         <source>one lakh (10^5)</source>
-        <translation>un lakh (10^5)</translation>
+        <translation>Un lakh (10^5)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="41"/>
         <source>one crore (10^7)</source>
-        <translation>un crore (10^7)</translation>
+        <translation>Un crore (10^7)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="42"/>
         <source>one dozen (12)</source>
-        <translation>una docena (12)</translation>
+        <translation>Una docena (12)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="43"/>
         <source>one gross (144)</source>
-        <translation>una gruesa (144)</translation>
+        <translation>Una gruesa (144)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="44"/>
         <source>one score (20)</source>
-        <translation>una veintena (20)</translation>
+        <translation>Una veintena (20)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="45"/>
         <source>parts per million</source>
-        <translation>partes por millón</translation>
+        <translation>Partes por millón</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="46"/>
         <source>per cent mille (10^-5)</source>
-        <translation>por cien mil (10^-5)</translation>
+        <translation>Por cien mil (10^-5)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="47"/>
         <source>one million (10^6) (Spanish name)</source>
-        <translation>un millón (10^6)</translation>
+        <translation>Un millón (10^6)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="48"/>
         <source>one milliard (10^9) (Spanish name)</source>
-        <translation>mil millones (10^9)</translation>
+        <translation>Mil millones (10^9)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="49"/>
         <source>one billion (10^12) (Spanish name)</source>
-        <translation>un billón (10^12)</translation>
+        <translation>Un billón (10^12)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="50"/>
         <source>one trillion (10^18) (Spanish name)</source>
-        <translation>un trillón (10^18)</translation>
+        <translation>Un trillón (10^18)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="51"/>
         <source>one quadrillion (10^24) (Spanish name)</source>
-        <translation>un cuatrillón (10^24)</translation>
+        <translation>Un cuatrillón (10^24)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="52"/>
         <source>one quintillion (10^30) (Spanish name)</source>
-        <translation>un quintillón (10^30)</translation>
+        <translation>Un quintillón (10^30)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="53"/>
         <source>one sextillion (10^36) (Spanish name)</source>
-        <translation>un sextillón (10^36)</translation>
+        <translation>Un sextillón (10^36)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="54"/>
         <source>one septillion (10^42) (Spanish name)</source>
-        <translation>un septillón (10^42)</translation>
+        <translation>Un septillón (10^42)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="55"/>
         <source>one octillion (10^48) (Spanish name)</source>
-        <translation>un octillón (10^48)</translation>
+        <translation>Un octillón (10^48)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="56"/>
         <source>one nonillion (10^54) (Spanish name)</source>
-        <translation>un nonillón (10^54)</translation>
+        <translation>Un nonillón (10^54)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="57"/>
         <source>one decillion (10^60) (Spanish name)</source>
-        <translation>un decillón (10^60)</translation>
+        <translation>Un decillón (10^60)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="58"/>
         <source>one dozen (12) (Spanish name)</source>
-        <translation>una docena (12)</translation>
+        <translation>Una docena (12)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="59"/>
         <source>one gross (144) (Spanish name)</source>
-        <translation>una gruesa (144)</translation>
+        <translation>Una gruesa (144)</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="60"/>
@@ -948,8 +948,53 @@
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="83"/>
-        <source>vacuum mag. permeability</source>
+        <source>vacuum magnetic permeability</source>
         <translation>Permeabilidad magnética del vacío</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="97"/>
+        <source>magnetic flux quantum</source>
+        <translation>Cuanto de flujo magnético</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="121"/>
+        <source>electron magnetic moment</source>
+        <translation>Momento magnético del electrón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="122"/>
+        <source>proton magnetic moment</source>
+        <translation>Momento magnético del protón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="123"/>
+        <source>neutron magnetic moment</source>
+        <translation>Momento magnético del neutrón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="124"/>
+        <source>muon magnetic moment</source>
+        <translation>Momento magnético del muon</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="128"/>
+        <source>electron magnetic moment anomaly</source>
+        <translation>Anomalía del momento magnético del electrón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="129"/>
+        <source>muon magnetic moment anomaly</source>
+        <translation>Anomalía del momento magnético del muon</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="130"/>
+        <source>electron gyromagnetic ratio</source>
+        <translation>Razón giromagnética del electrón</translation>
+    </message>
+    <message>
+        <location filename="../src/constanttext.cpp" line="131"/>
+        <source>proton gyromagnetic ratio</source>
+        <translation>Razón giromagnética del protón</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="84"/>
@@ -1015,11 +1060,6 @@
         <location filename="../src/constanttext.cpp" line="96"/>
         <source>nuclear magneton</source>
         <translation>Magnetón nuclear</translation>
-    </message>
-    <message>
-        <location filename="../src/constanttext.cpp" line="97"/>
-        <source>mag. flux quantum</source>
-        <translation>Cuanto de flujo magnético</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="98"/>
@@ -1137,26 +1177,6 @@
         <translation>Razón de masas muon-electrón</translation>
     </message>
     <message>
-        <location filename="../src/constanttext.cpp" line="121"/>
-        <source>electron mag. mom.</source>
-        <translation>Momento magnético del electrón</translation>
-    </message>
-    <message>
-        <location filename="../src/constanttext.cpp" line="122"/>
-        <source>proton mag. mom.</source>
-        <translation>Momento magnético del protón</translation>
-    </message>
-    <message>
-        <location filename="../src/constanttext.cpp" line="123"/>
-        <source>neutron mag. mom.</source>
-        <translation>Momento magnético del neutrón</translation>
-    </message>
-    <message>
-        <location filename="../src/constanttext.cpp" line="124"/>
-        <source>muon mag. mom.</source>
-        <translation>Momento magnético del muon</translation>
-    </message>
-    <message>
         <location filename="../src/constanttext.cpp" line="125"/>
         <source>electron g factor</source>
         <translation>Factor g del electrón</translation>
@@ -1170,26 +1190,6 @@
         <location filename="../src/constanttext.cpp" line="127"/>
         <source>muon g factor</source>
         <translation>Factor g del muon</translation>
-    </message>
-    <message>
-        <location filename="../src/constanttext.cpp" line="128"/>
-        <source>electron mag. mom. anomaly</source>
-        <translation>Anomalía del momento magnético del electrón</translation>
-    </message>
-    <message>
-        <location filename="../src/constanttext.cpp" line="129"/>
-        <source>muon mag. mom. anomaly</source>
-        <translation>Anomalía del momento magnético del muon</translation>
-    </message>
-    <message>
-        <location filename="../src/constanttext.cpp" line="130"/>
-        <source>electron gyromag. ratio</source>
-        <translation>Razón giromagnética del electrón</translation>
-    </message>
-    <message>
-        <location filename="../src/constanttext.cpp" line="131"/>
-        <source>proton gyromag. ratio</source>
-        <translation>Razón giromagnética del protón</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="132"/>
@@ -1249,7 +1249,7 @@
     <message>
         <location filename="../src/constanttext.cpp" line="143"/>
         <source>weak mixing angle</source>
-        <translation>Ángulo de mezcla débil (sen²θ_W)</translation>
+        <translation>Seno al cuadrado del ángulo de mezcla débil</translation>
     </message>
     <message>
         <location filename="../src/constanttext.cpp" line="144"/>
@@ -1287,7 +1287,7 @@
     <message>
         <location filename="../src/functiontext.cpp" line="17"/>
         <source>The ratio of a circle&apos;s circumference to its diameter.</source>
-        <translation>La razón entre la circunferencia y el diámetro de un círculo.</translation>
+        <translation>La razón entre la longitud de una circunferencia y su diámetro.</translation>
     </message>
     <message>
         <location filename="../src/functiontext.cpp" line="18"/>
@@ -1707,7 +1707,7 @@
     <message>
         <location filename="../src/functiontext.cpp" line="101"/>
         <source>The largest whole number not above x.</source>
-        <translation>El mayor número entero que no supera x.</translation>
+        <translation>El mayor entero menor o igual que x.</translation>
     </message>
     <message>
         <location filename="../src/functiontext.cpp" line="102"/>
@@ -1717,7 +1717,7 @@
     <message>
         <location filename="../src/functiontext.cpp" line="103"/>
         <source>The smallest whole number not below x.</source>
-        <translation>El menor número entero que no es menor que x.</translation>
+        <translation>El menor entero mayor o igual que x.</translation>
     </message>
     <message>
         <location filename="../src/functiontext.cpp" line="104"/>
@@ -1916,18 +1916,18 @@
     </message>
     <message>
         <location filename="../src/functiontext.cpp" line="143"/>
-        <source>The term added up for each whole value of its variable from `from` to `to`.</source>
-        <translation>El término sumado para cada valor entero de su variable, de `from` a `to`.</translation>
+        <source>The term added up for each whole value of its variable, between the two bounds.</source>
+        <translation>El término sumado para cada valor entero de su variable, entre los dos límites.</translation>
+    </message>
+    <message>
+        <location filename="../src/functiontext.cpp" line="145"/>
+        <source>The term multiplied for each whole value of its variable, between the two bounds.</source>
+        <translation>El término multiplicado para cada valor entero de su variable, entre los dos límites.</translation>
     </message>
     <message>
         <location filename="../src/functiontext.cpp" line="144"/>
         <source>Product</source>
         <translation>Productorio</translation>
-    </message>
-    <message>
-        <location filename="../src/functiontext.cpp" line="145"/>
-        <source>The term multiplied for each whole value of its variable from `from` to `to`.</source>
-        <translation>El término multiplicado para cada valor entero de su variable, de `from` a `to`.</translation>
     </message>
     <message>
         <location filename="../src/functiontext.cpp" line="146"/>
@@ -1997,7 +1997,7 @@
     <message>
         <location filename="../src/functiontext.cpp" line="159"/>
         <source>The x with erf(x) = y.</source>
-        <translation>El x con erf(x) = y.</translation>
+        <translation>El x tal que erf(x) = y.</translation>
     </message>
     <message>
         <location filename="../src/functiontext.cpp" line="160"/>
@@ -2007,7 +2007,7 @@
     <message>
         <location filename="../src/functiontext.cpp" line="161"/>
         <source>The x with erfc(x) = z.</source>
-        <translation>El x con erfc(x) = z.</translation>
+        <translation>El x tal que erfc(x) = z.</translation>
     </message>
     <message>
         <location filename="../src/functiontext.cpp" line="162"/>
@@ -2017,7 +2017,7 @@
     <message>
         <location filename="../src/functiontext.cpp" line="163"/>
         <source>The integral of t^(a−1) e^(−t) from 0 to x, over gamma(a).</source>
-        <translation>La integral de t^(a−1) e^(−t) entre 0 y x, dividida por gamma(a).</translation>
+        <translation>La integral de t^(a−1) e^(−t) de 0 a x, entre gamma(a).</translation>
     </message>
     <message>
         <location filename="../src/functiontext.cpp" line="164"/>
@@ -2057,7 +2057,7 @@
     <message>
         <location filename="../src/functiontext.cpp" line="171"/>
         <source>The integral of t^(a−1)(1 − t)^(b−1) from 0 to x, over beta(a, b).</source>
-        <translation>La integral de t^(a−1)(1 − t)^(b−1) entre 0 y x, dividida por beta(a, b).</translation>
+        <translation>La integral de t^(a−1)(1 − t)^(b−1) de 0 a x, entre beta(a, b).</translation>
     </message>
     <message>
         <location filename="../src/functiontext.cpp" line="172"/>
@@ -2067,7 +2067,7 @@
     <message>
         <location filename="../src/functiontext.cpp" line="173"/>
         <source>The x with betainc(a, b, x) = y.</source>
-        <translation>El x con betainc(a, b, x) = y.</translation>
+        <translation>El x tal que betainc(a, b, x) = y.</translation>
     </message>
     <message>
         <location filename="../src/functiontext.cpp" line="174"/>
@@ -2132,7 +2132,7 @@
     <message>
         <location filename="../src/functiontext.cpp" line="186"/>
         <source>Twice pi: the ratio of a circle&apos;s circumference to its radius.</source>
-        <translation>Dos veces pi: la razón entre la circunferencia de un círculo y su radio.</translation>
+        <translation>Dos veces pi: la razón entre la longitud de una circunferencia y su radio.</translation>
     </message>
     <message>
         <location filename="../src/functiontext.cpp" line="187"/>
@@ -2172,7 +2172,7 @@
     <message>
         <location filename="../src/functiontext.cpp" line="194"/>
         <source>1 − 1/3² + 1/5² − 1/7² + …, over the odd squares with alternating signs.</source>
-        <translation>1 − 1/3² + 1/5² − 1/7² + …, sobre los cuadrados impares con signos alternos.</translation>
+        <translation>1 − 1/3² + 1/5² − 1/7² + …, la suma alternada de los inversos de los cuadrados impares.</translation>
     </message>
     <message>
         <location filename="../src/functiontext.cpp" line="195"/>
@@ -3676,7 +3676,7 @@
         <translation>Nota</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1796"/>
+        <location filename="../src/mainwindow.cpp" line="1821"/>
         <source>≈: off by %1</source>
         <translation>≈: desviación de %1</translation>
     </message>
