@@ -27,3 +27,7 @@ QSize phoneKeySize(QSize screen, int reservedWidth, int columns, int spacing, QS
 // The font for a key's label: `font` itself when the label fits in `width`, or the largest smaller one
 // that makes it fit, never under `smallest` of its size (an even longer label is then cut at the edge).
 QFont fittedFont(const QFont& font, const QString& label, int width, qreal smallest = 0.6);
+
+// Whether `label` would need a font under 80 % of `font`'s size to fit in `width`: such a key spans two places
+// instead, since a key shows what it types and a name that small is hard to read.
+bool needsTwoPlaces(const QFont& font, const QString& label, int width);

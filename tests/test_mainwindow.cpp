@@ -2034,6 +2034,46 @@ TEST(MainWindow, StatisticsTakeTheDecimalCommaInCommaMode) {
     setting(window, "decimal:language")->trigger();
 }
 
+// No key's name is squeezed under 80 % of the font: such a key spans two places of its grid, the keys after it move
+// on, and no two keys share a place (on a phone, where keys are narrowest, and on a laptop; in both languages).
+TEST(MainWindow, LongNamedKeysSpanTwoPlaces) {
+    for (const char* language : {"language:en", "language:es"})
+        for (const QSize screen : {QSize(390, 844), QSize(1396, 868)}) {
+            MainWindow window;
+            setting(window, language)->trigger();
+            QCoreApplication::processEvents();
+            window.resize(screen);
+            window.layOutKeys(screen);
+            const int base = QFontInfo(window.font()).pixelSize();
+            int spanning = 0;
+            QStringList grids{"memoryKeys"};
+            for (const KeySection& section : keySections()) grids << "sectionKeys:" + section.id;
+            for (const QString& gridName : grids) {
+                const std::string name = gridName.toStdString();
+                auto* grid = child<QWidget>(window, name.c_str());
+                auto* layout = static_cast<QGridLayout*>(grid->layout());
+                QSet<QPair<int, int>> taken;
+                for (int i = 0; i < layout->count(); ++i) {
+                    auto* key = qobject_cast<QPushButton*>(layout->itemAt(i)->widget());
+                    if (!key) continue;
+                    int row, column, rows, columns;
+                    layout->getItemPosition(i, &row, &column, &rows, &columns);
+                    for (int c = column; c < column + columns; ++c) {
+                        EXPECT_FALSE(taken.contains({row, c})) << name << " " << key->text().toStdString();
+                        taken.insert({row, c});
+                    }
+                    EXPECT_LE(column + columns, 6) << key->text().toStdString();
+                    if (columns == 2) ++spanning;
+                    EXPECT_GE(QFontInfo(key->font()).pixelSize(), qRound(0.8 * base)) << language << " " << key->text().toStdString();
+                    EXPECT_LE(QFontMetrics(key->font()).horizontalAdvance(key->text()), key->width() - 10) << key->text().toStdString();
+                }
+            }
+            if (screen.width() < screen.height()) EXPECT_GT(spanning, 0) << language;
+            setting(window, "language:en")->trigger();
+            QCoreApplication::processEvents();
+        }
+}
+
 TEST(MainWindow, TheKeysShowTheSeparatorsInUse) {
     MainWindow window;
     setting(window, "decimal:comma")->trigger();

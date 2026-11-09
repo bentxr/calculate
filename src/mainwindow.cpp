@@ -648,6 +648,29 @@ void MainWindow::placeCommon() {
     }
 }
 
+// The grid's keys in six columns of `size`; a key whose name would need a font under 80 % of the size spans two
+// (from the next row when only one place is left in this one).
+void MainWindow::placeKeys(QWidget* grid, const QList<Key>& keys, QSize size) {
+    auto* layout = static_cast<QGridLayout*>(grid->layout());
+    int row = 0, column = 0;
+    for (const Key& key : keys) {
+        QPushButton* button = findChild<QPushButton*>("direct:" + key.id);
+        const bool two = needsTwoPlaces(font(), button->text(), size.width() - 10);
+        if (two && column == 5) {
+            ++row;
+            column = 0;
+        }
+        layout->removeWidget(button);
+        layout->addWidget(button, row, column, 1, two ? 2 : 1);
+        button->setFixedSize(two ? QSize(2 * size.width() + keySpacing, size.height()) : size);
+        column += two ? 2 : 1;
+        if (column >= 6) {
+            ++row;
+            column = 0;
+        }
+    }
+}
+
 // A grid of keys in six columns; shorter rows line up on the left, in the same columns.
 QWidget* MainWindow::keyGrid(const QString& name, const QList<Key>& keys, const QString& prefix) {
     auto* grid = new QWidget;
@@ -811,6 +834,8 @@ void MainWindow::layOutKeys(QSize screen) {
             findChild<QPushButton*>("key:" + key.id)->setFixedSize(row.size() == 5 ? numberSize : size);
         }
     for (const Key& key : everyDirectKey()) findChild<QPushButton*>("direct:" + key.id)->setFixedSize(size);
+    placeKeys(findChild<QWidget*>("memoryKeys"), memoryKeys(), size);
+    for (const KeySection& section : keySections()) placeKeys(findChild<QWidget*>("sectionKeys:" + section.id), section.keys, size);
     keySize_ = size;
     for (const QString& id : common_) findChild<QPushButton*>("common:" + id)->setFixedSize(size);
     drawerToggle_->setFixedSize(size);

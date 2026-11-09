@@ -37,3 +37,9 @@ QFont fittedFont(const QFont& font, const QString& label, int width, qreal small
     fitted.setPixelSize(least);
     return fitted;
 }
+
+bool needsTwoPlaces(const QFont& font, const QString& label, int width) {
+    QFont least = font;
+    least.setPixelSize(qMax(1, qRound(0.8 * QFontInfo(font).pixelSize())));
+    return QFontMetrics(least).horizontalAdvance(label) > width;
+}

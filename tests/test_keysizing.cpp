@@ -45,6 +45,17 @@ TEST(KeySizing, NeverSmallerThanTheSmallestSize) {
     EXPECT_EQ(fittedFont(font, "floatError", 5).pixelSize(), 12);  // 0.6 × 20
 }
 
+// A key spans two places, instead of shrinking its name, when one place would take a font under 80 % of the size.
+TEST(KeySizing, ALabelThatWouldShrinkBelowFourFifthsTakesTwoPlaces) {
+    QFont font;
+    font.setPixelSize(20);
+    const int full = QFontMetrics(font).horizontalAdvance("betaincinv");
+    EXPECT_FALSE(needsTwoPlaces(font, "betaincinv", full));
+    EXPECT_FALSE(needsTwoPlaces(font, "betaincinv", full * 9 / 10));  // 90 %: it shrinks a little
+    EXPECT_TRUE(needsTwoPlaces(font, "betaincinv", full * 7 / 10));   // 70 %
+    EXPECT_FALSE(needsTwoPlaces(font, "sin", 200));
+}
+
 TEST(KeySizing, PortraitScreensGetThePhoneArrangement) {
     EXPECT_EQ(keysLayout(QSize(390, 844)), KeysLayout::Narrow);   // a phone
     EXPECT_EQ(keysLayout(QSize(768, 1024)), KeysLayout::Narrow);  // a tablet held upright

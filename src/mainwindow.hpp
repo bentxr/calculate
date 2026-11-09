@@ -74,6 +74,7 @@ signals:
 private:
     QWidget* buildKeypad();
     QWidget* buildDirectKeys();
+    void placeKeys(QWidget* grid, const QList<Key>& keys, QSize size);  // see layOutKeys
     QWidget* keyGrid(const QString& name, const QList<Key>& keys, const QString& prefix);
     QPushButton* buildKey(const Key& key, const QString& prefix);  // prefix: "key:" or "direct:"
     QWidget* buildStatistics();
