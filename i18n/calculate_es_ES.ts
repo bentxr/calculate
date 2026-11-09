@@ -2408,9 +2408,109 @@
         <translation>arctanh(</translation>
     </message>
     <message>
+        <location filename="../src/keypad.cpp" line="187"/>
+        <source>csch</source>
+        <translation>cosech</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="187"/>
+        <source>csch(</source>
+        <translation>cosech(</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="188"/>
+        <source>coth</source>
+        <translation>cotgh</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="188"/>
+        <source>coth(</source>
+        <translation>cotgh(</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="189"/>
+        <source>asech</source>
+        <translation>arcsech</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="189"/>
+        <source>asech(</source>
+        <translation>arcsech(</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="190"/>
+        <source>acsch</source>
+        <translation>arccosech</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="190"/>
+        <source>acsch(</source>
+        <translation>arccosech(</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="191"/>
+        <source>acoth</source>
+        <translation>arccotgh</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="191"/>
+        <source>acoth(</source>
+        <translation>arccotgh(</translation>
+    </message>
+    <message>
         <location filename="../src/keypad.cpp" line="192"/>
         <source>Trigonometry</source>
         <translation>Trigonometría</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="197"/>
+        <source>csc</source>
+        <translation>cosec</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="197"/>
+        <source>csc(</source>
+        <translation>cosec(</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="198"/>
+        <source>cot</source>
+        <translation>cotg</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="198"/>
+        <source>cot(</source>
+        <translation>cotg(</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="199"/>
+        <source>asec</source>
+        <translation>arcsec</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="199"/>
+        <source>asec(</source>
+        <translation>arcsec(</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="200"/>
+        <source>acsc</source>
+        <translation>arccosec</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="200"/>
+        <source>acsc(</source>
+        <translation>arccosec(</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="201"/>
+        <source>acot</source>
+        <translation>arccotg</translation>
+    </message>
+    <message>
+        <location filename="../src/keypad.cpp" line="201"/>
+        <source>acot(</source>
+        <translation>arccotg(</translation>
     </message>
     <message>
         <location filename="../src/keypad.cpp" line="205"/>

@@ -703,6 +703,38 @@ TEST(MainWindow, SpanishRelabelsEverythingWithoutARestart) {
     EXPECT_EQ(child<QListWidget>(window, "modes")->item(0)->text(), "Calculator");
 }
 
+// Spanish keys use the Spanish spellings wherever the engine reads one (as sen and arcsen already do): on the keys, in
+// "Hold for", in the tooltips' examples and in the search.
+TEST(MainWindow, SpanishKeysUseTheSpanishSpellings) {
+    MainWindow window;
+    setting(window, "language:es")->trigger();
+    QCoreApplication::processEvents();
+    const QList<QPair<QString, QString>> spellings{{"csc", "cosec"},   {"cot", "cotg"},      {"csch", "cosech"},
+                                                   {"coth", "cotgh"},  {"asec", "arcsec"},   {"acsc", "arccosec"},
+                                                   {"acot", "arccotg"}, {"asech", "arcsech"}, {"acsch", "arccosech"},
+                                                   {"acoth", "arccotgh"}};
+    for (const auto& [id, spelled] : spellings) {
+        EXPECT_EQ(child<QPushButton>(window, ("direct:" + id).toUtf8().constData())->text(), spelled);
+        const calculate_core::Result r = calculate_core::evaluate((spelled + "(0.5)").toStdString());  // a name the engine reads
+        EXPECT_TRUE(!r.error || r.error->code != calculate_core::ErrorCode::UnknownName) << spelled.toStdString();
+    }
+    const QString sine = child<QPushButton>(window, "key:sin")->toolTip();
+    EXPECT_TRUE(sine.contains("sen(")) << sine.toStdString();  // the example as the key spells it
+    EXPECT_FALSE(sine.contains("sin(")) << sine.toStdString();
+    EXPECT_TRUE(sine.contains("Mantén pulsado para: arcsen, senh, arcsenh, cosec, arccosec")) << sine.toStdString();
+    auto* search = child<QLineEdit>(window, "search");
+    search->setText("arccosec");
+    bool found = false;
+    for (int row = 0; row < child<QListWidget>(window, "searchList")->count(); ++row) {
+        const QListWidgetItem* item = child<QListWidget>(window, "searchList")->item(row);
+        if (!item->isHidden() && item->text().startsWith("arccosec  —  ")) found = true;
+    }
+    EXPECT_TRUE(found);
+    setting(window, "language:en")->trigger();
+    QCoreApplication::processEvents();
+    EXPECT_EQ(child<QPushButton>(window, "direct:csc")->text(), "csc");
+}
+
 // The browser starts dark: the menu shows the theme in use, not always System.
 TEST(MainWindow, TheSettingsShowTheThemeInUse) {
     const QPalette original = QApplication::palette();
