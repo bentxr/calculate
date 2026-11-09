@@ -45,6 +45,7 @@ ValueParts split(const Digits& value, int trustedDigits) {
                 else *out += QChar('0');
             }
             if (n > e + 1) {
+                if (e + 1 == t) out = &p.noise;  // a point goes with the digit after it
                 *out += QChar('.');
                 for (int i = static_cast<int>(e) + 1; i < n; ++i) digit(i);
             }
@@ -52,6 +53,7 @@ ValueParts split(const Digits& value, int trustedDigits) {
     } else {
         digit(0);
         if (n > 1) {
+            if (t == 1) out = &p.noise;
             *out += QChar('.');
             for (int i = 1; i < n; ++i) digit(i);
         }
@@ -134,6 +136,34 @@ ValueParts valueParts(const Result& r) {
     addUncertainty(r, p.uncertainty, p.uncertaintyExponent);
     p.unit = fromStd(r.unit);
     return p;
+}
+
+ValueParts screenParts(const Result& r) {
+    ValueParts p = valueParts(r);
+    if (p.uncertainty.isEmpty() || r.binaryValue || r.value.digits.empty()) return p;
+    // |value| / 10^last to the nearest integer, ties to even, where 10^last is the place of the uncertainty's last digit.
+    const long long last = r.uncertaintyShown.exponent10 - static_cast<long long>(r.uncertaintyShown.digits.size()) + 1;
+    const std::string& digits = r.value.digits;
+    const long long keep = r.value.exponent10 - last + 1;  // the value's digits down to that place
+    std::string head = keep > 0 ? digits.substr(0, static_cast<std::size_t>(qMin<long long>(keep, digits.size()))) : "0";
+    if (keep > static_cast<long long>(head.size())) head.append(static_cast<std::size_t>(keep) - head.size(), '0');
+    const std::string tail = keep >= 0 ? (keep < static_cast<long long>(digits.size()) ? digits.substr(static_cast<std::size_t>(keep)) : "")
+                                       : std::string();  // further below: under half a unit, it rounds to 0
+    const bool beyond = tail.find_first_not_of('0', 1) != std::string::npos;
+    if (!tail.empty() && (tail[0] > '5' || (tail[0] == '5' && (beyond || (head.back() - '0') % 2 == 1)))) {
+        int i = static_cast<int>(head.size()) - 1;
+        for (; i >= 0 && head[static_cast<std::size_t>(i)] == '9'; --i) head[static_cast<std::size_t>(i)] = '0';
+        if (i < 0) head.insert(0, "1");
+        else ++head[static_cast<std::size_t>(i)];
+    }
+    const std::size_t lead = qMin(head.find_first_not_of('0'), head.size() - 1);  // "0" stays one digit
+    const calculate_core::Digits rounded{r.value.negative && head.find_first_not_of('0') != std::string::npos, head.substr(lead),
+                                         last + static_cast<long long>(head.size() - lead) - 1};
+    ValueParts shown = split(rounded, r.trustedDigitsWithUncertainty);
+    shown.uncertainty = p.uncertainty;
+    shown.uncertaintyExponent = p.uncertaintyExponent;
+    shown.unit = p.unit;
+    return shown;
 }
 
 FractionParts fractionParts(const Result& r) {

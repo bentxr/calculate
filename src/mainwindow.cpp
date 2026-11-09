@@ -1843,7 +1843,7 @@ void MainWindow::present() {
         lcd_->showValue(settings::decimalComma() ? view::withDecimalComma(*parts) : *parts);
     else if (shown.conversion) lcd_->showText(view::conversionText(shown));
     else if (shown.exact) lcd_->showExact(settings::decimalComma() ? view::withDecimalComma(view::fractionParts(shown)) : view::fractionParts(shown));
-    else lcd_->showValue(settings::decimalComma() ? view::withDecimalComma(view::valueParts(shown)) : view::valueParts(shown));
+    else lcd_->showValue(settings::decimalComma() ? view::withDecimalComma(view::screenParts(shown)) : view::screenParts(shown));
 }
 
 void MainWindow::apply(const Face& f) {

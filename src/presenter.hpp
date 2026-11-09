@@ -47,6 +47,9 @@ QString shortTypeNameSource(const calculate_core::TypeInfo& type);  // its Engli
 QString typeDigits(const calculate_core::TypeInfo& type);  // "~16 significant digits"
 QString typeDetail(const calculate_core::TypeInfo& type);  // the C++ type and its bits
 ValueParts valueParts(const calculate_core::Result& result);
+// The screen's: with an uncertainty shown, the value ends at the uncertainty's last digit, rounded half to even as the
+// engine's ± form; Details and Copy keep every digit (valueParts).
+ValueParts screenParts(const calculate_core::Result& result);
 FractionParts fractionParts(const calculate_core::Result& result);
 QString verdict(const QString& conditionNumber);
 QList<DetailRow> details(const calculate_core::Result& result, const calculate_core::TypeInfo& type);
