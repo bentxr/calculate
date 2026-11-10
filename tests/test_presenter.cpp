@@ -586,3 +586,23 @@ TEST(Presenter, InCommaModeStatisticsValuesAreSeparatedBySemicolons) {
     EXPECT_EQ(view::statisticsExpression("mean", "1,5; 2"), "mean(1, 5, 2)");
     settings::setDecimalSeparator(settings::DecimalSeparator::Language);
 }
+
+// With an uncertainty shown, the screen's value ends where the uncertainty does, rounded half to even as the engine's
+// ± form ("9.81669 ± 0.00066", not 45 noise digits before it); Details keep every digit.
+TEST(Presenter, TheScreenEndsTheValueWhereTheUncertaintyEnds) {
+    const auto shown = [](const char* text) {
+        const view::ValueParts p = view::screenParts(evaluate(text));
+        return QString(p.trusted + p.noise + QStringLiteral(" ± ") + p.uncertainty).toStdString();
+    };
+    for (const char* text : {"9.816689 ± 0.00066", "0.99996 ± 0.0012", "(3±0.4)*(4±0.3)", "123456.789 ± 0.25"}) {
+        const Result r = evaluate(text);
+        EXPECT_EQ(shown(text), r.plusMinus) << text;
+    }
+    const view::ValueParts tied = view::screenParts(evaluate("1.125 ± 0.5"));  // ± 0.50: a tie goes to the even digit
+    EXPECT_EQ(tied.trusted + tied.noise, "1.12");
+    EXPECT_EQ(evaluate("1.125 ± 0.5").plusMinus, "1.12 ± 0.50");
+    EXPECT_EQ(view::valueParts(evaluate("9.816689 ± 0.00066")).noise.size(), 45);  // Details: every digit
+    const Result plain = evaluate("0.1 + 0.2");  // no uncertainty: the screen as before
+    EXPECT_EQ(view::screenParts(plain).noise, view::valueParts(plain).noise);
+}
+

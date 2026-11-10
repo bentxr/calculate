@@ -2360,7 +2360,7 @@ TEST(MainWindow, UncertaintySettings) {
     EXPECT_TRUE(setting(window, "uncertainty:worst")->isChecked());
     EXPECT_TRUE(setting(window, "readprecision:off")->isChecked());
     run(window, "(3±0.4)×(4±0.3)");
-    EXPECT_EQ(lcd(window)->outputText(), "|12 ± 2.5");
+    EXPECT_EQ(lcd(window)->outputText(), "|12.0 ± 2.5");
     EXPECT_EQ(detail(window, "uncertainty"), "± 2.5e+0 worst case · ± 1.8e+0 statistical");
     forget(window);
     setting(window, "uncertainty:statistical")->trigger();
@@ -2376,6 +2376,15 @@ TEST(MainWindow, UncertaintySettings) {
     setting(window, "readprecision:off")->trigger();
 }
 
+// The screen cuts the value at the uncertainty's last digit; copying the value keeps every digit.
+TEST(MainWindow, TheScreenCutsTheValueAtTheUncertainty) {
+    MainWindow window;
+    run(window, "9.816689 ± 0.00066");
+    EXPECT_EQ(lcd(window)->outputText(), "9.816|69 ± 0.00066");
+    child<QAction>(window, "copy:value")->trigger();
+    EXPECT_TRUE(QGuiApplication::clipboard()->text().startsWith("9.816689000000000220325")) << QGuiApplication::clipboard()->text().toStdString();
+}
+
 TEST(MainWindow, TheUncertaintyIsInSpanishToo) {
     settings::setLanguage(settings::Language::Spanish);
     const QList<view::DetailRow> rows = view::details(calculate_core::evaluate("(3±0.4)*(4±0.3)"),
@@ -2383,7 +2392,7 @@ TEST(MainWindow, TheUncertaintyIsInSpanishToo) {
     EXPECT_EQ(rows[5].label, "Incertidumbre");
     EXPECT_EQ(rows[5].value, "± 2,5e+0 peor caso · ± 1,8e+0 estadística");  // Spanish brings the decimal comma
     EXPECT_EQ(constantTitle("G"), "Constante de gravitación universal");
-    EXPECT_EQ(constantTitle("billion"), "un billón (10^12)");
+    EXPECT_EQ(constantTitle("billion"), "Un billón (10^12)");  // every title capitalized
     settings::setLanguage(settings::Language::English);
 }
 
@@ -2397,7 +2406,7 @@ TEST(MainWindow, ThePlusMinusKeyEntersAnUncertainty) {
     forget(window);
     QTest::keyClick(lcd(window), Qt::Key_Return);
     EXPECT_TRUE(answered(window));
-    EXPECT_EQ(lcd(window)->outputText(), "5 ± 0.20");
+    EXPECT_EQ(lcd(window)->outputText(), "5|.00 ± 0.20");
 }
 
 TEST(MainWindow, ANameWithoutAKeyIsFoundBySearch) {
