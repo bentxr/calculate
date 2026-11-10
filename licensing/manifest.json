@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "ignore": ["build/**", ".git/**", "**/.qtcreator/**", "**/*.user", "**/*.AppImage", "**/aqtinstall.log"],
+  "ignore": ["build/**", ".private/**", ".git/**", "**/.qtcreator/**", "**/*.user", "**/*.AppImage", "**/aqtinstall.log"],
   "own": [".github/**", ".gitignore", "CMakeLists.txt", "CMakePresets.json", "NOTICE", "README.md", "docs/**",
           "i18n/**", "licensing/**", "packaging/**", "src/**", "tests/**", "tools/**"],
   "ownRepositories": ["https://github.com/bentxr/calculate-core.git"],
