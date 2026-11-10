@@ -3,13 +3,18 @@
 #include "keypad.hpp"
 #include "presenter.hpp"
 #include "printers.hpp"
+#include "settings.hpp"
 
 #include <QCoreApplication>
 #include <QFile>
+#include <QLineEdit>
+#include <QMenu>
 #include <QLocale>
 #include <QTranslator>
 
 #include <gtest/gtest.h>
+
+#include <memory>
 
 using namespace calculate_core;
 
@@ -33,6 +38,16 @@ TEST(Translation, EveryStringIsTranslated) {
     const QByteArray content = ts.readAll();
     EXPECT_FALSE(content.contains("type=\"unfinished\""));
     EXPECT_FALSE(content.contains("<translation></translation>"));
+}
+
+// Spanish quotes with « »: no translation keeps the English “ ”.
+TEST(Translation, SpanishQuotesWithGuillemets) {
+    QFile ts(CALCULATE_TS_FILE);
+    ASSERT_TRUE(ts.open(QIODevice::ReadOnly));
+    for (const QString& line : QString::fromUtf8(ts.readAll()).split('\n'))
+        if (line.contains("<translation>")) {
+            EXPECT_FALSE(line.contains(QChar(0x201C)) || line.contains(QChar(0x201D))) << line.trimmed().toStdString();
+        }
 }
 
 TEST(Translation, EveryFunctionTextIsMarkedForTranslation) {
@@ -67,4 +82,20 @@ TEST(Translation, TheInspectorInSpanish) {
     EXPECT_EQ(rows[0].label, "Bits almacenados");
     EXPECT_EQ(rows[4].label, "Anterior representable");
     QCoreApplication::removeTranslator(&spanish);
+}
+
+// Qt's own texts (a text field's context menu, the standard buttons of dialogs) follow the language too: the app
+// carries Qt's Spanish translation and installs it beside its own.
+TEST(Translation, QtsOwnTextsFollowTheLanguage) {
+    const char* context = "QPlatformTheme";  // Qt's, not ours: through variables, so lupdate leaves them out
+    const char* cancel = "Cancel";
+    settings::setLanguage(settings::Language::Spanish);
+    QLineEdit field;
+    std::unique_ptr<QMenu> menu(field.createStandardContextMenu());
+    EXPECT_TRUE(menu->actions().first()->text().startsWith(QStringLiteral("&Deshacer"))) << menu->actions().first()->text().toStdString();
+    EXPECT_EQ(QCoreApplication::translate(context, cancel), QStringLiteral("Cancelar"));
+    settings::setLanguage(settings::Language::English);
+    std::unique_ptr<QMenu> english(field.createStandardContextMenu());
+    EXPECT_TRUE(english->actions().first()->text().startsWith(QStringLiteral("&Undo")));
+    EXPECT_EQ(QCoreApplication::translate(context, cancel), QStringLiteral("Cancel"));
 }

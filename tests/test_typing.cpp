@@ -55,7 +55,8 @@ TEST(Typing, SpacesAreKeptOnce) {
     EXPECT_EQ(typed("1 + 2").text(), "1 + 2");
     EXPECT_EQ(typed("1  +2").text(), "1 +2");
     EXPECT_EQ(typed("1 000").text(), "1000");  // a thin space groups digits: ignored
-    EXPECT_FALSE(typing::typeCharacter(*new Entry, QChar('\n')));
+    Entry entry;
+    EXPECT_FALSE(typing::typeCharacter(entry, QChar('\n')));
 }
 
 TEST(Typing, TheCommaSeparatesArgumentsOnlyInACallThatTakesSeveral) {
@@ -91,6 +92,13 @@ TEST(Typing, ACaretOpensAnExponentThatEndsLikeLinearText) {
     EXPECT_EQ(typed("2^3!").text(), "2^(3!)");
     EXPECT_EQ(typed("2^1e-5").text(), "2^(1e−5)");  // a number's exponent sign stays in the number
     EXPECT_EQ(typed("2**3").text(), "2^(3)");
+    EXPECT_EQ(typed("2**3**2").text(), "2^(3^(2))");  // ** builds the same tower as ^
+    EXPECT_EQ(typed("2^3**2").text(), "2^(3^(2))");
+    EXPECT_EQ(typed("2**3**2+1").text(), "2^(3^(2))+1");  // the tower still ends like linear text
+    EXPECT_EQ(typed("2^√3**2").text(), "2^(√(3)^(2))");     // √ binds tighter than **
+    EXPECT_EQ(typed("√2**2").text(), "√(2)^(2)");  // and, like ^, leaves a root's operand
+    EXPECT_EQ(typed("2**3*4").text(), "2^(3)×4");
+    EXPECT_EQ(typed("(2**3)**2").text(), "(2^(3))^(2)");
     EXPECT_EQ(typed("x²+1").text(), "x^(2)+1");
     EXPECT_EQ(typed("nCr(2^3,4)").text(), "nCr(2^(3), 4)");  // the separator ends the exponent too
     EXPECT_EQ(typed("2^10 to").text(), "2^(10) to");      // a word after a space is not the exponent

@@ -3,7 +3,6 @@
 #include <QGuiApplication>
 #include <QPainter>
 #include <QPixmap>
-#include <QPolygonF>
 #include <QtMath>
 
 namespace icons {

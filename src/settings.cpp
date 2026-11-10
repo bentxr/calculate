@@ -55,6 +55,8 @@ QStringList inEveryLanguage(const char* context, const QString& source) {
 }
 
 void setLanguage(Language language) {
+    static QTranslator qt;  // Qt's own texts, in the same language
+    QCoreApplication::removeTranslator(&qt);
     QCoreApplication::removeTranslator(&translator());
     const QLocale locale = language == Language::System    ? QLocale::system()
                            : language == Language::Spanish ? QLocale(QLocale::Spanish, QLocale::Spain)
@@ -63,6 +65,7 @@ void setLanguage(Language language) {
     spanishInUse() = false;
     if (language != Language::English && translator().load(locale, "calculate", "_", ":/i18n")) {
         spanishInUse() = translator().language().startsWith("es");
+        if (qt.load(locale, "qtbase", "_", ":/i18n")) QCoreApplication::installTranslator(&qt);
         QCoreApplication::installTranslator(&translator());
     }
 }

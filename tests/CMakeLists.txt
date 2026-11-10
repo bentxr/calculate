@@ -8,6 +8,8 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(calculate-tests
     main.cpp
+    licensing/compliance.cpp
+    licensing/glob.cpp
     test_devicekeyboard.cpp
     test_entry.cpp
     test_icons.cpp
@@ -17,6 +19,7 @@ add_executable(calculate-tests
     test_keysizing.cpp
     test_lcd.cpp
     test_licences.cpp
+    test_licensing.cpp
     test_mainwindow.cpp
     test_popupplacement.cpp
     test_presenter.cpp
@@ -30,11 +33,10 @@ add_executable(calculate-tests
     test_worker.cpp
 )
 target_link_libraries(calculate-tests PRIVATE calculate-ui Qt6::Test GTest::gtest)
-if(NOT APPLE)
-    target_link_options(calculate-tests PRIVATE -Wl,--exclude-libs,ALL)
-endif()
+target_include_directories(calculate-tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(calculate-tests PRIVATE CALCULATE_TS_FILE="${PROJECT_SOURCE_DIR}/i18n/calculate_es_ES.ts"
-    CALCULATE_LICENSES_DIR="${PROJECT_SOURCE_DIR}/LICENSES")
+    CALCULATE_LICENSES_DIR="${PROJECT_SOURCE_DIR}/LICENSES"
+    CALCULATE_SOURCE_DIR="${PROJECT_SOURCE_DIR}" CALCULATE_BINARY_DIR="${PROJECT_BINARY_DIR}")
 
 include(GoogleTest)
 gtest_discover_tests(calculate-tests DISCOVERY_MODE PRE_TEST PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")

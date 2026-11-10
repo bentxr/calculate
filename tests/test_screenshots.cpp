@@ -5,9 +5,7 @@
 #include "settings.hpp"
 
 #include <QDir>
-#include <QPushButton>
 #include <QLabel>
-#include <QListWidget>
 #include <QTest>
 #include <QToolButton>
 

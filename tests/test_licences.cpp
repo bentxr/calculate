@@ -4,6 +4,9 @@
 #include <QApplication>
 #include <QDialog>
 #include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QListWidget>
 #include <QPlainTextEdit>
 #include <QTest>
@@ -34,10 +37,26 @@ QString fileText(const QString& path) {
     return QString::fromUtf8(file.readAll());
 }
 
+// The licence files of the components the program ships, as the licensing manifest lists them: each once, in
+// path order (test-only components, such as GoogleTest, are not shipped).
+QStringList shippedLicenceFiles() {
+    QFile file(QStringLiteral(CALCULATE_SOURCE_DIR "/licensing/manifest.json"));
+    EXPECT_TRUE(file.open(QIODevice::ReadOnly));
+    QStringList paths;
+    for (const QJsonValue component : QJsonDocument::fromJson(file.readAll()).object().value("components").toArray()) {
+        if (component["use"].toString() != "runtime") continue;
+        for (const QJsonValue licence : component["licenceFiles"].toArray())
+            if (!paths.contains(licence["path"].toString())) paths << licence["path"].toString();
+    }
+    paths.sort();
+    return paths;
+}
+
 }  // namespace
 
-// Every third-party notice and licence that travels with the program can be read in it: the screen typeface's, then
-// Qt's (the LGPL-3.0 and the GPL-3.0 it adds its permissions to).
+// Every third-party notice and licence that travels with the program can be read in it: NOTICE first (Qt, the
+// third-party code inside Qt, the typeface, the engine's libraries), then the licence of each component it names,
+// in path order.
 TEST(Licences, TheViewShowsEveryThirdPartyText) {
     MainWindow window;
     window.show();
@@ -50,19 +69,18 @@ TEST(Licences, TheViewShowsEveryThirdPartyText) {
     ASSERT_NE(list, nullptr);
     ASSERT_NE(text, nullptr);
     EXPECT_TRUE(text->isReadOnly());
-    ASSERT_EQ(list->count(), 3);
+    const QStringList shipped = QStringList{"NOTICE"} + shippedLicenceFiles();
+    ASSERT_GT(shipped.size(), 30);
+    ASSERT_EQ(list->count(), shipped.size());
     EXPECT_EQ(list->currentRow(), 0);
-    QFile ofl(QStringLiteral(":/fonts/JetBrainsMono-OFL.txt"));
-    ASSERT_TRUE(ofl.open(QIODevice::ReadOnly));
-    EXPECT_EQ(list->currentItem()->text(), "JetBrains Mono: OFL.txt");
-    EXPECT_EQ(text->toPlainText(), QString::fromUtf8(ofl.readAll()));
-    list->setCurrentRow(1);
-    EXPECT_EQ(list->currentItem()->text(), "Qt: LGPL-3.0-only.txt");
-    EXPECT_EQ(text->toPlainText(), fileText(QStringLiteral(CALCULATE_LICENSES_DIR "/LGPL-3.0-only.txt")));
-    EXPECT_TRUE(text->toPlainText().startsWith(QStringLiteral("                   GNU LESSER GENERAL PUBLIC LICENSE")));
-    list->setCurrentRow(2);
-    EXPECT_EQ(list->currentItem()->text(), "Qt: GPL-3.0-only.txt");
-    EXPECT_EQ(text->toPlainText(), fileText(QStringLiteral(CALCULATE_LICENSES_DIR "/GPL-3.0-only.txt")));
+    for (int i = 0; i < shipped.size(); ++i) {
+        list->setCurrentRow(i);
+        EXPECT_EQ(list->currentItem()->text(), shipped[i]);
+        EXPECT_EQ(text->toPlainText(), fileText(QStringLiteral(CALCULATE_SOURCE_DIR "/") + shipped[i]))
+            << shipped[i].toStdString();
+    }
+    list->setCurrentRow(0);
+    EXPECT_TRUE(text->toPlainText().contains(QStringLiteral("Qt 6.11.2")));
     EXPECT_TRUE(window.geometry().contains(dialog->geometry()));
     dialog->close();
 }
@@ -85,4 +103,15 @@ TEST(Licences, ReadInSpanish) {
     EXPECT_EQ(dialog->windowTitle(), QStringLiteral("Licencias de terceros"));
     dialog->close();
     QCoreApplication::removeTranslator(&spanish);
+}
+
+// The browser build links Qt statically, so the LGPL-3.0 asks that a user can rebuild it against a modified Qt and
+// may debug such a change: NOTICE (shown in the view) says how and grants it, and the README points to it.
+TEST(Licences, TheNoticeSaysHowToUseAModifiedQt) {
+    const QString notice = fileText(QStringLiteral(CALCULATE_SOURCE_DIR "/NOTICE"));
+    EXPECT_TRUE(notice.contains(QStringLiteral("Using a modified Qt")));
+    EXPECT_TRUE(notice.contains(QStringLiteral("https://github.com/bentxr/calculate")));
+    EXPECT_TRUE(notice.contains(QStringLiteral("cmake --preset wasm-ci && cmake --build --preset wasm-ci")));
+    EXPECT_TRUE(notice.contains(QStringLiteral("reverse engineering")));
+    EXPECT_TRUE(fileText(QStringLiteral(CALCULATE_SOURCE_DIR "/README.md")).contains(QStringLiteral("NOTICE")));
 }

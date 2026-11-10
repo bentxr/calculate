@@ -378,6 +378,12 @@ bool typeCharacter(Entry& e, QChar c) {
     case '*':
         if (before && before->text == QStringLiteral("×")) {  // ** is a power
             e.backspace();
+            // The first * ended the exponents being typed, as × does, but ** is ^, which builds a tower: go back
+            // into them, typed again (a root stays left: it binds tighter than ^).
+            while (e.cursor() > 0 && e.currentRow()[static_cast<std::size_t>(e.cursor() - 1)].kind == Template::Power) {
+                e.left();
+                e.setClosing(Closing::Operand);
+            }
             openPower(e);
         } else {
             insertPiece(e, QStringLiteral("×"));

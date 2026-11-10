@@ -276,6 +276,25 @@ TEST(Presenter, WithADecimalCommaErrorsQuoteTheInputAsShown) {
     EXPECT_EQ(view::errorText(unexpected, "3.5, "), "Unexpected “,”");
 }
 
+// A missing operator says what was probably meant: a remainder after %, a product before a name or a parenthesis,
+// and, with a decimal comma, arguments separated with "," (which there is the decimal point).
+TEST(Presenter, AMissingOperatorSaysWhatWasMeant) {
+    const auto text = [](const char* expression) {
+        const Result r = evaluated(expression);
+        EXPECT_TRUE(r.error) << expression;
+        return r.error ? view::errorText(*r.error, QString::fromUtf8(expression)) : QString();
+    };
+    EXPECT_EQ(text("2π"), "Missing operator before “π” (write 2×π, not 2π)");
+    EXPECT_EQ(text("2 3"), "Missing operator before “3”");
+    EXPECT_EQ(text("3%2"), "Missing operator after “%” (for a remainder write rem(3, 2))");
+    settings::setDecimalComma(true);
+    EXPECT_EQ(text("2.5%2"), "Missing operator after “%” (for a remainder write rem(2,5; 2))");
+    EXPECT_EQ(text("betainc(2. 5. 0.3)"),  // typed as betainc(2, 5, 0,3)
+              "Missing operator before “5,”: separate the arguments with “;” (here “,” is the decimal point)");
+    EXPECT_EQ(text("2π"), "Missing operator before “π” (write 2×π, not 2π)");
+    settings::setDecimalComma(false);
+}
+
 TEST(Presenter, ThePercentageQuestionsAreExpressions) {
     const QList<view::PercentageRow> rows = view::percentageRows(QStringLiteral("80"), QStringLiteral("100"));
     QStringList keys, expressions;
@@ -537,4 +556,33 @@ TEST(Presenter, BaseFieldsHaveCaptions) {
     for (const view::DetailRow& row : view::conversionRows(evaluate("0.1 to hex"))) labels << row.label;
     for (const view::DetailRow& row : view::conversionRows(evaluate("-1 to bin 8"))) labels << row.label;
     EXPECT_EQ(labels, QStringList({"Base", "Trusted digits in this base", "Base", "Width (bits)"}));
+}
+
+// In comma mode the IEEE rows write their numbers with the comma, as the rest of Details does; a note is prose.
+TEST(Presenter, TheIeeeRowsUseTheDecimalComma) {
+    settings::setDecimalSeparator(settings::DecimalSeparator::Comma);
+    for (const view::DetailRow& row : view::storedRows(evaluated("0.1 + 0.2"), view::bitColours(false)))
+        if (row.key == "below" || row.key == "above" || row.key == "ulp") {
+            EXPECT_TRUE(row.value.contains(',')) << row.key.toStdString() << ": " << row.value.toStdString();
+            EXPECT_FALSE(row.value.contains('.')) << row.key.toStdString();
+        }
+    int numbers = 0;
+    for (const view::DetailRow& row : view::conversionRows(evaluate("0.1 to fp32")))
+        if (row.key == "field:stored" || row.key == "field:error") {
+            ++numbers;
+            EXPECT_TRUE(row.value.contains(',')) << row.key.toStdString() << ": " << row.value.toStdString();
+            EXPECT_FALSE(row.value.contains('.')) << row.key.toStdString();
+        }
+    EXPECT_EQ(numbers, 2);
+    settings::setDecimalSeparator(settings::DecimalSeparator::Language);
+}
+
+// With the decimal comma a value's comma is its decimal separator, so the values are separated by ";" (or lines,
+// or spaces).
+TEST(Presenter, InCommaModeStatisticsValuesAreSeparatedBySemicolons) {
+    settings::setDecimalSeparator(settings::DecimalSeparator::Comma);
+    EXPECT_EQ(view::statisticsExpression("mean", "1,5; 2\n3 4,25"), "mean(1.5, 2, 3, 4.25)");
+    settings::setDecimalSeparator(settings::DecimalSeparator::Point);
+    EXPECT_EQ(view::statisticsExpression("mean", "1,5; 2"), "mean(1, 5, 2)");
+    settings::setDecimalSeparator(settings::DecimalSeparator::Language);
 }

@@ -17,7 +17,9 @@
 #include <QJsonObject>
 #include <QAbstractItemView>
 #include <QApplication>
+#include <QAction>
 #include <QClipboard>
+#include <QGuiApplication>
 #include <QComboBox>
 #include <QDialog>
 #include <QHelpEvent>
@@ -124,7 +126,7 @@ TEST(MainWindow, TheTypeMenuComesFromTheEngine) {
 
 TEST(MainWindow, AngleTypeAndEqualsStackBesideTheScreen) {
     MainWindow window;
-    window.resize(900, 700);
+    window.resize(1200, 700);  // wide enough for the keys side by side with any font
     window.show();
     ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
     const QRect angle = child<QWidget>(window, "angle")->geometry();
@@ -306,6 +308,40 @@ TEST(MainWindow, TheScreenShowsOnlyTheValueAndTheCardTheRest) {
     EXPECT_EQ(child<QWidget>(window, "keypad")->geometry(), keypad);  // an overlay: nothing moves
     EXPECT_EQ(lcd(window)->geometry(), screen);
     card->hide();
+}
+
+// A value has no spaces to break at (hundreds of digits, the stored bits): it wraps anywhere, so every row stays
+// inside the card at any width, the phone's included; each still copies whole from its context menu.
+TEST(MainWindow, TheCardsValuesWrapAtAnyWidth) {
+    QWidget host;
+    host.resize(320, 700);
+    host.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&host));
+    auto* under = new QWidget(&host);
+    under->setGeometry(0, 0, 320, 10);
+    under->show();
+    DetailsCard card(&host);
+    const QString digits = QStringLiteral("0.1000000000000000055511151231257827021181583404541015625");
+    const QString bits = QStringLiteral("<span style=\"color:#c00\">0</span><span style=\"color:#00c\">01111111011</span>"
+                                        "<span style=\"color:#0a0\">1001100110011001100110011001100110011001100110011010</span>");
+    card.setRows({{"value", "Value", digits, false}, {"bits", "Stored bits", bits, true}, {"type", "Type", "Double", false}});
+    card.popUp(under);
+    QTest::qWait(50);
+    for (const char* key : {"value", "bits", "type"}) {
+        auto* label = card.findChild<QLabel*>(QString("value:") + key);
+        ASSERT_NE(label, nullptr) << key;
+        EXPECT_LE(label->mapTo(&card, QPoint(label->width(), 0)).x(), card.width()) << key;  // nothing cut at the edge
+    }
+    for (const char* key : {"value", "bits"}) {
+        auto* label = card.findChild<QLabel*>(QString("value:") + key);
+        EXPECT_GT(label->height(), 2 * label->fontMetrics().height()) << key;  // on several lines
+        auto* copy = label->findChild<QAction*>("copyValue");
+        ASSERT_NE(copy, nullptr) << key;
+        copy->trigger();
+        EXPECT_EQ(QGuiApplication::clipboard()->text().remove(' '), std::string(key) == "value" ? digits :
+                  QStringLiteral("0011111110111001100110011001100110011001100110011001100110011010")) << key;
+    }
+    card.hide();
 }
 
 TEST(MainWindow, EveryRowOfTheCardExplainsItselfInAPopup) {
@@ -527,7 +563,7 @@ TEST(MainWindow, TheHistoryDropsDownUnderTheScreen) {
 
 TEST(MainWindow, KeysKeepTheirSizeAndScrollWhenTheWindowIsSmall) {
     MainWindow window;
-    window.resize(900, 700);
+    window.resize(1200, 700);  // wide enough for the keys side by side with any font
     window.show();
     ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
     const QSize sin = child<QPushButton>(window, "key:sin")->size();
@@ -541,10 +577,33 @@ TEST(MainWindow, KeysKeepTheirSizeAndScrollWhenTheWindowIsSmall) {
     EXPECT_EQ(child<QPushButton>(window, "key:7")->size(), seven);
     auto* keys = child<QScrollArea>(window, "keys");
     EXPECT_FALSE(keys->horizontalScrollBar()->isVisible());
-    window.resize(260, 400);
+    window.resize(1600, 260);  // a shorter window: they scroll instead (a narrower one: see the next test)
     QTest::qWait(50);
-    EXPECT_EQ(child<QPushButton>(window, "key:sin")->size(), sin);  // smaller window: they scroll instead
-    EXPECT_TRUE(keys->horizontalScrollBar()->isVisible());
+    EXPECT_EQ(child<QPushButton>(window, "key:sin")->size(), sin);
+    EXPECT_TRUE(keys->verticalScrollBar()->isVisible());
+}
+
+// The keys side by side need a certain width; a window narrower than that (half of a laptop's landscape screen)
+// takes the phone arrangement instead of scrolling sideways, and goes back when it is wide enough again.
+TEST(MainWindow, AWindowTooNarrowForTheKeysSideBySideGetsThePhoneArrangement) {
+    MainWindow window;
+    window.resize(1396, 868);
+    window.show();
+    ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
+    window.layOutKeys(QSize(1396, 868));  // a laptop's landscape screen
+    QTest::qWait(50);
+    EXPECT_TRUE(child<QWidget>(window, "rail")->isVisible());
+    auto* keys = child<QScrollArea>(window, "keys");
+    window.resize(698, 868);  // half of it
+    QTest::qWait(50);
+    EXPECT_FALSE(child<QWidget>(window, "rail")->isVisible());
+    EXPECT_TRUE(child<QPushButton>(window, "drawerToggle")->isVisible());
+    EXPECT_FALSE(keys->horizontalScrollBar()->isVisible());
+    for (const char* name : {"key:7", "common:asin"}) EXPECT_GE(child<QWidget>(window, name)->height(), touchTarget) << name;
+    window.resize(1396, 868);
+    QTest::qWait(50);
+    EXPECT_TRUE(child<QWidget>(window, "rail")->isVisible());
+    EXPECT_FALSE(child<QPushButton>(window, "drawerToggle")->isVisible());
 }
 
 TEST(MainWindow, DirectKeysInsertTheirFunctions) {
@@ -575,7 +634,7 @@ TEST(MainWindow, DirectKeysSitLeftOfTheMainPadAtTheSameSize) {
 
 TEST(MainWindow, TheLeftPanelCollapsesToARail) {
     MainWindow window;
-    window.resize(900, 700);
+    window.resize(1200, 700);  // wide enough for the keys side by side with any font
     window.show();
     ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
     auto* rail = child<QWidget>(window, "rail");
@@ -598,6 +657,7 @@ TEST(MainWindow, TheLeftPanelCollapsesToARail) {
 
 TEST(MainWindow, TheSettingsOpenAsAMenuFromTheGear) {
     MainWindow window;
+    window.resize(1000, 700);  // the keys side by side, the gear at the rail's foot
     window.show();
     ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
     auto* gear = child<QToolButton>(window, "settingsButton");
@@ -641,6 +701,38 @@ TEST(MainWindow, SpanishRelabelsEverythingWithoutARestart) {
     QCoreApplication::processEvents();
     EXPECT_EQ(child<QPushButton>(window, "key:sin")->text(), "sin");
     EXPECT_EQ(child<QListWidget>(window, "modes")->item(0)->text(), "Calculator");
+}
+
+// Spanish keys use the Spanish spellings wherever the engine reads one (as sen and arcsen already do): on the keys, in
+// "Hold for", in the tooltips' examples and in the search.
+TEST(MainWindow, SpanishKeysUseTheSpanishSpellings) {
+    MainWindow window;
+    setting(window, "language:es")->trigger();
+    QCoreApplication::processEvents();
+    const QList<QPair<QString, QString>> spellings{{"csc", "cosec"},   {"cot", "cotg"},      {"csch", "cosech"},
+                                                   {"coth", "cotgh"},  {"asec", "arcsec"},   {"acsc", "arccosec"},
+                                                   {"acot", "arccotg"}, {"asech", "arcsech"}, {"acsch", "arccosech"},
+                                                   {"acoth", "arccotgh"}};
+    for (const auto& [id, spelled] : spellings) {
+        EXPECT_EQ(child<QPushButton>(window, ("direct:" + id).toUtf8().constData())->text(), spelled);
+        const calculate_core::Result r = calculate_core::evaluate((spelled + "(0.5)").toStdString());  // a name the engine reads
+        EXPECT_TRUE(!r.error || r.error->code != calculate_core::ErrorCode::UnknownName) << spelled.toStdString();
+    }
+    const QString sine = child<QPushButton>(window, "key:sin")->toolTip();
+    EXPECT_TRUE(sine.contains("sen(")) << sine.toStdString();  // the example as the key spells it
+    EXPECT_FALSE(sine.contains("sin(")) << sine.toStdString();
+    EXPECT_TRUE(sine.contains("Mantén pulsado para: arcsen, senh, arcsenh, cosec, arccosec")) << sine.toStdString();
+    auto* search = child<QLineEdit>(window, "search");
+    search->setText("arccosec");
+    bool found = false;
+    for (int row = 0; row < child<QListWidget>(window, "searchList")->count(); ++row) {
+        const QListWidgetItem* item = child<QListWidget>(window, "searchList")->item(row);
+        if (!item->isHidden() && item->text().startsWith("arccosec  —  ")) found = true;
+    }
+    EXPECT_TRUE(found);
+    setting(window, "language:en")->trigger();
+    QCoreApplication::processEvents();
+    EXPECT_EQ(child<QPushButton>(window, "direct:csc")->text(), "csc");
 }
 
 // The browser starts dark: the menu shows the theme in use, not always System.
@@ -1574,7 +1666,8 @@ TEST(MainWindow, OnAPhoneThePadSitsAtTheBottomWithCommonAboveIt) {
     EXPECT_EQ(toggle->size(), child<QPushButton>(window, "common:asin")->size());
     EXPECT_FALSE(child<QPushButton>(window, "common:abs")->isVisible());  // its place holds More; abs is in Numbers
     EXPECT_FALSE(child<QWidget>(window, "drawer")->isVisible());
-    window.layOutKeys(QSize(1920, 1200));  // and back, side by side
+    window.resize(1200, 844);  // and back, side by side, in a window wide enough for it
+    window.layOutKeys(QSize(1920, 1200));
     QTest::qWait(50);
     EXPECT_TRUE(child<QWidget>(window, "rail")->isVisible());
     EXPECT_FALSE(toggle->isVisible());
@@ -1811,6 +1904,7 @@ TEST(MainWindow, OnAPhoneCommonIsEditedFromTheDrawer) {
     EXPECT_FALSE(window.common().contains("asin"));
     EXPECT_TRUE(drawer->isVisible());  // editing keeps the drawer open
     QTest::mouseClick(child<QToolButton>(window, "editCommon"), Qt::LeftButton);
+    window.resize(1200, 844);
     window.layOutKeys(QSize(1920, 1200));
     EXPECT_FALSE(drawer->isAncestorOf(child<QWidget>(window, "editCommon")));  // back on Common's title row
 }
@@ -1894,6 +1988,90 @@ TEST(MainWindow, ThePercentagesKeypadMovesToTheSecondValue) {
     QTest::mouseClick(child<QPushButton>(window, "percentKey:next"), Qt::LeftButton);  // and back
     QTest::mouseClick(child<QPushButton>(window, "percentKey:backspace"), Qt::LeftButton);
     EXPECT_EQ(child<QLineEdit>(window, "percentFirst")->text(), "");
+}
+
+// A box holds one number, so a typed point or comma is its decimal separator: shown as the one in use, read by the
+// engine as a point, and rewritten when the setting changes.
+TEST(MainWindow, ThePercentagesBoxesUseTheDecimalSeparatorInUse) {
+    MainWindow window;
+    setting(window, "decimal:comma")->trigger();
+    child<QListWidget>(window, "modes")->setCurrentRow(2);
+    auto* first = child<QLineEdit>(window, "percentFirst");
+    auto* second = child<QLineEdit>(window, "percentSecond");
+    QTest::keyClicks(first, "80");
+    QTest::keyClicks(second, "2.5");
+    EXPECT_EQ(second->text(), "2,5");
+    QLabel* share = child<QLabel>(window, "percent:secondOfFirst");
+    ASSERT_TRUE(QTest::qWaitFor([&] { return !share->text().isEmpty(); }, 10000));
+    EXPECT_EQ(share->text(), "3,125");
+    setting(window, "decimal:point")->trigger();
+    EXPECT_EQ(second->text(), "2.5");
+    QTest::keyClicks(first, ",5");
+    EXPECT_EQ(first->text(), "80.5");
+    setting(window, "decimal:language")->trigger();
+}
+
+// In comma mode the statistics box takes the comma as the decimal separator and ";" between values: its keys, its
+// prompt and the concise copy's example say so, and a change of the setting rewrites the box.
+TEST(MainWindow, StatisticsTakeTheDecimalCommaInCommaMode) {
+    MainWindow window;
+    setting(window, "decimal:comma")->trigger();
+    child<QListWidget>(window, "modes")->setCurrentRow(1);
+    EXPECT_EQ(child<QPushButton>(window, "statKey:point")->text(), ",");
+    EXPECT_EQ(child<QPushButton>(window, "statKey:comma")->text(), ";");
+    EXPECT_EQ(child<QLabel>(window, "statisticsLabel")->text(), "Values (one per line, or separated by semicolons):");
+    EXPECT_EQ(child<QAction>(window, "copy:concise")->text(), "Concise (1,23(4))");
+    for (const char* key : {"statKey:1", "statKey:point", "statKey:5", "statKey:comma", "statKey:2"})
+        QTest::mouseClick(child<QPushButton>(window, key), Qt::LeftButton);
+    auto* values = child<QPlainTextEdit>(window, "statisticsValues");
+    EXPECT_EQ(values->toPlainText(), "1,5; 2");
+    setting(window, "decimal:point")->trigger();
+    EXPECT_EQ(values->toPlainText(), "1.5, 2");
+    EXPECT_EQ(child<QPushButton>(window, "statKey:point")->text(), ".");
+    EXPECT_EQ(child<QPushButton>(window, "statKey:comma")->text(), ",");
+    EXPECT_EQ(child<QLabel>(window, "statisticsLabel")->text(), "Values (one per line, or separated by commas):");
+    EXPECT_EQ(child<QAction>(window, "copy:concise")->text(), "Concise (1.23(4))");
+    setting(window, "decimal:language")->trigger();
+}
+
+// No key's name is squeezed under 80 % of the font: such a key spans two places of its grid, the keys after it move
+// on, and no two keys share a place (on a phone, where keys are narrowest, and on a laptop; in both languages).
+TEST(MainWindow, LongNamedKeysSpanTwoPlaces) {
+    for (const char* language : {"language:en", "language:es"})
+        for (const QSize screen : {QSize(390, 844), QSize(1396, 868)}) {
+            MainWindow window;
+            setting(window, language)->trigger();
+            QCoreApplication::processEvents();
+            window.resize(screen);
+            window.layOutKeys(screen);
+            const int base = QFontInfo(window.font()).pixelSize();
+            int spanning = 0;
+            QStringList grids{"memoryKeys"};
+            for (const KeySection& section : keySections()) grids << "sectionKeys:" + section.id;
+            for (const QString& gridName : grids) {
+                const std::string name = gridName.toStdString();
+                auto* grid = child<QWidget>(window, name.c_str());
+                auto* layout = static_cast<QGridLayout*>(grid->layout());
+                QSet<QPair<int, int>> taken;
+                for (int i = 0; i < layout->count(); ++i) {
+                    auto* key = qobject_cast<QPushButton*>(layout->itemAt(i)->widget());
+                    if (!key) continue;
+                    int row, column, rows, columns;
+                    layout->getItemPosition(i, &row, &column, &rows, &columns);
+                    for (int c = column; c < column + columns; ++c) {
+                        EXPECT_FALSE(taken.contains({row, c})) << name << " " << key->text().toStdString();
+                        taken.insert({row, c});
+                    }
+                    EXPECT_LE(column + columns, 6) << key->text().toStdString();
+                    if (columns == 2) ++spanning;
+                    EXPECT_GE(QFontInfo(key->font()).pixelSize(), qRound(0.8 * base)) << language << " " << key->text().toStdString();
+                    EXPECT_LE(QFontMetrics(key->font()).horizontalAdvance(key->text()), key->width() - 10) << key->text().toStdString();
+                }
+            }
+            if (screen.width() < screen.height()) EXPECT_GT(spanning, 0) << language;
+            setting(window, "language:en")->trigger();
+            QCoreApplication::processEvents();
+        }
 }
 
 TEST(MainWindow, TheKeysShowTheSeparatorsInUse) {
@@ -2224,7 +2402,7 @@ TEST(MainWindow, ThePlusMinusKeyEntersAnUncertainty) {
 
 TEST(MainWindow, ANameWithoutAKeyIsFoundBySearch) {
     MainWindow window;
-    window.resize(640, 480);
+    window.resize(1000, 480);  // wide enough for the keys side by side
     window.show();
     ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
     auto* box = child<QLineEdit>(window, "search");

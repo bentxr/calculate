@@ -58,6 +58,7 @@ public slots:
 
 protected:
     void showEvent(QShowEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
     void changeEvent(QEvent* event) override;
     bool eventFilter(QObject* watched, QEvent* event) override;
 
@@ -73,6 +74,7 @@ signals:
 private:
     QWidget* buildKeypad();
     QWidget* buildDirectKeys();
+    void placeKeys(QWidget* grid, const QList<Key>& keys, QSize size);  // see layOutKeys
     QWidget* keyGrid(const QString& name, const QList<Key>& keys, const QString& prefix);
     QPushButton* buildKey(const Key& key, const QString& prefix);  // prefix: "key:" or "direct:"
     QWidget* buildStatistics();
@@ -170,6 +172,7 @@ private:
     bool shifted_ = false;  // ⇧ was pressed: the next letter is a capital
     bool storing_ = false;  // STO was pressed: the next variable letter stores the input
     QSize designScreen_;   // the screen the keys were laid out for
+    int wideWidth_ = 0;    // the window width the keys need side by side
     QToolButton* panelToggle_ = nullptr;
     QToolButton* settingsButton_ = nullptr;
     QMenu* settings_ = nullptr;
@@ -190,6 +193,7 @@ private:
     QPushButton* equals_ = nullptr;
     QWidget* messageStrip_ = nullptr;
     QLabel* statisticsLabel_ = nullptr;
+    bool statisticsComma_ = false;  // the decimal separator the statistics values are written with
     bool hasResult_ = false;  // whether last_ holds a result to present
     QStackedWidget* pages_ = nullptr;
     QScrollArea* keys_ = nullptr;

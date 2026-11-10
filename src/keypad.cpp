@@ -184,21 +184,21 @@ const QList<KeySection>& keySections() {
           {"acosh", put(QT_TRANSLATE_NOOP("keypad", "acosh"), QT_TRANSLATE_NOOP("keypad", "acosh("), "acosh")},
           {"atanh", put(QT_TRANSLATE_NOOP("keypad", "atanh"), QT_TRANSLATE_NOOP("keypad", "atanh("), "atanh")},
           {"sech", put("sech", "sech(", "sech")},
-          {"csch", put("csch", "csch(", "csch")},
-          {"coth", put("coth", "coth(", "coth")},
-          {"asech", put("asech", "asech(", "asech")},
-          {"acsch", put("acsch", "acsch(", "acsch")},
-          {"acoth", put("acoth", "acoth(", "acoth")}}},
+          {"csch", put(QT_TRANSLATE_NOOP("keypad", "csch"), QT_TRANSLATE_NOOP("keypad", "csch("), "csch")},
+          {"coth", put(QT_TRANSLATE_NOOP("keypad", "coth"), QT_TRANSLATE_NOOP("keypad", "coth("), "coth")},
+          {"asech", put(QT_TRANSLATE_NOOP("keypad", "asech"), QT_TRANSLATE_NOOP("keypad", "asech("), "asech")},
+          {"acsch", put(QT_TRANSLATE_NOOP("keypad", "acsch"), QT_TRANSLATE_NOOP("keypad", "acsch("), "acsch")},
+          {"acoth", put(QT_TRANSLATE_NOOP("keypad", "acoth"), QT_TRANSLATE_NOOP("keypad", "acoth("), "acoth")}}},
         {"trigonometry", QT_TRANSLATE_NOOP("keypad", "Trigonometry"),
          {{"asin", put(QT_TRANSLATE_NOOP("keypad", "asin"), QT_TRANSLATE_NOOP("keypad", "asin("), "asin")},
           {"acos", put(QT_TRANSLATE_NOOP("keypad", "acos"), QT_TRANSLATE_NOOP("keypad", "acos("), "acos")},
           {"atan", put(QT_TRANSLATE_NOOP("keypad", "atan"), QT_TRANSLATE_NOOP("keypad", "atan("), "atan")},
           {"sec", put("sec", "sec(", "sec")},
-          {"csc", put("csc", "csc(", "csc")},
-          {"cot", put("cot", "cot(", "cot")},
-          {"asec", put("asec", "asec(", "asec")},
-          {"acsc", put("acsc", "acsc(", "acsc")},
-          {"acot", put("acot", "acot(", "acot")},
+          {"csc", put(QT_TRANSLATE_NOOP("keypad", "csc"), QT_TRANSLATE_NOOP("keypad", "csc("), "csc")},
+          {"cot", put(QT_TRANSLATE_NOOP("keypad", "cot"), QT_TRANSLATE_NOOP("keypad", "cot("), "cot")},
+          {"asec", put(QT_TRANSLATE_NOOP("keypad", "asec"), QT_TRANSLATE_NOOP("keypad", "asec("), "asec")},
+          {"acsc", put(QT_TRANSLATE_NOOP("keypad", "acsc"), QT_TRANSLATE_NOOP("keypad", "acsc("), "acsc")},
+          {"acot", put(QT_TRANSLATE_NOOP("keypad", "acot"), QT_TRANSLATE_NOOP("keypad", "acot("), "acot")},
           {"atan2", put("atan2", "atan2(", "atan2")},
           {"hypot", put("hypot", "hypot(", "hypot")},
           {"sinc", put("sinc", "sinc(", "sinc")}}},
@@ -451,8 +451,12 @@ QString spokenName(const Key& key) {
 }
 
 QString keyTip(const Key& key) {
-    if (const calculate_core::FunctionDescription* f = functionOf(key.face))
-        return functionTitle(*f) + QStringLiteral(" · ") + QString::fromStdString(f->example);
+    if (const calculate_core::FunctionDescription* f = functionOf(key.face)) {
+        QString example = QString::fromStdString(f->example);  // "sin(1)": with the name the key shows ("sen(1)")
+        if (example.startsWith(key.face.label + QLatin1Char('(')))
+            example = translated(key.face.label) + example.mid(key.face.label.size());
+        return functionTitle(*f) + QStringLiteral(" · ") + example;
+    }
     QString name = spokenName(key);
     if (!name.isEmpty()) name[0] = name[0].toUpper();
     return name;

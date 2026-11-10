@@ -1,6 +1,7 @@
 #include "inspector.hpp"
 
 #include "printers.hpp"
+#include "settings.hpp"
 
 #include <QAction>
 #include <QClipboard>
@@ -52,6 +53,39 @@ TEST(Inspector, ConvertsADecimal) {
     EXPECT_EQ(shown(inspector, "ulp"), "2^−27 = 7.450580596923828125e−9");
     EXPECT_EQ(shown(inspector, "below"), "0.0999999940395355224609375");
     EXPECT_EQ(shown(inspector, "above"), "0.10000000894069671630859375");
+}
+
+// With the decimal comma the decimal field shows and takes ",", whichever separator is typed, as the main keypad does;
+// the point key shows the separator in use. showSeparator() follows a change of the setting.
+TEST(Inspector, TheDecimalFieldUsesTheSeparatorInUse) {
+    settings::setDecimalSeparator(settings::DecimalSeparator::Comma);
+    Inspector inspector;
+    inspector.setFormatIndex(inspector.formatIndex(NumberType::Float));
+    auto* decimal = child<QPlainTextEdit>(inspector, "inspectorDecimal");
+    auto* point = child<QPushButton>(inspector, "inspectorKey:.");
+    EXPECT_EQ(point->text(), ",");
+    QTest::keyClicks(decimal, "0.1");
+    EXPECT_EQ(text(inspector, "inspectorDecimal"), "0,1");
+    EXPECT_EQ(text(inspector, "inspectorHex"), "3DCC CCCD");
+    decimal->clear();
+    QTest::keyClicks(decimal, "0,5");
+    EXPECT_EQ(text(inspector, "inspectorHex"), "3F00 0000");
+    decimal->clear();
+    for (const char* key : {"inspectorKey:0", "inspectorKey:.", "inspectorKey:2", "inspectorKey:5"})
+        QTest::mouseClick(child<QPushButton>(inspector, key), Qt::LeftButton);
+    EXPECT_EQ(text(inspector, "inspectorDecimal"), "0,25");
+    EXPECT_EQ(text(inspector, "inspectorHex"), "3E80 0000");
+    inspector.loadBits(inspector.formatIndex(NumberType::Float), "3FC00000");
+    EXPECT_EQ(text(inspector, "inspectorDecimal"), "1,5");
+    settings::setDecimalSeparator(settings::DecimalSeparator::Point);
+    inspector.showSeparator();
+    EXPECT_EQ(point->text(), ".");
+    EXPECT_EQ(text(inspector, "inspectorDecimal"), "1.5");
+    decimal->clear();
+    QTest::keyClicks(decimal, "2,75");
+    EXPECT_EQ(text(inspector, "inspectorDecimal"), "2.75");
+    EXPECT_EQ(text(inspector, "inspectorHex"), "4030 0000");
+    settings::setDecimalSeparator(settings::DecimalSeparator::Language);
 }
 
 TEST(Inspector, EditingTheHexUpdatesTheOthers) {

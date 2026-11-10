@@ -383,6 +383,10 @@ FractionParts withDecimalComma(FractionParts p) {
     return p;
 }
 
+QString withSeparatorInUse(QString number) {
+    return number.replace(QRegularExpression(QStringLiteral("[.,]")), settings::decimalComma() ? QStringLiteral(",") : QStringLiteral("."));
+}
+
 QString withDecimalComma(const QString& expression) {
     QString s = expression;
     s.replace(',', ';');  // in the engine's text a comma only ever separates arguments
@@ -425,7 +429,19 @@ QString errorText(const Error& e, const QString& expression) {
     case ErrorCode::UnexpectedToken: return QCoreApplication::translate("view", "Unexpected “%1”").arg(part);
     case ErrorCode::UnexpectedEnd: return QCoreApplication::translate("view", "The expression ends too early");
     case ErrorCode::MissingClosingParenthesis: return QCoreApplication::translate("view", "Missing “)”");
-    case ErrorCode::MissingOperator: return QCoreApplication::translate("view", "Missing operator before “%1” (write 2×π, not 2π)").arg(part);
+    case ErrorCode::MissingOperator: {
+        static const QRegularExpression remainder(QStringLiteral("for a remainder write (rem\\(.*\\))\\)$"));
+        if (const QRegularExpressionMatch m = remainder.match(QString::fromStdString(e.message)); m.hasMatch()) {
+            const QString meant = settings::decimalComma() ? withDecimalComma(m.captured(1)) : m.captured(1);
+            return QCoreApplication::translate("view", "Missing operator after “%” (for a remainder write %1)").arg(meant);
+        }
+        // With a decimal comma, "," typed between arguments became the decimal point of the number before
+        if (settings::decimalComma() && QString::fromUtf8(bytes.left(static_cast<int>(e.begin))).trimmed().endsWith('.'))
+            return QCoreApplication::translate("view", "Missing operator before “%1”: separate the arguments with “;” (here “,” is the decimal point)").arg(part);
+        if (e.message.find("2×π") != std::string::npos)  // the engine's guess: a product without its sign
+            return QCoreApplication::translate("view", "Missing operator before “%1” (write 2×π, not 2π)").arg(part);
+        return QCoreApplication::translate("view", "Missing operator before “%1”").arg(part);
+    }
     case ErrorCode::UnknownName:
         if (part == "Ans") return QCoreApplication::translate("view", "There is no previous result yet");
         if (part == "M") return QCoreApplication::translate("view", "The memory is empty");
@@ -454,8 +470,11 @@ QString errorText(const Error& e, const QString& expression) {
 }
 
 QString statisticsExpression(const QString& function, const QString& values) {
-    const QStringList list = values.split(QRegularExpression(QStringLiteral("[\\s,;]+")), Qt::SkipEmptyParts);
+    // With the decimal comma, a comma belongs to its value and ";" separates them.
+    const bool comma = settings::decimalComma();
+    QStringList list = values.split(QRegularExpression(comma ? QStringLiteral("[\\s;]+") : QStringLiteral("[\\s,;]+")), Qt::SkipEmptyParts);
     if (list.isEmpty()) return {};
+    if (comma) list.replaceInStrings(QStringLiteral(","), QStringLiteral("."));
     return function + "(" + list.join(", ") + ")";
 }
 
@@ -558,21 +577,23 @@ QString grouped(const QString& text) {
     return s;
 }
 
-// A finite stored value written out: positional for −7 <= exponent < 21, else d.ddd…e−N; `ascii` uses - for minus.
+// A finite stored value written out: positional for −7 <= exponent < 21, else d.ddd…e−N. `ascii` uses - for minus
+// and the point (a field's text, read back by the engine); otherwise − and the decimal separator in use.
 QString writtenOut(const calculate_core::Digits& d, bool ascii) {
     const QString minusSign = ascii ? QStringLiteral("-") : minus();
+    const QString point = !ascii && settings::decimalComma() ? QStringLiteral(",") : QStringLiteral(".");
     const QString digits = fromStd(d.digits);
     const long long e = d.exponent10;
     QString s = d.negative ? minusSign : QString();
     if (e >= -7 && e < 21) {
-        if (e < 0) return s + QStringLiteral("0.") + QString(static_cast<int>(-e - 1), QChar('0')) + digits;
+        if (e < 0) return s + QStringLiteral("0") + point + QString(static_cast<int>(-e - 1), QChar('0')) + digits;
         QString whole = digits.left(static_cast<int>(e) + 1);
         whole += QString(qMax(0, static_cast<int>(e) + 1 - static_cast<int>(digits.size())), QChar('0'));
         const QString rest = digits.mid(static_cast<int>(e) + 1);
-        return s + whole + (rest.isEmpty() ? QString() : QStringLiteral(".") + rest);
+        return s + whole + (rest.isEmpty() ? QString() : point + rest);
     }
     s += digits.left(1);
-    if (digits.size() > 1) s += QStringLiteral(".") + digits.mid(1);
+    if (digits.size() > 1) s += point + digits.mid(1);
     return s + QStringLiteral("e") + (e < 0 ? minusSign + QString::number(-e) : QString::number(e));
 }
 
@@ -644,7 +665,7 @@ QList<DetailRow> conversionRows(const Result& r) {
         QString shown = label;  // unknown labels as they are
         for (const auto& [key, text] : labels)
             if (key == label) shown = QCoreApplication::translate("view", text);
-        rows.append({QStringLiteral("field:") + label, shown, fromStd(f.value), false});
+        rows.append({QStringLiteral("field:") + label, shown, label == "note" ? fromStd(f.value) : number(f.value), false});
     }
     return rows;
 }

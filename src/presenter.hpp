@@ -61,6 +61,8 @@ bool incomplete(const calculate_core::Error& error);
 ValueParts withDecimalComma(ValueParts parts);
 FractionParts withDecimalComma(FractionParts parts);
 QString withDecimalComma(const QString& expression);
+// One number, typed or shown: each point or comma becomes the decimal separator in use.
+QString withSeparatorInUse(QString number);
 
 // A result on one line of plain text, as the screen shows it: "1.000|2×10^−7", "−1/3 = −0.(3)".
 QString oneLine(const ValueParts& parts);

@@ -648,6 +648,29 @@ void MainWindow::placeCommon() {
     }
 }
 
+// The grid's keys in six columns of `size`; a key whose name would need a font under 80 % of the size spans two
+// (from the next row when only one place is left in this one).
+void MainWindow::placeKeys(QWidget* grid, const QList<Key>& keys, QSize size) {
+    auto* layout = static_cast<QGridLayout*>(grid->layout());
+    int row = 0, column = 0;
+    for (const Key& key : keys) {
+        QPushButton* button = findChild<QPushButton*>("direct:" + key.id);
+        const bool two = needsTwoPlaces(font(), button->text(), size.width() - 10);
+        if (two && column == 5) {
+            ++row;
+            column = 0;
+        }
+        layout->removeWidget(button);
+        layout->addWidget(button, row, column, 1, two ? 2 : 1);
+        button->setFixedSize(two ? QSize(2 * size.width() + keySpacing, size.height()) : size);
+        column += two ? 2 : 1;
+        if (column >= 6) {
+            ++row;
+            column = 0;
+        }
+    }
+}
+
 // A grid of keys in six columns; shorter rows line up on the left, in the same columns.
 QWidget* MainWindow::keyGrid(const QString& name, const QList<Key>& keys, const QString& prefix) {
     auto* grid = new QWidget;
@@ -757,13 +780,12 @@ QWidget* MainWindow::buildDirectKeys() {
 }
 
 // Lays the keys out for a screen of this size: side by side on a landscape screen, in the phone arrangement on a
-// portrait one; then gives every key the size derived from the screen. Called when the window is first shown,
-// whenever it moves to another screen, and after a change of language. What the window reserves for everything but
-// the keys is measured from its own layouts, so it holds for any style, font and language.
+// portrait one or in a window too narrow for them side by side; then gives every key the size derived from the
+// screen. Called when the window is first shown, whenever it moves to another screen, after a change of language,
+// and when a resize crosses the width the keys need side by side. What the window reserves for everything but the
+// keys is measured from its own layouts, so it holds for any style, font and language.
 void MainWindow::layOutKeys(QSize screen) {
     designScreen_ = screen;
-    narrow_ = keysLayout(screen) == KeysLayout::Narrow;
-    arrange();
     QWidget* area = keys_->widget();
     QWidget* pad = findChild<QWidget*>("keypad");
     QWidget* direct = findChild<QWidget*>("directKeys");
@@ -780,24 +802,30 @@ void MainWindow::layOutKeys(QSize screen) {
     const QMargins inner = pad->layout()->contentsMargins();
     const QMargins left = direct->layout()->contentsMargins();
     const int scrollBar = style()->pixelMetric(QStyle::PM_ScrollBarExtent);
-    QSize size;
+    const int columns = 12;
+    const int rows = 7;
+    const QSize reserved(outer.left() + outer.right() + centralWidget()->layout()->spacing() + modes_->width()
+                             + inner.left() + inner.right() + left.left() + left.right() + area->layout()->spacing()
+                             + 2 * keys_->frameWidth() + 2 * scrollBar,  // the window's bar and the column's
+                         outer.top() + outer.bottom() + lcd_->minimumSizeHint().height() + 2 * keySpacing
+                             + inner.top() + inner.bottom() + keypadGap
+                             + style()->pixelMetric(QStyle::PM_TitleBarHeight));
+    const QSize wide = keySize(screen, reserved, QSize(columns, rows), keySpacing, minimum);
+    // Side by side without scrolling sideways: the reserved room less the window's own bar, which shows only when
+    // the window is too short.
+    wideWidth_ = reserved.width() - scrollBar + columns * wide.width() + (columns - 1) * keySpacing;
+    narrow_ = keysLayout(screen) == KeysLayout::Narrow || width() < wideWidth_;
+    arrange();
+    QSize size = wide;
     if (narrow_) {
-        // The phone's keys share the screen's width, and stay large enough for a finger. Six keys fit both under the
-        // screen (beside the main pad's margins) and in the drawer (beside the column's margins and its scroll bar).
+        // The phone's keys share the width (the screen's, or the window's when that is narrower), and stay large
+        // enough for a finger. Six keys fit both under the screen (beside the main pad's margins) and in the drawer
+        // (beside the column's margins and its scroll bar).
         const int besidePad = outer.left() + outer.right() + inner.left() + inner.right() + 2 * keys_->frameWidth();
         const int inDrawer = 2 * drawer_->frameWidth() + left.left() + left.right() + scrollBar;
         const int reservedWidth = qMax(besidePad, inDrawer);
-        size = phoneKeySize(screen, reservedWidth, 6, keySpacing,
+        size = phoneKeySize(QSize(qMin(screen.width(), width()), screen.height()), reservedWidth, 6, keySpacing,
                             QSize(2 * fontMetrics().height(), qMax(touchTarget, minimum.height())));
-    } else {
-        const int rows = 7;
-        const QSize reserved(outer.left() + outer.right() + centralWidget()->layout()->spacing() + modes_->width()
-                                 + inner.left() + inner.right() + left.left() + left.right() + area->layout()->spacing()
-                                 + 2 * keys_->frameWidth() + 2 * scrollBar,  // the window's bar and the column's
-                             outer.top() + outer.bottom() + lcd_->minimumSizeHint().height() + 2 * keySpacing
-                                 + inner.top() + inner.bottom() + keypadGap
-                                 + style()->pixelMetric(QStyle::PM_TitleBarHeight));
-        size = keySize(screen, reserved, QSize(12, rows), keySpacing, minimum);
     }
     const QSize numberSize((6 * size.width() + keySpacing) / 5, size.height());  // five span six
 
@@ -806,6 +834,8 @@ void MainWindow::layOutKeys(QSize screen) {
             findChild<QPushButton*>("key:" + key.id)->setFixedSize(row.size() == 5 ? numberSize : size);
         }
     for (const Key& key : everyDirectKey()) findChild<QPushButton*>("direct:" + key.id)->setFixedSize(size);
+    placeKeys(findChild<QWidget*>("memoryKeys"), memoryKeys(), size);
+    for (const KeySection& section : keySections()) placeKeys(findChild<QWidget*>("sectionKeys:" + section.id), section.keys, size);
     keySize_ = size;
     for (const QString& id : common_) findChild<QPushButton*>("common:" + id)->setFixedSize(size);
     drawerToggle_->setFixedSize(size);
@@ -1002,6 +1032,14 @@ void MainWindow::updatePreviews() {
         const int room = common->sizeHint().width() - header->sizeHint().width() - keySpacing;
         preview->setText(preview->fontMetrics().elidedText(text, Qt::ElideRight, qMax(0, room)));
     }
+}
+
+// Crossing the width the keys need side by side changes the arrangement (on a landscape screen; a portrait one
+// always has the phone's).
+void MainWindow::resizeEvent(QResizeEvent* event) {
+    QMainWindow::resizeEvent(event);
+    if (keysSized_ && keysLayout(designScreen_) == KeysLayout::Wide && (width() < wideWidth_) != narrow_)
+        layOutKeys(designScreen_);
 }
 
 void MainWindow::showEvent(QShowEvent* event) {
@@ -1203,7 +1241,7 @@ void MainWindow::retranslate() {
     findChild<QAction*>("copy:trusted")->setText(tr("Trusted digits"));
     findChild<QAction*>("copy:bound")->setText(tr("Value ± bound"));
     findChild<QAction*>("copy:details")->setText(tr("Details as text"));
-    findChild<QAction*>("copy:concise")->setText(tr("Concise (1.23(4))"));
+    findChild<QAction*>("copy:concise")->setText(tr("Concise (%1)").arg(settings::decimalComma() ? QStringLiteral("1,23(4)") : QStringLiteral("1.23(4)")));
     findChild<QAction*>("copy:expression")->setText(tr("Expression"));
     findChild<QAction*>("history:copyExpression")->setText(tr("Copy expression"));
     findChild<QAction*>("history:copyValue")->setText(tr("Copy value"));
@@ -1218,10 +1256,22 @@ void MainWindow::retranslate() {
     historyToggle_->setToolTip(tr("History"));
     // The symbol buttons (☰, the gear, ▾) are spoken by their tooltips.
     for (QToolButton* button : {panelToggle_, settingsButton_, historyToggle_}) button->setAccessibleName(button->toolTip());
-    statisticsLabel_->setText(tr("Values (one per line, or separated by commas):"));
+    const bool comma = settings::decimalComma();
+    statisticsLabel_->setText(comma ? tr("Values (one per line, or separated by semicolons):") : tr("Values (one per line, or separated by commas):"));
+    findChild<QPushButton*>("statKey:point")->setText(comma ? QStringLiteral(",") : QStringLiteral("."));
+    findChild<QPushButton*>("statKey:comma")->setText(comma ? QStringLiteral(";") : QStringLiteral(","));
+    if (comma != statisticsComma_) {  // the values rewritten for the other separators
+        QString values = statisticsValues_->toPlainText();
+        if (comma) values.replace(',', ';').replace('.', ',');
+        else values.replace(',', '.').replace(';', ',');
+        statisticsValues_->setPlainText(values);
+        statisticsComma_ = comma;
+    }
     statisticsKeysToggle_->setToolTip(tr("Show or hide the keypad"));
     percentKeysToggle_->setToolTip(tr("Show or hide the keypad"));
     findChild<QPushButton*>("percentKey:point")->setText(settings::decimalComma() ? QStringLiteral(",") : QStringLiteral("."));
+    for (QLineEdit* box : {percentFirst_, percentSecond_}) box->setText(view::withSeparatorInUse(box->text()));
+    if (inspector_) inspector_->showSeparator();
     for (const view::PercentageRow& row : view::percentageRows(QStringLiteral("1"), QStringLiteral("2")))
         findChild<QLabel*>("percentTitle:" + row.key)->setText(row.title);
     requestPercentages();  // error texts are in the language too
@@ -1354,6 +1404,7 @@ QWidget* MainWindow::buildStatistics() {
     auto* layout = new QVBoxLayout(page);
     auto* header = new QHBoxLayout;
     statisticsLabel_ = new QLabel(page);
+    statisticsLabel_->setObjectName("statisticsLabel");
     statisticsKeysToggle_ = new QToolButton(page);
     statisticsKeysToggle_->setObjectName("statisticsKeysToggle");
     statisticsKeysToggle_->setCheckable(true);
@@ -1408,7 +1459,10 @@ QWidget* MainWindow::buildStatistics() {
         button->setFocusPolicy(Qt::NoFocus);
         const QString insert = QString::fromUtf8(pad[i].insert);
         connect(button, &QPushButton::clicked, this, [this, insert] {
+            const bool comma = settings::decimalComma();  // then "," is a value's own and ";" separates values
             if (insert.isEmpty()) statisticsValues_->textCursor().deletePreviousChar();
+            else if (insert == ".") statisticsValues_->insertPlainText(comma ? QStringLiteral(",") : insert);
+            else if (insert == ", ") statisticsValues_->insertPlainText(comma ? QStringLiteral("; ") : insert);
             else statisticsValues_->insertPlainText(insert);
         });
         grid->addWidget(button, i / 4, i % 4);
@@ -1426,12 +1480,17 @@ QWidget* MainWindow::buildPercentages() {
     auto* page = new QWidget;
     auto* layout = new QVBoxLayout(page);
     auto* entry = new QGridLayout;
-    // Only what a number is made of, typed or pasted (as in the statistics box).
+    // Only what a number is made of, typed or pasted (as in the statistics box). A box holds one number, so a point or
+    // a comma is its decimal separator, written as the one in use.
     auto numeric = [this](QLineEdit* edit) {
         connect(edit, &QLineEdit::textChanged, edit, [edit](const QString& text) {
             QString kept = text;
             kept.remove(QRegularExpression(QStringLiteral("[^0-9.,eE-]")));
-            if (kept != text) edit->setText(kept);
+            kept = view::withSeparatorInUse(kept);
+            if (kept == text) return;
+            const int cursor = edit->cursorPosition();
+            edit->setText(kept);
+            edit->setCursorPosition(qMin(cursor, int(kept.size())));
         });
         connect(edit, &QLineEdit::textChanged, this, [this] { percentTimer_.start(); });
         edit->installEventFilter(this);  // a box that takes the focus becomes the keypad's (see eventFilter)
@@ -1514,10 +1573,8 @@ QWidget* MainWindow::buildPercentages() {
         worker_->answerGeneration() = ++percentSerial_;
         worker_->answerCancelFlag() = true;
         QString first = percentFirst_->text(), second = percentSecond_->text();
-        if (settings::decimalComma()) {  // the engine reads a point
-            first.replace(',', '.');
-            second.replace(',', '.');
-        }
+        first.replace(',', '.');  // the engine reads a point
+        second.replace(',', '.');
         const QList<view::PercentageRow> rows = view::percentageRows(first, second);
         for (const view::PercentageRow& row : view::percentageRows(QStringLiteral("1"), QStringLiteral("2"))) {
             static_cast<ShortenedLabel*>(findChild<QLabel*>("percent:" + row.key))->setAnswer({});
